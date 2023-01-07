@@ -1,0 +1,13 @@
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[{*.cjs,*.js}]
+indent_size = 2
+tab_width = 2
+
+[{*.htm,*.html,*.pug,*.md}]
+indent_size = 2
+tab_width = 2
