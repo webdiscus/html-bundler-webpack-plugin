@@ -1,19 +1,26 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "0.0.1-beta.0",
+  "version": "0.1.0",
   "description": "HTML bundler plugin for webpack, extracts CSS and JS from their sources specified in HTML.",
   "keywords": [
     "plugin",
     "loader",
     "webpack",
     "bundle",
+    "builder",
+    "builder",
+    "entry",
+    "entrypoint",
     "html",
     "scss",
+    "css",
     "style",
     "js",
+    "inline",
     "svg",
     "image",
-    "extract"
+    "extract",
+    "html-webpack-plugin"
   ],
   "license": "ISC",
   "author": "webdiscus (https://github.com/webdiscus)",
@@ -60,7 +67,7 @@
     "ansis": "1.5.5"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.7",
+    "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
     "@test-fixtures/lorem": "0.0.2",
     "@test-fixtures/js": "0.0.2",
@@ -68,8 +75,7 @@
     "@types/jest": "^29.2.5",
     "css-loader": "^6.7.3",
     "jest": "^29.3.1",
-    "mini-css-extract-plugin": "^2.7.2",
-    "prettier": "^2.8.1",
+    "prettier": "^2.8.2",
     "sass": "^1.57.1",
     "sass-loader": "^13.2.0",
     "webpack": "^5.75.0",
