@@ -1,3 +1,5 @@
+const { isInline } = require('./Utils');
+
 /**
  * Store of script files from `script` tag for sharing with the plugin.
  */
@@ -24,7 +26,6 @@ class ScriptStore {
    */
   static add(request) {
     const [file] = request.split('?', 1);
-
     const entry = this.files.find((item) => item.name && item.file === file && item.issuer.request === this.issuer);
 
     if (entry != null) {
@@ -37,6 +38,7 @@ class ScriptStore {
     this.files.push({
       name: undefined,
       file,
+      inline: isInline(request),
       issuer: {
         filename: undefined,
         request: this.issuer,

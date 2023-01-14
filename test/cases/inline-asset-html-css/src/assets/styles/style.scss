@@ -1,0 +1,24 @@
+.svg-data-url {
+  // url must be as `data:image/svg+xml;utf8,<svg ...`
+  background: url('../images/icons/iphone.svg');
+}
+
+.png-data-url {
+  // url must be as `data:image/png;base64,iVBO...`
+  background: url('../images/icons/iphone.png');
+}
+
+.png-data-url2 {
+  // url must be as `data:image/png;base64,iVBO...`
+  background: url('Images/icons/iphone.png');
+}
+
+.svg-data-url-alias {
+  // resolve inline asset via alias
+  background: url('~Images/icons/imac.svg');
+}
+
+.png-data-url-alias {
+  // resolve inline asset via alias
+  background: url('~Images/icons/imac.png');
+}

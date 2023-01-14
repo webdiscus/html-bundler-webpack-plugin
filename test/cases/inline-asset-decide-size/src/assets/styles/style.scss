@@ -1,0 +1,17 @@
+// size < 1K, data-URL
+.data-url {
+  background: url('../images/icons/iphone.svg');
+}
+// size < 1K, data-URL
+.data-url {
+  background: url('../images/icons/iphone.png');
+}
+
+// size > 1K then resource file
+.filename {
+  background: url('../images/pug-logo.svg');
+}
+// size > 1K then resource file
+.filename {
+  background: url('../images/pug-logo.png');
+}

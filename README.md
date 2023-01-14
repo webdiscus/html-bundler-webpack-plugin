@@ -1,64 +1,46 @@
 <div align="center">
     <h1>
-        <a href="http://www.w3.org/html/logo/">
-          <img src="https://www.w3.org/html/logo/badge/html5-badge-h-solo.png" width="120" height="120" alt="HTML5 Powered" title="HTML5 Powered">
-        </a>
-        <a href="https://github.com/webpack/webpack">
-            <img height="120" src="https://webpack.js.org/assets/icon-square-big.svg">
-        </a>
+        <img height="120" src="https://user-images.githubusercontent.com/30186107/29488525-f55a69d0-84da-11e7-8a39-5476f663b5eb.png">
+        <img height="120" src="https://webpack.js.org/assets/icon-square-big.svg">
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin"><br>
         HTML bundler Webpack Plugin
         </a>
     </h1>
-  <div>The plugin generates HTML files contained output CSS and JS files extracted from their sources used in HTML</div>
 </div>
 
----
 [![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen "npm package")](https://www.npmjs.com/package/html-bundler-webpack-plugin "download npm package")
 [![node](https://img.shields.io/node/v/pug-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/pug-plugin/peer/webpack)](https://webpack.js.org/)
 
-> **Warning**
-> 
-> This is a brand new unique modern plugin that does exactly what you have wanted for a long time.\
-> This plugin has come to replace an outdated, inconvenient `html-webpack-plugin` and others.
-> 
-> The plugin automatically extracts JS, CSS, images, fonts, etc. from their sources loaded directly in HTML via `<link>` `<script>` `<img>` tags.
+This is a modern plugin that does exactly what you want, automatically extracts JS, CSS, images, fonts
+from their sources loaded directly in HTML using `<link>` `<script>` `<img>` `<source>` tags
+and replaces the source filenames with output hashed version of the files.
+The plugin enable to use an HTML file as entry-point in Webpack.
 
 > **Note**
 >
-> The purpose of this plugin is to make the developer's life much easier than it was with other plugins such as
-> `html-webpack-plugin` and `mini-css-extract-plugin`.
+> The purpose of this plugin is to make the developer's life much easier than it was using 
+> `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
 
 > **Note**
 > 
 > The plugin is under continuous development.
-> Many new feature will be implemented soon.
+> Many new killer features will be implemented soon.
 > 
 > _Кeep your finger on the pulse._
 > 
 > 
 
-# html-bundler-webpack-plugin
 
-
-This plugin will work like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML`
+This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML`
 file.
-
-The plugin enable to use a HTML file as entry-point in Webpack, extracts JS and CSS files from their sources specified
-in HTML.
-The plugin generates HTML files containing hashed output JS and CSS filenames whose source files are specified in the HTML
-file.
-
-The plugin automatically extracts the CSS from source style (e.g `*.scss`, `*.styl`) loaded via a `<link>` tag and generates a separate file with hashed filename for it.\
-The plugin automatically extracts the JavaScript from source script (e.g. `*.js`, `*.ts`) loaded via a `<script>` tag and generates a separate file with hashed filename for it.\
-The plugin automatically processes the images, fonts from sources loaded via `<link>`, `<img>` or `<source>` tags and generates a separate file with hashed filename for it.
 
 💡 **Highlights**:
 
+- Define your HTML pages in Webpack entry.
 - The HTML file is the entry-point for all source scripts and styles.
-- Source scripts and styles should be specified directly in HTML.
-- All JS and CSS files will be extracted from their sources specified in HTML.
+- Source scripts and styles should be loaded directly in HTML using tags.
+- All JS and CSS files will be extracted from their sources specified in HTML tags.
 
 Specify the HTML files in the Webpack entry:
 
@@ -66,22 +48,12 @@ Specify the HTML files in the Webpack entry:
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   entry: {
-    // define your HTML files here
+    // define HTML files here
     index: './src/views/home/index.html',  // output dist/index.html
-    about: './src/views/about/index.html', // output dist/about.html
   },
   plugins: [
     // enable processing of HTML files defined in Webpack entry
-    new HtmlBundlerPlugin({
-      js: {
-        // output filename of extracted JS file from source script
-        filename: 'assets/js/[name].[contenthash:8].js',
-      },
-      css: {
-        // output filename of extracted CSS file from source style
-        filename: 'assets/css/[name].[contenthash:8].css',
-      },
-    }),
+    new HtmlBundlerPlugin(),
   ],
   module: {
     rules: [
@@ -89,6 +61,7 @@ module.exports = {
         test: /.html/,
         loader: HtmlBundlerPlugin.loader, // HTML loader
       },
+      // ... other rules, e.g. for styles, images, fonts, etc.
     ],
   },
 };
@@ -99,7 +72,7 @@ Add source scripts and styles directly to HTML using relative path or Webpack al
 ```html
 <html>
   <head>
-    <link href="./styles.scss" rel="stylesheet">
+    <link href="./style.scss" rel="stylesheet">
     <script src="./main.js" defer="defer"></script>
   </head>
   <body>
@@ -113,7 +86,7 @@ The generated HTML contains hashed output CSS and JS filenames:
 ```html
 <html>
   <head>
-    <link href="/assets/css/styles.05e4dd86.css" rel="stylesheet">
+    <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
     <script src="/assets/js/main.f4b855d8.js" defer="defer"></script>
   </head>
   <body>
@@ -135,10 +108,317 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 | [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                     | resolve url in CSS                                               |
 | [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                            | encode SVG data-URL as utf8                                      |
 | [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)               | inline SVG icons in HTML                                         |
+| [html-loader](https://github.com/webpack-contrib/html-loader)                             | exports HTML as string                                           |
 
-# How to use source images in HTML
+## Contents
 
-It's very easy! Add to Webpack config the rule:
+---
+1. [Install and Quick start](#install)
+2. [Features](#features)
+3. [Plugin options](#plugin-options)
+4. [Recipes](#recipes)
+   - [How to inline CSS in HTML](#recipe-inline-css-in-html)
+   - [How to inline JS in HTML](#recipe-inline-js-in-html)
+   - [How to use source images in HTML](#recipe-use-images-in-html)
+   - [How to preload source fonts in HTML](#recipe-preload-fonts)
+   - [How to use HMR live reload](#recipe-hmr)
+
+<a id="features" name="features" href="#features"></a>
+## Features
+
+- compiles HTML files defined in Webpack entry
+- HTML file is entry-point for all resources (styles, scripts)
+- extracts CSS from source style loaded in HTML via a `<link>` tag
+- extracts JS from source script loaded in HTML via a `<script>` tag
+- processes the images, fonts from source files loaded in HTML via `<link>`, `<img>` or `<source>` tags
+- generated HTML contains hashed CSS, JS, images, fonts output filenames
+- resolves source files of URLs in CSS and extract resolved resources to output path\
+  not need more additional plugin such as [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)
+- support the `auto` publicPath
+- support the `inline CSS` in HTML from processed source style
+- support the `inline JavaScript` in HTML from compiled source script
+- support the module types `asset/resource` `asset/inline` `asset`
+- support the `inline image` as `base64 encoding` of binary images (png, jpg, etc.) in HTML and CSS
+- support the `inline SVG` as SVG tag in HTML
+- support the `inline SVG` as data-URL in CSS
+  ```scss
+  background: url('./icons/iphone.svg') // CSS: url("data:image/svg+xml,<svg>...</svg>")
+  ```
+
+<a id="install" name="install" href="#install"></a>
+## Install and Quick start
+
+Install the `html-bundler-webpack-plugin`:
+```bash
+npm install html-bundler-webpack-plugin --save-dev
+```
+
+Install additional packages for styles:
+```bash
+npm install css-loader sass sass-loader --save-dev
+```
+
+Change your `webpack.config.js` according to the following minimal configuration:
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  output: {
+    path: path.join(__dirname, 'dist/'),
+    publicPath: '/',
+  },
+
+  entry: {
+    // define HTML files here
+    index: './src/views/home/index.html',  // output dist/index.html
+    'pages/about': './src/views/about/index.html', // output dist/pages/about.html
+    // ...
+  },
+
+  plugins: [
+    new HtmlBundlerPlugin({
+      js: {
+        // output filename of extracted JS from source script loaded in HTML via `<script>` tag
+        filename: 'assets/js/[name].[contenthash:8].js',
+      },
+      css: {
+        // output filename of extracted CSS from source style loaded in HTML via `<link>` tag
+        filename: 'assets/css/[name].[contenthash:8].css',
+      },
+    }),
+  ],
+
+  module: {
+    rules: [
+      {
+        test: /\.html$/,
+        loader: HtmlBundlerPlugin.loader, // HTML loader
+      },
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+    ],
+  },
+};
+```
+
+---
+
+<a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
+## Plugin options
+
+### `verbose`
+Type: `boolean` Default: `false`<br>
+Display the file information at processing.
+
+<a id="plugin-option-outputPath" name="plugin-option-outputPath" href="#plugin-option-outputPath"></a>
+### `outputPath`
+Type: `string` Default: `webpack.options.output.path`<br>
+The output directory for processed file. This directory can be relative by `webpack.options.output.path` or absolute.
+
+<a id="plugin-option-filename" name="plugin-option-filename" href="#plugin-option-filename"></a>
+### `filename`
+Type: `string | Function` Default: `[name].html`<br>
+The name of output file.
+- If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
+  - `[id]` The ID of the chunk.
+  - `[name]` Only filename without extension or path.
+  - `[contenthash]` The hash of the content.
+  - `[contenthash:nn]` The `nn` is the length of hashes (defaults to 20).
+- If type is `Function` then following arguments are available in the function:
+  - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
+    - `pathData.filename` the full path to source file
+    - `pathData.chunk.name` the name of entry key
+  - `@param {AssetInfo} assetInfo` Mostly this object is empty.
+  - `@return {string}` The name or template string of output file.
+
+### `css`
+Type: `Object`\
+Default properties:
+```js
+{
+  test: /\.(css|scss|sass|less|styl)$/,
+  enabled: true,
+  verbose: false,
+  filename: '[name].css',
+  outputPath: null,
+}
+```
+The `filename` property see by [filename option](#plugin-option-filename).
+The `outputPath` property see by [outputPath option](#plugin-option-outputPath).
+
+The option to extract CSS from a style source file loaded in the HTML tag:
+```html
+<link href="./style.scss" rel="stylesheet">
+```
+
+> **Warning**
+>
+> Don't import source styles in JavaScript! Styles must be loaded directly in HTML.
+
+The default CSS output filename is `[name].css`. 
+You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      css: {
+        filename: 'assets/css/[name].[contenthash:8].css',
+      },
+    }),
+  ],
+};
+```
+
+The `name` is the filename of a loaded style.
+For example, if source file is `style.scss`, then output filename will be `assets/css/style.1234abcd.css`.\
+If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
+
+> **Warning**
+>
+> Don't use `mini-css-extract-plugin` or `style-loader`, they are not required more.\
+> The `html-bundler-webpack-plugin` extracts CSS much faster than other plugins and resolves all asset URLs in CSS, therefore the `resolve-url-loader` is redundant too.
+
+### `js`
+Type: `Object`\
+Default properties:
+```js
+{
+  verbose: false,
+  filename: '[name].js', 
+  outputPath: null,
+}
+```
+The `filename` property see by [filename option](#plugin-option-filename).
+The `outputPath` property see by [outputPath option](#plugin-option-outputPath).
+
+> **Note**
+>
+> - the extract `js` module is always enabled
+> - the `test` property not exist because all loaded scripts are automatically detected
+
+The option to extract JS from a script source file loaded in the HTML tag:
+```html
+<script src="./main.js"></script>
+```
+
+The default JS output filename is `[name].js`. 
+You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      js: {
+        filename: 'assets/js/[name].[contenthash:8].js',
+      },
+    }),
+  ],
+};
+```
+
+The `name` is the filename of a loaded script.
+For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
+If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
+
+
+---
+
+<a id="recipe-inline-css-in-html" name="recipe-inline-css-in-html" href="#recipe-inline-css-in-html"></a>
+## How to inline CSS in HTML
+
+For example, the _style.scss_:
+```scss
+$color: red;
+h1 {
+  color: $color;
+}
+```
+
+Add the `?inline` query to the source filename which you want inline: 
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <link href="./main.scss" rel="stylesheet" />
+    <!-- inline style -->
+    <link href="./main.scss?inline" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+The generated HTML contains inline CSS already processed via Webpack:
+
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
+    <!-- inline style -->
+    <style>
+      h1{color: red;}
+    </style>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+<a id="recipe-inline-js-in-html" name="recipe-inline-js-in-html" href="#recipe-inline-js-in-html"></a>
+## How to inline JS in HTML
+
+For example, the _main.js_:
+```js
+console.log('Hello JS!');
+```
+
+Add the `?inline` query to the source filename which you want inline:
+```html
+<html>
+  <head>
+    <!-- load script as file -->
+    <script src="./main.js" defer="defer"></script>
+    <!-- inline script -->
+    <script src="./main.js?inline"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+The generated HTML contains inline JS already compiled via Webpack:
+
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <script src="assets/js/main.992ba657.js" defer="defer"></script>
+    <!-- inline script -->
+    <script>
+      (()=>{"use strict";console.log("Hello JS!")})();
+    </script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+<a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
+## How to use source images in HTML
+
+Add to Webpack config the rule:
 ```js
  module: {
   rules: [
@@ -152,7 +432,7 @@ It's very easy! Add to Webpack config the rule:
   ],
 ```
 
-Now you can write source file (relative path or a Webpack alias) in HTML:
+Add a source file using a relative path or Webpack alias in HTML:
 ```html
 <html>
   <head>
@@ -182,9 +462,10 @@ The generated HTML contains hashed output images filenames:
 </html>
 ```
 
-# How to preload source fonts in HTML
+<a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
+## How to preload source fonts in HTML
 
-It's very easy! Add to Webpack config the rule:
+Add to Webpack config the rule:
 ```js
  module: {
   rules: [
@@ -198,7 +479,7 @@ It's very easy! Add to Webpack config the rule:
   ],
 ```
 
-Now you can write source file (relative path or a Webpack alias) in HTML:
+Add a source file using a relative path or Webpack alias in HTML:
 ```html
 <html>
   <head>
@@ -227,6 +508,38 @@ The generated HTML contains output fonts filenames:
 > **Note**
 > 
 > Now you don't need a plugin to copy files from source directory to public.
+
+
+<a id="recipe-hmr" name="recipe-hmr" href="#recipe-hmr"></a>
+### HMR live reload
+
+To enable live reload by changes any file add in the Webpack config the `devServer` option:
+```js
+module.exports = {
+  // enable HMR with live reload
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    watchFiles: {
+      paths: ['src/**/*.*'],
+      options: {
+        usePolling: true,
+      },
+    },
+  },
+};
+```
+
+> **Note**
+>
+> Live reload works only if in HTML used a JS file.
+> If your HTML has not a JS, then create one empty JS file, e.g. `hmr.js` and add it in the HTML:
+> ```html
+> <script src="./hmr.js"></script>
+> ```
+
+---
 
 ## Also See
 

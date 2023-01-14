@@ -1,4 +1,4 @@
-const loaderName = 'html-bundler-loader';
+const loaderName = 'html-bundler-webpack-loader';
 
 module.exports = {
   loaderName,

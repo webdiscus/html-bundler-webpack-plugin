@@ -1,7 +1,7 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "0.1.0",
-  "description": "HTML bundler plugin for webpack, extracts CSS and JS from their sources specified in HTML.",
+  "version": "0.2.0",
+  "description": "HTML bundler plugin for webpack, extracts CSS, JS, images from their sources loaded in HTML.",
   "keywords": [
     "plugin",
     "loader",

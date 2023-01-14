@@ -26,7 +26,7 @@ class Plugin {
    * @return {Array<RegExp|string>}
    */
   static getStyleRestrictions() {
-    return this.options ? [this.options.css?.test] : [];
+    return this.options ? [this.options.extractCss?.test] : [];
   }
 
   /**

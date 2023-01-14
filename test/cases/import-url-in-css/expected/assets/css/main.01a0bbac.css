@@ -1,0 +1,13 @@
+/* the url stays as is */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+/* Note:
+ - the url stays as is
+ - imported CSS files must be manually copied to dist folder using the copy-webpack-plugin
+ - add to 'css-loader' the `import: false` option
+*/
+@import url('/css/test.css');
+
+h1 {
+  color: red;
+}

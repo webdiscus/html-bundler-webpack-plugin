@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <h1>Home</h1>
+
+    <!-- test merging the svg attributes with img attributes into resulting inline svg -->
+    <img src="~Images/icons/imac.svg?inline" class="inline" style="width: 32px;" aria-hidden="true" stroke="red">
+
+    <!-- src must be output filename -->
+    <img src="~Images/icons/imac.svg" class="file">
+    <img src="~Images/icons/imac.png" class="file">
+
+    <!-- test replace all same assets with inline svg in one file -->
+    <img src="~Images/icons/imac.svg?inline" class="inline">
+
+    <!-- test inline not svg image -->
+    <img src="~Images/icons/imac.png?inline" class="inline">
+  </body>
+</html>

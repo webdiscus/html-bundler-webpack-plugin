@@ -1,0 +1,12 @@
+$color: red;
+h1 {
+  color: $color;
+}
+
+.img {
+  // test resolve source file in relative path
+  background-image: url(../../assets/images/apple.png);
+  width: 160px;
+  height: 130px;
+  border: 1px solid chartreuse;
+}

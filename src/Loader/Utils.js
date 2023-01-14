@@ -28,6 +28,17 @@ if (isWin) hmrFile = pathToPosix(hmrFile);
 const scriptExtensionRegexp = /\.js[a-z\d]*$/i;
 const isRequireableScript = (file) => !path.extname(file) || scriptExtensionRegexp.test(file);
 
+/**
+ * Whether request contains `inline` param.
+ *
+ * @param {string} request
+ * @return {boolean}
+ */
+const isInline = (request) => {
+  const [, query] = request.split('?', 2);
+  return query != null && /(?:^|&)inline(?:$|&)/.test(query);
+};
+
 // match: var locals_for_with = (locals || {});
 const searchLocalsRegexp = /(?<=locals_for_with = )(?:\(?locals \|\| {}\)?)(?=;)/;
 // match: var self = locals || {};
@@ -151,6 +162,7 @@ module.exports = {
   hmrFile,
   isRequireableScript,
   isWin,
+  isInline,
   pathToPosix,
   getQueryData,
   injectExternalData,

@@ -13,10 +13,6 @@ class Resolver {
   static hasAlias = false;
   static hasPlugins = false;
 
-  static styleResolveOptions = {
-    restrictions: [/\.(css|scss|sass|less|styl)$/],
-  };
-
   /**
    * @param {string} basedir The the root directory of absolute paths.
    * @param {{}} options The webpack `resolve` options.
@@ -50,7 +46,7 @@ class Resolver {
       mainFields: ['style', 'browser', 'sass', 'main'],
       mainFiles: ['_index', 'index'],
       extensions: ['.scss', '.sass', '.css'],
-      restrictions: plugin.isUsed() ? plugin.getStyleRestrictions() : this.styleResolveOptions.restrictions,
+      restrictions: plugin.getStyleRestrictions(),
     });
   }
 

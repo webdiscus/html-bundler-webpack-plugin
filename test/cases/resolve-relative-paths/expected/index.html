@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <title>Test</title>
+
+    <!-- don't resolve URLs -->
+    <link href="https://example.com/css/style.css" rel="stylesheet">
+    <link href="//css/style.css" rel="stylesheet">
+
+    <!-- don't resolve in public path -->
+    <link href="/css/style.css" rel="stylesheet">
+
+    <!-- resolve source files in parent directory -->
+    <link href="assets/img/favicon.697ef306.ico" rel="icon" />
+    <link href="assets/css/base.19050443.css" rel="stylesheet">
+    <script src="assets/js/main.b7ae6ca2.js" defer="defer"></script>
+
+    <!-- resolve source files in local directory, the local path `./` can be omitted -->
+    <link href="assets/css/home.19b32b6f.css" rel="stylesheet">
+    <script src="assets/js/home.55e55a15.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <h2>Test resolve path</h2>
+
+    <!-- resolve source file in SCSS file by `.img` class -->
+    <div class="img"></div>
+
+    <!-- resolve source files in the `./` local directory -->
+    <img src="assets/img/home.697ef306.png">
+
+    <!-- resolve source files in subdirectory -->
+    <img src="assets/img/lime.697ef306.png">
+    <img src="assets/img/lime1.697ef306.png">
+  </body>
+</html>

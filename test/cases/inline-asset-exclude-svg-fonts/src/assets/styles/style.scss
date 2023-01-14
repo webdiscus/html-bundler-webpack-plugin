@@ -1,0 +1,35 @@
+// size < 1K, data-URL
+.svg-data-url {
+  background: url('~Images/icons/iphone.svg');
+}
+
+// size < 1K, data-URL
+.png-data-url {
+  background: url('~Images/icons/iphone.png');
+}
+
+// size > 1K then resource file
+.svg-filename {
+  background: url('~Images/pug-logo.svg');
+}
+
+// size > 1K then resource file
+.png-filename {
+  background: url('~Images/pug-logo.png');
+}
+
+@font-face {
+  font-family: 'OpenSans';
+  src:
+    url('~Fonts/OpenSans/open-sans-regular.svg') format('svg'),
+    url('~Fonts/OpenSans/open-sans-regular.woff2') format('woff2');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'GlyphIcons';
+  src:
+    url('~Fonts/icons/GlyphIcons/glyphicons-halflings-regular.svg') format('svg'),
+    url('~Fonts/icons/GlyphIcons/glyphicons-halflings-regular.woff2') format('woff2');
+  font-style: normal;
+}

@@ -1,9 +1,16 @@
 const Loader = require('./Loader');
-const { isWin, pathToPosix } = require('./Utils');
+const { isWin, isInline, pathToPosix } = require('./Utils');
 
 const comparePos = (a, b) => a.startPos - b.startPos;
 
 class HtmlBundler {
+  /**
+   * Resolve all source resource in HTML.
+   *
+   * @param {string} html The source HTML string.
+   * @param {string} issuer The absolute filename.
+   * @return {string}
+   */
   static compile(html, issuer) {
     const tags = this.parseTags(html);
     const result = this.optimizeParsedTags(tags);
@@ -14,28 +21,48 @@ class HtmlBundler {
 
     for (let { type, file, startPos, endPos } of result) {
       const resolvedFile = this.resolve({ type, file, issuer });
-      // skip not resolved file, e.g. URL
+      // skip not resolved value, e.g. URL
       if (!resolvedFile) continue;
 
       output += html.slice(pos, startPos);
-      output += resolvedFile;
+
+      switch (type) {
+        case 'inline/style':
+          output += '<style>' + resolvedFile + '</style>';
+          break;
+        case 'inline/script':
+          // note: the closing tag `</script>` is already present in the tail of the html
+          output += '<script>' + resolvedFile;
+          break;
+        default:
+          output += resolvedFile;
+          break;
+      }
+
       pos = endPos;
     }
 
-    output += html.slice(pos);
-
-    return output;
+    return output + html.slice(pos);
   }
 
+  /**
+   * Resolve source file.
+   *
+   * Resolve relative path: href="./basic.css", href="../basic.css"
+   * Resolve alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
+   *
+   * Ignore URLs:
+   *  - https://example.com/style.css
+   *  - http://example.com/style.css
+   *  - //style.css
+   *  - /style.css
+   *
+   * @param {string} type The type of source: 'style', 'script', 'asset'.
+   * @param {string} file The source file of resource.
+   * @param {string} issuer The issuer of source file.
+   * @return {string|boolean} Return resolved full path of source file or false
+   */
   static resolve({ type, file, issuer }) {
-    // relative path: href="./basic.css", href="../basic.css"
-    // alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
-
-    // ignore URLs:
-    //   https://example.com/style.css
-    //   http://example.com/style.css
-    //   //style.css
-    //   /style.css
     if (/^(?:https?:)?(?:\/{1,2})/.test(file)) {
       return false;
     }
@@ -44,9 +71,11 @@ class HtmlBundler {
 
     switch (type) {
       case 'style':
+      case 'inline/style':
         resolvedFile = Loader.compiler.loaderRequireStyle(file, issuer);
         break;
       case 'script':
+      case 'inline/script':
         resolvedFile = Loader.compiler.loaderRequireScript(file, issuer);
         break;
       default:
@@ -57,10 +86,18 @@ class HtmlBundler {
     return resolvedFile;
   }
 
+  /**
+   * Transform a deep nested structure of parsed values to a flat one.
+   *
+   * TODO: optimize the parsing to save data directly in flat structure.
+   *
+   * @param {Array<{}>} tags
+   * @return {Array<{}>}
+   */
   static optimizeParsedTags(tags) {
     const result = [];
 
-    for (let { type, startPos: tagStartPos, attrs } of tags) {
+    for (let { type, startPos: tagStartPos, endPos: tagEndPos, attrs } of tags) {
       for (let { startPos: attrStartOffset, endPos: attrEndOffset, value } of attrs) {
         const attrStartPos = tagStartPos + attrStartOffset;
 
@@ -74,11 +111,21 @@ class HtmlBundler {
             });
           }
         } else {
+          let startPos = attrStartPos;
+          let endPos = tagStartPos + attrEndOffset;
+
+          if (['style', 'script'].indexOf(type) >= 0 && isInline(value)) {
+            // cut the source tag completely to inject an inline `<script>` or `<style>` tag
+            startPos = tagStartPos;
+            endPos = tagEndPos;
+            type = `inline/${type}`;
+          }
+
           result.push({
             type,
             file: value,
-            startPos: attrStartPos,
-            endPos: tagStartPos + attrEndOffset,
+            startPos,
+            endPos,
           });
         }
       }
@@ -87,6 +134,12 @@ class HtmlBundler {
     return result;
   }
 
+  /**
+   * Parse all possible tags containing source resources.
+   *
+   * @param {string} content
+   * @return {Array<{}>}
+   */
   static parseTags(content) {
     const links = this.parseTag(content, { tagName: 'link', attrs: ['href'] });
     const scripts = this.parseTag(content, { tagName: 'script', attrs: ['src'] });
@@ -112,8 +165,7 @@ class HtmlBundler {
    * <source srcset="./img1.png, ./img2.png 100w, ./img3.png 1.5x">
    * <source srcset="./photo.webp" type="image/webp" />
    *
-   * TODO: don't allow parse resource in style => move it to css/scss
-   *       <div style="background-image: url(image.png)">
+   * Note: don't parse resource in style, like <div style="background-image: url(image.png)">.
    *
    * @param {string} content
    * @param {string} tagName
@@ -130,7 +182,7 @@ class HtmlBundler {
 
     while ((startPos = content.indexOf(open, startPos)) >= 0) {
       let attrValues = [];
-      endPos = content.indexOf(close, startPos) + 1;
+      endPos = content.indexOf(close, startPos) + close.length;
       if (endPos < 1) throw new Error(`The '${tagName}' tag hasn't the close '>' char.`);
 
       const tagSource = content.slice(startPos, endPos);
@@ -167,6 +219,11 @@ class HtmlBundler {
     return result;
   }
 
+  /**
+   * @param {string} tagSource The source code of an HTML tag.
+   * @param {string} attr The attribute to parse value.
+   * @return {{attr: string, value: string, startPos: number, endPos: number}|boolean}
+   */
   static parseAttr(tagSource, attr) {
     const open = `${attr}="`;
     let startPos = tagSource.indexOf(open);
@@ -181,6 +238,10 @@ class HtmlBundler {
     return { attr, value, startPos, endPos };
   }
 
+  /**
+   * @param {string} tagSource The source code of an HTML tag.
+   * @return {{attr: string, value: Array<{}>, startPos: number, endPos: number}|boolean}
+   */
   static parseSrcset(tagSource) {
     const attr = 'srcset';
     const open = `${attr}="`;

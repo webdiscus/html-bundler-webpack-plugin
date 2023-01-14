@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <title>Test</title>
+    <link href="~Images/favicons/favicon.svg" rel="icon" type='image/svg+xml' sizes='any' />
+    <link href="~Images/favicons/favicon-32px.png" rel="icon" type='image/png' sizes='32x32' />
+    <link href="../assets/styles/style.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>About</h1>
+
+    <!-- caching test of the same resources used in another file. -->
+
+    <!-- size < 2K, data-URL -->
+    <img src="~Images/icons/iphone.png" class="inline">
+
+    <!-- size < 2K, inline SVG -->
+    <img src="~Images/icons/iphone.svg?inline" class="inline">
+
+    <!-- size > 2K then resource file -->
+    <img src="~Images/pug-logo.png" class="file">
+    <img src="~Images/pug-logo.svg" class="file">
+  </body>
+</html>

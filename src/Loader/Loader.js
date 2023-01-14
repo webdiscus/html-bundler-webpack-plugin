@@ -138,8 +138,6 @@ class Loader {
     const re = new RegExp(`${attr}="(.+?)"`);
     let [, file] = re.exec(value) || [];
 
-    // TODO: {string || []} attr can be: `href`, `src`, ['src', 'srcset']
-
     if (isWin) templateFile = pathToPosix(templateFile);
 
     const resolvedValue = this.compiler.loaderRequire(file, templateFile);

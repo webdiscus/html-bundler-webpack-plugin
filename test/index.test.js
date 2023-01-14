@@ -121,6 +121,36 @@ describe('parse attributes unit tests', () => {
   });
 });
 
+describe('resolve parsed values', () => {
+  test('https://example.com/style.css', (done) => {
+    const received = HtmlBundler.resolve({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
+    const expected = false;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('http://example.com/style.css', (done) => {
+    const received = HtmlBundler.resolve({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
+    const expected = false;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('//style.css', (done) => {
+    const received = HtmlBundler.resolve({ type: 'style', file: '//style.css', issuer: '' });
+    const expected = false;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('/style.css', (done) => {
+    const received = HtmlBundler.resolve({ type: 'style', file: '/style.css', issuer: '' });
+    const expected = false;
+    expect(received).toEqual(expected);
+    done();
+  });
+});
+
 describe('parse tags unit tests', () => {
   test('parse single tag img', (done) => {
     //const html = `<img src="img1.png" alt="logo"><img src="img1.png" srcset="img2.png 100w, img3.png 500w, img4.png 1000w">`;
@@ -466,7 +496,7 @@ describe('parse tags unit tests', () => {
   });
 });
 
-describe('AssetEntry tests', () => {
+describe('AssetEntry unit tests', () => {
   test('inEntry false', (done) => {
     const received = AssetEntry.inEntry('file.js');
     expect(received).toBeFalsy();
@@ -482,7 +512,7 @@ describe('AssetEntry tests', () => {
   });
 });
 
-describe('integration tests', () => {
+describe('features tests', () => {
   test('Hello World!', (done) => {
     compareFileListAndContent(PATHS, 'hello-world', done);
   });
@@ -491,17 +521,62 @@ describe('integration tests', () => {
     compareFileListAndContent(PATHS, 'resolve-script-style-asset', done);
   });
 
-  test('resolve-ignore-urls', (done) => {
-    compareFileListAndContent(PATHS, 'resolve-ignore-urls', done);
+  test('resolve-relative-paths', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-relative-paths', done);
+  });
+
+  test('resolve-alias-in-html', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-alias-in-html', done);
+  });
+
+  //
+  test('resolve the url(image) in CSS', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-url-in-css', done);
+  });
+
+  test('@import url() in CSS', (done) => {
+    compareFileListAndContent(PATHS, 'import-url-in-css', done);
+  });
+
+  test('@import url() in SCSS', (done) => {
+    compareFileListAndContent(PATHS, 'import-url-in-scss', done);
   });
 });
 
-describe('extract css', () => {
-  test('resolve-style-scss', (done) => {
-    compareFileListAndContent(PATHS, 'resolve-style-scss', done);
+describe('options', () => {
+  test('option-filename-function', (done) => {
+    compareFileListAndContent(PATHS, 'option-filename-function', done);
+  });
+});
+
+describe('inline images', () => {
+  test('inline-asset-bypass-data-url', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-bypass-data-url', done);
   });
 
-  test('require css in pug and resolve in css the url(image)', (done) => {
-    compareFileListAndContent(PATHS, 'resolve-url-in-css', done);
+  test('inline-asset-decide-size', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-decide-size', done);
+  });
+
+  test('inline-asset-query', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-query', done);
+  });
+
+  test('inline-asset-html-css', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-html-css', done);
+  });
+
+  test('inline-asset-exclude-svg-fonts', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-exclude-svg-fonts', done);
+  });
+
+  describe('inline styles & scripts', () => {
+    test('inline style using URL query `?inline` and resolve url() in CSS', (done) => {
+      compareFileListAndContent(PATHS, 'inline-style-query-with-resolve-url', done);
+    });
+
+    test('inline script using URL query `?inline`', (done) => {
+      compareFileListAndContent(PATHS, 'inline-script-query', done);
+    });
   });
 });
