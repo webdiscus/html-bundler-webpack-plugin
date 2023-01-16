@@ -67,7 +67,7 @@ module.exports = {
 };
 ```
 
-Add source scripts and styles directly to HTML using relative path or Webpack alias:
+Add source scripts and styles directly to HTML using a relative path or Webpack alias:
 
 ```html
 <html>
@@ -117,8 +117,8 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 2. [Features](#features)
 3. [Plugin options](#plugin-options)
 4. [Recipes](#recipes)
-   - [How to inline CSS in HTML](#recipe-inline-css-in-html)
-   - [How to inline JS in HTML](#recipe-inline-js-in-html)
+   - [How to inline CSS in HTML](#recipe-inline-css)
+   - [How to inline JS in HTML](#recipe-inline-js)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to preload source fonts in HTML](#recipe-preload-fonts)
    - [How to use HMR live reload](#recipe-hmr)
@@ -275,7 +275,7 @@ module.exports = {
 };
 ```
 
-The `name` is the filename of a loaded style.
+The `[name]` is the base filename of a loaded style.
 For example, if source file is `style.scss`, then output filename will be `assets/css/style.1234abcd.css`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
@@ -323,14 +323,14 @@ module.exports = {
 };
 ```
 
-The `name` is the filename of a loaded script.
+The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
 
 ---
 
-<a id="recipe-inline-css-in-html" name="recipe-inline-css-in-html" href="#recipe-inline-css-in-html"></a>
+<a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
 ## How to inline CSS in HTML
 
 For example, the _style.scss_:
@@ -341,7 +341,7 @@ h1 {
 }
 ```
 
-Add the `?inline` query to the source filename which you want inline: 
+Add the `?inline` query to the source filename which you want to inline:
 ```html
 <html>
   <head>
@@ -374,7 +374,11 @@ The generated HTML contains inline CSS already processed via Webpack:
 </html>
 ```
 
-<a id="recipe-inline-js-in-html" name="recipe-inline-js-in-html" href="#recipe-inline-js-in-html"></a>
+> **Note**
+> 
+> To enable source map in inline CSS set the Webpack option `devtool: 'source-map'`.
+
+<a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
 ## How to inline JS in HTML
 
 For example, the _main.js_:
@@ -382,7 +386,7 @@ For example, the _main.js_:
 console.log('Hello JS!');
 ```
 
-Add the `?inline` query to the source filename which you want inline:
+Add the `?inline` query to the source filename which you want to inline:
 ```html
 <html>
   <head>
@@ -511,7 +515,7 @@ The generated HTML contains output fonts filenames:
 
 
 <a id="recipe-hmr" name="recipe-hmr" href="#recipe-hmr"></a>
-### HMR live reload
+## HMR live reload
 
 To enable live reload by changes any file add in the Webpack config the `devServer` option:
 ```js
@@ -533,7 +537,7 @@ module.exports = {
 
 > **Note**
 >
-> Live reload works only if in HTML used a JS file.
+> Live reload works only if in HTML used a JS file. This is specific of Webpack.
 > If your HTML has not a JS, then create one empty JS file, e.g. `hmr.js` and add it in the HTML:
 > ```html
 > <script src="./hmr.js"></script>

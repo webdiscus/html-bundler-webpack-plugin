@@ -171,6 +171,22 @@ class Asset {
 
     return module.__isStyle;
   }
+
+  /**
+   * Whether request contains the `inline` URL query param.
+   *
+   * TODO: compare perf with url parse.
+   *
+   * @param {string} request
+   * @return {boolean}
+   */
+  static isInline(request) {
+    if (!request) return false;
+
+    const [, query] = request.split('?', 2);
+
+    return query != null && /(?:^|&)inline(?:$|&)/.test(query);
+  }
 }
 
 module.exports = Asset;

@@ -295,8 +295,8 @@ class Resolver {
     const sourceFile = this.getSourceFile(rawRequest, issuerFile);
 
     if (sourceFile != null) {
-      const isInline = AssetSource.isInline(issuerRequest);
-      const assetFile = this.resolveAsset(sourceFile, issuerRequest, isInline ? entryAsset : null);
+      const inline = AssetSource.isInline(issuerRequest);
+      const assetFile = this.resolveAsset(sourceFile, issuerRequest, inline ? entryAsset : null);
 
       if (assetFile != null) {
         if (assetFile.endsWith('.css') && this.isDuplicate(assetFile, issuerRequest)) {

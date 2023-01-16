@@ -18,7 +18,7 @@ const extractCss = {
   outputPath: null,
   filename: '[name].css',
   // inline CSS
-  isInline: false,
+  inline: false,
 
   /**
    * Extract CSS and source map.
@@ -74,7 +74,7 @@ const extractCss = {
       contentCSS += content;
 
       if (sourceMap) {
-        if (isInlineSourceMap || this.isInline) {
+        if (isInlineSourceMap || this.inline) {
           const sourceURLs = sourceMap.sources
             .map((source) => '/*# sourceURL=' + (sourceMap.sourceRoot || '') + source + ' */')
             .join('\n');
@@ -91,7 +91,7 @@ const extractCss = {
     }
 
     if (hasMapping) {
-      if (isInlineSourceMap || this.isInline) {
+      if (isInlineSourceMap || this.inline) {
         contentCSS += contentMapping;
       } else {
         mapFile = assetFile + '.map';

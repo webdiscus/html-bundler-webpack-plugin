@@ -110,7 +110,9 @@ class ResponsiveLoader {
     if (assets.length === 1) {
       asset = Asset.getOutputFile(assets[0], issuerAssetFile);
     } else if (assets.length > 1 && sizes.length > 1) {
-      asset = assets.map((item, index) => Asset.getOutputFile(item, issuerAssetFile) + ` ${sizes[index]}w`).join(',');
+      asset = assets
+        .map((assetFile, index) => Asset.getOutputFile(assetFile, issuerAssetFile) + ` ${sizes[index]}w`)
+        .join(',');
     }
 
     return asset;

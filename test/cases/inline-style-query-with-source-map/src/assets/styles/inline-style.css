@@ -1,0 +1,10 @@
+h1 {
+  font-size: 20px;
+}
+
+.img-inline-style {
+  border: 2px solid orangered;
+  width: 160px;
+  height: 130px;
+  background-image: url("Images/image.png");
+}

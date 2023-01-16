@@ -1,3 +1,6 @@
+const path = require('path');
+const { isWin, pathToPosix } = require('./Utils');
+
 class AssetSource {
   static data = new Map();
 
@@ -6,7 +9,9 @@ class AssetSource {
    * @return {boolean}
    */
   static isInline(file) {
-    return this.data.has(file);
+    // fix: a file resolved in the loader is always in posix format,
+    // but in the plugin the file can be in win format, therefore normalize the file
+    return this.data.has(path.normalize(file));
   }
 
   /**
@@ -42,6 +47,8 @@ class AssetSource {
     const RawSource = compilation.compiler.webpack.sources.RawSource;
 
     for (let [sourceFile, item] of this.data) {
+      if (isWin) sourceFile = pathToPosix(sourceFile);
+
       for (let [assetFile, source] of item.issuers) {
         const asset = compilation.assets[assetFile];
         if (!asset) continue;

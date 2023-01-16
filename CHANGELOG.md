@@ -1,5 +1,8 @@
 # Change log
 
+## 0.2.1 (2023-01-16)
+- fix: resolving inlined styles on windows
+
 ## 0.2.0 (2023-01-14)
 - feat: add supports for the inline CSS in HTML
 - feat: add supports for the inline JS in HTML

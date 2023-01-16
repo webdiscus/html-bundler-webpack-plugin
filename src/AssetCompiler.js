@@ -5,7 +5,7 @@ const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
 const { pluginName } = require('./config');
-const { isFunction, toCommonJS } = require('./Utils');
+const { isWin, pathToPosix, isFunction, toCommonJS } = require('./Utils');
 
 const { plugin, scriptStore } = require('./Modules');
 const extractCss = require('./Modules/extractCss');
@@ -65,7 +65,7 @@ const {
 
 /**
  * @typedef {ModuleOptions} ModuleProps
- * @property {boolean} [`isInline` = false] Whether inline CSS should contain inline source map.
+ * @property {boolean} [`inline` = false] Whether inline CSS should contain inline source map.
  */
 
 /**
@@ -516,12 +516,11 @@ class AssetCompiler {
 
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
-      const resourceQuery = resourceResolveData ? resourceResolveData.query : null;
-      const isInline = (resourceQuery && resourceQuery.startsWith('?inline')) || module.type === 'asset/source';
 
       if (!sourceRequest || AssetInline.isDataUrl(sourceRequest)) continue;
 
-      const { issuer } = module.resourceResolveData.context;
+      const inline = Asset.isInline(resourceResolveData.query) || module.type === 'asset/source';
+      const { issuer } = resourceResolveData.context;
       const [sourceFile] = sourceRequest.split('?', 1);
       let issuerFile = !issuer || this.isEntry(issuer) ? entry.importFile : issuer;
 
@@ -562,7 +561,7 @@ class AssetCompiler {
           }
 
           assetModules.add({
-            isInline,
+            inline,
             entryAsset: null,
             // postprocessInfo
             isEntry: true,
@@ -624,12 +623,12 @@ class AssetCompiler {
 
         Resolver.addAsset(sourceRequest, assetFile, issuerFile);
 
-        if (isInline) {
+        if (inline) {
           AssetSource.add(sourceRequest);
         }
 
         // skip already processed file assets, but all inline assets must be processed
-        if (isCached && !isInline) {
+        if (isCached && !inline) {
           continue;
         }
 
@@ -646,7 +645,7 @@ class AssetCompiler {
         }
 
         assetModules.add({
-          isInline,
+          inline,
           entryAsset: entry.filename,
           // postprocessInfo
           isEntry: false,
@@ -726,7 +725,7 @@ class AssetCompiler {
    * @return {string|null} When return null then not emit file.
    */
   renderModule({
-    isInline,
+    inline,
     entryAsset,
     source,
     sourceFile,
@@ -776,7 +775,7 @@ class AssetCompiler {
 
     if (pluginModule) {
       if (pluginModule.extract) {
-        pluginModule.isInline = isInline;
+        pluginModule.inline = inline;
         content = pluginModule.extract(content, assetFile, this.compilation);
       }
       if (pluginModule.postprocess) {
@@ -796,7 +795,7 @@ class AssetCompiler {
       }
     }
 
-    if (isInline) {
+    if (inline) {
       AssetSource.setSource(sourceRequest, entryAsset, content);
       return null;
     }
@@ -837,13 +836,16 @@ class AssetCompiler {
           sourceFile,
           outputPath,
         } = item;
+
         if (isEntry) {
           const entry = AssetEntry.get(item.name);
           verboseEntry(entry);
         } else if (isScript) {
+          const posixSourceFile = isWin ? pathToPosix(sourceFile) : sourceFile;
+          const assetFile = scriptStore.files.find(({ file }) => file === posixSourceFile)?.chunkFiles;
           verboseExtractModule({
             sourceFile,
-            assetFile: scriptStore.files.find(({ file }) => file === sourceFile).chunkFiles,
+            assetFile,
             issuers: [issuerFile],
             outputPath,
             header: item.header,
@@ -895,11 +897,12 @@ class AssetCompiler {
   resolveOutputFilename(filename, outputPath) {
     if (!outputPath) return filename;
 
-    const relativeOutputPath = path.isAbsolute(outputPath)
+    let relativeOutputPath = path.isAbsolute(outputPath)
       ? path.relative(this.webpackOutputPath, outputPath)
       : outputPath;
 
     if (relativeOutputPath) {
+      if (isWin) relativeOutputPath = pathToPosix(relativeOutputPath);
       filename = path.posix.join(relativeOutputPath, filename);
     }
 

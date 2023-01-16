@@ -50,12 +50,12 @@ class VMScript {
     try {
       const script = new vm.Script(source, { filename: templateFile });
       script.runInContext(this.contextObject);
+
+      return this.contextObject[this.templateName](locals);
     } catch (error) {
       Dependency.watch();
       executeTemplateFunctionException(error, templateFile);
     }
-
-    return this.contextObject[this.templateName](locals);
   }
 }
 
