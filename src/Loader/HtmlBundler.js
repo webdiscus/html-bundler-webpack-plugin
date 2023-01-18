@@ -306,6 +306,7 @@ class HtmlBundler {
   /**
    * Whether link tag load a style or other assets.
    *
+   * <link href="style.css" type="text/css" />            => true
    * <link href="style.css" rel="stylesheet" />           => true
    * <link href="basic.css" rel="alternate stylesheet" /> => true
    * <link href="favicon.ico" rel="icon"  />              => false
@@ -315,7 +316,7 @@ class HtmlBundler {
    * @return {boolean}
    */
   static isStyle(tag) {
-    return /rel=".*stylesheet.*"/.test(tag);
+    return /rel=".*stylesheet.*"/.test(tag) || /type="text\/css"/.test(tag);
   }
 }
 

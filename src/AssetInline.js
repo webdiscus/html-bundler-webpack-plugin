@@ -2,43 +2,73 @@ const path = require('path');
 const { isWin } = require('./Utils');
 
 /**
- * Parse tag attributes in a string.
- *
- * @param {string} string
+ * @param {{key: string, value: string}} attrs
  * @param {Array<string>} exclude The list of excluded attributes from result.
- * @returns {Object<key: string, value: string>} The parsed attributes as object key:value.
+ * @return {string}
  */
-const parseAttributes = (string, exclude = []) => {
-  let attrPaars = string.replace(/\n/g, ' ').split('=');
-  let keys = [];
-  let values = [];
-  let attrs = {};
-
-  for (let str of attrPaars) {
-    let quoteStartPos = str.indexOf('"');
-    let quoteEndPos = str.lastIndexOf('"');
-
-    if (quoteStartPos < 0) {
-      keys.push(str.trim());
-    } else {
-      let value = str.slice(quoteStartPos + 1, quoteEndPos).trim();
-      let key = str.slice(quoteEndPos + 1).trim();
-      if (value) values.push(value);
-      if (key) keys.push(key);
+const attrsToString = (attrs, exclude = []) => {
+  let res = '';
+  for (const key in attrs) {
+    if (exclude.indexOf(key) < 0) {
+      res += ` ${key}="${attrs[key]}"`;
     }
   }
 
-  for (let i = 0; i < keys.length; i++) {
-    let key = keys[i];
-    let value = values[i];
+  return res;
+};
 
-    if (value !== '' && !exclude.find((item) => key.startsWith(item))) {
-      attrs[key] = value;
-    }
+/**
+ * Parse tag attributes in a tag string.
+ *
+ * @param {string} string
+ * @returns {Object<key: string, value: string>} The parsed attributes as object key:value.
+ */
+const parseAttributes = (string) => {
+  let attrs = {};
+  const matches = string.matchAll(/([^\s]+)="(.+?)"/gm);
+  for (const [, key, val] of matches) {
+    attrs[key] = val;
   }
 
   return attrs;
 };
+
+/**
+ * Parse values in HTML.
+ *
+ * @param {string} content The HTML content.
+ * @param {string} value The value to parse.
+ * @return {Array<{value: string, attrs: {}, tagStartPos: number, tagEndPos: number, valueStartPos: number, valueEndPos: number}>}
+ */
+const parseValues = (content, value) => {
+  const valueLen = value.length;
+  let valueStartPos = 0;
+  let valueEndPos = 0;
+  let result = [];
+
+  while ((valueStartPos = content.indexOf(value, valueStartPos)) >= 0) {
+    valueEndPos = valueStartPos + valueLen;
+
+    let tagStartPos = valueStartPos;
+    let tagEndPos = content.indexOf('>', valueEndPos) + 1;
+    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
+
+    result.push({
+      value,
+      attrs: parseAttributes(content.slice(tagStartPos, tagEndPos)),
+      tagStartPos,
+      tagEndPos,
+      valueStartPos,
+      valueEndPos,
+    });
+
+    valueStartPos = valueEndPos;
+  }
+
+  return result;
+};
+
+const comparePos = (a, b) => a.valueStartPos - b.valueStartPos;
 
 class AssetInline {
   static data = new Map();
@@ -172,7 +202,7 @@ class AssetInline {
     const innerSVG = svg.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
 
     // encode reserved chars in data URL for IE 9-11 (enable if needed)
-    //const reservedChars = /["#%{}<>]/g;
+    // const reservedChars = /["#%{}<>]/g;
     // const charReplacements = {
     //   '"': "'",
     //   '#': '%23',
@@ -211,61 +241,52 @@ class AssetInline {
 
     const RawSource = compilation.compiler.webpack.sources.RawSource;
     const NL = '\n';
-    const excludeTags = ['link'];
 
-    // resulting HTML files
     for (const assetFile of this.inlineSvgIssueAssets) {
       const asset = compilation.assets[assetFile];
       if (!asset) continue;
 
-      let html = asset.source();
+      const html = asset.source();
+      const headPos = html.indexOf('<head');
+      const headEndPos = html.indexOf('</head>');
+      const hasHead = headPos >= 0 && headEndPos > headPos;
+      let results = [];
 
-      // inline assets in HTML
+      // parse all inline SVG images in HTML
       for (let [sourceFile, item] of this.data) {
         if (!item.inlineSvg || !item.inlineSvg.assets.has(assetFile)) continue;
+        results = [...results, ...parseValues(html, sourceFile)];
+      }
+      results.sort(comparePos);
 
-        const [filename] = path.basename(sourceFile).split('?', 1);
-        const cache = item.cache;
+      // compile parsed data to HTML with inlined SVG
+      const excludeAttrs = ['src', 'href', 'xmlns', 'alt'];
+      let output = '';
+      let pos = 0;
 
-        // replace all asset tags with svg content
-        // start replacing in body, ignore head
-        let offset = html.indexOf('<body');
-        let srcPos;
-        while ((srcPos = html.indexOf(sourceFile, offset)) >= 0) {
-          // find tag `<img src="sourceFile">` with inline asset
-          let tagStartPos = srcPos;
-          let tagEndPos = srcPos + sourceFile.length;
-          while (tagStartPos >= 0 && html.charAt(--tagStartPos) !== '<') {}
-          tagEndPos = html.indexOf('>', tagEndPos);
+      for (let { value, attrs, tagStartPos, tagEndPos, valueStartPos, valueEndPos } of results) {
+        const { cache } = this.data.get(value);
 
-          // reserved feat: ignore replacing of a tag
-          // const tag = html.slice(tagStartPos + 1, html.indexOf(' ', tagStartPos + 3));
-          // if (excludeTags.indexOf(tag) >= 0) {
-          //   offset = tagEndPos;
-          //   continue;
-          // }
+        if (hasHead && tagStartPos < headEndPos) {
+          // in head inline as data URL
+          output += html.slice(pos, valueStartPos) + cache.dataUrl;
+          pos = valueEndPos;
+        } else {
+          // in body inline as SVG tag
+          attrs = { ...cache.svgAttrs, ...attrs };
+          const attrsString = attrsToString(attrs, [...excludeAttrs, 'title']);
+          const [filename] = path.basename(value).split('?', 1);
+          const titleStr = 'title' in attrs ? attrs['title'] : 'alt' in attrs ? attrs['alt'] : null;
+          const title = titleStr ? `<title>${titleStr}</title>` : '';
+          const inlineSvg = `${NL}<!-- inline: ${filename} -->${NL}<svg${attrsString}>${title}${cache.innerSVG}</svg>${NL}`;
 
-          // parse image attributes
-          let tagAttrsString = html.slice(html.indexOf(' ', tagStartPos), tagEndPos);
-          let tagAttrs = parseAttributes(tagAttrsString);
-          delete tagAttrs['src'];
-
-          // merge svg attributes with tag attributes
-          let attrs = Object.assign({}, cache.svgAttrs, tagAttrs);
-          let attrsString = '';
-          for (let key in attrs) {
-            attrsString += ' ' + key + '="' + attrs[key] + '"';
-          }
-
-          const inlineSvg =
-            NL + `<!-- inline: ${filename} -->` + NL + '<svg' + attrsString + '>' + cache.innerSVG + '</svg>' + NL;
-
-          offset = tagStartPos + inlineSvg.length;
-          html = html.slice(0, tagStartPos) + inlineSvg + html.slice(tagEndPos + 1);
+          output += html.slice(pos, tagStartPos) + inlineSvg;
+          pos = tagEndPos;
         }
       }
 
-      compilation.assets[assetFile] = new RawSource(html);
+      output += html.slice(pos);
+      compilation.assets[assetFile] = new RawSource(output);
     }
   }
 }

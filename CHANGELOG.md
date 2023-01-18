@@ -1,5 +1,10 @@
 # Change log
 
+## 0.3.0 (2023-01-18)
+- feat: inline binary images, e.g. PNG
+- feat: inline SVG images
+- fix: resolve href in the `<link>` tag with the attribute `type="text/css"` as the style file
+
 ## 0.2.1 (2023-01-16)
 - fix: resolving inlined styles on windows
 

@@ -570,17 +570,21 @@ describe('inline images', () => {
     compareFileListAndContent(PATHS, 'inline-asset-exclude-svg-fonts', done);
   });
 
-  describe('inline styles & scripts', () => {
-    test('inline style using URL query `?inline` and resolve url() in CSS', (done) => {
-      compareFileListAndContent(PATHS, 'inline-style-query', done);
-    });
+  test('inline-asset-svg-favicon', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-svg-favicon', done);
+  });
+});
 
-    test('inline style with source map using URL query `?inline`', (done) => {
-      compareFileListAndContent(PATHS, 'inline-style-query-with-source-map', done);
-    });
+describe('inline styles & scripts', () => {
+  test('inline style using URL query `?inline` and resolve url() in CSS', (done) => {
+    compareFileListAndContent(PATHS, 'inline-style-query', done);
+  });
 
-    test('inline script using URL query `?inline`', (done) => {
-      compareFileListAndContent(PATHS, 'inline-script-query', done);
-    });
+  test('inline style with source map using URL query `?inline`', (done) => {
+    compareFileListAndContent(PATHS, 'inline-style-query-with-source-map', done);
+  });
+
+  test('inline script using URL query `?inline`', (done) => {
+    compareFileListAndContent(PATHS, 'inline-script-query', done);
   });
 });

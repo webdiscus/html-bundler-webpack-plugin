@@ -47,21 +47,15 @@ module.exports = {
       // images
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
-        },
-      },
-
-      // inline images: png or svg icons with size < 2 KB
-      {
-        test: /\.(png|svg)$/i,
+        // auto inline by image size
         type: 'asset',
-        exclude: /favicon/, // don't inline favicon
         parser: {
           dataUrlCondition: {
-            maxSize: 2048, // 2kb
+            maxSize: 1024,
           },
+        },
+        generator: {
+          filename: 'assets/img/[name].[hash:8][ext]',
         },
       },
     ],

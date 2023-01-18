@@ -119,6 +119,7 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 4. [Recipes](#recipes)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
+   - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to preload source fonts in HTML](#recipe-preload-fonts)
    - [How to use HMR live reload](#recipe-hmr)
@@ -419,12 +420,49 @@ The generated HTML contains inline JS already compiled via Webpack:
 </html>
 ```
 
+<a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
+## How to inline SVG, PNG images in HTML
+
+You can inline images in two ways:
+- inline image using `?inline` query
+- auto inline by image size
+
+Add to Webpack config the rule:
+```js
+module: {
+  rules: [
+    {
+      test: /\.(png|jpe?g|svg|webp|ico)$/i,
+      oneOf: [
+        // inline image using `?inline` query
+        {
+          resourceQuery: /inline/,
+          type: 'asset/inline',
+        },
+        // auto inline by image size
+        {
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 1024,
+            },
+          },
+          generator: {
+            filename: 'assets/img/[name].[hash:8][ext]',
+          },
+        },
+      ],
+    },
+  ],
+}
+```
+
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
 ## How to use source images in HTML
 
 Add to Webpack config the rule:
 ```js
- module: {
+module: {
   rules: [
     {
       test: /\.(png|jpe?g|ico)/,
@@ -434,6 +472,7 @@ Add to Webpack config the rule:
       },
     },
   ],
+}
 ```
 
 Add a source file using a relative path or Webpack alias in HTML:
@@ -471,7 +510,7 @@ The generated HTML contains hashed output images filenames:
 
 Add to Webpack config the rule:
 ```js
- module: {
+module: {
   rules: [
     {
       test: /\.(eot|ttf|woff|woff2)/,
@@ -481,6 +520,7 @@ Add to Webpack config the rule:
       },
     },
   ],
+}
 ```
 
 Add a source file using a relative path or Webpack alias in HTML:

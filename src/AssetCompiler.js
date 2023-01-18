@@ -823,6 +823,7 @@ class AssetCompiler {
    */
   done(stats) {
     // display verbose after rendering of all modules
+    // TODO: distinct verbose data to reduce display info of same assets loaded in many issuers
     if (verboseList.size > 0) {
       for (let item of verboseList) {
         const {
