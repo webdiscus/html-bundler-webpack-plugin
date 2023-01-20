@@ -1,5 +1,15 @@
 # Change log
 
+## 0.4.0 (2023-01-20)
+- feat: added support for `<input>` `<audio>` `<video>` `<track>` tags
+- fix: automatic publicPath must be empty string when used HMR
+- fix: corrupted inline JS code when code contains '$$' chars chain
+
+## 0.3.1 (2023-01-19)
+- refactor: optimize parsing of source
+- chore: update dev packages
+- docs: update readme
+
 ## 0.3.0 (2023-01-18)
 - feat: inline binary images, e.g. PNG
 - feat: inline SVG images

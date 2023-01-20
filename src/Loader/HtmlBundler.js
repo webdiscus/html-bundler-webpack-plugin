@@ -13,7 +13,7 @@ class HtmlBundler {
    */
   static compile(html, issuer) {
     const tags = this.parseTags(html);
-    const result = this.optimizeParsedTags(tags);
+    const result = this.normalizeTagsList(tags);
     let output = '';
     let pos = 0;
 
@@ -51,11 +51,12 @@ class HtmlBundler {
    * Resolve relative path: href="./basic.css", href="../basic.css"
    * Resolve alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
    *
-   * Ignore URLs:
+   * Ignore:
    *  - https://example.com/style.css
    *  - http://example.com/style.css
    *  - //style.css
    *  - /style.css
+   *  - javascript:alert('hello')
    *
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} file The source file of resource.
@@ -63,7 +64,7 @@ class HtmlBundler {
    * @return {string|boolean} Return resolved full path of source file or false
    */
   static resolve({ type, file, issuer }) {
-    if (/^(?:https?:)?(?:\/{1,2})/.test(file)) {
+    if (/^(?:https?:)?(?:\/{1,2})/.test(file) || file.startsWith('javascript:')) {
       return false;
     }
 
@@ -94,7 +95,7 @@ class HtmlBundler {
    * @param {Array<{}>} tags
    * @return {Array<{}>}
    */
-  static optimizeParsedTags(tags) {
+  static normalizeTagsList(tags) {
     const result = [];
 
     for (let { type, startPos: tagStartPos, endPos: tagEndPos, attrs } of tags) {
@@ -137,16 +138,37 @@ class HtmlBundler {
   /**
    * Parse all possible tags containing source resources.
    *
+   * Note: following outdated tags will be not supported
+   * - <embed type="image/jpg" src="..."> => better to use the <img src="...">
+   * - <embed type="video/webm" src="..."> => better to use the <video src="...">
+   * - <embed type="audio/mpeg" src="..."> => better to use the <audio src="...">
+   *
    * @param {string} content
    * @return {Array<{}>}
    */
   static parseTags(content) {
-    const links = this.parseTag(content, { tagName: 'link', attrs: ['href'] });
-    const scripts = this.parseTag(content, { tagName: 'script', attrs: ['src'] });
-    const images = this.parseTag(content, { tagName: 'img', attrs: ['src', 'srcset'] });
-    const sourceImages = this.parseTag(content, { tagName: 'source', attrs: ['srcset'] });
+    const tagsList = [
+      { tag: 'link', attrs: ['href', 'imagesrcset'] }, // `imagesrcset` is for rel="preload" and as="image" only
+      { tag: 'script', attrs: ['src'] },
+      { tag: 'img', attrs: ['src', 'srcset'] },
+      { tag: 'input', attrs: ['src'] }, // type="image"
+      { tag: 'source', attrs: ['src', 'srcset'] },
+      { tag: 'audio', attrs: ['src'] },
+      { tag: 'track', attrs: ['src'] },
+      { tag: 'video', attrs: ['src', 'poster'] },
+      // { tag: 'object', attrs: ['data'] }, // reserved for the future
+    ];
 
-    return [...links, ...scripts, ...images, ...sourceImages].sort(comparePos);
+    let result = [];
+    for (let item of tagsList) {
+      const parsedTags = this.parseTag(content, item);
+
+      if (parsedTags.length > 0) {
+        result = result.concat(parsedTags);
+      }
+    }
+
+    return result.sort(comparePos);
   }
 
   /**
@@ -168,12 +190,12 @@ class HtmlBundler {
    * Note: don't parse resource in style, like <div style="background-image: url(image.png)">.
    *
    * @param {string} content
-   * @param {string} tagName
+   * @param {string} tag
    * @param {string | Array<string>} attrs
    * @return {Array<{}> | boolean}
    */
-  static parseTag(content, { tagName, attrs = [] }) {
-    const open = `<${tagName} `;
+  static parseTag(content, { tag, attrs = [] }) {
+    const open = `<${tag} `;
     const close = '>';
     let startPos = 0;
     let endPos = 0;
@@ -183,19 +205,22 @@ class HtmlBundler {
     while ((startPos = content.indexOf(open, startPos)) >= 0) {
       let attrValues = [];
       endPos = content.indexOf(close, startPos) + close.length;
-      if (endPos < 1) throw new Error(`The '${tagName}' tag hasn't the close '>' char.`);
 
-      const tagSource = content.slice(startPos, endPos);
+      if (endPos < 1) {
+        throw new Error(`The '${tag}' tag hasn't the close '>' char.`);
+      }
+
+      const source = content.slice(startPos, endPos);
       let type = 'asset';
 
-      if (tagName === 'script') {
+      if (tag === 'script') {
         type = 'script';
-      } else if (tagName === 'link' && this.isStyle(tagSource)) {
+      } else if (tag === 'link' && this.isStyle(source)) {
         type = 'style';
       }
 
       for (let attr of attrs) {
-        let value = attr === 'srcset' ? this.parseSrcset(tagSource) : this.parseAttr(tagSource, attr);
+        let value = attr === 'srcset' ? this.parseSrcset(source) : this.parseAttr(source, attr);
         value !== false && attrValues.push(value);
       }
 
@@ -205,8 +230,8 @@ class HtmlBundler {
       }
 
       result.push({
-        tagName,
-        tagSource,
+        tag,
+        source,
         type,
         attrs: attrValues,
         startPos,
@@ -220,39 +245,39 @@ class HtmlBundler {
   }
 
   /**
-   * @param {string} tagSource The source code of an HTML tag.
+   * @param {string} source The source code of an HTML tag.
    * @param {string} attr The attribute to parse value.
    * @return {{attr: string, value: string, startPos: number, endPos: number}|boolean}
    */
-  static parseAttr(tagSource, attr) {
+  static parseAttr(source, attr) {
     const open = `${attr}="`;
-    let startPos = tagSource.indexOf(open);
+    let startPos = source.indexOf(open);
 
     if (startPos < 0) return false;
 
     startPos += open.length;
 
-    const endPos = tagSource.indexOf('"', startPos);
-    const value = tagSource.slice(startPos, endPos);
+    const endPos = source.indexOf('"', startPos);
+    const value = source.slice(startPos, endPos);
 
     return { attr, value, startPos, endPos };
   }
 
   /**
-   * @param {string} tagSource The source code of an HTML tag.
+   * @param {string} source The source code of an HTML tag.
    * @return {{attr: string, value: Array<{}>, startPos: number, endPos: number}|boolean}
    */
-  static parseSrcset(tagSource) {
+  static parseSrcset(source) {
     const attr = 'srcset';
     const open = `${attr}="`;
-    let startPos = tagSource.indexOf(open);
+    let startPos = source.indexOf(open);
 
     if (startPos < 0) return false;
 
     startPos += open.length;
 
-    const endPos = tagSource.indexOf('"', startPos);
-    const srcset = tagSource.slice(startPos, endPos);
+    const endPos = source.indexOf('"', startPos);
+    const srcset = source.slice(startPos, endPos);
     const value = this.parseSrcsetValue(srcset);
 
     return { attr, value, startPos, endPos };
@@ -307,10 +332,7 @@ class HtmlBundler {
    * Whether link tag load a style or other assets.
    *
    * <link href="style.css" type="text/css" />            => true
-   * <link href="style.css" rel="stylesheet" />           => true
-   * <link href="basic.css" rel="alternate stylesheet" /> => true
-   * <link href="favicon.ico" rel="icon"  />              => false
-   * <link href="myFont.woff2" rel="preload" />           => false
+   * <link href="style.css" rel="alternate stylesheet" /> => true
    *
    * @param {string} tag The tag with attributes.
    * @return {boolean}

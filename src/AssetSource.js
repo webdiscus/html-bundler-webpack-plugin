@@ -53,8 +53,12 @@ class AssetSource {
         const asset = compilation.assets[assetFile];
         if (!asset) continue;
 
-        let html = asset.source().replace(sourceFile, source);
-        compilation.assets[assetFile] = new RawSource(html);
+        const content = asset.source();
+        const pos = content.indexOf(sourceFile);
+        if (pos > -1) {
+          const newContent = content.slice(0, pos) + source + content.slice(pos + sourceFile.length);
+          compilation.assets[assetFile] = new RawSource(newContent);
+        }
       }
     }
   }

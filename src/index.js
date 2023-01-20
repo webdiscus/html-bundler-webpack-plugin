@@ -51,16 +51,16 @@ class Plugin extends AssetCompiler {
   /**
    * Override abstract method.
    *
-   * @param {string} content
+   * @param {Compilation} compilation The instance of the webpack compilation.
    * @param {string} sourceFile
-   * @return {string}
+   * @param {string} assetFile
+   * @param {string} source
+   * @return {string|undefined}
    */
-  afterCompile(content, sourceFile) {
-    if (this.options.minify === true && this.isEntry(sourceFile) && typeof content === 'string') {
-      // TODO: minify HTML
+  afterProcess(compilation, { sourceFile, assetFile, source }) {
+    if (this.options.minify === true && sourceFile && this.isEntry(sourceFile) && typeof source === 'string') {
+      // TODO: minify source
     }
-
-    return content;
   }
 }
 

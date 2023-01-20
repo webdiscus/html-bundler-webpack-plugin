@@ -43,6 +43,18 @@ class AssetScript {
   }
 
   /**
+   * Find source file by its asset file.
+   *
+   * @param {string} assetFile The asset file.
+   * @return {string|null} The source file.
+   */
+  static findSourceFile(assetFile) {
+    const result = scriptStore.getAll().find(({ chunkFiles }) => chunkFiles.indexOf(assetFile) > -1);
+
+    return result ? result.file : null;
+  }
+
+  /**
    * @param {string} file The source file of script.
    * @return {string } Return unique assetFile
    */
@@ -142,16 +154,20 @@ class AssetScript {
         const assetFile = Asset.getOutputFile(chunkFile, issuerFile);
 
         if (asset.inline === true) {
-          const source = assets[assetFile].source();
-          newContent = content.replace(sourceFile, source);
-          trashFiles.add(assetFile);
+          const source = assets[chunkFile].source();
+          const pos = content.indexOf(sourceFile);
+          if (pos > -1) {
+            // note: the str.replace(searchValue, replaceValue) is buggy when the replaceValue contains chars chain '$$'
+            newContent = content.slice(0, pos) + source + content.slice(pos + sourceFile.length);
+            trashFiles.add(assetFile);
+          }
         } else {
           newContent = content.replace(sourceFile, assetFile);
           realSplitFiles.add(chunkFile);
         }
 
-        // add verbose info
-        asset.chunkFiles = assetFile;
+        // set asset filename
+        asset.chunkFiles = [assetFile];
       } else {
         // extract original script tag with all attributes for usage it as template for chunks
         let srcStartPos = content.indexOf(sourceFile);
@@ -184,7 +200,7 @@ class AssetScript {
           newContent = content.slice(0, tagStartPos) + scriptTags + content.slice(tagEndPos);
         }
 
-        // add verbose info
+        // set asset filename
         asset.chunkFiles = chunkFiles;
       }
 

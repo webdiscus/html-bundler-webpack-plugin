@@ -155,11 +155,11 @@ describe('parse tags unit tests', () => {
   test('parse single tag img', (done) => {
     //const html = `<img src="img1.png" alt="logo"><img src="img1.png" srcset="img2.png 100w, img3.png 500w, img4.png 1000w">`;
     const html = `<img src="img1.png" alt="logo">`;
-    const received = HtmlBundler.parseTag(html, { tagName: 'img', attrs: ['src'] });
+    const received = HtmlBundler.parseTag(html, { tag: 'img', attrs: ['src'] });
     const expected = [
       {
-        tagName: 'img',
-        tagSource: '<img src="img1.png" alt="logo">',
+        tag: 'img',
+        source: '<img src="img1.png" alt="logo">',
         type: 'asset',
         startPos: 0,
         endPos: 31,
@@ -200,8 +200,8 @@ describe('parse tags unit tests', () => {
     const received = HtmlBundler.parseTags(html);
     const expected = [
       {
-        tagName: 'script',
-        tagSource: '<script src="./main.js" />',
+        tag: 'script',
+        source: '<script src="./main.js" />',
         type: 'script',
         startPos: 23,
         endPos: 49,
@@ -215,8 +215,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'link',
-        tagSource: '<link href="./style.css" rel="stylesheet" />',
+        tag: 'link',
+        source: '<link href="./style.css" rel="stylesheet" />',
         type: 'style',
         startPos: 55,
         endPos: 99,
@@ -230,8 +230,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'link',
-        tagSource: '<link href="./basic.css" rel="alternate stylesheet" />',
+        tag: 'link',
+        source: '<link href="./basic.css" rel="alternate stylesheet" />',
         type: 'style',
         startPos: 105,
         endPos: 159,
@@ -245,8 +245,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'link',
-        tagSource: '<link href="./favicon.ico" rel="icon" />',
+        tag: 'link',
+        source: '<link href="./favicon.ico" rel="icon" />',
         type: 'asset',
         startPos: 165,
         endPos: 205,
@@ -260,8 +260,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'link',
-        tagSource: '<link href="./my-font.woff2" rel="preload" as="font" type="font/woff2" />',
+        tag: 'link',
+        source: '<link href="./my-font.woff2" rel="preload" as="font" type="font/woff2" />',
         type: 'asset',
         startPos: 211,
         endPos: 284,
@@ -275,8 +275,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'source',
-        tagSource: '<source srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">',
+        tag: 'source',
+        source: '<source srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">',
         type: 'asset',
         startPos: 340,
         endPos: 402,
@@ -306,8 +306,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'img',
-        tagSource: '<img src="./apple.png" alt="apple">',
+        tag: 'img',
+        source: '<img src="./apple.png" alt="apple">',
         type: 'asset',
         startPos: 408,
         endPos: 443,
@@ -321,8 +321,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'img',
-        tagSource: '<img srcset="./lime1.png, ./lime2.png 100w, ./lime3.png 1.5x" src="./lime.png">',
+        tag: 'img',
+        source: '<img srcset="./lime1.png, ./lime2.png 100w, ./lime3.png 1.5x" src="./lime.png">',
         type: 'asset',
         startPos: 484,
         endPos: 563,
@@ -358,8 +358,8 @@ describe('parse tags unit tests', () => {
         ],
       },
       {
-        tagName: 'source',
-        tagSource: '<source srcset="./plum.webp" type="image/webp" />',
+        tag: 'source',
+        source: '<source srcset="./plum.webp" type="image/webp" />',
         type: 'asset',
         startPos: 569,
         endPos: 618,
@@ -404,7 +404,7 @@ describe('parse tags unit tests', () => {
 </html>
  `;
     const tags = HtmlBundler.parseTags(html);
-    const received = HtmlBundler.optimizeParsedTags(tags);
+    const received = HtmlBundler.normalizeTagsList(tags);
     const expected = [
       {
         type: 'script',

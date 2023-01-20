@@ -122,6 +122,21 @@ class Asset {
   }
 
   /**
+   * Find source file by its asset file.
+   *
+   * @param {string} assetFile The asset file.
+   * @return {string|null} The source file.
+   */
+  static findSourceFile(assetFile) {
+    const entries = this.files.entries();
+    for (let [sourceFile, value] of entries) {
+      if (value === assetFile) return sourceFile;
+    }
+
+    return null;
+  }
+
+  /**
    * @param {string} sourceFile
    * @param {string} assetFile
    * @return {{isCached: boolean, filename: string}}
