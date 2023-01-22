@@ -1,5 +1,10 @@
 # Change log
 
+## 0.5.0 (2023-01-22)
+- feat: add plugin option `test` to process entry files that pass test assertion
+- feat: add loader option `preprocessor` to allows pre-processing of content before handling
+- docs: update readme with new features
+
 ## 0.4.0 (2023-01-20)
 - feat: added support for `<input>` `<audio>` `<video>` `<track>` tags
 - fix: automatic publicPath must be empty string when used HMR

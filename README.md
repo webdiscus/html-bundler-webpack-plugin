@@ -3,11 +3,13 @@
         <img height="120" src="https://user-images.githubusercontent.com/30186107/29488525-f55a69d0-84da-11e7-8a39-5476f663b5eb.png">
         <img height="120" src="https://webpack.js.org/assets/icon-square-big.svg">
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin"><br>
-        HTML bundler Webpack Plugin
+        HTML Bundler Plugin for Webpack
         </a>
     </h1>
+    <div>HTML Bundler Plugin is the right way to bundle all resources with your HTML files</div>
 </div>
 
+---
 [![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen "npm package")](https://www.npmjs.com/package/html-bundler-webpack-plugin "download npm package")
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/html-bundler-webpack-plugin/peer/webpack)](https://webpack.js.org/)
@@ -17,23 +19,21 @@ from their sources loaded directly in HTML using tags
 and replaces the source filenames with output hashed version of the files.
 The plugin enable to use an HTML file as entry-point in Webpack.
 
-How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`; 
-
-> **Note**
->
-> The purpose of this plugin is to make the developer's life much easier than it was using 
-> `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
-
-
-This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML`
-file.
+The purpose of this plugin is to make the developer's life much easier than it was using 
+ `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
 
 💡 **Highlights**:
 
 - Define your HTML pages in Webpack entry.
 - The HTML file is the entry-point for all source scripts and styles.
-- Source scripts and styles should be loaded directly in HTML using tags.
-- All JS and CSS files will be extracted from their sources specified in HTML tags.
+- Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
+- All JS and CSS files will be extracted from their sources loaded in HTML tags.
+- You can very easy inline JS, CSS, SVG, images w/o additional plugin and loaders.
+
+This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML`
+file.
+
+How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`;
 
 ### Simple usage example
 Add the HTML files in the Webpack entry:
@@ -95,12 +95,16 @@ The generated HTML contains hashed output CSS and JS filenames:
 1. [Install and Quick start](#install)
 2. [Features](#features)
 3. [Plugin options](#plugin-options)
+3. [Loader options](#loader-options)
 4. [Recipes](#recipes)
+   - [How to use source images in HTML](#recipe-use-images-in-html)
+   - [How to preload source fonts in HTML](#recipe-preload-fonts)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
-   - [How to use source images in HTML](#recipe-use-images-in-html)
-   - [How to preload source fonts in HTML](#recipe-preload-fonts)
+   - [How to use a template engine, e.g. Handlebars](#recipe-template-engine)
+   - [How to pass data into template](#recipe-pass-data)
+   - [How to pass different data in multipage configuration](#recipe-pass-data-multipage)
    - [How to use HMR live reload](#recipe-hmr)
 
 <a id="features" name="features" href="#features"></a>
@@ -214,7 +218,13 @@ module.exports = {
 
 ### `verbose`
 Type: `boolean` Default: `false`<br>
-Display the file information at processing.
+Display information about extracted files.
+
+### `test`
+Type: `RegExp` Default: `/\.html$/`<br>
+The `test` option allows то handel only those entry points that match their source filename.
+
+For example, if you has `*.html` and `*.hbs` entry points, then you can set the option to match all needed files: `test: /\.(html|hbs)$/`.
 
 <a id="plugin-option-outputPath" name="plugin-option-outputPath" href="#plugin-option-outputPath"></a>
 ### `outputPath`
@@ -243,7 +253,6 @@ Default properties:
 ```js
 {
   test: /\.(css|scss|sass|less|styl)$/,
-  enabled: true,
   verbose: false,
   filename: '[name].css',
   outputPath: null,
@@ -298,11 +307,7 @@ Default properties:
 ```
 The `filename` property see by [filename option](#plugin-option-filename).
 The `outputPath` property see by [outputPath option](#plugin-option-outputPath).
-
-> **Note**
->
-> - the extract `js` module is always enabled
-> - the `test` property not exist because all loaded scripts are automatically detected
+The `test` property not exist because all JS files loaded in `<script>` tag are automatically detected.
 
 The option to extract JS from a script source file loaded in the HTML tag:
 ```html
@@ -329,134 +334,83 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
-
 ---
 
-<a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
-## How to inline CSS in HTML
+<a id="loader-options" name="loader-options" href="#loader-options"></a>
+## Loader options
 
-For example, the _style.scss_:
-```scss
-$color: red;
-h1 {
-  color: $color;
-}
+### `preprocessor`
+Type:
+```
+type preprocessor = (
+  content: string,
+  loaderContext: LoaderContext
+) => HTMLElement;
 ```
 
-Add the `?inline` query to the source filename which you want to inline:
+Default: `undefined`<br>
+
+The `content` argument is raw content of a file.\
+The `loaderContext` argument is an object contained useful properties, e.g.:
+- `mode` - the Webpack mode: `production`, `development`, `none`
+- `rootContext` - the path to Webpack context
+- `resource` - the template file
+
+Complete API see by the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context).
+
+The preprocessor is called before handling of the content. 
+This function can be used to replace a placeholder with a variable or compile the content with a template engine, e.g. [Handlebars](https://handlebarsjs.com).
+
+For example, set variable in the template
+_index.html_
 ```html
 <html>
-  <head>
-    <!-- load style as file -->
-    <link href="./main.scss" rel="stylesheet" />
-    <!-- inline style -->
-    <link href="./main.scss?inline" rel="stylesheet" />
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
-The generated HTML contains inline CSS already processed via Webpack:
+_Webpack config_
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
 
-```html
-<html>
-  <head>
-    <!-- load style as file -->
-    <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
-    <!-- inline style -->
-    <style>
-      h1{color: red;}
-    </style>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
-</html>
+  entry: {
+    index: './src/index.html',
+  },
+
+  plugins: [new HtmlBundlerPlugin()],
+
+  module: {
+    rules: [
+      {
+        test: /\.html$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (content, loaderContext) => content.replace('{{title}}', 'Homepage'),
+        },
+      },
+    ],
+  },
+};
+
 ```
 
 > **Note**
-> 
-> To enable source map in inline CSS set the Webpack option `devtool: 'source-map'`.
+>
+> The `preprocessor` will be called for each entry file.
+> For multipage configuration, you can use the `loaderContext.resource` property to differentiate data for diverse pages.
+> See the [usage example](#recipe-pass-data-multipage).
 
-<a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
-## How to inline JS in HTML
-
-For example, the _main.js_:
-```js
-console.log('Hello JS!');
-```
-
-Add the `?inline` query to the source filename which you want to inline:
-```html
-<html>
-  <head>
-    <!-- load script as file -->
-    <script src="./main.js" defer="defer"></script>
-    <!-- inline script -->
-    <script src="./main.js?inline"></script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
-</html>
-```
-
-The generated HTML contains inline JS already compiled via Webpack:
-
-```html
-<html>
-  <head>
-    <!-- load style as file -->
-    <script src="assets/js/main.992ba657.js" defer="defer"></script>
-    <!-- inline script -->
-    <script>
-      (()=>{"use strict";console.log("Hello JS!")})();
-    </script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
-</html>
-```
-
-<a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
-## How to inline SVG, PNG images in HTML
-
-You can inline images in two ways:
-- force inline image using `?inline` query
-- auto inline by image size
-
-Add to Webpack config the rule:
-```js
-module: {
-  rules: [
-    {
-      test: /\.(png|jpe?g|svg|webp|ico)$/i,
-      oneOf: [
-        // inline image using `?inline` query
-        {
-          resourceQuery: /inline/,
-          type: 'asset/inline',
-        },
-        // auto inline by image size
-        {
-          type: 'asset',
-          parser: {
-            dataUrlCondition: {
-              maxSize: 1024,
-            },
-          },
-          generator: {
-            filename: 'assets/img/[name].[hash:8][ext]',
-          },
-        },
-      ],
-    },
-  ],
-}
-```
+---
 
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
 ## How to use source images in HTML
@@ -552,8 +506,376 @@ The generated HTML contains output fonts filenames:
 
 > **Note**
 > 
-> Now you don't need a plugin to copy files from source directory to public.
+> You don't need a plugin to copy files from source directory to public.
 
+
+<a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
+## How to inline CSS in HTML
+
+For example, the _style.scss_:
+```scss
+$color: red;
+h1 {
+  color: $color;
+}
+```
+
+Add the `?inline` query to the source filename which you want to inline:
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <link href="./main.scss" rel="stylesheet" />
+    <!-- inline style -->
+    <link href="./style.scss?inline" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+The generated HTML contains inline CSS already processed via Webpack:
+
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <link href="/assets/css/main.05e4dd86.css" rel="stylesheet">
+    <!-- inline style -->
+    <style>
+      h1{color: red;}
+    </style>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+> **Note**
+>
+> To enable source map in inline CSS set the Webpack option `devtool`.
+
+<a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
+## How to inline JS in HTML
+
+For example, the _script.js_:
+```js
+console.log('Hello JS!');
+```
+
+Add the `?inline` query to the source filename which you want to inline:
+```html
+<html>
+  <head>
+    <!-- load script as file -->
+    <script src="./main.js" defer="defer"></script>
+    <!-- inline script -->
+    <script src="./script.js?inline"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+The generated HTML contains inline JS already compiled via Webpack:
+
+```html
+<html>
+  <head>
+    <!-- load style as file -->
+    <script src="assets/js/main.992ba657.js" defer="defer"></script>
+    <!-- inline script -->
+    <script>
+      (()=>{"use strict";console.log("Hello JS!")})();
+    </script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+> **Note**
+>
+> If Webpack is started as `serve` or `watch`,
+> the inlined JS code will contain additional HMR code.
+> Don't worry it is ok, so works Webpack `live reload`.
+>
+> To enable source map in inline JS set the Webpack option `devtool`.
+
+<a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
+## How to inline SVG, PNG images in HTML
+
+You can inline images in two ways:
+- force inline image using `?inline` query
+- auto inline by image size
+
+Add to Webpack config the rule:
+```js
+module: {
+  rules: [
+    {
+      test: /\.(png|jpe?g|svg|webp|ico)$/i,
+      oneOf: [
+        // inline image using `?inline` query
+        {
+          resourceQuery: /inline/,
+          type: 'asset/inline',
+        },
+        // auto inline by image size
+        {
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 1024,
+            },
+          },
+          generator: {
+            filename: 'assets/img/[name].[hash:8][ext]',
+          },
+        },
+      ],
+    },
+  ],
+}
+```
+
+<a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
+## How to use a template engine
+
+For example, using the Handlebars templating engine, there is an
+_index.hbs_
+```html
+<html>
+<head>
+  <title>{{title}}</title>
+</head>
+<body>
+  <h1>{{headline}}</h1>
+  <div>
+    <p>{{firstname}} {{lastname}}</p>
+  </div>
+</body>
+</html>
+```
+
+Add the `preprocessor` option to compile the content with Handlebars.
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Handlebars = require('handlebars');
+module.exports = {
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+
+  entry: {
+    index: './src/views/home/index.hbs',
+  },
+
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.hbs$/, // add the option to match *.hbs files in entry, default is /\.html$/
+    }),
+  ],
+
+  module: {
+    rules: [
+      {
+        test: /\.hbs$/, // must match the files specified in the entry
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          // add the preprocessor function to compile *.hbs files to HTML
+          // you can pass data here to all templates
+          preprocessor: (content, loaderContext) =>
+            Handlebars.compile(content)({
+              title: 'My Title',
+              headline: 'Breaking Bad',
+              firstname: 'Walter',
+              lastname: 'Heisenberg',
+            }),
+        },
+      },
+    ],
+  },
+};
+
+```
+
+<a id="recipe-pass-data" name="recipe-pass-data" href="#recipe-pass-data"></a>
+## How to pass data into template
+
+You can pass variables into template using a template engine, e.g. [Handlebars](https://handlebarsjs.com).
+See the usage example by [How to use a template engine](#recipe-template-engine) or [How to pass different data in multipage configuration](#recipe-pass-data-multipage).
+
+<a id="recipe-pass-data-multipage" name="recipe-pass-data-multipage" href="#recipe-pass-data-multipage"></a>
+## How to pass different data in multipage configuration
+
+For example, you have several pages with variables:
+
+one file has `.html` extension, _first.html_
+```html
+<html>
+<head>
+  <title>{{title}}</title>
+  <link href="./first.scss" rel="stylesheet">
+  <script src="./first.js" defer="defer"></script>
+</head>
+<body>
+  <h1>{{headline}}</h1>
+  <div>
+    <p>{{firstname}} {{lastname}}</p>
+  </div>
+</body>
+</html>
+```
+
+other file has `.hbs` extension, _second.hbs_
+```html
+<html>
+<head>
+  <title>{{title}}</title>
+  <link href="./second.scss" rel="stylesheet">
+  <script src="./second.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Location</h1>
+  <div>
+    <p>{{city}}, {{state}}</p>
+    <img src="./map.png" alt="map" />
+  </div>
+</body>
+</html>
+```
+
+_Webpack config for multipage_
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Handlebars = require('handlebars');
+
+/**
+ * Find template data by template file.
+ *
+ * @param {string} sourceFile
+ * @param {Object} data
+ * @return {Object}
+ */
+const findData = (sourceFile, data) => {
+  for (const [key, value] of Object.entries(data)) {
+    if (sourceFile.endsWith(key)) return value;
+  }
+  return {};
+};
+
+// define template data using a template filename as key
+const entryData = {
+  'src/first.html': {
+    title: 'First page',
+    headline: 'Breaking Bad',
+    firstname: 'Walter',
+    lastname: 'Heisenberg',
+  },
+  'src/second.hbs': {
+    title: 'Second page',
+    city: 'Albuquerque',
+    state: 'New Mexico',
+  },
+};
+
+module.exports = {
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+
+  entry: {
+    // define your templates here
+    first: './src/first.html', // => dist/first.html
+    'route/to/second': './src/second.hbs', // => dist/route/to/second.html
+  },
+
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|hbs)$/, // match all template files
+      js: {
+        filename: 'assets/js/[name].[contenthash:8].js',
+      },
+      css: {
+        filename: 'assets/css/[name].[contenthash:8].css',
+      },
+    }),
+  ],
+
+  module: {
+    rules: [
+      // templates
+      {
+        test: /\.(html|hbs)/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          // the deconstucted 'resource' argument is the template name
+          preprocessor: (content, { resource }) => {
+            // get template variables by template filename
+            const data = findData(resource, entryData);
+            // compile template with specific variables
+            return Handlebars.compile(content)(data);
+          },
+        },
+      },
+      // images
+      {
+        test: /\.(png|svg|jpe?g|webp)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/img/[name].[hash:8][ext]',
+        },
+      },
+    ],
+  },
+};
+
+```
+
+The generated _dist/first.html_
+```html
+<html>
+<head>
+  <title>First page</title>
+  <link href="/assets/css/first.05e4dd86.css" rel="stylesheet">
+  <script src="/assets/js/first.f4b855d8.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Breaking Bad</h1>
+  <div>
+    <p>Walter Heisenberg</p>
+  </div>
+</body>
+</html>
+
+```
+
+The generated _dist/route/to/second.html_
+```html
+<html>
+<head>
+  <title>Second page</title>
+  <link href="/assets/css/second.d8605e4d.css" rel="stylesheet">
+  <script src="/assets/js/second.5d8f4b85.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Location</h1>
+  <div>
+    <p>Albuquerque, New Mexico</p>
+    <img src="assets/img/map.697ef306.png" alt="map" />
+  </div>
+</body>
+</html>
+
+```
 
 <a id="recipe-hmr" name="recipe-hmr" href="#recipe-hmr"></a>
 ## HMR live reload

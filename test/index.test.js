@@ -543,9 +543,19 @@ describe('features tests', () => {
   });
 });
 
-describe('options', () => {
-  test('option-filename-function', (done) => {
+describe('plugin options', () => {
+  test('filename as function', (done) => {
     compareFileListAndContent(PATHS, 'option-filename-function', done);
+  });
+});
+
+describe('loader options', () => {
+  test('preprocessor with handlebars', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
+  });
+
+  test('preprocessor with handlebars for multipage', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-multipage', done);
   });
 });
 

@@ -16,6 +16,7 @@ const compile = function (content, callback) {
   const loaderOptions = loaderContext.getOptions() || {};
   const webpackOptions = loaderContext._compiler.options || {};
   const { rootContext: context, resource, resourcePath: filename, resourceQuery } = loaderContext;
+  const preprocessor = typeof loaderOptions.preprocessor === 'function' ? loaderOptions.preprocessor : null;
   let basedir = loaderOptions.basedir || context;
   let customData = {};
   let compileResult, result;
@@ -47,6 +48,18 @@ const compile = function (content, callback) {
     loaderContext,
     watchFiles: loaderOptions.watchFiles,
   });
+
+  try {
+    if (preprocessor !== null) {
+      content = preprocessor(content, loaderContext);
+    }
+  } catch (error) {
+    const preprocessorError = `[html-bundler-loader] Error in preprocessor!`;
+    const compileError = new Error(error);
+    callback(compileError, preprocessorError);
+
+    return;
+  }
 
   try {
     /** @type {{body: string, dependencies: []}} */
