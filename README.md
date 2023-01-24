@@ -14,68 +14,48 @@
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/html-bundler-webpack-plugin/peer/webpack)](https://webpack.js.org/)
 
-This is a modern plugin that does exactly what you want, automatically extracts JS, CSS, images, fonts
-from their sources loaded directly in HTML using tags 
-and replaces the source filenames with output hashed version of the files.
-The plugin enable to use an HTML file as entry-point in Webpack.
+This is a new powerful plugin that does exactly what you want, automatically extracts JS, CSS, images, fonts
+from their sources loaded directly in HTML.
+The generated HTML contains output hashed filenames of processed source files.
+The plugin allow to use an HTML file or a template as an entry point in Webpack.
 
 The purpose of this plugin is to make the developer's life much easier than it was using 
  `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
 
 💡 **Highlights**:
 
-- Define your HTML pages in Webpack entry.
-- The HTML file is the entry-point for all source scripts and styles.
+- Define your HTML templates in Webpack entry.
+- The HTML template is the entry point for all source scripts and styles.
 - Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
 - All JS and CSS files will be extracted from their sources loaded in HTML tags.
-- You can very easy inline JS, CSS, SVG, images w/o additional plugin and loaders.
+- You can easily inline JS, CSS, SVG, images **without additional plugins and loaders**.
+- You can easily use a template engine, e.g. [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**
 
-This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML`
-file.
+This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
 
 How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`;
 
 ### Simple usage example
-Add the HTML files in the Webpack entry:
 
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  entry: {
-    // define HTML files here
-    index: './src/views/home/index.html', // output dist/index.html
-  },
-  plugins: [
-    // enable processing of HTML files defined in Webpack entry
-    new HtmlBundlerPlugin(),
-  ],
-  module: {
-    rules: [
-      {
-        test: /.html/,
-        loader: HtmlBundlerPlugin.loader, // HTML loader
-      },
-      // ... other rules, e.g. for styles, images, fonts, etc.
-    ],
-  },
-};
-```
-
-Add source scripts and styles directly to HTML using a relative path or Webpack alias:
+Add source scripts, styles, images directly to HTML using a relative path or a Webpack alias:
 
 ```html
 <html>
   <head>
+    <!-- load source style -->
     <link href="./style.scss" rel="stylesheet">
+    <!-- load source script -->
     <script src="./main.js" defer="defer"></script>
   </head>
   <body>
     <h1>Hello World!</h1>
+    <!-- @images is the Webpack alias for the source images directory -->
+    <img src="@images/logo.png">
   </body>
 </html>
 ```
 
-The generated HTML contains hashed output CSS and JS filenames:
+The generated HTML contains hashed output filenames of processed source files:
 
 ```html
 <html>
@@ -85,9 +65,43 @@ The generated HTML contains hashed output CSS and JS filenames:
   </head>
   <body>
     <h1>Hello World!</h1>
+    <img src="/assets/img/logo.58b43bd8.png">
   </body>
 </html>
 ```
+
+Add the HTML templates in the Webpack entry:
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  entry: {
+    // define HTML templates here
+    index: './src/views/home/index.html', // output dist/index.html
+  },
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, './src/images'),
+    },
+  },
+  plugins: [
+    // enable processing of HTML templates defined in Webpack entry
+    new HtmlBundlerPlugin(),
+  ],
+  module: {
+    rules: [
+      {
+        test: /.html/,
+        loader: HtmlBundlerPlugin.loader, // HTML template loader
+      },
+      // ... other rules, e.g. for styles, images, fonts, etc.
+    ],
+  },
+};
+```
+
 
 ## Contents
 
@@ -104,18 +118,17 @@ The generated HTML contains hashed output CSS and JS filenames:
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to use a template engine, e.g. Handlebars](#recipe-template-engine)
    - [How to pass data into template](#recipe-pass-data)
-   - [How to pass different data in multipage configuration](#recipe-pass-data-multipage)
+   - [How to pass different data by multipage configuration](#recipe-pass-data-multipage)
    - [How to use HMR live reload](#recipe-hmr)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
 
+- HTML file is the entry point for all resources (styles, scripts)
 - handels HTML files defined in Webpack entry
-- HTML file is entry-point for all resources (styles, scripts)
 - extracts CSS from source style loaded in HTML via a `<link>` tag
 - extracts JS from source script loaded in HTML via a `<script>` tag
-- processes the images, fonts and other resources from source files loaded in HTML tags
-- support the tags and attributes:
+- resolves source files in the CSS `url()` and in the HTML tags, attributes:
   - `<link>` attributes: `href` (when `type="text/css"` or `rel="stylesheet"`) `imagesrcset`
   - `<script>` attributes: `src`
   - `<img>` attributes: `src` `srcset`
@@ -124,20 +137,17 @@ The generated HTML contains hashed output CSS and JS filenames:
   - `<audio>` attributes: `src`
   - `<track>` attributes: `src`
   - `<video>` attributes: `src`
+- extracts resolved resources to output directory
 - generated HTML contains hashed CSS, JS, images, fonts output filenames
-- resolves source files of URLs in CSS and extract resolved resources to output directory
-- support the `auto` publicPath
 - support the module types `asset/resource` `asset/inline` `asset`
 - `inline CSS` in HTML
 - `inline JavaScript` in HTML
 - `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
 - `inline SVG` as SVG tag in HTML
 - `inline SVG` as `utf-8` data-URL in CSS
-  ```scss
-  background: url('./icons/iphone.svg') // CSS: url("data:image/svg+xml,<svg>...</svg>")
-  ```
+- support the `auto` publicPath
 
-Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
+Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
 | Package                                                                                   | Features                                                         | 
 |-------------------------------------------------------------------------------------------|------------------------------------------------------------------|
@@ -200,7 +210,7 @@ module.exports = {
     rules: [
       {
         test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader, // HTML loader
+        loader: HtmlBundlerPlugin.loader, //  HTML template loader
       },
       {
         test: /\.(css|sass|scss)$/,
@@ -406,6 +416,8 @@ module.exports = {
 
 > **Note**
 >
+> Using the `preprocessor` you can use anyone template engine without its loader.
+> 
 > The `preprocessor` will be called for each entry file.
 > For multipage configuration, you can use the `loaderContext.resource` property to differentiate data for diverse pages.
 > See the [usage example](#recipe-pass-data-multipage).
@@ -668,6 +680,7 @@ Add the `preprocessor` option to compile the content with Handlebars.
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const Handlebars = require('handlebars');
+
 module.exports = {
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -679,14 +692,14 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.hbs$/, // add the option to match *.hbs files in entry, default is /\.html$/
+      test: /\.(html|hbs)$/, // add the option to match *.hbs files in entry, default is /\.html$/
     }),
   ],
 
   module: {
     rules: [
       {
-        test: /\.hbs$/, // must match the files specified in the entry
+        test: /\.(html|hbs)$/, // must match the files specified in the entry
         loader: HtmlBundlerPlugin.loader,
         options: {
           // add the preprocessor function to compile *.hbs files to HTML
@@ -709,54 +722,82 @@ module.exports = {
 <a id="recipe-pass-data" name="recipe-pass-data" href="#recipe-pass-data"></a>
 ## How to pass data into template
 
-You can pass variables into template using a template engine, e.g. [Handlebars](https://handlebarsjs.com).
-See the usage example by [How to use a template engine](#recipe-template-engine) or [How to pass different data in multipage configuration](#recipe-pass-data-multipage).
+You can pass variables into template using a lightweight template engine, e.g. [Handlebars](https://handlebarsjs.com).
+See the usage example by [How to use a template engine](#recipe-template-engine) or [How to pass different data by multipage configuration](#recipe-pass-data-multipage).
 
 <a id="recipe-pass-data-multipage" name="recipe-pass-data-multipage" href="#recipe-pass-data-multipage"></a>
-## How to pass different data in multipage configuration
+## How to pass different data by multipage configuration
 
-For example, you have several pages with variables:
+For multipage configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks/) templating engine maintained by Mozilla.
 
-one file has `.html` extension, _first.html_
+For example, you have several pages with variables.\
+Both pages have the same layout _src/views/layouts/default.html_
 ```html
+<!DOCTYPE html>
 <html>
 <head>
   <title>{{title}}</title>
-  <link href="./first.scss" rel="stylesheet">
-  <script src="./first.js" defer="defer"></script>
+  <!-- block for specific page styles -->
+  {% block styles %}{% endblock %}
+  <!-- block for specific page scripts -->
+  {% block scripts %}{% endblock %}
 </head>
 <body>
-  <h1>{{headline}}</h1>
-  <div>
-    <p>{{firstname}} {{lastname}}</p>
-  </div>
+  <main class="main-content">
+    <!-- block for specific page content -->
+    {% block content %}{% endblock %}
+  </main>
 </body>
 </html>
 ```
 
-other file has `.hbs` extension, _second.hbs_
+_src/views/pages/home/index.html_
 ```html
-<html>
-<head>
-  <title>{{title}}</title>
-  <link href="./second.scss" rel="stylesheet">
-  <script src="./second.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Location</h1>
-  <div>
-    <p>{{city}}, {{state}}</p>
-    <img src="./map.png" alt="map" />
-  </div>
-</body>
-</html>
+{% extends "src/views/layouts/default.html" %}
+
+{% block styles %}
+  <link href="./home.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+  <script src="./home.js" defer="defer"></script>
+{% endblock %}
+
+{% block content %}
+  <h1>{{ filmTitle }}</h1>
+  <p>Location: {{ location }}</p>
+  <!-- @images is the Webpack alias for the source images directory -->
+  <img src="@images/{{ imageFile }}">
+{% endblock %}
 ```
 
-_Webpack config for multipage_
+_src/views/pages/about/index.html_
+```html
+{% extends "src/views/layouts/default.html" %}
+
+{% block styles %}
+  <link href="./about.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+  <script src="./about.js" defer="defer"></script>
+{% endblock %}
+
+{% block content %}
+  <h1>Main characters</h1>
+  <ul>
+  {% for item in actors %}
+    <li class="name">{{ item.firstname }} {{ item.lastname }}</li>
+  {% endfor %}
+  </ul>
+{% endblock %}
+```
+
+_Webpack config_
 ```js
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Handlebars = require('handlebars');
+const Nunjucks = require('nunjucks');
 
 /**
  * Find template data by template file.
@@ -772,18 +813,26 @@ const findData = (sourceFile, data) => {
   return {};
 };
 
-// define template data using a template filename as key
+// note: data keys are different endings of source template files defined in entry
 const entryData = {
-  'src/first.html': {
-    title: 'First page',
-    headline: 'Breaking Bad',
-    firstname: 'Walter',
-    lastname: 'Heisenberg',
+  'home/index.html': {
+    title: 'Home',
+    filmTitle: 'Breaking Bad',
+    location: 'Albuquerque, New Mexico',
+    imageFile: 'map.png',
   },
-  'src/second.hbs': {
-    title: 'Second page',
-    city: 'Albuquerque',
-    state: 'New Mexico',
+  'about/index.html': {
+    title: 'About',
+    actors: [
+      {
+        firstname: 'Walter',
+        lastname: 'White, "Heisenberg"',
+      },
+      {
+        firstname: 'Jesse',
+        lastname: 'Pinkman',
+      },
+    ],
   },
 };
 
@@ -791,16 +840,18 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist/'),
   },
-
   entry: {
     // define your templates here
-    first: './src/first.html', // => dist/first.html
-    'route/to/second': './src/second.hbs', // => dist/route/to/second.html
+    index: 'src/views/pages/home/index.html', // => dist/index.html
+    about: 'src/views/pages/about/index.html', // => dist/about.html
   },
-
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, 'src/assets/images'),
+    },
+  },
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|hbs)$/, // match all template files
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },
@@ -809,22 +860,26 @@ module.exports = {
       },
     }),
   ],
-
   module: {
     rules: [
       // templates
       {
-        test: /\.(html|hbs)/,
-        loader: HtmlBundlerPlugin.loader,
+        test: /\.html/,
+        loader: HtmlBundlerPlugin.loader, //  HTML template loader
         options: {
-          // the deconstucted 'resource' argument is the template name
+          // the deconstucted 'resource' argument is the template file
           preprocessor: (content, { resource }) => {
             // get template variables by template filename
             const data = findData(resource, entryData);
-            // compile template with specific variables
-            return Handlebars.compile(content)(data);
+            // render template with specific variables
+            return Nunjucks.renderString(content, data);
           },
         },
+      },
+      // styles
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
       },
       // images
       {
@@ -840,41 +895,45 @@ module.exports = {
 
 ```
 
-The generated _dist/first.html_
+The generated _dist/index.html_
 ```html
+<!DOCTYPE html>
 <html>
 <head>
-  <title>First page</title>
-  <link href="/assets/css/first.05e4dd86.css" rel="stylesheet">
-  <script src="/assets/js/first.f4b855d8.js" defer="defer"></script>
+  <title>Home</title>
+  <link href="assets/css/home.2180238c.css" rel="stylesheet">
+  <script src="assets/js/home.790d746b.js" defer="defer"></script>
 </head>
 <body>
-  <h1>Breaking Bad</h1>
-  <div>
-    <p>Walter Heisenberg</p>
-  </div>
+  <main class="main-content">
+    <h1>Breaking Bad</h1>
+    <p>Breaking Bad is an American crime drama</p>
+    <p>Location: Albuquerque, New Mexico</p>
+    <img src="assets/img/map.697ef306.png" alt="location" />
+  </main>
 </body>
 </html>
-
 ```
 
-The generated _dist/route/to/second.html_
+The generated _dist/about.html_
 ```html
+<!DOCTYPE html>
 <html>
 <head>
-  <title>Second page</title>
-  <link href="/assets/css/second.d8605e4d.css" rel="stylesheet">
-  <script src="/assets/js/second.5d8f4b85.js" defer="defer"></script>
+  <title>About</title>
+  <link href="assets/css/about.2777c101.css" rel="stylesheet">
+  <script src="assets/js/about.1.c5e03c0e.js" defer="defer"></script>
 </head>
 <body>
-  <h1>Location</h1>
-  <div>
-    <p>Albuquerque, New Mexico</p>
-    <img src="assets/img/map.697ef306.png" alt="map" />
-  </div>
+  <main class="main-content">
+    <h1>Main characters</h1>
+    <ul>
+      <li class="name">Walter White, &quot;Heisenberg&quot;</li>
+      <li class="name">Jesse Pinkman</li>
+    </ul>
+  </main>
 </body>
 </html>
-
 ```
 
 <a id="recipe-hmr" name="recipe-hmr" href="#recipe-hmr"></a>

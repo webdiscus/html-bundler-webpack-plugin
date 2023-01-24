@@ -1,8 +1,14 @@
 # Change log
 
+## 0.5.1 (2023-01-22)
+- refactor: optimize code
+- test: add test for usage `Nunjucks` template engine
+- docs: update readme for usage the multipage configuration with `Nunjucks` template engine
+
 ## 0.5.0 (2023-01-22)
 - feat: add plugin option `test` to process entry files that pass test assertion
 - feat: add loader option `preprocessor` to allows pre-processing of content before handling
+- test: add test for usage `Handlebars` template engine
 - docs: update readme with new features
 
 ## 0.4.0 (2023-01-20)

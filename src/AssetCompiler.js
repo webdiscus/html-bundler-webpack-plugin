@@ -539,7 +539,7 @@ class AssetCompiler {
         if (AssetScript.isScript(module)) {
           if (this.options.extractJs.verbose && issuerFile !== sourceFile) {
             verboseList.add({
-              isScript: true,
+              type: 'script',
               header: 'Extract JS',
               issuerFile,
               sourceFile,
@@ -565,7 +565,7 @@ class AssetCompiler {
 
           if (verbose) {
             verboseList.add({
-              isEntry: true,
+              type: 'entry',
               name: chunk.name,
             });
           }
@@ -647,7 +647,7 @@ class AssetCompiler {
 
         if (moduleVerbose) {
           verboseList.add({
-            isModule: true,
+            type: 'module',
             header: pluginModule.verboseHeader,
             sourceFile,
             outputPath: moduleOutputPath,
@@ -680,7 +680,7 @@ class AssetCompiler {
 
         if (verbose) {
           verboseList.add({
-            isAssetResource: true,
+            type: module.type,
             sourceFile: sourceRequest,
           });
         }
@@ -689,7 +689,7 @@ class AssetCompiler {
 
         if (verbose) {
           verboseList.add({
-            isAssetInline: true,
+            type: module.type,
             sourceFile: sourceRequest,
           });
         }
@@ -844,56 +844,57 @@ class AssetCompiler {
     // display verbose after rendering of all modules
     if (verboseList.size > 0) {
       for (let item of verboseList) {
-        const {
-          isEntry,
-          isModule,
-          isScript,
-          isAssetResource,
-          isAssetSource,
-          isAssetInline,
-          issuerFile,
-          sourceFile,
-          outputPath,
-        } = item;
+        const { type, issuerFile, sourceFile, outputPath } = item;
 
-        if (isEntry) {
-          const entry = AssetEntry.get(item.name);
-          verboseEntry(entry);
-        } else if (isScript) {
-          const posixSourceFile = isWin ? pathToPosix(sourceFile) : sourceFile;
-          const assetFile = scriptStore.files.find(({ file }) => file === posixSourceFile)?.chunkFiles;
-          verboseExtractModule({
-            sourceFile,
-            assetFile,
-            issuers: [issuerFile],
-            outputPath,
-            header: item.header,
-          });
-        } else if (isModule) {
-          const data = Resolver.data.get(sourceFile);
-          verboseExtractModule({
-            sourceFile,
-            assetFile: data.originalAssetFile,
-            issuers: data.issuers,
-            outputPath: item.outputPath,
-            header: item.header,
-          });
-        } else if (isAssetResource) {
-          const data = Resolver.data.get(sourceFile);
-          verboseExtractResource({
-            sourceFile,
-            assetFile: data.originalAssetFile,
-            issuers: data.issuers,
-            outputPath: this.webpackOutputPath,
-          });
-        } else if (isAssetSource) {
-          // TODO: implement
-        } else if (isAssetInline) {
-          const data = AssetInline.data.get(sourceFile);
-          verboseExtractInlineResource({
-            sourceFile,
-            data,
-          });
+        switch (type) {
+          case 'entry': {
+            const entry = AssetEntry.get(item.name);
+            verboseEntry(entry);
+            break;
+          }
+          case 'module': {
+            const { originalAssetFile, issuers } = Resolver.data.get(sourceFile);
+            verboseExtractModule({
+              sourceFile,
+              assetFile: originalAssetFile,
+              issuers: issuers,
+              outputPath,
+              header: item.header,
+            });
+            break;
+          }
+          case 'script': {
+            const posixSourceFile = isWin ? pathToPosix(sourceFile) : sourceFile;
+            const assetFile = scriptStore.files.find(({ file }) => file === posixSourceFile)?.chunkFiles;
+            verboseExtractModule({
+              sourceFile,
+              assetFile,
+              issuers: [issuerFile],
+              outputPath,
+              header: item.header,
+            });
+            break;
+          }
+          case 'asset/resource': {
+            const { originalAssetFile, issuers } = Resolver.data.get(sourceFile);
+            verboseExtractResource({
+              sourceFile,
+              assetFile: originalAssetFile,
+              issuers,
+              outputPath: this.webpackOutputPath,
+            });
+            break;
+          }
+          case 'asset/inline':
+            verboseExtractInlineResource({
+              sourceFile,
+              data: AssetInline.data.get(sourceFile),
+            });
+            break;
+          case 'asset/source':
+            // reserved
+            break;
+          // no default
         }
       }
     }

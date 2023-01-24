@@ -554,8 +554,8 @@ describe('loader options', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
   });
 
-  test('preprocessor with handlebars for multipage', (done) => {
-    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-multipage', done);
+  test('preprocessor with nunjucks for multipage', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-nunjucks-multipage', done);
   });
 });
 

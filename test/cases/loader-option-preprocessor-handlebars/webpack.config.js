@@ -10,15 +10,19 @@ module.exports = {
   },
 
   entry: {
-    index: './src/home.html',
+    index: './src/home.hbs',
   },
 
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|hbs)$/,
+    }),
+  ],
 
   module: {
     rules: [
       {
-        test: /\.html$/,
+        test: /\.(html|hbs)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
           preprocessor: (content, loaderContext) =>

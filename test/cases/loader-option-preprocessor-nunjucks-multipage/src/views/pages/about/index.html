@@ -1,0 +1,18 @@
+{% extends "src/views/layouts/default.html" %}
+
+{% block styles %}
+  <link href="about.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+  <script src="about.js" defer="defer"></script>
+{% endblock %}
+
+{% block content %}
+  <h1>Main characters</h1>
+  <ul>
+  {% for item in actors %}
+    <li class="name">{{ item.firstname }} {{ item.lastname }}</li>
+  {% endfor %}
+  </ul>
+{% endblock %}
