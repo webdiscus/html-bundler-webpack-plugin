@@ -1,0 +1,40 @@
+<html>
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <h1>Home</h1>
+
+    <!-- data-src and data-srcset attributes -->
+    <img data-src="assets/img/apple.697ef306.png" data-srcset="assets/img/fig1.697ef306.png, assets/img/fig2.697ef306.png 100w, assets/img/fig3.697ef306.png 1.5x">
+
+    <img
+      data-srcset="assets/img/fig1.697ef306.png, assets/img/fig2.697ef306.png 100w, assets/img/fig3.697ef306.png 1.5x"
+      srcset="assets/img/lime1.697ef306.png, assets/img/lime2.697ef306.png 200w, assets/img/lime3.697ef306.png 2.5x"
+      src="assets/img/apple.697ef306.png"
+    >
+
+    <!-- custom attributes -->
+    <img
+      data-ignore-src="./fig1.png"
+      data-resolve-src="assets/img/fig2.697ef306.png"
+      alt="custom image"
+    />
+
+    <!-- new custom tag with new attributes -->
+    <custom-img
+      data-src-one="assets/img/fig1.697ef306.png"
+      data-src-two="assets/img/fig2.697ef306.png"
+      alt="custom image"
+    />
+
+    <svg width="160" height="130">
+      <use href="assets/img/fig1.697ef306.png"></use>
+    </svg>
+
+    <svg width="160" height="130">
+      <use xlink:href="assets/img/apple.697ef306.png"></use>
+    </svg>
+
+  </body>
+</html>

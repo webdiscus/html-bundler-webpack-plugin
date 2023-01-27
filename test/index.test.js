@@ -86,7 +86,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset single value', (done) => {
     const source = '<source srcset="img1.png">';
-    const received = HtmlBundler.parseSrcset(source, 'srcset');
+    const received = HtmlBundler.parseAttr(source, 'srcset');
     const expected = {
       attr: 'srcset',
       startPos: 16,
@@ -105,7 +105,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset multi values', (done) => {
     const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = HtmlBundler.parseSrcset(source, 'srcset');
+    const received = HtmlBundler.parseAttr(source, 'srcset');
     const expected = {
       attr: 'srcset',
       startPos: 28,
@@ -155,7 +155,7 @@ describe('parse tags unit tests', () => {
   test('parse single tag img', (done) => {
     //const html = `<img src="img1.png" alt="logo"><img src="img1.png" srcset="img2.png 100w, img3.png 500w, img4.png 1000w">`;
     const html = `<img src="img1.png" alt="logo">`;
-    const received = HtmlBundler.parseTag(html, { tag: 'img', attrs: ['src'] });
+    const received = HtmlBundler.parseTag(html, { tag: 'img', attributes: ['src'] });
     const expected = [
       {
         tag: 'img',
@@ -171,324 +171,6 @@ describe('parse tags unit tests', () => {
             endPos: 18,
           },
         ],
-      },
-    ];
-    expect(received).toEqual(expected);
-    done();
-  });
-
-  test('parse all resources in html', (done) => {
-    const html = `
-<html>
-   <head>
-     <script src="./main.js" />
-     <link href="./style.css" rel="stylesheet" />
-     <link href="./basic.css" rel="alternate stylesheet" />
-     <link href="./favicon.ico" rel="icon" />
-     <link href="./my-font.woff2" rel="preload" as="font" type="font/woff2" />
-   </head>
-   <body>
-     <!-- test tags sort -->
-     <source srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">
-     <img src="./apple.png" alt="apple">
-     <!-- test attributes sort -->
-     <img srcset="./lime1.png, ./lime2.png 100w, ./lime3.png 1.5x" src="./lime.png">
-     <source srcset="./plum.webp" type="image/webp" />
-   </body>
-</html>
- `;
-    const received = HtmlBundler.parseTags(html);
-    const expected = [
-      {
-        tag: 'script',
-        source: '<script src="./main.js" />',
-        type: 'script',
-        startPos: 23,
-        endPos: 49,
-        attrs: [
-          {
-            attr: 'src',
-            value: './main.js',
-            startPos: 13,
-            endPos: 22,
-          },
-        ],
-      },
-      {
-        tag: 'link',
-        source: '<link href="./style.css" rel="stylesheet" />',
-        type: 'style',
-        startPos: 55,
-        endPos: 99,
-        attrs: [
-          {
-            attr: 'href',
-            value: './style.css',
-            startPos: 12,
-            endPos: 23,
-          },
-        ],
-      },
-      {
-        tag: 'link',
-        source: '<link href="./basic.css" rel="alternate stylesheet" />',
-        type: 'style',
-        startPos: 105,
-        endPos: 159,
-        attrs: [
-          {
-            attr: 'href',
-            value: './basic.css',
-            startPos: 12,
-            endPos: 23,
-          },
-        ],
-      },
-      {
-        tag: 'link',
-        source: '<link href="./favicon.ico" rel="icon" />',
-        type: 'asset',
-        startPos: 165,
-        endPos: 205,
-        attrs: [
-          {
-            attr: 'href',
-            value: './favicon.ico',
-            startPos: 12,
-            endPos: 25,
-          },
-        ],
-      },
-      {
-        tag: 'link',
-        source: '<link href="./my-font.woff2" rel="preload" as="font" type="font/woff2" />',
-        type: 'asset',
-        startPos: 211,
-        endPos: 284,
-        attrs: [
-          {
-            attr: 'href',
-            value: './my-font.woff2',
-            startPos: 12,
-            endPos: 27,
-          },
-        ],
-      },
-      {
-        tag: 'source',
-        source: '<source srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">',
-        type: 'asset',
-        startPos: 340,
-        endPos: 402,
-        attrs: [
-          {
-            attr: 'srcset',
-            startPos: 16,
-            endPos: 60,
-            value: [
-              {
-                value: './fig1.png',
-                startPos: 0,
-                endPos: 10,
-              },
-              {
-                value: './fig2.png',
-                startPos: 12,
-                endPos: 22,
-              },
-              {
-                value: './fig3.png',
-                startPos: 29,
-                endPos: 39,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        tag: 'img',
-        source: '<img src="./apple.png" alt="apple">',
-        type: 'asset',
-        startPos: 408,
-        endPos: 443,
-        attrs: [
-          {
-            attr: 'src',
-            value: './apple.png',
-            startPos: 10,
-            endPos: 21,
-          },
-        ],
-      },
-      {
-        tag: 'img',
-        source: '<img srcset="./lime1.png, ./lime2.png 100w, ./lime3.png 1.5x" src="./lime.png">',
-        type: 'asset',
-        startPos: 484,
-        endPos: 563,
-        attrs: [
-          {
-            attr: 'srcset',
-            startPos: 13,
-            endPos: 60,
-            value: [
-              {
-                value: './lime1.png',
-                startPos: 0,
-                endPos: 11,
-              },
-              {
-                value: './lime2.png',
-                startPos: 13,
-                endPos: 24,
-              },
-              {
-                value: './lime3.png',
-                startPos: 31,
-                endPos: 42,
-              },
-            ],
-          },
-          {
-            attr: 'src',
-            value: './lime.png',
-            startPos: 67,
-            endPos: 77,
-          },
-        ],
-      },
-      {
-        tag: 'source',
-        source: '<source srcset="./plum.webp" type="image/webp" />',
-        type: 'asset',
-        startPos: 569,
-        endPos: 618,
-        attrs: [
-          {
-            attr: 'srcset',
-            startPos: 16,
-            endPos: 27,
-            value: [
-              {
-                value: './plum.webp',
-                startPos: 0,
-                endPos: 11,
-              },
-            ],
-          },
-        ],
-      },
-    ];
-    expect(received).toEqual(expected);
-    done();
-  });
-
-  test('optimize parsed tags', (done) => {
-    const html = `
-<html>
-   <head>
-     <script src="./main.js" />
-     <link href="./style.css" rel="stylesheet" />
-     <link href="./basic.css" rel="alternate stylesheet" />
-     <link href="./favicon.ico" rel="icon" />
-     <link href="./my-font.woff2" rel="preload" as="font" type="font/woff2" />
-   </head>
-   <body>
-     <!-- test tags sort -->
-     <source srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">
-     <img src="./apple.png" alt="apple">
-     <!-- test attributes sort -->
-     <img srcset="./lime1.png, ./lime2.png 100w, ./lime3.png 1.5x" src="./lime.png">
-     <source srcset="./plum.webp" type="image/webp" />
-   </body>
-</html>
- `;
-    const tags = HtmlBundler.parseTags(html);
-    const received = HtmlBundler.normalizeTagsList(tags);
-    const expected = [
-      {
-        type: 'script',
-        file: './main.js',
-        endPos: 45,
-        startPos: 36,
-      },
-      {
-        file: './style.css',
-        type: 'style',
-        startPos: 67,
-        endPos: 78,
-      },
-      {
-        type: 'style',
-        file: './basic.css',
-        startPos: 117,
-        endPos: 128,
-      },
-      {
-        type: 'asset',
-        file: './favicon.ico',
-        startPos: 177,
-        endPos: 190,
-      },
-      {
-        type: 'asset',
-        file: './my-font.woff2',
-        startPos: 223,
-        endPos: 238,
-      },
-      {
-        type: 'asset',
-        file: './fig1.png',
-        startPos: 356,
-        endPos: 366,
-      },
-      {
-        type: 'asset',
-        file: './fig2.png',
-        startPos: 368,
-        endPos: 378,
-      },
-      {
-        type: 'asset',
-        file: './fig3.png',
-        startPos: 385,
-        endPos: 395,
-      },
-      {
-        type: 'asset',
-        file: './apple.png',
-        startPos: 418,
-        endPos: 429,
-      },
-      {
-        type: 'asset',
-        file: './lime1.png',
-        startPos: 497,
-        endPos: 508,
-      },
-      {
-        type: 'asset',
-        file: './lime2.png',
-        startPos: 510,
-        endPos: 521,
-      },
-      {
-        type: 'asset',
-        file: './lime3.png',
-        startPos: 528,
-        endPos: 539,
-      },
-      {
-        type: 'asset',
-        file: './lime.png',
-        startPos: 551,
-        endPos: 561,
-      },
-      {
-        type: 'asset',
-        file: './plum.webp',
-        startPos: 585,
-        endPos: 596,
       },
     ];
     expect(received).toEqual(expected);
@@ -544,12 +226,44 @@ describe('features tests', () => {
 });
 
 describe('plugin options', () => {
+  test('verbose', (done) => {
+    compareFileListAndContent(PATHS, 'option-verbose', done);
+  });
+
   test('filename as function', (done) => {
     compareFileListAndContent(PATHS, 'option-filename-function', done);
+  });
+
+  test('options.sourcePath and options.outputPath (default)', (done) => {
+    compareFileListAndContent(PATHS, 'option-default-path', done);
+  });
+
+  test('options.sourcePath and options.outputPath', (done) => {
+    compareFileListAndContent(PATHS, 'option-custom-path', done);
+  });
+
+  test('options.extractComments = false', (done) => {
+    compareFileListAndContent(PATHS, 'option-extract-comments-false', done);
+  });
+
+  test('options.extractComments = true', (done) => {
+    compareFileListAndContent(PATHS, 'option-extract-comments-true', done);
   });
 });
 
 describe('loader options', () => {
+  test('disable the processing of all tags and attributes', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-sources-false', done);
+  });
+
+  test('add custom tags and attributes', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-sources-attrs', done);
+  });
+
+  test('filter tags and attributes', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-sources-attrs-filter', done);
+  });
+
   test('preprocessor with handlebars', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
   });
@@ -596,5 +310,88 @@ describe('inline styles & scripts', () => {
 
   test('inline script using URL query `?inline`', (done) => {
     compareFileListAndContent(PATHS, 'inline-script-query', done);
+  });
+});
+
+describe('special cases', () => {
+  test('resolve values with invalid syntax', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-values-invalid-syntax', done);
+  });
+});
+
+// Test Messages
+
+describe('warning tests', () => {
+  test('duplicate scripts', (done) => {
+    const containString = 'Duplicate scripts are not allowed';
+    stdoutContain(PATHS, 'msg-warning-duplicate-scripts', containString, done);
+  });
+
+  test('duplicate scripts using alias', (done) => {
+    const containString = 'Duplicate scripts are not allowed';
+    stdoutContain(PATHS, 'msg-warning-duplicate-scripts-alias', containString, done);
+  });
+
+  test('duplicate styles', (done) => {
+    const containString = 'Duplicate styles are not allowed';
+    stdoutContain(PATHS, 'msg-warning-duplicate-styles', containString, done);
+  });
+});
+
+describe('exception tests', () => {
+  test('exception test: previous error', (done) => {
+    const containString = 'previous error';
+
+    try {
+      PluginError('previous error');
+    } catch (error) {
+      try {
+        PluginError('last error', error);
+      } catch (error) {
+        expect(error.toString()).toContain(containString);
+        done();
+      }
+    }
+  });
+
+  test('exception test: nested exceptions', (done) => {
+    const containString = 'last error';
+
+    const originalError = new PluginException('original error');
+    try {
+      PluginError('previous error', originalError);
+    } catch (error) {
+      try {
+        PluginError('last error', error);
+      } catch (error) {
+        expect(error.toString()).toContain(containString);
+        done();
+      }
+    }
+  });
+
+  test('exception: resolve file', (done) => {
+    const containString = `can't be resolved in the template`;
+    exceptionContain(PATHS, 'msg-exception-resolve-file', containString, done);
+  });
+
+  test('exception: @import CSS is not supported', (done) => {
+    const containString = `Disable the 'import' option in 'css-loader'`;
+    exceptionContain(PATHS, 'msg-exception-import-css-rule', containString, done);
+  });
+
+  test('exception: option modules', (done) => {
+    const containString = 'must be the array of';
+    exceptionContain(PATHS, 'msg-exception-option-modules', containString, done);
+  });
+
+  test('exception: execute postprocess', (done) => {
+    const containString = 'Postprocess is failed';
+    exceptionContain(PATHS, 'msg-exception-execute-postprocess', containString, done);
+  });
+
+  test('exception: multiple chunks with same filename', (done) => {
+    const containString = 'Multiple chunks emit assets to the same filename';
+    exceptionContain(PATHS, 'msg-exception-multiple-chunks-same-filename', containString, done);
   });
 });

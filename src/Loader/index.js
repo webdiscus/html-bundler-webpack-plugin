@@ -1,3 +1,4 @@
+const { merge } = require('webpack-merge');
 const HtmlBundler = require('./HtmlBundler');
 const { plugin, scriptStore } = require('./Modules');
 const Dependency = require('./Dependency');
@@ -19,7 +20,36 @@ const compile = function (content, callback) {
   const preprocessor = typeof loaderOptions.preprocessor === 'function' ? loaderOptions.preprocessor : null;
   let basedir = loaderOptions.basedir || context;
   let customData = {};
-  let compileResult, result;
+  let compileResult;
+  let result;
+
+  // default tags and attributes for resolving resources
+  const sources = [
+    { tag: 'link', attributes: ['href', 'imagesrcset'] }, // `imagesrcset` is for rel="preload" and as="image" only
+    { tag: 'script', attributes: ['src'] },
+    { tag: 'img', attributes: ['src', 'srcset'] },
+    { tag: 'input', attributes: ['src'] }, // type="image"
+    { tag: 'source', attributes: ['src', 'srcset'] },
+    { tag: 'audio', attributes: ['src'] },
+    { tag: 'track', attributes: ['src'] },
+    { tag: 'video', attributes: ['src', 'poster'] },
+    { tag: 'object', attributes: ['data'] },
+  ];
+
+  // merge defaults and custom sources
+  if (Array.isArray(loaderOptions.sources)) {
+    for (const item of loaderOptions.sources) {
+      const source = sources.find(({ tag }) => tag === item.tag);
+      if (source) {
+        source.attributes = [...source.attributes, ...(item.attributes || [])];
+        if (typeof item.filter === 'function') {
+          source.filter = item.filter;
+        }
+      } else {
+        sources.push(item);
+      }
+    }
+  }
 
   if (basedir.slice(-1) !== '/') basedir += '/';
   if (loaderContext.cacheable != null) loaderContext.cacheable(true);
@@ -62,8 +92,8 @@ const compile = function (content, callback) {
   }
 
   try {
-    /** @type {{body: string, dependencies: []}} */
-    compileResult = HtmlBundler.compile(content, filename);
+    compileResult = loaderOptions.sources === false ? content : HtmlBundler.compile(content, filename, sources);
+    //console.log('>> ', filename, '\n', compileResult);
 
     // Note: don't use compileResult.dependencies because it is not available by compile error.
     // The loader tracks all dependencies during compilation and stores them in `Dependency` instance.

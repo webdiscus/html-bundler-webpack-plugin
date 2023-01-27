@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>Test</title>
+    <meta name="theme-color" content="#ffffff">
+
+    <meta name="twitter:image" content="assets/img/apple.697ef306.png">
+
+    <meta name="msapplication-TileImage" content="assets/img/fig1.697ef306.png">
+    <meta name="msapplication-TileColor" content="#da532c">
+
+    <meta property="og:title" content="Some text" />
+    <meta property="og:image" content="assets/img/fig1.697ef306.png" />
+    <meta property="og:image:url" content="assets/img/fig2.697ef306.png" />
+
+    <meta itemprop="logo" content="assets/img/fig1.697ef306.png" />
+    <meta itemprop="screenshot" content="assets/img/fig2.697ef306.png" />
+    <meta itemprop="thumbnailUrl" content="./fig3.png" />
+
+    <!-- TODO:
+      resolve the `url()` and  `{{ require() }}` syntax:
+
+      content="name=Check Order Status;icon-uri={{ require('./favicon.ico') }}"
+      <div style="background-image: url('./image.png')">
+      <style>h1 {background-image: url('./image.png')}</style>
+    -->
+    <meta name="msapplication-task" content="name=Check Order Status;action-uri=./orderStatus.aspx?src=IE9;icon-uri=./favicon.ico">
+  </head>
+  <body>
+    <h1>Home</h1>
+    <!-- ignore resolving of the 'src' via filter -->
+    <img src="./apple.png">
+    <!-- resolves only the concrete value of the 'src' via filter -->
+    <img src="assets/img/fig3.697ef306.png">
+
+    <!-- custom tag with custom attributes used in filter -->
+    <custom-img
+      data-src-one="./fig1.png"
+      data-src-two="assets/img/fig2.697ef306.png"
+      data-resolve-attr="data-src-two"
+      src="./fig3.png"
+      alt="custom image"
+    />
+  </body>
+</html>

@@ -1,6 +1,17 @@
 # Change log
 
-## 0.5.1 (2023-01-22)
+## 0.6.0 (2023-01-28)
+- feat: add `sources` options to define custom tags and attributes for resolving source files
+- feat: add `extractComments` option to enable/disable saving comments in *.LICENSE.txt file
+- feat: add to default resolving the `data` attribute of `object` tag
+- feat: add supports the `responsive-loader`
+- fix: resolves excact attribute name w/o leading wildcard
+- fix: resolves mutiline attributes
+- fix: resolves mutiline values in srcset attribute
+- test: add tests for new options, messages
+- docs: update readme
+
+## 0.5.1 (2023-01-24)
 - refactor: optimize code
 - test: add test for usage `Nunjucks` template engine
 - docs: update readme for usage the multipage configuration with `Nunjucks` template engine

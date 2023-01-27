@@ -13,6 +13,8 @@
 [![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen "npm package")](https://www.npmjs.com/package/html-bundler-webpack-plugin "download npm package")
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/html-bundler-webpack-plugin/peer/webpack)](https://webpack.js.org/)
+[![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
+[![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
 This is a new powerful plugin that does exactly what you want, automatically extracts JS, CSS, images, fonts
 from their sources loaded directly in HTML.
@@ -128,15 +130,7 @@ module.exports = {
 - handels HTML files defined in Webpack entry
 - extracts CSS from source style loaded in HTML via a `<link>` tag
 - extracts JS from source script loaded in HTML via a `<script>` tag
-- resolves source files in the CSS `url()` and in the HTML tags, attributes:
-  - `<link>` attributes: `href` (when `type="text/css"` or `rel="stylesheet"`) `imagesrcset`
-  - `<script>` attributes: `src`
-  - `<img>` attributes: `src` `srcset`
-  - `<source>` attributes: `src` `srcset`
-  - `<input>` attributes: `src` when `type="image"`
-  - `<audio>` attributes: `src`
-  - `<track>` attributes: `src`
-  - `<video>` attributes: `src`
+- resolves source files in the CSS `url()` and in HTML attributes
 - extracts resolved resources to output directory
 - generated HTML contains hashed CSS, JS, images, fonts output filenames
 - support the module types `asset/resource` `asset/inline` `asset`
@@ -344,14 +338,197 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
+### `extractComments`
+Type: `boolean` Default: `false`<br>
+Enable / disable extraction of comments to `*.LICENSE.txt` file.
+
+When using `splitChunks` optimization for node modules containing comments, 
+Webpack extracts those comments into a separate text file.
+By default, the plugin don't create such unwanted text files.
+But if you want to extract files like `*.LICENSE.txt`, set this option to `true`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      extractComments: true,
+    }),
+  ],
+};
+```
+
 ---
 
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
 ## Loader options
 
+### `sources`
+Type:
+```ts
+type sources =
+  | boolean
+  | Array<{
+      tag?: string;
+      attributes?: Array<string>;
+      filter?: ({
+        tag: string,
+        attribute: string,
+        value: string,
+        attributes: string,
+        resourcePath: string
+      }) => boolean|undefined;
+    }>;
+```
+
+Default: `true`<br>
+
+By default, resolves source files in the following attributes:
+
+| Tag      | Attributes                                                                            |
+|----------|---------------------------------------------------------------------------------------|
+| `link`   | `href` (for `type="text/css"` or `rel="stylesheet"`) `imagesrcset` (for `as="image"`) |
+| `script` | `src`                                                                                 |
+| `img`    | `src` `srcset`                                                                        |
+| `input`  | `src` (for `type="image"`)                                                            |
+| `source` | `src` `srcset`                                                                        |
+| `audio`  | `src`                                                                                 |
+| `track`  | `src`                                                                                 |
+| `video`  | `src` `poster`                                                                        |
+| `object` | `data`                                                                                |
+
+To disable the processing of all attributes, set the `source` option as `false`.
+
+> **Note**
+> 
+> Automatically are processed only attributes containing a relative path or Webpack alias, e.g.:
+> - `src="./image.png"` - relative path to local directory
+> - `src="../../assets/image.png"` - relative path to parent directory
+> - `src="@images/image.png"` - image directory as Webpack alias
+> 
+> Url values like following are not processed, e.g.:
+> - `src="https://example.com/img/image.png"`
+> - `src="//example.com/img/image.png"`
+> - `src="/img/image.png"`
+> 
+> Other not file values are ignored, e.g.:
+> - `src="data:image/png; ..."`
+> - `src="javascript: ..."`
+
+The default tags can be extended with new attributes or add new tags and attributes.
+
+For example, add the processing of the `data-src` and `data-srcset` attributes to the `img` tag:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.html$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          sources: [
+            {
+              tag: 'img',
+              attributes: ['data-src', 'data-srcset'],
+            }
+          ],
+        },
+      },
+    ],
+  },
+};
+```
+
+You can use the `filter` function to allow processing for specific attributes.
+
+For example, use `filter` to allow processing for images in `meta` tag by `content` attribute:
+
+```html
+<html>
+  <head>
+    <!-- ignore the attribute via filter -->
+    <meta name="theme-color" content="#ffffff">
+    <!-- resolve the 'content' attribute if 'name' containing special values  -->
+    <meta name="twitter:image" content="./image.png">
+    <meta name="logo" content="./logo.png">
+  </head>
+  <body>
+    <!-- resolve 'src' attribute containing relative path -->
+    <img src="./image.png">
+  </body>
+</html>
+```
+
+_webpack.config.js_
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.html$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          sources: [
+            {
+              tag: 'meta',
+              attributes: ['content'],
+              // note: use the destruction of used variables from the object argument
+              filter: ({ tag, attribute, value, attributes, resourcePath }) => {
+                const allowedNames = ['twitter:image', 'logo'];
+                if ('name' in attributes && allowedNames.indexOf(attributes.name) < 0) {
+                  return false;
+                }
+              },
+            }
+          ],
+        },
+      },
+    ],
+  },
+};
+```
+
+The `filter` parameter is an object containing the properties:
+- `tag` the name of the HTML tag
+- `attribute` the name of the HTML attribute
+- `value` the value of the HTML attribute
+- `attributes` all attributes of the tag
+- `resourcePath` the path of the HTML file
+
+The attribute can be ignored by returning `false`, otherwise the function should return nothing. 
+
+Filter can disable an attribute of a tag.
+
+For example, disable the processing of default attribute `srcset` of the `img` tag:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.html$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          sources: [
+            {
+              tag: 'img',
+              filter: ({ attribute }) => attribute !== 'srcset',
+            }
+          ],
+        },
+      },
+    ],
+  },
+};
+```
+
 ### `preprocessor`
 Type:
-```
+```ts
 type preprocessor = (
   content: string,
   loaderContext: LoaderContext

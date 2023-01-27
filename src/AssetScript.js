@@ -49,7 +49,7 @@ class AssetScript {
    * @return {string|null} The source file.
    */
   static findSourceFile(assetFile) {
-    const result = scriptStore.getAll().find(({ chunkFiles }) => chunkFiles.indexOf(assetFile) > -1);
+    const result = scriptStore.getAll().find(({ chunkFiles }) => chunkFiles?.indexOf(assetFile) > -1);
 
     return result ? result.file : null;
   }
