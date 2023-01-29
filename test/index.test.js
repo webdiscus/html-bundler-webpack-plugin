@@ -210,8 +210,15 @@ describe('features tests', () => {
   test('resolve-alias-in-html', (done) => {
     compareFileListAndContent(PATHS, 'resolve-alias-in-html', done);
   });
+});
 
-  //
+describe('resolve styles', () => {
+  test('resolve styles with same name', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-styles-with-same-name', done);
+  });
+});
+
+describe('resolve url in style', () => {
   test('resolve the url(image) in CSS', (done) => {
     compareFileListAndContent(PATHS, 'resolve-url-in-css', done);
   });
@@ -223,9 +230,41 @@ describe('features tests', () => {
   test('@import url() in SCSS', (done) => {
     compareFileListAndContent(PATHS, 'import-url-in-scss', done);
   });
+
+  test('resolve-url-deep', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-url-deep', done);
+  });
 });
 
 describe('plugin options', () => {
+  test('output.publicPath = auto', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-auto', done);
+  });
+
+  test('output.publicPath = function', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-function', done);
+  });
+
+  test('output.publicPath = ""', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-empty', done);
+  });
+
+  test('output.publicPath = "/"', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-root', done);
+  });
+
+  test('option js.filename', (done) => {
+    compareFileListAndContent(PATHS, 'option-js-filename', done);
+  });
+
+  test('options js, css outputPath absolute', (done) => {
+    compareFileListAndContent(PATHS, 'option-js-css-outputPath-absolute', done);
+  });
+
+  test('options js, css outputPath relative', (done) => {
+    compareFileListAndContent(PATHS, 'option-js-css-outputPath-relative', done);
+  });
+
   test('verbose', (done) => {
     compareFileListAndContent(PATHS, 'option-verbose', done);
   });
@@ -248,6 +287,10 @@ describe('plugin options', () => {
 
   test('options.extractComments = true', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-true', done);
+  });
+
+  test('options.postprocess', (done) => {
+    compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
 });
 
@@ -313,9 +356,49 @@ describe('inline styles & scripts', () => {
   });
 });
 
+describe('split chunks', () => {
+  // test('resolve assets when used split chunk, development', (done) => {
+  //   compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-dev', done);
+  // });
+  //
+  // test('resolve assets when used split chunk, production', (done) => {
+  //   compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-prod', done);
+  // });
+
+  test('import source scripts and styles from node module', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-node-module-source', done);
+  });
+
+  // test('import source scripts and styles from many node module', (done) => {
+  //   compareFileListAndContent(PATHS, 'split-chunk-node-module-many-vendors', done);
+  // });
+  //
+  // test('load vendor scripts from node module', (done) => {
+  //   compareFileListAndContent(PATHS, 'split-chunk-vendor', done);
+  // });
+  //
+  // test('extract css and js w/o runtime code of css-loader', (done) => {
+  //   compareFileListAndContent(PATHS, 'split-chunk-css-js', done);
+  // });
+});
+
 describe('special cases', () => {
   test('resolve values with invalid syntax', (done) => {
     compareFileListAndContent(PATHS, 'resolve-values-invalid-syntax', done);
+  });
+});
+
+describe('extras: responsive images', () => {
+  test('responsive images in template', (done) => {
+    compareFileListAndContent(PATHS, 'responsive-images', done);
+  });
+
+  test('require images in pug and in style', (done) => {
+    compareFileListAndContent(PATHS, 'responsive-images-html-scss', done);
+  });
+
+  test('require many duplicate images in pug and styles', (done) => {
+    compareFileListAndContent(PATHS, 'responsive-images-many-duplicates', done);
   });
 });
 
@@ -393,5 +476,15 @@ describe('exception tests', () => {
   test('exception: multiple chunks with same filename', (done) => {
     const containString = 'Multiple chunks emit assets to the same filename';
     exceptionContain(PATHS, 'msg-exception-multiple-chunks-same-filename', containString, done);
+  });
+
+  test('exception: missing the closing', (done) => {
+    const containString = `missing the closing '>' char`;
+    exceptionContain(PATHS, 'msg-exception-close-tag', containString, done);
+  });
+
+  test('exception: missing the closing at eof', (done) => {
+    const containString = `missing the closing '>' char`;
+    exceptionContain(PATHS, 'msg-exception-close-tag-eof', containString, done);
   });
 });

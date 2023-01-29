@@ -1,11 +1,17 @@
 # Change log
 
+## 0.7.0 (2023-01-29)
+- feat: add `postprocess` plugin option
+- fix: parsing srcset attribute containing a query as JSON5, e.g. `srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"`
+- test: add tests for options, responsive images, exceptions
+- docs: update readme
+
 ## 0.6.0 (2023-01-28)
-- feat: add `sources` options to define custom tags and attributes for resolving source files
-- feat: add `extractComments` option to enable/disable saving comments in *.LICENSE.txt file
+- feat: add `sources` loader option to define custom tags and attributes for resolving source files
+- feat: add `extractComments` plugin option to enable/disable saving comments in *.LICENSE.txt file
 - feat: add to default resolving the `data` attribute of `object` tag
 - feat: add supports the `responsive-loader`
-- fix: resolves excact attribute name w/o leading wildcard
+- fix: resolves exact attribute name w/o leading wildcard
 - fix: resolves mutiline attributes
 - fix: resolves mutiline values in srcset attribute
 - test: add tests for new options, messages
@@ -17,8 +23,8 @@
 - docs: update readme for usage the multipage configuration with `Nunjucks` template engine
 
 ## 0.5.0 (2023-01-22)
-- feat: add plugin option `test` to process entry files that pass test assertion
-- feat: add loader option `preprocessor` to allows pre-processing of content before handling
+- feat: add `test` plugin option to process entry files that pass test assertion
+- feat: add `preprocessor` loader option to allow pre-processing of content before handling
 - test: add test for usage `Handlebars` template engine
 - docs: update readme with new features
 
@@ -50,10 +56,11 @@
 First release:
 - feat: handles HTML files from webpack entry
 - feat: resolving the Webpack alias in the source file name
-- feat: option `js` to extract JavaScript files from source scripts loaded in HTML via a `<script>` tag and generates a separate file for it
-- feat: option `css` to extract CSS files from source styles loaded in HTML via a `<link>` tag and generates a separate file for it
+- feat: add `js` plugin option to extract JavaScript files from source scripts loaded in HTML via a `<script>` tag and generates a separate file for it
+- feat: add `css` plugin option to extract CSS files from source styles loaded in HTML via a `<link>` tag and generates a separate file for it
 - feat: processes the images, fonts from sources loaded via `<link>`, `<img>` or `<source>` tags and generates a separate file for it
 - feat: resolves and extracts images from sources loaded via `url()` in a style (css, scss)
+- feat: support auto `publicPath`
 
 ## 0.0.1-beta.0 (2023-01-07)
 - docs: announcement of the plugin

@@ -29,8 +29,15 @@
     <h1>Home</h1>
     <!-- ignore resolving of the 'src' via filter -->
     <img src="./apple.png">
+
+    <!-- ignore resolving of the 'srcset' via filter -->
+    <img srcset="fig1.png, fig2.png">
+
     <!-- resolves only the concrete value of the 'src' via filter -->
     <img src="./fig3.png">
+
+    <!-- resolves only if srcset contains the concrete value via filter -->
+    <img srcset="fig1.png, fig2.png, fig3.png">
 
     <!-- custom tag with custom attributes used in filter -->
     <custom-img

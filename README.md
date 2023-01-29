@@ -6,7 +6,7 @@
         HTML Bundler Plugin for Webpack
         </a>
     </h1>
-    <div>HTML Bundler Plugin is the right way to bundle all resources with your HTML files</div>
+    <div>HTML Bundler Plugin is the right way to bundle all resources with your HTML templates</div>
 </div>
 
 ---
@@ -16,7 +16,7 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-This is a new powerful plugin that does exactly what you want, automatically extracts JS, CSS, images, fonts
+This is a new powerful plugin that does exactly what you want: automatically extracts JS, CSS, images, fonts
 from their sources loaded directly in HTML.
 The generated HTML contains output hashed filenames of processed source files.
 The plugin allow to use an HTML file or a template as an entry point in Webpack.
@@ -24,18 +24,16 @@ The plugin allow to use an HTML file or a template as an entry point in Webpack.
 The purpose of this plugin is to make the developer's life much easier than it was using 
  `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
 
-💡 **Highlights**:
+💡 **Highlights**
 
-- Define your HTML templates in Webpack entry.
-- The HTML template is the entry point for all source scripts and styles.
+- The HTML template is the entry point.
 - Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
-- All JS and CSS files will be extracted from their sources loaded in HTML tags.
-- You can easily inline JS, CSS, SVG, images **without additional plugins and loaders**.
-- You can easily use a template engine, e.g. [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**
+- All JS and CSS files will be extracted from their sources loaded in HTML.
+- You can inline JS, CSS, SVG, images **without additional plugins and loaders**.
+- You can use a template engine, e.g. [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**
+- This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
 
-This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
-
-How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`;
+How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`.
 
 ### Simple usage example
 
@@ -114,6 +112,7 @@ module.exports = {
 3. [Loader options](#loader-options)
 4. [Recipes](#recipes)
    - [How to use source images in HTML](#recipe-use-images-in-html)
+   - [How to resize and generate responsive images](#recipe-responsive-images)
    - [How to preload source fonts in HTML](#recipe-preload-fonts)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
@@ -140,6 +139,7 @@ module.exports = {
 - `inline SVG` as SVG tag in HTML
 - `inline SVG` as `utf-8` data-URL in CSS
 - support the `auto` publicPath
+- enable/disable extraction of comments to `*.LICENSE.txt` file
 
 Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
@@ -358,6 +358,48 @@ module.exports = {
 };
 ```
 
+### `postprocess`
+Type:
+```ts
+type postprocess = (
+  content: string,
+  info: ResourceInfo,
+  compilation: Compilation,
+) => string|null;
+
+type ResourceInfo = {
+  verbose: boolean,
+  isEntry: boolean,
+  filename: 
+    | string
+    | ((pathData: PathData) => string),
+  sourceFile: string,
+  outputPath: string,
+  assetFile: string,
+};
+```
+
+Default: `null`<br>
+
+Called after the Webpack compilation.
+
+The `postprocess` have the following arguments:
+
+- `content: string` - a content of processed file
+- `info: ResourceInfo` - an info about current file
+- `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
+
+If return `null` then the content processed via Webpack is ignored and will be saved a result from the loader.
+
+The `ResourceInfo` have the following properties:
+
+- `verbose: boolean` - whether information should be displayed
+- `isEntry: boolean` - if is `true`, the resource is the entry point, otherwise is a resource loaded in the entry point
+- `filename: string|function` - a filename of the resource, see [filename](https://webpack.js.org/configuration/output/#outputfilename)
+- `sourceFile: string` - a full path of the source file
+- `outputPath: string` - a full path of the output directory
+- `assetFile: string` - an output asset file relative by outputPath
+
 ---
 
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
@@ -383,7 +425,7 @@ type sources =
 
 Default: `true`<br>
 
-By default, resolves source files in the following attributes:
+By default, resolves source files in the following tags and attributes:
 
 | Tag      | Attributes                                                                            |
 |----------|---------------------------------------------------------------------------------------|
@@ -397,25 +439,50 @@ By default, resolves source files in the following attributes:
 | `video`  | `src` `poster`                                                                        |
 | `object` | `data`                                                                                |
 
-To disable the processing of all attributes, set the `source` option as `false`.
+To disable the processing of all attributes, set the `sources` option as `false`.
 
 > **Note**
 > 
-> Automatically are processed only attributes containing a relative path or Webpack alias, e.g.:
-> - `src="./image.png"` - relative path to local directory
-> - `src="../../assets/image.png"` - relative path to parent directory
-> - `src="@images/image.png"` - image directory as Webpack alias
+> Automatically are processed only attributes containing a relative path or Webpack alias:
+> - `src="./image.png"` - a relative path to local directory
+> - `src="../../assets/image.png"` - a relative path to parent directory
+> - `src="@images/image.png"` - an image directory as Webpack alias
 > 
-> Url values like following are not processed, e.g.:
+> Url values are not processed:
 > - `src="https://example.com/img/image.png"`
 > - `src="//example.com/img/image.png"`
 > - `src="/img/image.png"`
 > 
-> Other not file values are ignored, e.g.:
+> Others not file values are ignored, e.g.:
 > - `src="data:image/png; ..."`
 > - `src="javascript: ..."`
 
-The default tags can be extended with new attributes or add new tags and attributes.
+The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
+The argument is an object containing the properties:
+- `tag: string` - a name of the HTML tag
+- `attribute: string` - a name of the HTML attribute
+- `value: string` - a value of the HTML attribute
+- `attributes: string` - all attributes of the tag
+- `resourcePath: string` - a path of the HTML template
+
+The processing of an attribute can be ignored by returning `false`.
+
+Examples of using argument properties:
+```js
+{
+  tag: 'img',
+  // use the destructuring of variables from the object argument  
+  filter: ({ tag, attribute, value, attributes, resourcePath }) => {
+    if (attribute === 'src') return false;
+    if (value.endsWith('.webp')) return false;
+    if ('srcset' in attributes && attributes['srcset'] === '') return false;
+    if (resourcePath.indexOf('example')) return false;
+    // otherwise return 'true' or nothing to allow processing
+  },
+}
+```
+
+The default sources can be extended with new tags and attributes.
 
 For example, add the processing of the `data-src` and `data-srcset` attributes to the `img` tag:
 
@@ -441,9 +508,9 @@ module.exports = {
 };
 ```
 
-You can use the `filter` function to allow processing for specific attributes.
+You can use the `filter` function to allow the processing only specific attributes.
 
-For example, use `filter` to allow processing for images in `meta` tag by `content` attribute:
+For example, allow processing only for images in `content` attribute of the `meta` tag:
 
 ```html
 <html>
@@ -475,8 +542,7 @@ module.exports = {
             {
               tag: 'meta',
               attributes: ['content'],
-              // note: use the destruction of used variables from the object argument
-              filter: ({ tag, attribute, value, attributes, resourcePath }) => {
+              filter: ({ attributes }) => {
                 const allowedNames = ['twitter:image', 'logo'];
                 if ('name' in attributes && allowedNames.indexOf(attributes.name) < 0) {
                   return false;
@@ -491,16 +557,7 @@ module.exports = {
 };
 ```
 
-The `filter` parameter is an object containing the properties:
-- `tag` the name of the HTML tag
-- `attribute` the name of the HTML attribute
-- `value` the value of the HTML attribute
-- `attributes` all attributes of the tag
-- `resourcePath` the path of the HTML file
-
-The attribute can be ignored by returning `false`, otherwise the function should return nothing. 
-
-Filter can disable an attribute of a tag.
+The filter can disable an attribute of a tag.
 
 For example, disable the processing of default attribute `srcset` of the `img` tag:
 
@@ -537,23 +594,25 @@ type preprocessor = (
 
 Default: `undefined`<br>
 
-The `content` argument is raw content of a file.\
-The `loaderContext` argument is an object contained useful properties, e.g.:
-- `mode` - the Webpack mode: `production`, `development`, `none`
-- `rootContext` - the path to Webpack context
-- `resource` - the template file
+The `content` argument is the raw content of a file.\
+The `loaderContext` argument is an object contained useful properties:
+- `mode: string` - a Webpack mode: `production`, `development`, `none`
+- `rootContext: string` - a path to Webpack context
+- `resource: string` - a template file, including query
+- `resourcePath: string` - a template file
 
 Complete API see by the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context).
 
 The preprocessor is called before handling of the content. 
-This function can be used to replace a placeholder with a variable or compile the content with a template engine, e.g. [Handlebars](https://handlebarsjs.com).
+This function can be used to replace a placeholder with a variable or compile the content with a template engine,
+such as [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks).
 
 For example, set variable in the template
 _index.html_
 ```html
 <html>
 <head>
-  <title>{{title}}</title>
+  <title>{{ title }}</title>
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -582,7 +641,7 @@ module.exports = {
         test: /\.html$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, loaderContext) => content.replace('{{title}}', 'Homepage'),
+          preprocessor: (content, loaderContext) => content.replace('{{ title }}', 'Homepage'),
         },
       },
     ],
@@ -596,7 +655,7 @@ module.exports = {
 > Using the `preprocessor` you can use anyone template engine without its loader.
 > 
 > The `preprocessor` will be called for each entry file.
-> For multipage configuration, you can use the `loaderContext.resource` property to differentiate data for diverse pages.
+> For multipage configuration, you can use the `loaderContext.resourcePath` property to differentiate data for diverse pages.
 > See the [usage example](#recipe-pass-data-multipage).
 
 ---
@@ -647,6 +706,78 @@ The generated HTML contains hashed output images filenames:
     </picture>
   </body>
 </html>
+```
+
+<a id="recipe-responsive-images" name="recipe-responsive-images" href="#recipe-responsive-images"></a>
+## How to resize and generate responsive images
+
+To resize or generate responsive images is recommended to use the [responsive-loader](https://github.com/dazuaz/responsive-loader).
+
+Install additional packages:
+```
+npm i -D responsive-loader sharp
+```
+
+To resize an image use the query parameter `size`:
+
+```html
+<!-- resize source image to max. 640px -->
+<img src="./image.png?size=640">
+```
+
+To generate responsible images use in `srcset` attribute the query parameter `sizes` als `JSON5` to avoid parsing error, 
+because many images must be separated by commas `,` but we use the comma to separate sizes for one image:
+```html
+<!-- responsible images with different sizes: 320px, 480px, 640px -->
+<img src="./image.png?size=480"
+     srcset="./image.png?{sizes:[320,480,640]}">
+```
+
+You can convert source image to other output format. 
+For example, we have original image 2000px width as PNG and want to resize to 640px and save as WEBP:
+
+```html
+<img src="./image.png?size=640&format=webp">
+```
+
+You can create a small inline image placeholder. To do this, use the following query parameters:
+- `placeholder=true` - enable to generate the placeholder
+- `placeholderSize=35` - the size of the generating placeholder
+- `prop=placeholder` - the plugin-specific `prop` parameter retrieves the property from the object generated by `responsive-loader`
+
+```html
+<img src="./image.png?placeholder=true&placeholderSize=35&prop=placeholder"
+     srcset="./image.png?{sizes:[320,480,640]}">
+```
+
+The generated HTML:
+```html
+<img src="data:image/png;base64,iVBORw0K ..."
+     srcset="/img/image-320w.png 320w,/img/image-480w.png 480w,/img/image-640w.png 640w">
+```
+
+Add to Webpack config the rule for responsive images:
+```js
+module.exports = {
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|webp)$/i,
+        type: 'asset/resource',
+        use: {
+          loader: 'responsive-loader',
+          options: {
+            // output filename of images, e.g. dist/assets/img/image-640w.png
+            name: 'assets/img/[name]-[width]w.[ext]',
+            sizes: [640], // max. image size, if 'size' query is not used
+          },
+        },
+      },
+      // ... other loaders
+    ],
+  },
+};
+
 ```
 
 <a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
@@ -840,12 +971,12 @@ _index.hbs_
 ```html
 <html>
 <head>
-  <title>{{title}}</title>
+  <title>{{ title }}</title>
 </head>
 <body>
-  <h1>{{headline}}</h1>
+  <h1>{{ headline }}</h1>
   <div>
-    <p>{{firstname}} {{lastname}}</p>
+    <p>{{ firstname }} {{ lastname }}</p>
   </div>
 </body>
 </html>
@@ -905,7 +1036,7 @@ See the usage example by [How to use a template engine](#recipe-template-engine)
 <a id="recipe-pass-data-multipage" name="recipe-pass-data-multipage" href="#recipe-pass-data-multipage"></a>
 ## How to pass different data by multipage configuration
 
-For multipage configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks/) templating engine maintained by Mozilla.
+For multipage configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks) templating engine maintained by Mozilla.
 
 For example, you have several pages with variables.\
 Both pages have the same layout _src/views/layouts/default.html_
@@ -913,7 +1044,7 @@ Both pages have the same layout _src/views/layouts/default.html_
 <!DOCTYPE html>
 <html>
 <head>
-  <title>{{title}}</title>
+  <title>{{ title }}</title>
   <!-- block for specific page styles -->
   {% block styles %}{% endblock %}
   <!-- block for specific page scripts -->
@@ -1044,10 +1175,9 @@ module.exports = {
         test: /\.html/,
         loader: HtmlBundlerPlugin.loader, //  HTML template loader
         options: {
-          // the deconstucted 'resource' argument is the template file
-          preprocessor: (content, { resource }) => {
+          preprocessor: (content, { resourcePath }) => {
             // get template variables by template filename
-            const data = findData(resource, entryData);
+            const data = findData(resourcePath, entryData);
             // render template with specific variables
             return Nunjucks.renderString(content, data);
           },

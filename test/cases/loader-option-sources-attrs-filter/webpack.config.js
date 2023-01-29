@@ -49,7 +49,8 @@ module.exports = {
             {
               tag: 'img',
               filter: ({ tag, attribute, value, attributes, resourcePath }) => {
-                if (!value.endsWith('fig3.png')) return false;
+                if (attribute === 'src' && !value.endsWith('fig3.png')) return false;
+                if (attribute === 'srcset' && !value.find((item) => item.endsWith('fig3.png'))) return false;
               },
             },
 

@@ -1,7 +1,7 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "0.6.0",
-  "description": "HTML bundler plugin for webpack handels HTML files as entrypoint and extracts CSS, JS, images from their sources loaded in HTML.",
+  "version": "0.7.0",
+  "description": "HTML bundler plugin for webpack handels HTML templates as entry point and extracts CSS, JS, images from their sources loaded in HTML.",
   "keywords": [
     "webpack",
     "plugin",
@@ -9,7 +9,8 @@
     "bundle",
     "bundler",
     "entry",
-    "entrypoint",
+    "asset",
+    "resource",
     "scss",
     "css",
     "js",
@@ -19,7 +20,6 @@
     "base64",
     "utf-8",
     "svg",
-    "png",
     "image",
     "extract",
     "loader",

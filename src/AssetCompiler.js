@@ -94,7 +94,7 @@ const {
 /**
  * @typedef {Object} ResourceInfo
  * @property {boolean} isEntry True if is the asset from entry, false if asset is required from template.
- * @property {boolean} [verbose = false] Whether information should be displayed.
+ * @property {boolean} verbose Whether information should be displayed.
  * @property {string|(function(PathData, AssetInfo): string)} filename The filename template or function.
  * @property {string} sourceFile The absolute path to source file.
  * @property {string} outputPath The absolute path to output directory of asset.
@@ -473,6 +473,7 @@ class AssetCompiler {
 
   /**
    * Called before a module build has started.
+   *
    * @param {Object} module
    */
   beforeBuildModule(module) {
@@ -573,7 +574,7 @@ class AssetCompiler {
           assetModules.add({
             inline,
             entryAsset: null,
-            // postprocessInfo
+            // resourceInfo
             isEntry: true,
             verbose: entry.verbose,
             outputPath: entry.outputPath,
@@ -657,7 +658,7 @@ class AssetCompiler {
         assetModules.add({
           inline,
           entryAsset: entry.filename,
-          // postprocessInfo
+          // resourceInfo
           isEntry: false,
           verbose: moduleVerbose,
           outputPath: moduleOutputPath,
@@ -810,7 +811,7 @@ class AssetCompiler {
         content = pluginModule.extract(content, assetFile, this.compilation);
       }
       if (pluginModule.postprocess) {
-        const postprocessInfo = {
+        const resourceInfo = {
           isEntry,
           verbose,
           outputPath,
@@ -819,9 +820,9 @@ class AssetCompiler {
           filename: filenameTemplate,
         };
         try {
-          content = pluginModule.postprocess(content, postprocessInfo, this.compilation);
+          content = pluginModule.postprocess(content, resourceInfo, this.compilation);
         } catch (error) {
-          postprocessException(error, postprocessInfo);
+          postprocessException(error, resourceInfo);
         }
       }
     }
@@ -890,9 +891,6 @@ class AssetCompiler {
               sourceFile,
               data: AssetInline.data.get(sourceFile),
             });
-            break;
-          case 'asset/source':
-            // reserved
             break;
           // no default
         }

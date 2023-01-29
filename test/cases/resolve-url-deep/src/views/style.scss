@@ -1,0 +1,10 @@
+@use '../styles/fonts/icons';
+
+h1 {
+  color: midnightblue;
+}
+
+.mat {
+  font-family: icons.$font-family;
+  font-size: 20px;
+}

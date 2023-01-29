@@ -1,5 +1,6 @@
 const Loader = require('./Loader');
 const { isWin, isInline, pathToPosix } = require('./Utils');
+const { indexOf } = require('nunjucks/src/lib');
 
 const spaceChars = [' ', '\t', '\n', '\r', '\f'];
 
@@ -32,6 +33,28 @@ const indexOfNonSpace = (content, startPos = 0) => {
   for (; spaceChars.indexOf(content.charAt(startPos)) > -1; startPos++) {}
 
   return startPos;
+};
+
+/**
+ * Returns the first index of the searched char if none of the excluded chars was found before it.
+ *
+ * @param {string} search The search char.
+ * @param {string} content Where to search for a char.
+ * @param {number} startPos The offset in content.
+ * @param {string} except A string containing chars that should not be before the searched character.
+ * @return {number} TThe index of the found char, otherwise -1.
+ */
+const indexOfChar = (search, content, startPos = 0, except = '') => {
+  let offset = 0;
+  let char;
+
+  while ((char = content.charAt(startPos))) {
+    if (char === search) return startPos;
+    if (offset++ > 0 && except.indexOf(char) > -1) return -1;
+    startPos++;
+  }
+
+  return -1;
 };
 
 /**
@@ -98,6 +121,7 @@ class HtmlBundler {
    *
    * Resolve relative path: href="./basic.css", href="../basic.css"
    * Resolve alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
+   * Resolve file with query: srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"
    *
    * Ignore:
    *  - https://example.com/style.css
@@ -116,33 +140,24 @@ class HtmlBundler {
   static resolve({ type, file, issuer }) {
     file = file.trim();
 
-    if (/^(?:\/{1,2})/.test(file) || file.indexOf(':') > -1 || file.startsWith('#')) {
+    if (/^(?:\/{1,2})/.test(file) || file.startsWith('#') || (file.indexOf(':') > 0 && file.indexOf('?{') < 0)) {
       return false;
     }
-
-    let resolvedFile;
 
     switch (type) {
       case 'style':
       case 'inline/style':
-        resolvedFile = Loader.compiler.loaderRequireStyle(file, issuer);
-        break;
+        return Loader.compiler.loaderRequireStyle(file, issuer);
       case 'script':
       case 'inline/script':
-        resolvedFile = Loader.compiler.loaderRequireScript(file, issuer);
-        break;
-      default:
-        resolvedFile = Loader.compiler.loaderRequire(file, issuer);
-        break;
+        return Loader.compiler.loaderRequireScript(file, issuer);
     }
 
-    return resolvedFile;
+    return Loader.compiler.loaderRequire(file, issuer);
   }
 
   /**
    * Transform a deep nested structure of parsed values to a flat one.
-   *
-   * TODO: optimize the parsing to save data directly in flat structure.
    *
    * @param {Array<{}>} tags
    * @return {Array<{}>}
@@ -233,11 +248,13 @@ class HtmlBundler {
 
     while ((startPos = content.indexOf(open, startPos)) >= 0) {
       let attrValues = [];
-      endPos = content.indexOf(close, startPos) + close.length;
+      endPos = indexOfChar(close, content, startPos, '<');
 
       if (endPos < 1) {
-        throw new Error(`The '${tag}' tag hasn't the closing '>' char.`);
+        throw new Error(`The '${tag}' tag starting at ${startPos} position is missing the closing '>' char.`);
       }
+
+      endPos += close.length;
 
       const source = content.slice(startPos, endPos);
       let type = 'asset';
@@ -370,6 +387,11 @@ class HtmlBundler {
     let endPos = 0;
     let currentPos;
     let values = [];
+
+    // support for 'responsive-loader' value, e.g.: image.png?{sizes: [100,200,300], format: 'jpg'}
+    if (srcsetValue.indexOf('?{') > 0) {
+      return [{ value: srcsetValue, startPos, endPos: srcsetValue.length }];
+    }
 
     do {
       currentPos = srcsetValue.indexOf(',', startPos);

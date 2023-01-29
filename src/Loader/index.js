@@ -93,7 +93,6 @@ const compile = function (content, callback) {
 
   try {
     compileResult = loaderOptions.sources === false ? content : HtmlBundler.compile(content, filename, sources);
-    //console.log('>> ', filename, '\n', compileResult);
 
     // Note: don't use compileResult.dependencies because it is not available by compile error.
     // The loader tracks all dependencies during compilation and stores them in `Dependency` instance.

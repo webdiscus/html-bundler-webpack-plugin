@@ -1,0 +1,33 @@
+// placeholder for responsive image in header
+.header-container {
+  width: 100%;
+  height: 300px;
+  max-height: 300px;
+  overflow: hidden;
+  background-size: cover;
+
+  &.placeholder-css {
+    // placeholder of responsive image
+    // 2 ways to define placeholder: one is in Pug via style attribute, other is in CSS
+    background-image: url('Images/abstract.webp?prop=placeholder&placeholder=true&placeholderSize=50');
+    background-position: 0 35%;
+  }
+
+  // responsive image
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 0 35%;
+  }
+}
+
+// styles for demo on page
+$width: 160;
+$height: 130;
+.resized-image {
+  width: #{$width}px;
+  height: #{$height}px;
+  border: 1px solid chocolate;
+  background-image: url('Images/image.png?size=#{$width}');
+}
