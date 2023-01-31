@@ -16,17 +16,16 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-This is a new powerful plugin that does exactly what you want: automatically extracts JS, CSS, images, fonts
-from their sources loaded directly in HTML.
+The plugin allows to use an HTML file or a template as a starting point for collecting all the dependencies used in your web application.
+This plugin does exactly what you want: automatically extracts JS, CSS, images, fonts from their sources loaded directly in HTML.
 The generated HTML contains output hashed filenames of processed source files.
-The plugin allow to use an HTML file or a template as an entry point in Webpack.
 
-The purpose of this plugin is to make the developer's life much easier than it was using 
- `html-webpack-plugin` `mini-css-extract-plugin` and other plugins.
+The purpose of this plugin is to make Webpack setup much easier and intuitiver than with other plugins like
+ `html-webpack-plugin` `mini-css-extract-plugin`.
 
 💡 **Highlights**
 
-- The HTML template is the entry point.
+- An entry point is an HTML template.
 - Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
 - All JS and CSS files will be extracted from their sources loaded in HTML.
 - You can inline JS, CSS, SVG, images **without additional plugins and loaders**.
@@ -41,17 +40,17 @@ Add source scripts, styles, images directly to HTML using a relative path or a W
 
 ```html
 <html>
-  <head>
-    <!-- load source style -->
-    <link href="./style.scss" rel="stylesheet">
-    <!-- load source script -->
-    <script src="./main.js" defer="defer"></script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- @images is the Webpack alias for the source images directory -->
-    <img src="@images/logo.png">
-  </body>
+<head>
+  <!-- load source style here -->
+  <link href="./style.scss" rel="stylesheet">
+  <!-- load source script here -->
+  <script src="./main.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <!-- @images is the Webpack alias for the source images directory -->
+  <img src="@images/logo.png">
+</body>
 </html>
 ```
 
@@ -59,14 +58,14 @@ The generated HTML contains hashed output filenames of processed source files:
 
 ```html
 <html>
-  <head>
-    <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
-    <script src="/assets/js/main.f4b855d8.js" defer="defer"></script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <img src="/assets/img/logo.58b43bd8.png">
-  </body>
+<head>
+  <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
+  <script src="/assets/js/main.f4b855d8.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <img src="/assets/img/logo.58b43bd8.png">
+</body>
 </html>
 ```
 
@@ -514,17 +513,17 @@ For example, allow processing only for images in `content` attribute of the `met
 
 ```html
 <html>
-  <head>
-    <!-- ignore the attribute via filter -->
-    <meta name="theme-color" content="#ffffff">
-    <!-- resolve the 'content' attribute if 'name' containing special values  -->
-    <meta name="twitter:image" content="./image.png">
-    <meta name="logo" content="./logo.png">
-  </head>
-  <body>
-    <!-- resolve 'src' attribute containing relative path -->
-    <img src="./image.png">
-  </body>
+<head>
+  <!-- ignore the attribute via filter -->
+  <meta name="theme-color" content="#ffffff">
+  <!-- resolve the 'content' attribute if 'name' containing special values  -->
+  <meta name="twitter:image" content="./image.png">
+  <meta name="logo" content="./logo.png">
+</head>
+<body>
+  <!-- resolve 'src' attribute containing relative path -->
+  <img src="./image.png">
+</body>
 </html>
 ```
 
@@ -681,30 +680,30 @@ module: {
 Add a source file using a relative path or Webpack alias in HTML:
 ```html
 <html>
-  <head>
-    <link href="./favicon.ico" rel="icon" />
-  </head>
-  <body>
-    <img src="./apple.png" srcset="./apple1.png 320w, ./apple2.png 640w" alt="apple">
-    <picture>
-      <source srcset="./fig1.jpg, ./fig2.jpg 320w, ./fig3.jpg 640w">
-    </picture>
-  </body>
+<head>
+  <link href="./favicon.ico" rel="icon" />
+</head>
+<body>
+  <img src="./apple.png" srcset="./apple1.png 320w, ./apple2.png 640w" alt="apple">
+  <picture>
+    <source srcset="./fig1.jpg, ./fig2.jpg 320w, ./fig3.jpg 640w">
+  </picture>
+</body>
 </html>
 ```
 
 The generated HTML contains hashed output images filenames:
 ```html
 <html>
-  <head>
-    <link href="/assets/img/favicon.05e4dd86.ico" rel="icon" />
-  </head>
-  <body>
-    <img src="/assets/img/apple.f4b855d8.png" srcset="/assets/img/apple1.855f4bd8.png 320w, /assets/img/apple2.d8f4b855.png 640w" alt="apple">
-    <picture>
-      <source srcset="/assets/img/fig1.605e4dd8.jpg, /assets/img/fig2.8605e4dd.jpg 320w, /assets/img/fig3.e4605dd8.jpg 640w">
-    </picture>
-  </body>
+<head>
+  <link href="/assets/img/favicon.05e4dd86.ico" rel="icon" />
+</head>
+<body>
+  <img src="/assets/img/apple.f4b855d8.png" srcset="/assets/img/apple1.855f4bd8.png 320w, /assets/img/apple2.d8f4b855.png 640w" alt="apple">
+  <picture>
+    <source srcset="/assets/img/fig1.605e4dd8.jpg, /assets/img/fig2.8605e4dd.jpg 320w, /assets/img/fig3.e4605dd8.jpg 640w">
+  </picture>
+</body>
 </html>
 ```
 
@@ -801,26 +800,26 @@ module: {
 Add a source file using a relative path or Webpack alias in HTML:
 ```html
 <html>
-  <head>
-    <link href="./font1.woff2" rel="preload" as="font" type="font/woff2" />
-    <link href="./font2.woff2" rel="preload" as="font" type="font/woff2" />
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <link href="./font1.woff2" rel="preload" as="font" type="font/woff2" />
+  <link href="./font2.woff2" rel="preload" as="font" type="font/woff2" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
 The generated HTML contains output fonts filenames:
 ```html
 <html>
-  <head>
-    <link href="/assets/fonts/font1.woff2" rel="preload" as="font" type="font/woff2" />
-    <link href="/assets/fonts/font2.woff2" rel="preload" as="font" type="font/woff2" />
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <link href="/assets/fonts/font1.woff2" rel="preload" as="font" type="font/woff2" />
+  <link href="/assets/fonts/font2.woff2" rel="preload" as="font" type="font/woff2" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
@@ -843,15 +842,15 @@ h1 {
 Add the `?inline` query to the source filename which you want to inline:
 ```html
 <html>
-  <head>
-    <!-- load style as file -->
-    <link href="./main.scss" rel="stylesheet" />
-    <!-- inline style -->
-    <link href="./style.scss?inline" rel="stylesheet" />
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <!-- load style as file -->
+  <link href="./main.scss" rel="stylesheet" />
+  <!-- inline style -->
+  <link href="./style.scss?inline" rel="stylesheet" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
@@ -859,17 +858,17 @@ The generated HTML contains inline CSS already processed via Webpack:
 
 ```html
 <html>
-  <head>
-    <!-- load style as file -->
-    <link href="/assets/css/main.05e4dd86.css" rel="stylesheet">
-    <!-- inline style -->
-    <style>
-      h1{color: red;}
-    </style>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <!-- load style as file -->
+  <link href="/assets/css/main.05e4dd86.css" rel="stylesheet">
+  <!-- inline style -->
+  <style>
+    h1{color: red;}
+  </style>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
@@ -888,15 +887,15 @@ console.log('Hello JS!');
 Add the `?inline` query to the source filename which you want to inline:
 ```html
 <html>
-  <head>
-    <!-- load script as file -->
-    <script src="./main.js" defer="defer"></script>
-    <!-- inline script -->
-    <script src="./script.js?inline"></script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <!-- load script as file -->
+  <script src="./main.js" defer="defer"></script>
+  <!-- inline script -->
+  <script src="./script.js?inline"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 
@@ -904,17 +903,17 @@ The generated HTML contains inline JS already compiled via Webpack:
 
 ```html
 <html>
-  <head>
-    <!-- load style as file -->
-    <script src="assets/js/main.992ba657.js" defer="defer"></script>
-    <!-- inline script -->
-    <script>
-      (()=>{"use strict";console.log("Hello JS!")})();
-    </script>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-  </body>
+<head>
+  <!-- load style as file -->
+  <script src="assets/js/main.992ba657.js" defer="defer"></script>
+  <!-- inline script -->
+  <script>
+    (()=>{"use strict";console.log("Hello JS!")})();
+  </script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
 </html>
 ```
 

@@ -292,9 +292,17 @@ describe('plugin options', () => {
   test('options.postprocess', (done) => {
     compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
+
+  test('entry', (done) => {
+    compareFileListAndContent(PATHS, 'option-entry', done);
+  });
 });
 
 describe('loader options', () => {
+  test('defaults option when in module.rules is not defined', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-defaults', done);
+  });
+
   test('disable the processing of all tags and attributes', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-sources-false', done);
   });
@@ -311,8 +319,12 @@ describe('loader options', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
   });
 
-  test('preprocessor with nunjucks for multipage', (done) => {
-    compareFileListAndContent(PATHS, 'loader-option-preprocessor-nunjucks-multipage', done);
+  test('preprocessor for simple multipage', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-multipage', done);
+  });
+
+  test('preprocessor for multipage with nunjucks', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-multipage-nunjucks', done);
   });
 });
 
@@ -357,29 +369,29 @@ describe('inline styles & scripts', () => {
 });
 
 describe('split chunks', () => {
-  // test('resolve assets when used split chunk, development', (done) => {
-  //   compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-dev', done);
-  // });
-  //
-  // test('resolve assets when used split chunk, production', (done) => {
-  //   compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-prod', done);
-  // });
+  test('extract css and js w/o runtime code of css-loader', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-css-js', done);
+  });
+
+  test('import source scripts and styles from many node module', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-node-module-many-vendors', done);
+  });
 
   test('import source scripts and styles from node module', (done) => {
     compareFileListAndContent(PATHS, 'split-chunk-node-module-source', done);
   });
 
-  // test('import source scripts and styles from many node module', (done) => {
-  //   compareFileListAndContent(PATHS, 'split-chunk-node-module-many-vendors', done);
-  // });
-  //
-  // test('load vendor scripts from node module', (done) => {
-  //   compareFileListAndContent(PATHS, 'split-chunk-vendor', done);
-  // });
-  //
-  // test('extract css and js w/o runtime code of css-loader', (done) => {
-  //   compareFileListAndContent(PATHS, 'split-chunk-css-js', done);
-  // });
+  test('resolve assets when used split chunk, development', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-dev', done);
+  });
+
+  test('resolve assets when used split chunk, production', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-resolve-assets-prod', done);
+  });
+
+  test('load vendor scripts from node module', (done) => {
+    compareFileListAndContent(PATHS, 'split-chunk-vendor', done);
+  });
 });
 
 describe('special cases', () => {

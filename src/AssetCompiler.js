@@ -137,6 +137,9 @@ class AssetCompiler {
     type: 'jsonp', // compiles JS from source into HTML string via Function()
   };
 
+  // the id to bind loader with data passed into template via entry.data
+  entryDataId;
+
   // webpack's options and modules
   webpackContext = '';
   webpackOutputPath = '';
@@ -170,6 +173,8 @@ class AssetCompiler {
     // let know the loader that the plugin is being used
     plugin.init(this.options);
 
+    this.reset();
+
     // bind the instance context for using these methods as references in Webpack hooks
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
@@ -179,6 +184,13 @@ class AssetCompiler {
     this.afterProcessAssets = this.afterProcessAssets.bind(this);
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
     this.done = this.done.bind(this);
+  }
+
+  /**
+   * Reset all initial values.
+   */
+  reset() {
+    this.entryDataId = 1;
   }
 
   /**
@@ -200,6 +212,37 @@ class AssetCompiler {
   isEntry(sourceFile) {
     const [file] = sourceFile.split('?', 1);
     return this.options.test.test(file);
+  }
+
+  /**
+   * @param {{}} options The Webpack options where entry contains additional 'data' property.
+   */
+  initializeWebpackEntry(options) {
+    let { entry } = options;
+    const pluginEntries = this.options.entry;
+
+    // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
+    if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
+      // reset entry
+      entry = {};
+    }
+
+    if (pluginEntries) {
+      for (const key in pluginEntries) {
+        const entry = pluginEntries[key];
+
+        if (entry['import'] == null) {
+          pluginEntries[key] = { import: [entry] };
+          continue;
+        }
+
+        if (!Array.isArray(entry.import)) {
+          entry.import = [entry.import];
+        }
+      }
+
+      options.entry = { ...entry, ...pluginEntries };
+    }
   }
 
   /**
@@ -261,6 +304,13 @@ class AssetCompiler {
 
     if (!this.options.sourcePath) this.options.sourcePath = this.webpackContext;
     if (!this.options.outputPath) this.options.outputPath = this.webpackOutputPath;
+
+    compiler.hooks.initialize.tap(pluginName, () => {
+      // reserved for future feature
+    });
+
+    // options.entry
+    this.initializeWebpackEntry(options);
 
     // entry options
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
@@ -369,6 +419,13 @@ class AssetCompiler {
         extract: isFunction(extract) ? extract : null,
         verbose,
       };
+
+      if (entry.data) {
+        entry.entryDataId = `${this.entryDataId}`;
+        entry.import[0] += importFile.indexOf('?') < 0 ? '?' : '&';
+        entry.import[0] += `__entryDataId=${this.entryDataId}`;
+        this.entryDataId++;
+      }
 
       AssetEntry.add(entry, assetEntryOptions);
     }
@@ -900,6 +957,7 @@ class AssetCompiler {
     verboseList.clear();
     issuerCache.clear();
 
+    this.reset();
     Asset.reset();
     AssetEntry.reset();
     AssetScript.reset();

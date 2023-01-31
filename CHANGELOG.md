@@ -1,5 +1,10 @@
 # Change log
 
+## 0.8.0 (2023-02-01)
+- feat: add `entry` plugin option, this has same API as Webpack entry, but have additional `data` property
+- feat: pass custom data into `preprocessor` via additional `data` property of `entry` plugin option
+- feat: support split chunk
+
 ## 0.7.0 (2023-01-29)
 - feat: add `postprocess` plugin option
 - fix: parsing srcset attribute containing a query as JSON5, e.g. `srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"`

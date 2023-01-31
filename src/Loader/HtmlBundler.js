@@ -1,6 +1,5 @@
 const Loader = require('./Loader');
 const { isWin, isInline, pathToPosix } = require('./Utils');
-const { indexOf } = require('nunjucks/src/lib');
 
 const spaceChars = [' ', '\t', '\n', '\r', '\f'];
 

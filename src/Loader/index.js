@@ -8,6 +8,27 @@ const Loader = require('./Loader');
 const { getCompileErrorMessage, getCompileErrorHtml, getExecuteTemplateFunctionErrorMessage } = require('./Exeptions');
 
 /**
+ * @param {{}} entries
+ * @param {string} resourceQuery
+ * @return {{}|null}
+ */
+const findEntryData = (entries, resourceQuery) => {
+  const params = new URLSearchParams(resourceQuery);
+  const entryDataId = params.get('__entryDataId');
+
+  if (entryDataId) {
+    for (let key in entries) {
+      const entry = entries[key];
+      if (entry.entryDataId === entryDataId) {
+        return entry.data;
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
  * @param {string} content The HTML template.
  * @param {function(error: Error|null, result: string?)?} callback The asynchronous callback function.
  * @return {string|undefined}
@@ -81,7 +102,9 @@ const compile = function (content, callback) {
 
   try {
     if (preprocessor !== null) {
-      content = preprocessor(content, loaderContext);
+      const data = findEntryData(webpackOptions.entry, loaderContext.resourceQuery);
+
+      content = preprocessor(content, loaderContext, data);
     }
   } catch (error) {
     const preprocessorError = `[html-bundler-loader] Error in preprocessor!`;

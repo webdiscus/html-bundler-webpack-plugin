@@ -1,0 +1,1 @@
+(self.webpackChunk=self.webpackChunk||[]).push([[17,870],{870:(o,l,e)=>{const n=e(691),s=e(703);console.log(">> main-b:"),console.log(" - B: ",n),console.log(" - C: ",s)}}]);
