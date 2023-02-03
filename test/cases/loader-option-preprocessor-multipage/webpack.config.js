@@ -3,13 +3,11 @@ const HtmlBundlerPlugin = require('../../../');
 
 const template = `src/views/template.html`;
 
-const data = {
+const entryData = {
   1: { title: 'Home', header: 'Home page' },
   2: { title: 'About', header: 'About page' },
   3: { title: 'Contact', header: 'Contact page' },
 };
-
-const findData = (id) => data[id] || {};
 
 const render = (content, data) => {
   for (const key in data) {
@@ -29,13 +27,24 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    'pages/1': `${template}?id=1`, // => dist/pages/1.html
-    'pages/2': `${template}?id=2`, // => dist/pages/2.html
-    'pages/3': `${template}?id=3`, // => dist/pages/3.html
-  },
-
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        'pages/1': {
+          import: template,
+          data: entryData['1'],
+        },
+        'pages/2': {
+          import: template,
+          data: entryData['2'],
+        },
+        'pages/3': {
+          import: template,
+          data: entryData['3'],
+        },
+      },
+    }),
+  ],
 
   module: {
     rules: [
@@ -43,13 +52,7 @@ module.exports = {
         test: /\.(html)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, { resource }) => {
-            const [, query] = resource.split('?');
-            const [, id] = query.split('=');
-            const data = findData(id);
-
-            return render(content, data);
-          },
+          preprocessor: (content, { data }) => render(content, data),
         },
       },
       {

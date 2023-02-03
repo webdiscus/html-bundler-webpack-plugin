@@ -15,13 +15,12 @@ module.exports = {
     },
   },
 
-  entry: {
-    index: './src/index.html?lang=en',
-    'de/index': './src/index.html?lang=de',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html?lang=en',
+        'de/index': './src/index.html?lang=de',
+      },
       js: {
         // this option must override the output.filename
         filename: 'js/[name].[contenthash:8].js',

@@ -1,8 +1,46 @@
 # Change log
 
+## 0.9.0 (2023-02-04)
+- feat(BREAKING CHANGE): the 3rd argument `data` of the `preprocessor` has been moved to the 2nd argument as a property\
+  `v0.9.0`: `preprocessor: (content, { resourcePath, data }) => {}` <= NEW syntax\
+  `v0.8.0`: `preprocessor: (content, { resourcePath }, data) => {}` <= old syntax
+- fix: avoids an additional query param for internal use in the module's `resource` property
+- fix: remove info comments before inlined SVG
+- docs: add description how to pass data into template using new option `entry`
+
 ## 0.8.0 (2023-02-01)
-- feat: add `entry` plugin option, this has same API as Webpack entry, but have additional `data` property
-- feat: pass custom data into `preprocessor` via additional `data` property of `entry` plugin option
+- feat: add `entry` plugin option, this has same API as Webpack entry plus additional `data` property
+- feat: add 3rd `data` argument of the `preprocessor` to pass template specific data:
+  ```js
+  module.exports = {
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: { // <= NEW `entry` option
+          index: {
+            import: 'src/views/template.html',
+            data: { // <= NEW `data` property
+              title: 'Home',
+            },
+          },
+        },
+      }),
+    ],
+  
+    module: {
+      rules: [
+        {
+          test: /\.(html)$/,
+          loader: HtmlBundlerPlugin.loader,
+          options: {
+            preprocessor: (content, { resourcePath }, data) => { // <= NEW 3rd `data` argument
+              return render(content, data);
+            },
+          },
+        },
+      ],
+    },
+  };
+  ```
 - feat: support split chunk
 
 ## 0.7.0 (2023-01-29)

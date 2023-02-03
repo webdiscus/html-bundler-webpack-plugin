@@ -28,20 +28,21 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        // template w/o data
-        help: 'src/views/help.html',
-
         // pass diff data into template
         'pages/demo': {
-          import: 'src/views/template.html?id=1',
+          import: 'src/views/template.html',
           data: {
             title: 'Demo',
             header: 'Demo page',
           },
         },
 
+        // template w/o data
+        help: 'src/views/help.html',
+
         // pass diff data into same template
         'pages/contact': {
+          //import: 'src/views/template.html?q=1&{"a":2,"b":"c"}',
           import: 'src/views/template.html',
           data: {
             title: 'Contact',
@@ -68,8 +69,7 @@ module.exports = {
         test: /\.(html)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, { resourcePath }, data) => {
-            //console.log('>> preprocessor: ', resourcePath, data);
+          preprocessor: (content, { data }) => {
             return render(content, data);
           },
         },

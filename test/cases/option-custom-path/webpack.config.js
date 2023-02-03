@@ -18,22 +18,22 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    // test the option `sourcePath` to resolve the import filename
-    index: 'index.html',
-    // test an absolute path for import
-    about: path.join(templatePath, 'about.html'),
-    // test the option `outputPath` to resolve the output filename
-    'pages/contact': {
-      import: 'pages/contact.html',
-      filename: '[name].html',
-    },
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       sourcePath: templatePath, // absolute base path of sources
       outputPath: htmlPath, // absolute output path to html
+
+      entry: {
+        // test the option `sourcePath` to resolve the import filename
+        index: 'index.html',
+        // test an absolute path for import
+        about: path.join(templatePath, 'about.html'),
+        // test the option `outputPath` to resolve the output filename
+        'pages/contact': {
+          import: 'pages/contact.html',
+          filename: '[name].html',
+        },
+      },
     }),
   ],
 

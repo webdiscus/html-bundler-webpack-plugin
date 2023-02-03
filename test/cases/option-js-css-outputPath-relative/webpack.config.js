@@ -10,12 +10,11 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    index: './src/views/home/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/home/index.html',
+      },
       js: {
         filename: '[name].[contenthash:8].js',
         // test the path relative by output.path

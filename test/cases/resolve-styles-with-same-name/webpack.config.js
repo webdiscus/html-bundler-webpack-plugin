@@ -9,15 +9,14 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    home: './src/views/home/index.html',
-    about: './src/views/about/index.html',
-    demo: './src/views/demo/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
+      entry: {
+        home: './src/views/home/index.html',
+        about: './src/views/about/index.html',
+        demo: './src/views/demo/index.html',
+      },
       css: {
         // test conflict: Multiple chunks emit assets to the same filename
         filename: 'assets/css/[name].css',

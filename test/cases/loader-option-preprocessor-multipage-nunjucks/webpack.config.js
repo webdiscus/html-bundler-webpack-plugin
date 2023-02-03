@@ -2,23 +2,8 @@ const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 const Nunjucks = require('nunjucks');
 
-/**
- * Find template data by template file.
- *
- * @param {string} sourceFile
- * @param {Object} data
- * @return {Object}
- */
-const findData = (sourceFile, data) => {
-  for (const [key, value] of Object.entries(data)) {
-    if (sourceFile.endsWith(key)) return value;
-  }
-  return {};
-};
-
-// note: data keys are different endings of source files
 const entryData = {
-  'home/index.html': {
+  home: {
     title: 'Home',
     filmTitle: 'Breaking Bad',
     description: 'Breaking Bad is an American crime drama',
@@ -27,7 +12,7 @@ const entryData = {
     imageFile: 'map.png',
     imageAlt: 'location',
   },
-  'about/index.html': {
+  about: {
     title: 'About',
     actors: [
       {
@@ -49,11 +34,6 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: 'src/views/pages/home/index.html',
-    about: 'src/views/pages/about/index.html',
-  },
-
   resolve: {
     alias: {
       '@images': path.join(__dirname, 'src/assets/images'),
@@ -62,6 +42,16 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: {
+          import: 'src/views/pages/home/index.html',
+          data: entryData.home,
+        },
+        about: {
+          import: 'src/views/pages/about/index.html',
+          data: entryData.about,
+        },
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },
@@ -77,7 +67,7 @@ module.exports = {
         test: /\.html$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, { resource }) => Nunjucks.renderString(content, findData(resource, entryData)),
+          preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
         },
       },
       {

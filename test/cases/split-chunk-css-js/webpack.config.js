@@ -4,16 +4,15 @@ const HtmlBundlerPlugin = require('../../../');
 module.exports = {
   mode: 'production',
 
-  entry: {
-    index: './src/index.html',
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
   },
 
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
       js: {
         // test verbose for JS
         verbose: true,

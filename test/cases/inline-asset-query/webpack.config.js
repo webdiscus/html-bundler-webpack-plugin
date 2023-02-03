@@ -15,11 +15,13 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
+    }),
+  ],
 
   module: {
     rules: [

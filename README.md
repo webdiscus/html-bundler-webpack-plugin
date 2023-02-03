@@ -1,8 +1,8 @@
 <div align="center">
     <h1>
-        <img height="120" src="https://user-images.githubusercontent.com/30186107/29488525-f55a69d0-84da-11e7-8a39-5476f663b5eb.png">
-        <img height="120" src="https://webpack.js.org/assets/icon-square-big.svg">
-        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin"><br>
+        <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
+        <br>
+        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">
         HTML Bundler Plugin for Webpack
         </a>
     </h1>
@@ -16,12 +16,11 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-The plugin allows to use an HTML file or a template as a starting point for collecting all the dependencies used in your web application.
+The plugin make Webpack setup easily and intuitive.
+
+This plugin allows to use an HTML file or a template as a starting point for collecting all the dependencies used in your web application.
 This plugin does exactly what you want: automatically extracts JS, CSS, images, fonts from their sources loaded directly in HTML.
 The generated HTML contains output hashed filenames of processed source files.
-
-The purpose of this plugin is to make Webpack setup much easier and intuitiver than with other plugins like
- `html-webpack-plugin` `mini-css-extract-plugin`.
 
 💡 **Highlights**
 
@@ -29,7 +28,7 @@ The purpose of this plugin is to make Webpack setup much easier and intuitiver t
 - Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
 - All JS and CSS files will be extracted from their sources loaded in HTML.
 - You can inline JS, CSS, SVG, images **without additional plugins and loaders**.
-- You can use a template engine, e.g. [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**
+- You can use a template engine, e.g. [EJS](https://ejs.co), [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**.
 - This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
 
 How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`.
@@ -69,25 +68,25 @@ The generated HTML contains hashed output filenames of processed source files:
 </html>
 ```
 
-Add the HTML templates in the Webpack entry:
+Add the HTML templates in the `entry` option (syntax is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)):
 
 ```js
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-  entry: {
-    // define HTML templates here
-    index: './src/views/home/index.html', // output dist/index.html
-  },
   resolve: {
     alias: {
-      '@images': path.join(__dirname, './src/images'),
+      '@images': path.join(__dirname, 'src/images'),
     },
   },
   plugins: [
-    // enable processing of HTML templates defined in Webpack entry
-    new HtmlBundlerPlugin(),
+    new HtmlBundlerPlugin({
+      entry: {
+        // define HTML templates here
+        index: 'src/views/home/index.html', // output dist/index.html
+      },
+    }),
   ],
   module: {
     rules: [
@@ -104,11 +103,21 @@ module.exports = {
 
 ## Contents
 
----
-1. [Install and Quick start](#install)
-2. [Features](#features)
+1. [Features](#features)
+2. [Install and Quick start](#install)
 3. [Plugin options](#plugin-options)
+   - [test](#option-test) (process only templates matching RegExp)
+   - [entry](#option-entry) (define HTML templates)
+   - [outputPath](#option-outputPath) (output path of HTML file)
+   - [filename](#option-filename) (output filename of HTML file)
+   - [css](#option-css) (output filename of extracted CSS)
+   - [js](#option-js) (output filename of extracted JS)
+   - [postprocess](#option-postprocess)
+   - [extractComments](#option-extractComments)
+   - [verbose](#option-verbose)
 3. [Loader options](#loader-options)
+   - [sources](#loader-option-sources)
+   - [preprocessor](#loader-option-preprocessor) (for custom templates)
 4. [Recipes](#recipes)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
@@ -116,16 +125,14 @@ module.exports = {
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
-   - [How to use a template engine, e.g. Handlebars](#recipe-template-engine)
-   - [How to pass data into template](#recipe-pass-data)
-   - [How to pass different data by multipage configuration](#recipe-pass-data-multipage)
+   - [How to use a template engine](#recipe-template-engine)
+   - [How to pass data into templates](#recipe-pass-data-to-templates)
    - [How to use HMR live reload](#recipe-hmr)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
 
-- HTML file is the entry point for all resources (styles, scripts)
-- handels HTML files defined in Webpack entry
+- HTML template is the entry point for all resources (styles, scripts)
 - extracts CSS from source style loaded in HTML via a `<link>` tag
 - extracts JS from source script loaded in HTML via a `<script>` tag
 - resolves source files in the CSS `url()` and in HTML attributes
@@ -179,15 +186,14 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    // define HTML files here
-    index: './src/views/home/index.html',  // output dist/index.html
-    'pages/about': './src/views/about/index.html', // output dist/pages/about.html
-    // ...
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        // define HTML files here
+        index: 'src/views/home/index.html',  // output dist/index.html
+        'pages/about': 'src/views/about/index.html', // output dist/pages/about.html
+        // ...
+      },
       js: {
         // output filename of extracted JS from source script loaded in HTML via `<script>` tag
         filename: 'assets/js/[name].[contenthash:8].js',
@@ -214,30 +220,97 @@ module.exports = {
 };
 ```
 
+
+> **Note**
+> 
+> Since the version `0.9.0`, you can define HTML templates in the `entry` option of the plugin.
+> If is used the `entry` option of the plugin, then the origin Webpack `entry` option should be undefined.
+
 ---
 
 <a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
 ## Plugin options
 
-### `verbose`
-Type: `boolean` Default: `false`<br>
-Display information about extracted files.
-
+<a id="option-test" name="option-test" href="#option-test"></a>
 ### `test`
 Type: `RegExp` Default: `/\.html$/`<br>
 The `test` option allows то handel only those entry points that match their source filename.
 
 For example, if you has `*.html` and `*.hbs` entry points, then you can set the option to match all needed files: `test: /\.(html|hbs)$/`.
 
-<a id="plugin-option-outputPath" name="plugin-option-outputPath" href="#plugin-option-outputPath"></a>
+
+<a id="option-entry" name="option-entry" href="#option-entry"></a>
+### `entry`
+Type: `object` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
+plus additional `data` property.
+
+Define your HTML files or templates in the entry option.
+
+HTML is a starting point for collecting all the dependencies used in your web application.
+Specify source scripts (JS, TS) and styles (CSS, SCSS, etc.) directly in HTML.
+The plugin automatically extracts JS, CSS from their sources specified in HTML.
+
+#### Simple syntax
+
+The key of an entry object is the `output file` w/o extension, relative by the [`outputPath`](#option-outputPath) option.\
+The value is the `source file`, absolute or relative by the Webpack config file. 
+
+```js
+{
+  entry: {
+    index: 'src/views/home/index.html', // => dist/index.html
+    'pages/about/index': 'src/views/about.html', // => dist/pages/about/index.html
+  },
+}
+```
+
+#### Advanced syntax
+
+The entry value might be an object:
+
+```ts
+type entryValue = {
+  import: string,
+  filename: string
+  data: object,
+}
+```
+
+- `import` - a source file, absolute or relative by the Webpack config file
+- `filename` - an output file, relative by the 'outputPath' option
+- `data` - an object with variables passed into [`preprocessor`](#loader-option-preprocessor) to render a template
+
+Usage example:
+
+```js
+{
+  entry: {
+    'pages/about/index': { // output file as the key
+      import: 'src/views/about.html', // source template file
+      data: {
+        title: 'About',
+      }
+    },
+
+    contact: {
+      import: 'src/views/contact.html',
+      filename: 'pages/contact/index.html', // output file as the 'filename' property
+    },
+  },
+}
+```
+
+<a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>
 ### `outputPath`
 Type: `string` Default: `webpack.options.output.path`<br>
 The output directory for processed file. This directory can be relative by `webpack.options.output.path` or absolute.
 
-<a id="plugin-option-filename" name="plugin-option-filename" href="#plugin-option-filename"></a>
+
+<a id="option-filename" name="option-filename" href="#option-filename"></a>
 ### `filename`
 Type: `string | Function` Default: `[name].html`<br>
-The name of output file.
+The output filename relative by the [`outputPath`](#option-outputPath) option.
+
 - If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
   - `[id]` The ID of the chunk.
   - `[name]` Only filename without extension or path.
@@ -250,28 +323,33 @@ The name of output file.
   - `@param {AssetInfo} assetInfo` Mostly this object is empty.
   - `@return {string}` The name or template string of output file.
 
+
+<a id="option-css" name="option-css" href="#option-css"></a>
 ### `css`
 Type: `Object`\
 Default properties:
 ```js
 {
   test: /\.(css|scss|sass|less|styl)$/,
-  verbose: false,
   filename: '[name].css',
   outputPath: null,
+  verbose: false,
 }
 ```
-The `filename` property see by [filename option](#plugin-option-filename).
-The `outputPath` property see by [outputPath option](#plugin-option-outputPath).
 
-The option to extract CSS from a style source file loaded in the HTML tag:
+- `test` - an RegEpx to process all source styles that pass test assertion
+- `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).\
+- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `verbose` - enable/disable display process information for styles
+
+This is the option to extract CSS from a style source file specified in the HTML tag:
 ```html
 <link href="./style.scss" rel="stylesheet">
 ```
 
 > **Warning**
 >
-> Don't import source styles in JavaScript! Styles must be loaded directly in HTML.
+> Don't import source styles in JavaScript! Styles must be specified directly in HTML.
 
 The default CSS output filename is `[name].css`. 
 You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
@@ -298,21 +376,26 @@ If you want to have a different output filename, you can use the `filename` opti
 > Don't use `mini-css-extract-plugin` or `style-loader`, they are not required more.\
 > The `html-bundler-webpack-plugin` extracts CSS much faster than other plugins and resolves all asset URLs in CSS, therefore the `resolve-url-loader` is redundant too.
 
+
+<a id="option-js" name="option-js" href="#option-js"></a>
 ### `js`
 Type: `Object`\
 Default properties:
 ```js
 {
-  verbose: false,
   filename: '[name].js', 
   outputPath: null,
+  verbose: false,
 }
 ```
-The `filename` property see by [filename option](#plugin-option-filename).
-The `outputPath` property see by [outputPath option](#plugin-option-outputPath).
-The `test` property not exist because all JS files loaded in `<script>` tag are automatically detected.
 
-The option to extract JS from a script source file loaded in the HTML tag:
+- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).\
+- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `verbose` - enable/disable display process information for styles
+
+The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
+
+This is the option to extract JS from a script source file specified in the HTML tag:
 ```html
 <script src="./main.js"></script>
 ```
@@ -337,26 +420,8 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
-### `extractComments`
-Type: `boolean` Default: `false`<br>
-Enable / disable extraction of comments to `*.LICENSE.txt` file.
 
-When using `splitChunks` optimization for node modules containing comments, 
-Webpack extracts those comments into a separate text file.
-By default, the plugin don't create such unwanted text files.
-But if you want to extract files like `*.LICENSE.txt`, set this option to `true`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      extractComments: true,
-    }),
-  ],
-};
-```
-
+<a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
 ### `postprocess`
 Type:
 ```ts
@@ -399,11 +464,40 @@ The `ResourceInfo` have the following properties:
 - `outputPath: string` - a full path of the output directory
 - `assetFile: string` - an output asset file relative by outputPath
 
+
+<a id="option-extractComments" name="option-extractComments" href="#option-extractComments"></a>
+### `extractComments`
+Type: `boolean` Default: `false`<br>
+Enable / disable extraction of comments to `*.LICENSE.txt` file.
+
+When using `splitChunks` optimization for node modules containing comments,
+Webpack extracts those comments into a separate text file.
+By default, the plugin don't create such unwanted text files.
+But if you want to extract files like `*.LICENSE.txt`, set this option to `true`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      extractComments: true,
+    }),
+  ],
+};
+```
+
+
+<a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
+### `verbose`
+Type: `boolean` Default: `false`<br>
+Display information about all processed files.
+
 ---
 
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
 ## Loader options
 
+<a id="loader-option-sources" name="loader-option-sources" href="#loader-option-sources"></a>
 ### `sources`
 Type:
 ```ts
@@ -582,6 +676,8 @@ module.exports = {
 };
 ```
 
+
+<a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
 ### `preprocessor`
 Type:
 ```ts
@@ -599,14 +695,15 @@ The `loaderContext` argument is an object contained useful properties:
 - `rootContext: string` - a path to Webpack context
 - `resource: string` - a template file, including query
 - `resourcePath: string` - a template file
+- `data: object|null` - variables passed form [`entry`](#option-entry)
 
 Complete API see by the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context).
 
-The preprocessor is called before handling of the content. 
-This function can be used to replace a placeholder with a variable or compile the content with a template engine,
-such as [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks).
+The preprocessor is called for each entry file, before handling of the content. 
+This function can be used to compile the template with a template engine,
+such as [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks), etc.
 
-For example, set variable in the template
+For example, set a variable in the template
 _index.html_
 ```html
 <html>
@@ -628,11 +725,18 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/index.html',
-  },
-
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: { // => dist/index.html
+          import: './src/views/index.html',
+          data: {
+            title: 'Homepage',
+          }
+        },
+      },
+    }),
+  ],
 
   module: {
     rules: [
@@ -640,7 +744,10 @@ module.exports = {
         test: /\.html$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, loaderContext) => content.replace('{{ title }}', 'Homepage'),
+          preprocessor: (content, { data }) => {
+            // you can use here a template engine like EJS, Handlebars, Nunjucks, etc 
+            return content.replace('{{ title }}', data.title);
+          },
         },
       },
     ],
@@ -649,13 +756,7 @@ module.exports = {
 
 ```
 
-> **Note**
->
-> Using the `preprocessor` you can use anyone template engine without its loader.
-> 
-> The `preprocessor` will be called for each entry file.
-> For multipage configuration, you can use the `loaderContext.resourcePath` property to differentiate data for diverse pages.
-> See the [usage example](#recipe-pass-data-multipage).
+See the example [How to use a template engine](#recipe-template-engine).
 
 ---
 
@@ -928,7 +1029,7 @@ The generated HTML contains inline JS already compiled via Webpack:
 <a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
 ## How to inline SVG, PNG images in HTML
 
-You can inline images in two ways:
+You can inline the images in two ways:
 - force inline image using `?inline` query
 - auto inline by image size
 
@@ -965,6 +1066,16 @@ module: {
 <a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
 ## How to use a template engine
 
+Using the [preprocessor](#loader-option-preprocessor) you can compile the template with a template engine such as:
+- [EJS](https://ejs.co), 
+- [Handlebars](https://handlebarsjs.com)
+- [Nunjucks](https://mozilla.github.io/nunjucks/), 
+
+> **Note**
+> 
+> For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
+> This plugin works on the same codebase but has additional Pug-specific features.
+
 For example, using the Handlebars templating engine, there is an
 _index.hbs_
 ```html
@@ -981,7 +1092,7 @@ _index.hbs_
 </html>
 ```
 
-Add the `preprocessor` option to compile the content with Handlebars.
+Add the `preprocessor` option to compile the template.
 
 ```js
 const path = require('path');
@@ -993,13 +1104,22 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/views/home/index.hbs',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       test: /\.(html|hbs)$/, // add the option to match *.hbs files in entry, default is /\.html$/
+      
+      entry: {
+        index: {
+          import: './src/views/home/index.hbs',
+          // pass data into the preprocessor
+          data: {
+            title: 'My Title',
+            headline: 'Breaking Bad',
+            firstname: 'Walter',
+            lastname: 'Heisenberg',
+          },
+        },
+      },
     }),
   ],
 
@@ -1010,14 +1130,7 @@ module.exports = {
         loader: HtmlBundlerPlugin.loader,
         options: {
           // add the preprocessor function to compile *.hbs files to HTML
-          // you can pass data here to all templates
-          preprocessor: (content, loaderContext) =>
-            Handlebars.compile(content)({
-              title: 'My Title',
-              headline: 'Breaking Bad',
-              firstname: 'Walter',
-              lastname: 'Heisenberg',
-            }),
+          preprocessor: (content, { data }) => Handlebars.compile(content)(data),
         },
       },
     ],
@@ -1026,16 +1139,12 @@ module.exports = {
 
 ```
 
-<a id="recipe-pass-data" name="recipe-pass-data" href="#recipe-pass-data"></a>
-## How to pass data into template
 
-You can pass variables into template using a lightweight template engine, e.g. [Handlebars](https://handlebarsjs.com).
-See the usage example by [How to use a template engine](#recipe-template-engine) or [How to pass different data by multipage configuration](#recipe-pass-data-multipage).
+<a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>
+## How to pass data into templates
 
-<a id="recipe-pass-data-multipage" name="recipe-pass-data-multipage" href="#recipe-pass-data-multipage"></a>
-## How to pass different data by multipage configuration
-
-For multipage configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks) templating engine maintained by Mozilla.
+You can pass variables into template using a template engine, e.g. [Handlebars](https://handlebarsjs.com).
+For multiple page configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks) templating engine maintained by Mozilla.
 
 For example, you have several pages with variables.\
 Both pages have the same layout _src/views/layouts/default.html_
@@ -1063,10 +1172,12 @@ _src/views/pages/home/index.html_
 {% extends "src/views/layouts/default.html" %}
 
 {% block styles %}
+  <!-- load source style -->
   <link href="./home.scss" rel="stylesheet">
 {% endblock %}
 
 {% block scripts %}
+  <!-- load source script -->
   <script src="./home.js" defer="defer"></script>
 {% endblock %}
 
@@ -1106,29 +1217,19 @@ const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const Nunjucks = require('nunjucks');
 
-/**
- * Find template data by template file.
- *
- * @param {string} sourceFile
- * @param {Object} data
- * @return {Object}
- */
-const findData = (sourceFile, data) => {
-  for (const [key, value] of Object.entries(data)) {
-    if (sourceFile.endsWith(key)) return value;
-  }
-  return {};
-};
-
-// note: data keys are different endings of source template files defined in entry
+// Note: 
+// If your pages have a lot of variables, it's a good idea to define them separately 
+// to keep the configuration clean and clear.
 const entryData = {
-  'home/index.html': {
+  // variables for home page
+  home: {
     title: 'Home',
     filmTitle: 'Breaking Bad',
     location: 'Albuquerque, New Mexico',
     imageFile: 'map.png',
   },
-  'about/index.html': {
+  // variables for about page
+  about: {
     title: 'About',
     actors: [
       {
@@ -1147,11 +1248,6 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'dist/'),
   },
-  entry: {
-    // define your templates here
-    index: 'src/views/pages/home/index.html', // => dist/index.html
-    about: 'src/views/pages/about/index.html', // => dist/about.html
-  },
   resolve: {
     alias: {
       '@images': path.join(__dirname, 'src/assets/images'),
@@ -1159,6 +1255,17 @@ module.exports = {
   },
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        // define your templates here
+        index: { // => dist/index.html
+          import: 'src/views/pages/home/index.html',
+          data: entryData.home,
+        },
+        about: { // => dist/about.html
+          import: 'src/views/pages/about/index.html',
+          data: entryData.about,
+        },
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },
@@ -1174,10 +1281,8 @@ module.exports = {
         test: /\.html/,
         loader: HtmlBundlerPlugin.loader, //  HTML template loader
         options: {
-          preprocessor: (content, { resourcePath }) => {
-            // get template variables by template filename
-            const data = findData(resourcePath, entryData);
-            // render template with specific variables
+          preprocessor: (content, { data }) => {
+            // render template with page-specific variables defined in entry
             return Nunjucks.renderString(content, data);
           },
         },

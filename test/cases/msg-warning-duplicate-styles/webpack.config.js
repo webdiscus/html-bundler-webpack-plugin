@@ -16,12 +16,11 @@ module.exports = {
     },
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },

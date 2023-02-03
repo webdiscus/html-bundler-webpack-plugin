@@ -9,13 +9,19 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/home.hbs',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       test: /\.(html|hbs)$/,
+      entry: {
+        index: {
+          import: './src/home.hbs',
+          data: {
+            title: 'Breaking Bad',
+            firstname: 'Walter',
+            lastname: 'Heisenberg',
+          },
+        },
+      },
     }),
   ],
 
@@ -25,12 +31,7 @@ module.exports = {
         test: /\.(html|hbs)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (content, loaderContext) =>
-            Handlebars.compile(content)({
-              title: 'Breaking Bad',
-              firstname: 'Walter',
-              lastname: 'Heisenberg',
-            }),
+          preprocessor: (content, { data }) => Handlebars.compile(content)(data),
         },
       },
       {

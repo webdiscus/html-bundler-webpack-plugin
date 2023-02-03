@@ -8,12 +8,11 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },

@@ -5,11 +5,6 @@ module.exports = {
   mode: 'production',
   //mode: 'development',
 
-  entry: {
-    index: 'src/views/index.html',
-    about: 'src/views/about.html',
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
     //chunkFilename: 'assets/js/[id].js',
@@ -26,6 +21,10 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html',
+        about: 'src/views/about.html',
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },

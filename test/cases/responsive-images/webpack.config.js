@@ -16,12 +16,11 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    'pages/home': './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        'pages/home': './src/views/index.html',
+      },
       js: {
         filename: '[name].[contenthash:8].js',
       },

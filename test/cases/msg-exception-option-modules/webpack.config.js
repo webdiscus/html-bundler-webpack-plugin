@@ -9,12 +9,11 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    index: './src/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
       // test: modules must be the array of ModuleOptions, also not any object
       modules: {},
     }),

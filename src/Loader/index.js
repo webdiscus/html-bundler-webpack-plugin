@@ -8,27 +8,6 @@ const Loader = require('./Loader');
 const { getCompileErrorMessage, getCompileErrorHtml, getExecuteTemplateFunctionErrorMessage } = require('./Exeptions');
 
 /**
- * @param {{}} entries
- * @param {string} resourceQuery
- * @return {{}|null}
- */
-const findEntryData = (entries, resourceQuery) => {
-  const params = new URLSearchParams(resourceQuery);
-  const entryDataId = params.get('__entryDataId');
-
-  if (entryDataId) {
-    for (let key in entries) {
-      const entry = entries[key];
-      if (entry.entryDataId === entryDataId) {
-        return entry.data;
-      }
-    }
-  }
-
-  return null;
-};
-
-/**
  * @param {string} content The HTML template.
  * @param {function(error: Error|null, result: string?)?} callback The asynchronous callback function.
  * @return {string|undefined}
@@ -102,9 +81,7 @@ const compile = function (content, callback) {
 
   try {
     if (preprocessor !== null) {
-      const data = findEntryData(webpackOptions.entry, loaderContext.resourceQuery);
-
-      content = preprocessor(content, loaderContext, data);
+      content = preprocessor(content, loaderContext);
     }
   } catch (error) {
     const preprocessorError = `[html-bundler-loader] Error in preprocessor!`;
@@ -151,6 +128,15 @@ const compile = function (content, callback) {
 module.exports = function (content, map, meta) {
   const loaderContext = this;
   const callback = loaderContext.async();
+
+  // note: the 'entryData' is the custom property defined in plugin
+  // set the origin 'data' property of loader context,
+  // see https://webpack.js.org/api/loaders/#thisdata
+  if (loaderContext.entryData != null) {
+    const loader = loaderContext.loaders[loaderContext.loaderIndex];
+    loader.data = loaderContext.entryData;
+    delete loaderContext.entryData;
+  }
 
   compile.call(loaderContext, content, (error, result) => {
     if (error) {

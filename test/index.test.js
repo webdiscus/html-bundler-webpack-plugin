@@ -253,47 +253,47 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-output-public-path-root', done);
   });
 
+  test('option sourcePath and outputPath (default)', (done) => {
+    compareFileListAndContent(PATHS, 'option-default-path', done);
+  });
+
+  test('option sourcePath and outputPath', (done) => {
+    compareFileListAndContent(PATHS, 'option-custom-path', done);
+  });
+
+  test('option filename as function', (done) => {
+    compareFileListAndContent(PATHS, 'option-filename-function', done);
+  });
+
   test('option js.filename', (done) => {
     compareFileListAndContent(PATHS, 'option-js-filename', done);
   });
 
-  test('options js, css outputPath absolute', (done) => {
+  test('option js and css outputPath absolute', (done) => {
     compareFileListAndContent(PATHS, 'option-js-css-outputPath-absolute', done);
   });
 
-  test('options js, css outputPath relative', (done) => {
+  test('option js and css outputPath relative', (done) => {
     compareFileListAndContent(PATHS, 'option-js-css-outputPath-relative', done);
   });
 
-  test('verbose', (done) => {
+  test('option verbose', (done) => {
     compareFileListAndContent(PATHS, 'option-verbose', done);
   });
 
-  test('filename as function', (done) => {
-    compareFileListAndContent(PATHS, 'option-filename-function', done);
-  });
-
-  test('options.sourcePath and options.outputPath (default)', (done) => {
-    compareFileListAndContent(PATHS, 'option-default-path', done);
-  });
-
-  test('options.sourcePath and options.outputPath', (done) => {
-    compareFileListAndContent(PATHS, 'option-custom-path', done);
-  });
-
-  test('options.extractComments = false', (done) => {
+  test('option extractComments = false', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-false', done);
   });
 
-  test('options.extractComments = true', (done) => {
+  test('option extractComments = true', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-true', done);
   });
 
-  test('options.postprocess', (done) => {
+  test('option postprocess', (done) => {
     compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
 
-  test('entry', (done) => {
+  test('option entry', (done) => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
 });
@@ -313,6 +313,10 @@ describe('loader options', () => {
 
   test('filter tags and attributes', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-sources-attrs-filter', done);
+  });
+
+  test('preprocessor with EJS', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs', done);
   });
 
   test('preprocessor with handlebars', (done) => {

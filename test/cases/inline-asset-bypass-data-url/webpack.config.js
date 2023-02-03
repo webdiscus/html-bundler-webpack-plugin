@@ -10,11 +10,13 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
+    }),
+  ],
 
   module: {
     rules: [

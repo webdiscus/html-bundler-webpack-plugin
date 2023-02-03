@@ -17,13 +17,12 @@ module.exports = {
     //publicPath: 'auto', // test responsive loader with auto publicPath
   },
 
-  entry: {
-    'pages/home': './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
+      entry: {
+        'pages/home': './src/views/index.html',
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },

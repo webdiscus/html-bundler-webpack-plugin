@@ -16,13 +16,12 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
+      entry: {
+        index: './src/views/index.html',
+      },
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },

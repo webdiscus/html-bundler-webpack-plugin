@@ -17,14 +17,13 @@ module.exports = {
     },
   },
 
-  entry: {
-    index: './src/views/index.html',
-    'about/index': './src/views/about/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
+      entry: {
+        index: './src/views/index.html',
+        'about/index': './src/views/about/index.html',
+      },
       js: {
         filename: 'assets/js/[name].js',
       },

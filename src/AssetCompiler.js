@@ -1,6 +1,7 @@
 const vm = require('vm');
 const path = require('path');
 
+const NormalModule = require('webpack/lib/NormalModule');
 const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
@@ -138,7 +139,8 @@ class AssetCompiler {
   };
 
   // the id to bind loader with data passed into template via entry.data
-  entryDataId;
+  entryDataIndex;
+  entryDataCache = new Map();
 
   // webpack's options and modules
   webpackContext = '';
@@ -187,10 +189,48 @@ class AssetCompiler {
   }
 
   /**
-   * Reset all initial values.
+   * Entries defined in plugin options are merged with Webpack entry option.
+   *
+   * @param {{}} options The Webpack options where entry contains additional 'data' property.
+   */
+  initializeWebpackEntry(options) {
+    let { entry } = options;
+    const pluginEntry = this.options.entry;
+
+    // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
+    if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
+      // set empty entry to avoid Webpack error
+      entry = {};
+    }
+
+    if (pluginEntry) {
+      for (const key in pluginEntry) {
+        const entry = pluginEntry[key];
+
+        if (entry.import == null) {
+          pluginEntry[key] = { import: [entry] };
+          continue;
+        }
+
+        if (!Array.isArray(entry.import)) {
+          entry.import = [entry.import];
+        }
+      }
+
+      options.entry = { ...entry, ...pluginEntry };
+
+      // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
+      options.experiments.layers = true;
+    }
+  }
+
+  /**
+   * Reset initial values.
    */
   reset() {
-    this.entryDataId = 1;
+    // TODO: test hmr
+    this.entryDataIndex = 1;
+    this.entryDataCache.clear();
   }
 
   /**
@@ -212,37 +252,6 @@ class AssetCompiler {
   isEntry(sourceFile) {
     const [file] = sourceFile.split('?', 1);
     return this.options.test.test(file);
-  }
-
-  /**
-   * @param {{}} options The Webpack options where entry contains additional 'data' property.
-   */
-  initializeWebpackEntry(options) {
-    let { entry } = options;
-    const pluginEntries = this.options.entry;
-
-    // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
-    if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
-      // reset entry
-      entry = {};
-    }
-
-    if (pluginEntries) {
-      for (const key in pluginEntries) {
-        const entry = pluginEntries[key];
-
-        if (entry['import'] == null) {
-          pluginEntries[key] = { import: [entry] };
-          continue;
-        }
-
-        if (!Array.isArray(entry.import)) {
-          entry.import = [entry.import];
-        }
-      }
-
-      options.entry = { ...entry, ...pluginEntries };
-    }
   }
 
   /**
@@ -350,6 +359,20 @@ class AssetCompiler {
       compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
       compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
 
+      // called after the module hook but right before the execution of a loader
+      NormalModule.getCompilationHooks(compilation).loader.tap(pluginName, (loaderContext, module) => {
+        if (typeof module.layer === 'string' && module.layer.startsWith('__entryDataId')) {
+          const [, entryDataId] = module.layer.split('=', 2);
+          loaderContext.entryData = this.entryDataCache.get(entryDataId);
+          loaderContext.data = this.entryDataCache.get(entryDataId);
+        }
+
+        // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
+        // if (module.__entryDataId) {
+        //   loaderContext.entryData = this.entryDataCache.get(module.__entryDataId);
+        // }
+      });
+
       // render source code of modules
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
@@ -421,10 +444,24 @@ class AssetCompiler {
       };
 
       if (entry.data) {
-        entry.entryDataId = `${this.entryDataId}`;
-        entry.import[0] += importFile.indexOf('?') < 0 ? '?' : '&';
-        entry.import[0] += `__entryDataId=${this.entryDataId}`;
-        this.entryDataId++;
+        // IMPORTANT: when the entry contains same source file for many chunks, for example:
+        // {
+        //   page1: { import: 'src/template.html', data: { title: 'A'} },
+        //   page2: { import: 'src/template.html', data: { title: 'B'} },
+        // }
+        // add an unique identifier of the entry to execute a loader for all templates,
+        // otherwise Webpack call a loader only for the first template.
+        // See 'webpack/lib/NormalModule.js:identifier()'.
+
+        entry.layer = `__entryDataId=${this.entryDataIndex}`;
+
+        // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
+        // specify the entry data id as a query param
+        //entry.import[0] += importFile.indexOf('?') < 0 ? '?' : '&';
+        //entry.import[0] += `__entryDataId=${this.entryDataIndex}`;
+
+        this.entryDataCache.set(`${this.entryDataIndex}`, entry.data);
+        this.entryDataIndex++;
       }
 
       AssetEntry.add(entry, assetEntryOptions);
@@ -440,6 +477,33 @@ class AssetCompiler {
   beforeResolve(resolveData) {
     const { context, request, contextInfo } = resolveData;
     const { issuer } = contextInfo;
+    const [resourceFile] = request.split('?', 2);
+
+    // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
+    // Resolve the entry data id from the resource query added in the 'entryOption' hook
+    // to generate unique identifier of the module.
+    // It is ultra important when the entry contains same source file for many chunks.
+    // For example:
+    // { page1: 'src/template.html', page2: 'src/template.html' }
+    // const [, resourceQuery] = request.split('?', 2);
+    // if (resourceQuery) {
+    //   const params = new URLSearchParams(resourceQuery);
+    //   let queryString = '';
+    //
+    //   if (params.has('__entryDataId')) {
+    //     resolveData.__entryDataId = params.get('__entryDataId');
+    //     // note: don't remove this param, because it serves for unique identifier of the module
+    //     // when used entry data and the entry contains same source file for many chunks
+    //     // remove the temporary private param from request
+    //     //params.delete('__entryDataId');
+    //     //params.forEach((value, key) => {
+    //     //  queryString += queryString ? '&' : '?';
+    //     //  queryString += value ? `${key}=${value}` : `${key}`;
+    //     //});
+    //     // recovery the original request w/o temporary private param
+    //     //resolveData.request = resourceFile + queryString;
+    //   }
+    // }
 
     // save requests to issuer cache
     if (!issuer) issuerCache.add(request);
@@ -448,9 +512,8 @@ class AssetCompiler {
     if (request.startsWith('data:')) return;
 
     if (issuer && issuer.length > 0) {
-      const [requestFile] = request.split('?', 1);
       const extractCss = this.options.extractCss;
-      if (extractCss.enabled && extractCss.test.test(issuer) && requestFile.endsWith('.js')) {
+      if (extractCss.enabled && extractCss.test.test(issuer) && resourceFile.endsWith('.js')) {
         // ignore runtime scripts of a loader, because a style can't have a javascript dependency
         return false;
       }
@@ -504,7 +567,13 @@ class AssetCompiler {
   afterCreateModule(module, createData, resolveData) {
     const { type, loaders } = module;
     const { rawRequest, resource } = createData;
-    const issuer = resolveData.contextInfo.issuer;
+    const { issuer } = resolveData.contextInfo;
+
+    // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
+    // pass a resolved entry data id into the module
+    // if (resolveData.__entryDataId) {
+    //   module.__entryDataId = resolveData.__entryDataId;
+    // }
 
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
 

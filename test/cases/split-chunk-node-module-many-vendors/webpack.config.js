@@ -5,10 +5,6 @@ module.exports = {
   mode: 'production',
   //mode: 'development',
 
-  entry: {
-    index: './src/index.html',
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
     clean: true,
@@ -16,6 +12,9 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },

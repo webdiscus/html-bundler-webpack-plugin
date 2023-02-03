@@ -240,16 +240,15 @@ class AssetInline {
     if (this.inlineSvgIssueAssets.size === 0) return;
 
     const RawSource = compilation.compiler.webpack.sources.RawSource;
-    const NL = '\n';
 
     for (const assetFile of this.inlineSvgIssueAssets) {
       const asset = compilation.assets[assetFile];
       if (!asset) continue;
 
       const html = asset.source();
-      const headPos = html.indexOf('<head');
-      const headEndPos = html.indexOf('</head>');
-      const hasHead = headPos >= 0 && headEndPos > headPos;
+      const headStartPos = html.indexOf('<head');
+      const headEndPos = html.indexOf('</head>', headStartPos);
+      const hasHead = headStartPos >= 0 && headEndPos > headStartPos;
       let results = [];
 
       // parse all inline SVG images in HTML
@@ -275,10 +274,9 @@ class AssetInline {
           // in body inline as SVG tag
           attrs = { ...cache.svgAttrs, ...attrs };
           const attrsString = attrsToString(attrs, [...excludeAttrs, 'title']);
-          const [filename] = path.basename(value).split('?', 1);
           const titleStr = 'title' in attrs ? attrs['title'] : 'alt' in attrs ? attrs['alt'] : null;
           const title = titleStr ? `<title>${titleStr}</title>` : '';
-          const inlineSvg = `${NL}<!-- inline: ${filename} -->${NL}<svg${attrsString}>${title}${cache.innerSVG}</svg>${NL}`;
+          const inlineSvg = `<svg${attrsString}>${title}${cache.innerSVG}</svg>`;
 
           output += html.slice(pos, tagStartPos) + inlineSvg;
           pos = tagEndPos;

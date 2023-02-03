@@ -9,15 +9,14 @@ module.exports = {
     publicPath: 'auto',
   },
 
-  entry: {
-    index: './src/views/home/index.html',
-    about: './src/views/about/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       // test verbose option
       verbose: true,
+      entry: {
+        index: './src/views/home/index.html',
+        about: './src/views/about/index.html',
+      },
       js: {
         filename: 'js/[name].[contenthash:8].js',
       },

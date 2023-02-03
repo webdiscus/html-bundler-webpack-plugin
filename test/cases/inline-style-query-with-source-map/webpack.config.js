@@ -16,13 +16,12 @@ module.exports = {
     },
   },
 
-  entry: {
-    index: './src/views/index.html',
-    'pages/about': './src/views/about.html', // test same inline CSS from different paths
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+        'pages/about': './src/views/about.html', // test same inline CSS from different paths
+      },
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },

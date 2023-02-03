@@ -15,14 +15,13 @@ module.exports = {
     publicPath: '/',
   },
 
-  entry: {
-    index: './src/views/index.html',
-    about: './src/views/about.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
+      entry: {
+        index: './src/views/index.html',
+        about: './src/views/about.html',
+      },
       js: {
         filename: '[name].[contenthash:8].js',
       },

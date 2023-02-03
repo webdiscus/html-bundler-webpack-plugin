@@ -4,10 +4,6 @@ const HtmlBundlerPlugin = require('../../../');
 module.exports = {
   mode: 'production',
 
-  entry: {
-    index: './src/index.html',
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
     publicPath: '/',
@@ -27,10 +23,13 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      extractComments: true, // extract license into separate file *.LICENSE.txt
+      entry: {
+        index: './src/index.html',
+      },
       js: {
         filename: 'assets/js/[name].[contenthash:8].js',
       },
+      extractComments: true, // extract license into separate file *.LICENSE.txt
     }),
   ],
 

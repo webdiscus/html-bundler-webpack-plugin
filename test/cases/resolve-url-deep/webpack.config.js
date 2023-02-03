@@ -16,12 +16,11 @@ module.exports = {
     },
   },
 
-  entry: {
-    index: './src/views/index.html',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
       css: {
         // test conflict: Multiple chunks emit assets to the same filename
         filename: 'assets/css/[name].css',
