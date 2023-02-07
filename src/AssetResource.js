@@ -16,15 +16,31 @@ class AssetResource {
   /**
    * @param {Object} module The Webpack module.
    * @param {string} issuer The issuer of module resource.
+   * @param {AssetEntryOptions} entryPoint The current entry point.
    */
-  static render(module, issuer) {
+  static render(module, issuer, entryPoint) {
     const { buildInfo, resource } = module;
-    const assetFile = buildInfo.filename;
+    let assetFile = buildInfo.filename;
     // try to get asset file processed via responsive-loader
     const asset = ResponsiveLoader.getAsset(module, issuer);
 
+    // resolve SVG filename with fragment, like './icons.svg#home'
+    if (resource.indexOf('.svg#') > 0) {
+      if (assetFile.indexOf('.svg#') > 0) {
+        // fix save file name when filename in Webpack config is like '[name][ext][fragment]'
+        const [file] = assetFile.split('#');
+        buildInfo.filename = file;
+      } else {
+        // fix output asset filename used in HTML
+        const [, fragment] = resource.split('#');
+        assetFile += `#${fragment}`;
+      }
+    }
+
     if (asset != null) {
-      Resolver.addResolvedAsset(resource, asset, issuer);
+      const key = Resolver.getAssetKey(issuer, entryPoint);
+
+      Resolver.addResolvedAsset(resource, asset, key);
 
       // save a module and handler for asset that may be used in many styles
       Resolver.setModuleHandler(resource, (originalAssetFile, issuer) => ResponsiveLoader.getAsset(module, issuer));
@@ -34,8 +50,8 @@ class AssetResource {
       return;
     }
 
-    // save an asset file that may be used in many files
-    Resolver.addAsset(resource, assetFile, issuer);
+    // save the original asset file that may be used in many files
+    Resolver.addAsset(resource, assetFile);
   }
 }
 

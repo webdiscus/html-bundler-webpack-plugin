@@ -203,6 +203,10 @@ describe('features tests', () => {
     compareFileListAndContent(PATHS, 'resolve-script-style-asset', done);
   });
 
+  test('resolve-script-style-in-same-page', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-script-style-in-same-page', done);
+  });
+
   test('resolve-relative-paths', (done) => {
     compareFileListAndContent(PATHS, 'resolve-relative-paths', done);
   });
@@ -210,11 +214,23 @@ describe('features tests', () => {
   test('resolve-alias-in-html', (done) => {
     compareFileListAndContent(PATHS, 'resolve-alias-in-html', done);
   });
+
+  test('resolve svg href with fragment', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-svg-use-fragment', done);
+  });
+
+  test('resolve svg href with fragment in filename', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-svg-use-fragment-filename', done);
+  });
 });
 
 describe('resolve styles', () => {
   test('resolve styles with same name', (done) => {
     compareFileListAndContent(PATHS, 'resolve-styles-with-same-name', done);
+  });
+
+  test('resolve styles loaded from node_modules', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-styles-from-module', done);
   });
 });
 

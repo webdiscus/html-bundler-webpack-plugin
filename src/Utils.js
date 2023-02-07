@@ -2,6 +2,7 @@ const path = require('path');
 const JSON5 = require('json5');
 
 const isWin = path.sep === '\\';
+const workingDir = process.env.PWD;
 
 /**
  * Converts the win path to POSIX standard.
@@ -15,6 +16,22 @@ const isWin = path.sep === '\\';
  * @return {*}
  */
 const pathToPosix = (value) => value.replace(/\\/g, '/');
+
+/**
+ * Return path of file relative by working directory.
+ *
+ * @param {string} file
+ * @return {string}
+ */
+const pathRelativeByPwd = (file) => {
+  if (file.startsWith(workingDir)) {
+    let relPath = path.relative(workingDir, file);
+
+    return path.extname(file) ? relPath : path.join(relPath, path.sep);
+  }
+
+  return file;
+};
 
 const isFunction = (value) => typeof value === 'function';
 
@@ -110,6 +127,7 @@ const toCommonJS = (code) => {
 module.exports = {
   isWin,
   pathToPosix,
+  pathRelativeByPwd,
   parseQuery,
   parseRequest,
   isFunction,

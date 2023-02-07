@@ -2,9 +2,7 @@
     <h1>
         <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
         <br>
-        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">
-        HTML Bundler Plugin for Webpack
-        </a>
+        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
     <div>HTML Bundler Plugin is the right way to bundle all resources with your HTML templates</div>
 </div>
@@ -28,7 +26,7 @@ The generated HTML contains output hashed filenames of processed source files.
 - Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
 - All JS and CSS files will be extracted from their sources loaded in HTML.
 - You can inline JS, CSS, SVG, images **without additional plugins and loaders**.
-- You can use a template engine, e.g. [EJS](https://ejs.co), [Nunjucks](https://mozilla.github.io/nunjucks/), [Handlebars](https://handlebarsjs.com) and others **without template loaders**.
+- You can use a template engine like [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/) and others **without template loaders**.
 - This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
 
 How to easily build a multipage website with this plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate) used the `html-bundler-webpack-plugin`.
@@ -126,7 +124,13 @@ module.exports = {
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to use a template engine](#recipe-template-engine)
+     - [Handlebars](#using-template-handlebars)
+     - [Mustache](#using-template-mustache)
+     - [Nunjucks](#using-template-nunjucks)
+     - [EJS](#using-template-ejs)
    - [How to pass data into templates](#recipe-pass-data-to-templates)
+   - [How to config `splitChunks`](#recipe-split-chunks)
+   - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
    - [How to use HMR live reload](#recipe-hmr)
 
 <a id="features" name="features" href="#features"></a>
@@ -146,6 +150,7 @@ module.exports = {
 - `inline SVG` as `utf-8` data-URL in CSS
 - support the `auto` publicPath
 - enable/disable extraction of comments to `*.LICENSE.txt` file
+- supports all template engines for Node.js like [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/) and others
 
 Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
@@ -278,7 +283,7 @@ type entryValue = {
 
 - `import` - a source file, absolute or relative by the Webpack config file
 - `filename` - an output file, relative by the 'outputPath' option
-- `data` - an object with variables passed into [`preprocessor`](#loader-option-preprocessor) to render a template
+- `data` - an object passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
 
 Usage example:
 
@@ -299,6 +304,11 @@ Usage example:
   },
 }
 ```
+
+> **Note**
+> 
+> You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
+> But the `data` property can only be defined in the `entry` option of the plugin.
 
 <a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>
 ### `outputPath`
@@ -689,15 +699,13 @@ type preprocessor = (
 
 Default: `undefined`<br>
 
-The `content` argument is the raw content of a file.\
-The `loaderContext` argument is an object contained useful properties:
+The `content` is the raw content of a file.\
+The `loaderContext` is the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context) object contained useful properties:
 - `mode: string` - a Webpack mode: `production`, `development`, `none`
 - `rootContext: string` - a path to Webpack context
 - `resource: string` - a template file, including query
 - `resourcePath: string` - a template file
 - `data: object|null` - variables passed form [`entry`](#option-entry)
-
-Complete API see by the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context).
 
 The preprocessor is called for each entry file, before handling of the content. 
 This function can be used to compile the template with a template engine,
@@ -745,7 +753,7 @@ module.exports = {
         loader: HtmlBundlerPlugin.loader,
         options: {
           preprocessor: (content, { data }) => {
-            // you can use here a template engine like EJS, Handlebars, Nunjucks, etc 
+            // you can use here a template engine like EJS, Handlebars, Nunjucks, etc. 
             return content.replace('{{ title }}', data.title);
           },
         },
@@ -1067,17 +1075,20 @@ module: {
 ## How to use a template engine
 
 Using the [preprocessor](#loader-option-preprocessor) you can compile the template with a template engine such as:
-- [EJS](https://ejs.co), 
 - [Handlebars](https://handlebarsjs.com)
+- [Mustache](https://github.com/janl/mustache.js)
 - [Nunjucks](https://mozilla.github.io/nunjucks/), 
+- [EJS](https://ejs.co), 
 
 > **Note**
 > 
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
 > This plugin works on the same codebase but has additional Pug-specific features.
 
-For example, using the Handlebars templating engine, there is an
-_index.hbs_
+<a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
+#### Using the Handlebars
+
+For example, there is a template _index.hbs_
 ```html
 <html>
 <head>
@@ -1139,12 +1150,117 @@ module.exports = {
 
 ```
 
+> **Note**
+>
+> If you are using a template with a specific extension other than `.html`,
+> specify that extension in the `test` option of the plugin.
+> 
+> For example, when using the Handlebars template with `.hbs` extension:
+> ```js
+> new HtmlBundlerPlugin({
+>   test: /.hbs$/,
+>   entry: {
+>     index: './src/views/home.hbs', // <= specify all extensions used here in the 'test' option
+>   },
+> })
+> ```
+
+<a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
+#### Using the Mustache
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Mustache = require('mustache');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.mustache$/, // <= change
+      entry: {
+        index: './src/views/home.mustache'
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.mustache$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (content, { data }) => Mustache.render(content, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+<a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
+#### Using the Nunjucks
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Nunjucks = require('nunjucks');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.njk$/, // <= change
+      entry: {
+        index: './src/views/home.njk'
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.njk$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (content, { data }) => Nunjucks.renderString(content, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
+#### Using the EJS
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const ejs = require('ejs');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.ejs$/, // <= change
+      entry: {
+        index: './src/views/home.hbs'
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.ejs$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (content, { data }) => ejs.render(content, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
 
 <a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>
 ## How to pass data into templates
 
 You can pass variables into template using a template engine, e.g. [Handlebars](https://handlebarsjs.com).
-For multiple page configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks) templating engine maintained by Mozilla.
+For multiple page configuration, better to use the [Nunjucks](https://mozilla.github.io/nunjucks) template engine maintained by Mozilla.
 
 For example, you have several pages with variables.\
 Both pages have the same layout _src/views/layouts/default.html_
@@ -1281,10 +1397,8 @@ module.exports = {
         test: /\.html/,
         loader: HtmlBundlerPlugin.loader, //  HTML template loader
         options: {
-          preprocessor: (content, { data }) => {
-            // render template with page-specific variables defined in entry
-            return Nunjucks.renderString(content, data);
-          },
+          // render template with page-specific variables defined in entry
+          preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
         },
       },
       // styles
@@ -1346,6 +1460,166 @@ The generated _dist/about.html_
 </body>
 </html>
 ```
+
+<a id="recipe-split-chunks" name="recipe-split-chunks" href="#recipe-split-chunks"></a>
+### How to config `splitChunks`
+
+Webpack tries to split every entry file, include template files, which completely breaks the compilation process in the plugin.
+
+To avoid this issue, you must specify which scripts should be split, using `optimization.splitChunks.cacheGroups`:
+
+```js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        scripts: {
+          test: /\.(js|ts)$/,
+          chunks: 'all',
+        },
+      },
+    },
+  },
+  // ...
+};
+```
+
+> **Note**
+>
+> In the `test` option must be specified all extensions of scripts which should be split.
+
+See details by [splitChunks.cacheGroups](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunkscachegroups).
+
+For example, in a template are used the scripts and styles from `node_modules`:
+```html
+<html>
+<head>
+  <title>Home</title>
+  <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="bootstrap/dist/js/bootstrap.min.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <script src="./main.js"></script>
+</body>
+</html>
+```
+
+In this use case the `optimization.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
+```js
+module.exports = {
+  optimization: {
+    runtimeChunk: 'single',
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // use exactly this Regexp
+          name: 'vendor',
+          chunks: 'all',
+        },
+      },
+    },
+  },
+};
+```
+
+> **Warning**
+>
+> Splitting CSS to many chunk is principal impossible. Splitting works only for JS files.
+> If you use vendor styles in your style file, e.g.:
+>
+> _style.scss_
+> ```scss
+> @use "bootstrap/scss/bootstrap";
+> body {
+>   color: bootstrap.$primary;
+> }
+> ```
+>
+> Then vendor styles will not be saved to a separate file, because `sass-loader` generates one CSS bundle code.
+> Therefore vendor styles should be loaded in a template separately.
+
+> **Warning**
+>
+> If you will to use the `test` as `/[\\/]node_modules[\\/]`, without extension specification,
+> then Webpack concatenates JS code together with CSS in one file,
+> because Webpack can't differentiate CSS module from JS module, therefore you MUST match only JS files.
+>
+> If you want save module styles separate from your styles, then load them in a template separately:
+> ```html
+> <html>
+> <head>
+>   <title>Home</title>
+>   <!-- load module styles separately -->
+>   <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+>   <!-- load your styles separately -->
+>   <link href="./style.scss" rel="stylesheet">
+> </head>
+> <body>
+>   <h1>Hello World!</h1>
+>   <script src="./main.js"></script>
+> </body>
+> </html>
+> ```
+
+
+<a id="recipe-split-many-modules" name="recipe-split-many-modules" href="#recipe-split-many-modules"></a>
+### How to split multiple node modules and save under own names
+
+If you use many node modules and want save each module to separate file then use `optimization.cacheGroups.{cacheGroup}.name` as function.
+
+For example, many node modules are imported in the `script.js`:
+```js
+import { Button } from 'bootstrap';
+import _, { map } from 'underscore';
+// ...
+```
+
+Then, use the `name` as following function:
+```js
+const path = require('path');
+const PugPlugin = require('pug-plugin');
+
+module.exports = {
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+  plugins: [
+    new PugPlugin({
+      js: {
+        filename: 'js/[name].[contenthash:8].js',
+      },
+    }),
+  ],
+  optimization: {
+    runtimeChunk: 'single',
+    splitChunks: {
+      chunks: 'all',
+      minSize: 10000, // extract modules bigger than 10KB, defaults is 30KB
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // split JS only, ignore CSS modules
+          // save node module under own name
+          name(module) {
+            const name = module.resourceResolveData.descriptionFileData.name.replace('@', '');
+            return `npm.${name}`;
+          },
+        },
+      },
+    },
+  },
+};
+```
+
+The split files will be saved like this:
+```
+dist/js/npm.popperjs/core.f96a1152.js <- the `popperjs/core` used in bootstrap will be extracted too
+dist/js/npm.bootstrap.f69a4e44.js
+dist/js/npm.underscore.4e44f69a.js
+dist/js/runtime.9cd0e0f9.js <- common runtime code
+dist/js/script.3010da09.js
+```
+
 
 <a id="recipe-hmr" name="recipe-hmr" href="#recipe-hmr"></a>
 ## HMR live reload

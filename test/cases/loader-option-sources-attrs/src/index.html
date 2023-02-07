@@ -22,18 +22,22 @@
     />
 
     <!-- new custom tag with new attributes -->
-    <custom-img
+    <img-ng
       data-src-one="./fig1.png"
       data-src-two="./fig2.png"
       alt="custom image"
-    />
+    ></img-ng>
 
     <svg width="160" height="130">
-      <use href="./fig1.png"></use>
+      <image href="./fig1.png"></image>
     </svg>
 
-    <svg width="160" height="130">
-      <use xlink:href="./apple.png"></use>
+    <svg width="24" height="24">
+      <use href="./icons.svg#circle"></use>
+    </svg>
+
+    <svg width="24" height="24">
+      <use href="./icons.svg#rect"></use>
     </svg>
 
   </body>

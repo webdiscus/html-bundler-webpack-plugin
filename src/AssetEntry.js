@@ -142,7 +142,7 @@ class AssetEntry {
 
   /**
    * Clear caches.
-   * This method is called only once, when the plugin is applied.
+   * Called only once, when the plugin is applied.
    */
   static clear() {
     this.entryMap.clear();
@@ -150,7 +150,7 @@ class AssetEntry {
 
   /**
    * Remove entries added not via webpack entry.
-   * This method is called before each compilation after changes by `webpack serv/watch`.
+   * Called before each compilation after changes by `webpack serv/watch`.
    */
   static reset() {
     for (const entryName of this.compilationEntryNames) {

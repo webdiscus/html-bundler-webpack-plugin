@@ -1,5 +1,19 @@
 # Change log
 
+## 0.9.1 (2023-02-08)
+- fix: correctly resolve SVG filename with fragment in `use` tag
+  ```html
+  <svg width="24" height="24">
+    <use href="./icons.svg#home"></use>
+  </svg>
+  ```
+- fix: resolve assets when the same file is used on many pages generated from the same template
+- fix: pass data to template after changes when using HMR
+- fix: by verbose display a file path relative by working directory instead of an absolute path
+- refactor: code optimisation
+- test: add tests for bugfixes
+- docs: update readme
+
 ## 0.9.0 (2023-02-04)
 - feat(BREAKING CHANGE): the 3rd argument `data` of the `preprocessor` has been moved to the 2nd argument as a property\
   `v0.9.0`: `preprocessor: (content, { resourcePath, data }) => {}` <= NEW syntax\
@@ -9,7 +23,7 @@
 - docs: add description how to pass data into template using new option `entry`
 
 ## 0.8.0 (2023-02-01)
-- feat: add `entry` plugin option, this has same API as Webpack entry plus additional `data` property
+- feat: add `entry` plugin option, this option is identical to Webpack entry plus additional `data` property
 - feat: add 3rd `data` argument of the `preprocessor` to pass template specific data:
   ```js
   module.exports = {

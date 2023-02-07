@@ -9,7 +9,7 @@ class AssetScript {
 
   /**
    * Clear cache.
-   * This method is called only once, when the plugin is applied.
+   * Called only once, when the plugin is applied.
    */
   static clear() {
     this.index = {};
@@ -18,10 +18,11 @@ class AssetScript {
 
   /**
    * Reset settings.
-   * This method is called before each compilation after changes by `webpack serv/watch`.
+   * Called before each compilation after changes by `webpack serv/watch`.
    */
   static reset() {
     this.index = {};
+    scriptStore.reset();
   }
 
   /**
@@ -78,6 +79,7 @@ class AssetScript {
    * @param {string} filename The asset filename of issuer.
    */
   static setIssuerFilename(issuer, filename) {
+    if (!issuer) return;
     scriptStore.setIssuerFilename(issuer, filename);
   }
 

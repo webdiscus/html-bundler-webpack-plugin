@@ -29,7 +29,7 @@ module.exports = {
               attributes: ['data-src', 'data-srcset', 'data-resolve-src'],
             },
             {
-              tag: 'custom-img',
+              tag: 'img-ng',
               attributes: ['data-src-one', 'data-src-two'],
             },
 
@@ -38,19 +38,24 @@ module.exports = {
               attributes: ['data-source'],
             },
 
-            // image in svg
+            // image in SVG
+            {
+              tag: 'image',
+              attributes: ['href'],
+            },
+            // SVG image fragment
             {
               tag: 'use',
-              attributes: ['href', 'xlink:href'],
+              attributes: ['href'], // note: 'xlink:href' is deprecated and not supported in browsers
             },
           ],
         },
       },
       {
-        test: /\.(png|jpe?g|ico)/,
+        test: /\.(png|jpe?g|ico|svg)/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
+          filename: 'assets/img/[name].[hash:8][ext][query]',
         },
       },
     ],

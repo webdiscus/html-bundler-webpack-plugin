@@ -1,14 +1,26 @@
 const { pluginName } = require('../config');
-const { outToConsole, isFunction } = require('../Utils');
+const { pathRelativeByPwd, outToConsole, isFunction } = require('../Utils');
 const { green, greenBright, cyan, cyanBright, magenta, yellowBright, black, gray, ansi } = require('ansis/colors');
-const grayBright = ansi(245);
+const Asset = require('../Asset');
 
+const grayBright = ansi(245);
 const header = black.bgGreen`[${pluginName}]`;
 
 // width of labels in first column
 const padWidth = 12;
 
+const pathRelativeByPwdArr = (files) => {
+  for (let key in files) {
+    files[key] = pathRelativeByPwd(files[key]);
+  }
+
+  return files;
+};
+
 const verboseEntry = ({ name, importFile, outputPath, filename, filenameTemplate }) => {
+  importFile = pathRelativeByPwd(importFile);
+  outputPath = pathRelativeByPwd(outputPath);
+
   /**
    * @param {string} name
    * @param {string} importFile
@@ -53,7 +65,11 @@ const verboseExtractResource = ({ issuers, sourceFile, outputPath, assetFile }) 
  * @param {string} title
  */
 const verboseExtractModule = ({ issuers, sourceFile, outputPath, assetFile, title }) => {
-  const issuerFiles = Array.isArray(issuers) ? issuers : Array.from(issuers.keys());
+  let issuerFiles = Array.isArray(issuers) ? issuers : Array.from(issuers.keys());
+
+  sourceFile = pathRelativeByPwd(sourceFile);
+  outputPath = pathRelativeByPwd(outputPath);
+  issuerFiles = pathRelativeByPwdArr(issuerFiles);
 
   if (!title) title = 'Extract Module';
 
@@ -90,8 +106,17 @@ const verboseResolveResource = ({ issuers, sourceFile }) => {
   const title = 'Resolve Resource';
   let issuersStr = '';
 
+  sourceFile = pathRelativeByPwd(sourceFile);
+  issuers = pathRelativeByPwdArr(issuers);
+
   for (let [issuer, asset] of issuers) {
+    let issuerAsset = Asset.findAssetFile(issuer);
     let value = asset && asset.startsWith('data:') ? asset.slice(0, asset.indexOf(',')) + ',...' : asset;
+
+    if (issuerAsset) {
+      issuer = issuerAsset;
+    }
+
     issuersStr +=
       'in: '.padStart(padWidth) + `${magenta(issuer)}\n` + 'as: '.padStart(padWidth) + `${grayBright(value)}\n`;
   }
@@ -112,8 +137,10 @@ const verboseExtractInlineResource = ({ sourceFile, data }) => {
   let dataUrlStr = '';
   let dataUrlIssuersStr = '';
 
+  sourceFile = pathRelativeByPwd(sourceFile);
+
   if (data.dataUrl) {
-    const issuers = Array.from(data.dataUrl.issuers);
+    const issuers = pathRelativeByPwdArr(Array.from(data.dataUrl.issuers));
 
     dataUrlStr =
       'data URL: '.padStart(padWidth) +
@@ -128,7 +155,7 @@ const verboseExtractInlineResource = ({ sourceFile, data }) => {
   }
 
   if (data.inlineSvg) {
-    const issuers = Array.from(data.inlineSvg.issuers);
+    const issuers = pathRelativeByPwdArr(Array.from(data.inlineSvg.issuers));
     const attrs = data.cache.svgAttrs;
     let attrsString = '';
 

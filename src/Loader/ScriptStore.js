@@ -6,6 +6,7 @@ const { isInline } = require('./Utils');
 
 class ScriptStore {
   static files = [];
+  static scriptIssuers = new Map();
 
   static init({ issuer }) {
     this.issuer = issuer;
@@ -62,13 +63,19 @@ class ScriptStore {
   }
 
   /**
-   * @param {string} issuer The source file of issuer of the required file.
+   * @param {string} entryPoint The source file of an entry point.
    * @param {string} filename The output asset filename of issuer.
    */
-  static setIssuerFilename(issuer, filename) {
-    for (let item of this.files) {
-      if (item.issuer.request === issuer) {
-        item.issuer.filename = filename;
+  static setIssuerFilename(entryPoint, filename) {
+    for (let { file, issuer } of this.files) {
+      // one script file can be loaded on many pages generated from same template file
+      if (issuer.filename == null && issuer.request === entryPoint) {
+        const scriptIssuers = this.scriptIssuers.get(file);
+
+        if (scriptIssuers == null || !scriptIssuers.has(filename)) {
+          issuer.filename = filename;
+          scriptIssuers == null ? this.scriptIssuers.set(file, new Set([filename])) : scriptIssuers.add(filename);
+        }
       }
     }
   }
@@ -77,8 +84,20 @@ class ScriptStore {
     return this.files;
   }
 
+  /**
+   * Clear cache.
+   * Called only once, when the plugin is applied.
+   */
   static clear() {
     this.files = [];
+  }
+
+  /**
+   * Reset settings.
+   * Called before each compilation after changes by `webpack serv/watch`.
+   */
+  static reset() {
+    this.scriptIssuers.clear();
   }
 }
 

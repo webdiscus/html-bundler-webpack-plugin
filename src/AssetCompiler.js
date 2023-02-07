@@ -139,12 +139,16 @@ class AssetCompiler {
   };
 
   // the id to bind loader with data passed into template via entry.data
-  entryDataIndex;
+  entryDataIndex = 1;
   entryDataCache = new Map();
 
   // webpack's options and modules
   webpackContext = '';
   webpackOutputPath = '';
+
+  // current entry point during dependency compilation
+  /** @type AssetEntryOptions */
+  currentEntryPoint;
 
   /**
    * @param {PluginOptions|{}} options
@@ -174,8 +178,6 @@ class AssetCompiler {
 
     // let know the loader that the plugin is being used
     plugin.init(this.options);
-
-    this.reset();
 
     // bind the instance context for using these methods as references in Webpack hooks
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
@@ -222,15 +224,6 @@ class AssetCompiler {
       // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
       options.experiments.layers = true;
     }
-  }
-
-  /**
-   * Reset initial values.
-   */
-  reset() {
-    // TODO: test hmr
-    this.entryDataIndex = 1;
-    this.entryDataCache.clear();
   }
 
   /**
@@ -366,11 +359,6 @@ class AssetCompiler {
           loaderContext.entryData = this.entryDataCache.get(entryDataId);
           loaderContext.data = this.entryDataCache.get(entryDataId);
         }
-
-        // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
-        // if (module.__entryDataId) {
-        //   loaderContext.entryData = this.entryDataCache.get(module.__entryDataId);
-        // }
       });
 
       // render source code of modules
@@ -454,12 +442,6 @@ class AssetCompiler {
         // See 'webpack/lib/NormalModule.js:identifier()'.
 
         entry.layer = `__entryDataId=${this.entryDataIndex}`;
-
-        // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
-        // specify the entry data id as a query param
-        //entry.import[0] += importFile.indexOf('?') < 0 ? '?' : '&';
-        //entry.import[0] += `__entryDataId=${this.entryDataIndex}`;
-
         this.entryDataCache.set(`${this.entryDataIndex}`, entry.data);
         this.entryDataIndex++;
       }
@@ -478,32 +460,6 @@ class AssetCompiler {
     const { context, request, contextInfo } = resolveData;
     const { issuer } = contextInfo;
     const [resourceFile] = request.split('?', 2);
-
-    // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
-    // Resolve the entry data id from the resource query added in the 'entryOption' hook
-    // to generate unique identifier of the module.
-    // It is ultra important when the entry contains same source file for many chunks.
-    // For example:
-    // { page1: 'src/template.html', page2: 'src/template.html' }
-    // const [, resourceQuery] = request.split('?', 2);
-    // if (resourceQuery) {
-    //   const params = new URLSearchParams(resourceQuery);
-    //   let queryString = '';
-    //
-    //   if (params.has('__entryDataId')) {
-    //     resolveData.__entryDataId = params.get('__entryDataId');
-    //     // note: don't remove this param, because it serves for unique identifier of the module
-    //     // when used entry data and the entry contains same source file for many chunks
-    //     // remove the temporary private param from request
-    //     //params.delete('__entryDataId');
-    //     //params.forEach((value, key) => {
-    //     //  queryString += queryString ? '&' : '?';
-    //     //  queryString += value ? `${key}=${value}` : `${key}`;
-    //     //});
-    //     // recovery the original request w/o temporary private param
-    //     //resolveData.request = resourceFile + queryString;
-    //   }
-    // }
 
     // save requests to issuer cache
     if (!issuer) issuerCache.add(request);
@@ -569,12 +525,6 @@ class AssetCompiler {
     const { rawRequest, resource } = createData;
     const { issuer } = resolveData.contextInfo;
 
-    // [RESERVED FALLBACK] if the experimental 'layer' option will be changed or removed in next Webpack version.
-    // pass a resolved entry data id into the module
-    // if (resolveData.__entryDataId) {
-    //   module.__entryDataId = resolveData.__entryDataId;
-    // }
-
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
 
     if (type === 'asset/inline' || type === 'asset') {
@@ -585,7 +535,6 @@ class AssetCompiler {
       if (AssetScript.isScript(module)) return;
 
       module.__isDependencyTypeUrl = true;
-      Resolver.addAsset(resource, undefined, issuer);
     }
 
     // add resolved sources in use cases:
@@ -651,6 +600,8 @@ class AssetCompiler {
     entry.filename = compilation.getPath(chunk.filenameTemplate, { contentHashType, chunk });
     AssetScript.setIssuerFilename(entry.request, entry.filename);
 
+    this.currentEntryPoint = null;
+
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
 
@@ -699,7 +650,6 @@ class AssetCompiler {
 
           assetModules.add({
             inline,
-            entryAsset: null,
             // resourceInfo
             isEntry: true,
             verbose: entry.verbose,
@@ -717,6 +667,8 @@ class AssetCompiler {
               hash: chunk.contentHash[contentHashType],
             },
           });
+
+          this.currentEntryPoint = entry;
 
           continue;
         }
@@ -758,7 +710,7 @@ class AssetCompiler {
           assetFile = this.resolveOutputFilename(assetFile, pluginModule.outputPath);
         }
 
-        Resolver.addAsset(sourceRequest, assetFile, issuerFile);
+        Resolver.addAsset(sourceRequest, assetFile);
 
         if (inline) {
           AssetSource.add(sourceRequest);
@@ -783,7 +735,6 @@ class AssetCompiler {
 
         assetModules.add({
           inline,
-          entryAsset: entry.filename,
           // resourceInfo
           isEntry: false,
           verbose: moduleVerbose,
@@ -803,7 +754,7 @@ class AssetCompiler {
         });
       } else if (module.type === 'asset/resource') {
         // resource required in the template or in the CSS via url()
-        AssetResource.render(module, issuerFile);
+        AssetResource.render(module, issuerFile, this.currentEntryPoint);
 
         if (verbose) {
           verboseList.add({
@@ -877,16 +828,20 @@ class AssetCompiler {
   /**
    * Render the module source code generated by a loader.
    *
-   * @param {string} code The source code.
+   * @param {boolean} inline Whether the resource should be inlined.
+   * @param {Object} source The Webpack source.
    * @param {string} sourceFile The full path of source file w/o URL query.
    * @param {string} sourceRequest The full path of source file with URL query.
    * @param {string} assetFile
+   * @param {boolean} isEntry
+   * @param {boolean} verbose
+   * @param {string} outputPath
+   * @param {string|function} filenameTemplate
    * @param {ModuleProps} pluginModule
-   * @return {string|null} When return null then not emit file.
+   * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
   renderModule({
     inline,
-    entryAsset,
     source,
     sourceFile,
     sourceRequest,
@@ -913,7 +868,7 @@ class AssetCompiler {
       code = toCommonJS(code);
     }
 
-    Resolver.setIssuer(sourceRequest, entryAsset);
+    Resolver.setContext(sourceRequest, this.currentEntryPoint);
 
     const contextOptions = {
       require: Resolver.require,
@@ -954,7 +909,7 @@ class AssetCompiler {
     }
 
     if (inline) {
-      AssetSource.setSource(sourceRequest, entryAsset, content);
+      AssetSource.setSource(sourceRequest, this.currentEntryPoint.filename, content);
       return null;
     }
 
@@ -984,7 +939,7 @@ class AssetCompiler {
             verboseExtractModule({
               sourceFile,
               assetFile: originalAssetFile,
-              issuers: issuers,
+              issuers,
               outputPath,
               header: item.header,
             });
@@ -1026,7 +981,6 @@ class AssetCompiler {
     verboseList.clear();
     issuerCache.clear();
 
-    this.reset();
     Asset.reset();
     AssetEntry.reset();
     AssetScript.reset();

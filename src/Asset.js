@@ -46,7 +46,7 @@ class Asset {
 
   /**
    * Reset settings.
-   * This method is called before each compilation after changes by `webpack serv/watch`.
+   * Called before each compilation after changes by `webpack serv/watch`.
    */
   static reset() {
     this.fileIndex = {};
