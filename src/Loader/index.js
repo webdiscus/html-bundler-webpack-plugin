@@ -1,11 +1,16 @@
 const { merge } = require('webpack-merge');
 const HtmlBundler = require('./HtmlBundler');
-const { plugin, scriptStore } = require('./Modules');
+const PluginService = require('../Plugin/PluginService');
+const ScriptCollection = require('../Plugin/ScriptCollection');
 const Dependency = require('./Dependency');
 const Resolver = require('./Resolver');
 const Loader = require('./Loader');
 
-const { getCompileErrorMessage, getCompileErrorHtml, getExecuteTemplateFunctionErrorMessage } = require('./Exeptions');
+const {
+  getCompileErrorMessage,
+  getCompileErrorHtml,
+  getExecuteTemplateFunctionErrorMessage,
+} = require('./Messages/Exeptions');
 
 /**
  * @param {string} content The HTML template.
@@ -55,7 +60,7 @@ const compile = function (content, callback) {
   if (loaderContext.cacheable != null) loaderContext.cacheable(true);
 
   // prevent double initialisation with same options, occurs when many entry files used in one webpack config
-  if (!plugin.isCached(context)) {
+  if (!PluginService.isCached(context)) {
     Resolver.init({
       basedir,
       options: webpackOptions.resolve || {},
@@ -69,7 +74,7 @@ const compile = function (content, callback) {
     customData,
   });
 
-  scriptStore.init({
+  ScriptCollection.init({
     // filename with url query
     issuer: resource,
   });

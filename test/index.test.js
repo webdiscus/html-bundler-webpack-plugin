@@ -1,31 +1,13 @@
-import path from 'path';
 import { compareFileListAndContent, exceptionContain, stdoutContain } from './utils/helpers';
-import { PluginError, PluginException } from '../src/Messages/Exception';
-import { parseQuery } from '../src/Utils';
-import AssetEntry from '../src/AssetEntry';
-
+import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
+import { parseQuery } from '../src/Plugin/Utils';
+import AssetEntry from '../src/Plugin/AssetEntry';
 import HtmlBundler from '../src/Loader/HtmlBundler';
-
-const PATHS = {
-  base: __dirname,
-  testSource: path.join(__dirname, 'cases'),
-  // relative path in the test directory to web root dir name, same as by a web server (e.g. nginx)
-  //webRoot: '/public/',
-  webRoot: '/dist/',
-  // relative path in the test directory to expected files for test
-  expected: '/expected/',
-  // relative path in the public directory
-  output: '/assets/',
-};
-
-const testTimeout = 5000;
+import { PATHS } from './config';
 
 beforeAll(() => {});
 
-beforeEach(() => {
-  // on linux/macOS not work set the testTimeout in jest.config.js
-  jest.setTimeout(testTimeout);
-});
+beforeEach(() => {});
 
 describe('misc unit tests', () => {
   test('parseQuery array', (done) => {
@@ -203,8 +185,12 @@ describe('features tests', () => {
     compareFileListAndContent(PATHS, 'resolve-script-style-asset', done);
   });
 
-  test('resolve-script-style-in-same-page', (done) => {
-    compareFileListAndContent(PATHS, 'resolve-script-style-in-same-page', done);
+  test('resolve-in-many-pages-from-same-tmpl', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-in-many-pages-from-same-tmpl', done);
+  });
+
+  test('resolve-in-many-pages-from-one-html', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-in-many-pages-from-one-html', done);
   });
 
   test('resolve-relative-paths', (done) => {

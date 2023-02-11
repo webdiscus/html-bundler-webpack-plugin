@@ -3,9 +3,9 @@ const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
 const Dependency = require('./Dependency');
-const { plugin } = require('./Modules');
+const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('./Utils');
-const { resolveException, unsupportedInterpolationException } = require('./Exeptions');
+const { resolveException } = require('./Messages/Exeptions');
 
 class Resolver {
   static aliasRegexp = /^([~@])?(.*?)(?=\/)/;
@@ -46,7 +46,7 @@ class Resolver {
       mainFields: ['style', 'browser', 'sass', 'main'],
       mainFiles: ['_index', 'index'],
       extensions: ['.scss', '.sass', '.css'],
-      restrictions: plugin.getStyleRestrictions(),
+      restrictions: PluginService.getStyleRestrictions(),
     });
   }
 
@@ -101,119 +101,6 @@ class Resolver {
     }
 
     return isWin ? pathToPosix(resolvedFile) : resolvedFile;
-  }
-
-  /**
-   * Interpolate filename for `compile` method.
-   *
-   * @note: the file is the argument of require() and can be any expression, like require('./' + file + '.jpg').
-   * See https://webpack.js.org/guides/dependency-management/#require-with-expression.
-   *
-   * @param {string} value The expression to resolve.
-   * @param {string} templateFile The template file.
-   * @param {string} [type = 'default'] The require type: 'default', 'script', 'style'.
-   * @return {string}
-   */
-  static interpolate(value, templateFile, type = 'default') {
-    value = value.trim();
-    const [, quote, file] = /(^"|'|`)(.+?)(?=`|'|")/.exec(value) || [];
-    const isScript = type === 'script';
-    const isStyle = type === 'style';
-    let interpolatedValue = null;
-    let valueFile = file;
-
-    // the argument begin with a string quote
-    const context = path.dirname(templateFile) + '/';
-
-    if (!file) {
-      // fix webpack require issue `Cannot find module` for the case:
-      // - var file = './image.jpeg';
-      // require(file) <- error
-      // require(file + '') <- solution
-      return value + ` + ''`;
-    }
-
-    // resolve an absolute path by prepending options.basedir
-    if (file[0] === '/') {
-      interpolatedValue = quote + this.basedir + value.slice(2);
-    }
-
-    // resolve a file in current directory
-    if (interpolatedValue == null && file.slice(0, 2) === './') {
-      interpolatedValue = quote + context + value.slice(3);
-    }
-
-    // resolve a file in parent directory
-    if (interpolatedValue == null && file.slice(0, 3) === '../') {
-      interpolatedValue = quote + context + value.slice(1);
-    }
-
-    // resolve a webpack `resolve.alias`
-    if (interpolatedValue == null) {
-      interpolatedValue = this.resolveAlias(value.slice(1));
-
-      if (typeof interpolatedValue === 'string') {
-        interpolatedValue = quote + interpolatedValue;
-      } else if (Array.isArray(interpolatedValue)) {
-        interpolatedValue = null;
-        valueFile = this.removeAliasPrefix(file);
-      }
-    }
-
-    // try the enhanced resolver for alias from tsconfig or for alias as array of paths
-    // the following examples work:
-    // '@data/path/script'
-    // '@data/path/script.js'
-    // '@images/logo.jpg'
-    // `${file}`
-    if (interpolatedValue == null) {
-      if (file.indexOf('{') < 0 && !file.endsWith('/')) {
-        try {
-          const resolvedValueFile = isStyle
-            ? this.resolveStyle(context, valueFile)
-            : this.resolveFile(context, valueFile);
-          interpolatedValue = value.replace(file, resolvedValueFile);
-        } catch (error) {
-          resolveException(error, value, templateFile);
-        }
-      } else if (file.indexOf('/') >= 0) {
-        // @note: resolve of alias from tsconfig in interpolating string is not supported for `compile` method,
-        // the following examples not work:
-        // `@data/${pathname}/script`
-        // `@data/${pathname}/script.js`
-        // `@data/path/${filename}`
-        // '@data/path/' + filename
-        unsupportedInterpolationException(value, templateFile);
-      }
-    }
-
-    if (interpolatedValue == null) {
-      return value;
-    }
-
-    if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
-
-    // remove quotes: '/path/to/file.js' -> /path/to/file.js
-    let resolvedValue = interpolatedValue.slice(1, -1);
-    let resolvedFile;
-
-    // detect only full resolved path, w/o interpolation like: '/path/to/' + file or `path/to/${file}`
-    if (!/["'`$]/g.test(resolvedValue)) {
-      resolvedFile = resolvedValue;
-    }
-
-    if (isScript || isStyle) {
-      if (!resolvedFile) {
-        unsupportedInterpolationException(value, templateFile);
-      }
-      if (isScript) resolvedFile = this.resolveScriptExtension(resolvedFile);
-
-      return isWin ? pathToPosix(resolvedFile) : resolvedFile;
-    }
-
-    if (resolvedFile) Dependency.add(resolvedFile);
-
-    return interpolatedValue;
   }
 
   /**

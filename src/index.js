@@ -1,5 +1,4 @@
-const AssetCompiler = require('./AssetCompiler');
-const { loader } = require('./Modules');
+const AssetCompiler = require('./Plugin/AssetCompiler');
 
 /**
  * @typedef {Object} PluginOptions
@@ -65,4 +64,4 @@ class Plugin extends AssetCompiler {
 }
 
 module.exports = Plugin;
-module.exports.loader = loader;
+module.exports.loader = require.resolve('./Loader');

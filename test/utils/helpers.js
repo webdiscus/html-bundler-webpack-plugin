@@ -55,7 +55,7 @@ export const exceptionContain = function (PATHS, relTestCasePath, containString,
 };
 
 export const stdoutContain = function (PATHS, relTestCasePath, containString, done) {
-  const stdout = jest.spyOn(console._stdout, 'write').mockImplementation(() => {});
+  const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   compile(PATHS, relTestCasePath, {}).then(() => {
     const { calls } = stdout.mock;

@@ -1,7 +1,20 @@
 # Change log
 
+## 0.10.0 (2023-02-11)
+- feat: improve verbose information output for extracted scripts
+- fix: resolve scripts in diff pages generated from one template
+- fix: warning for duplicate files when many html files are generated from one template
+- refactor: optimise code structure, code cleanup
+- refactor: optimize code for processing of scripts
+- test: add base and advanced test template for issues
+- chore: add GitHub CONTRIBUTING.md
+- chore: add GitHub PULL_REQUEST_TEMPLATE.md
+- chore: add GitHub ISSUE_TEMPLATE
+- chore: add SECURITY.md
+- docs: update content structure, improve readme content
+
 ## 0.9.1 (2023-02-08)
-- fix: correctly resolve SVG filename with fragment in `use` tag
+- fix: resolve SVG filename with fragment in `use` tag
   ```html
   <svg width="24" height="24">
     <use href="./icons.svg#home"></use>
@@ -15,10 +28,10 @@
 - docs: update readme
 
 ## 0.9.0 (2023-02-04)
-- feat(BREAKING CHANGE): the 3rd argument `data` of the `preprocessor` has been moved to the 2nd argument as a property\
+- BREAKING CHANGE: the 3rd argument `data` of the `preprocessor` has been moved to the 2nd argument as a property\
   `v0.9.0`: `preprocessor: (content, { resourcePath, data }) => {}` <= NEW syntax\
   `v0.8.0`: `preprocessor: (content, { resourcePath }, data) => {}` <= old syntax
-- fix: avoids an additional query param for internal use in the module's `resource` property
+- fix: avoid an additional query param for internal use in the module's `resource` property
 - fix: remove info comments before inlined SVG
 - docs: add description how to pass data into template using new option `entry`
 
@@ -59,7 +72,7 @@
 
 ## 0.7.0 (2023-01-29)
 - feat: add `postprocess` plugin option
-- fix: parsing srcset attribute containing a query as JSON5, e.g. `srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"`
+- fix: parse srcset attribute containing a query as JSON5, e.g. `srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"`
 - test: add tests for options, responsive images, exceptions
 - docs: update readme
 
@@ -68,9 +81,9 @@
 - feat: add `extractComments` plugin option to enable/disable saving comments in *.LICENSE.txt file
 - feat: add to default resolving the `data` attribute of `object` tag
 - feat: add supports the `responsive-loader`
-- fix: resolves exact attribute name w/o leading wildcard
-- fix: resolves mutiline attributes
-- fix: resolves mutiline values in srcset attribute
+- fix: resolve exact attribute name w/o leading wildcard
+- fix: resolve mutiline attributes
+- fix: resolve mutiline values in srcset attribute
 - test: add tests for new options, messages
 - docs: update readme
 
@@ -86,7 +99,7 @@
 - docs: update readme with new features
 
 ## 0.4.0 (2023-01-20)
-- feat: added support for `<input>` `<audio>` `<video>` `<track>` tags
+- feat: add support for `<input>` `<audio>` `<video>` `<track>` tags
 - fix: automatic publicPath must be empty string when used HMR
 - fix: corrupted inline JS code when code contains '$$' chars chain
 
@@ -111,13 +124,13 @@
 
 ## 0.1.0 (2023-01-12)
 First release:
-- feat: handles HTML files from webpack entry
-- feat: resolving the Webpack alias in the source file name
+- feat: handle HTML files from webpack entry
+- feat: resolve the Webpack alias in the source file name
 - feat: add `js` plugin option to extract JavaScript files from source scripts loaded in HTML via a `<script>` tag and generates a separate file for it
 - feat: add `css` plugin option to extract CSS files from source styles loaded in HTML via a `<link>` tag and generates a separate file for it
-- feat: processes the images, fonts from sources loaded via `<link>`, `<img>` or `<source>` tags and generates a separate file for it
-- feat: resolves and extracts images from sources loaded via `url()` in a style (css, scss)
-- feat: support auto `publicPath`
+- feat: process the images, fonts from sources loaded via `<link>`, `<img>` or `<source>` tags and generates a separate file for it
+- feat: resolve and extracts images from sources loaded via `url()` in a style (css, scss)
+- feat: resolve auto `publicPath`
 
 ## 0.0.1-beta.0 (2023-01-07)
 - docs: announcement of the plugin
