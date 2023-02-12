@@ -4,7 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>HTML Bundler Plugin is the right way to bundle all resources with HTML templates</div>
+    <div>The plugin make easily to bundle HTML pages from source templates, styles, scripts, images</div>
 </div>
 
 ---
@@ -14,23 +14,18 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-The plugin make Webpack setup easily and intuitive.
-
-This plugin allows to use an HTML template as a starting point for all dependencies used in your web application. 
-All source styles, scripts specified in HTML are processed, and the extracted JS, CSS are saved to the output directory.
-The plugin automatically substitutes output filenames into the generated HTML file.
-
+This plugin allows to use an HTML template as a starting point for all dependencies used in your web application.
+All source files of scripts, styles, images specified in HTML are processed automatically.
+All processed files are extracted and saved to the output directory.
+The plugin automatically substitutes the output filenames of the processed resources in the generated HTML file.
 
 💡 **Highlights**
 
-- An entry point is an HTML template.
-- Source scripts and styles can be loaded directly in HTML using `<script>` and `<link>` tags.
-- All JS and CSS files extracts from their sources specified in HTML.
+- You can define an HTML template as an **entry point**.
+- You can specify source scripts and styles directly in HTML using `<script>` and `<link>` tags.
 - You can inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
 - You can use a template engine like [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/) and others **without template loaders**.
-- This plugin works like the [pug-plugin](https://github.com/webdiscus/pug-plugin) but the entry point is a `HTML` template.
-
-How to create multiple HTML pages with html-bundler-webpack-plugin, see the [Webpack boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate).
+- You can pass a data into the template.
 
 > If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
@@ -54,7 +49,7 @@ Add source scripts, styles, images directly to HTML using a relative path or a W
 </html>
 ```
 
-The generated HTML contains hashed output filenames of processed source files:
+The generated HTML contains output filenames of processed source files:
 
 ```html
 <html>
@@ -100,6 +95,8 @@ module.exports = {
   },
 };
 ```
+
+> How to create multiple HTML pages with html-bundler-webpack-plugin, see the [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate).
 
 
 ## Contents
