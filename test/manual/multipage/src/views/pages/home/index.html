@@ -1,0 +1,24 @@
+{% extends "src/views/layouts/default.html" %}
+
+<!-- set variables used in layout -->
+{% set title="Home" %}
+
+{% block styles %}
+<!-- load specific page style -->
+<link href="./style.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+<!-- load specific page script -->
+<script src="./home.js"></script>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="container flex-column center-x">
+    <h1>Home</h1>
+    <div class="teaser">Simple multipage boilerplate using HTML, SCSS, JS.</div>
+    <img class="home-image" src="@images/dolphin.jpg">
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,103 @@
+// Reset and normalize.
+
+// Set all elements inherit from `html`
+*:not(img),
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+// Prevent iOS and IE text size adjust after device orientation change, without disabling user zoom.
+html {
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  // Set box model on the root element
+  box-sizing: border-box;
+  touch-action: manipulation;
+}
+
+// Font rendering.
+body {
+  // Support for all WebKit browsers.
+  -webkit-font-smoothing: antialiased;
+  // Support for Firefox.
+  -moz-osx-font-smoothing: grayscale;
+  // Support for Safari and Chrome.
+  text-rendering: optimizeLegibility;
+  // Support for IE.
+  font-feature-settings: 'liga';
+  overflow-x: hidden;
+}
+
+// Remove default margin and padding.
+html,
+body,
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  // remove the gray background color from active links in IE 10
+  background-color: transparent;
+  // remove underline
+  text-decoration: none;
+
+  &:active,
+  &:hover {
+    outline: 0;
+  }
+}
+
+button,
+select {
+  text-transform: none;
+}
+
+// Reset default cursor for disabled elements.
+button[disabled],
+html input[disabled] {
+  cursor: default;
+}
+
+// Remove inner padding and border in Firefox 4+.
+button::-moz-focus-inner,
+input::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+// Address Firefox 4+ setting `line-height` on `input` using `!important` in the UA stylesheet.
+input {
+  line-height: normal;
+}
+
+pre {
+  overflow: auto;
+}
+
+ul,
+ol,
+li {
+  //padding: 0;
+  //margin: 0;
+}
+
+// Remove most spacing between table cells.
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  th,
+  td {
+    padding: 0;
+  }
+}
+
+// Hide the `template` element, template placeholder for some template elements and attributes.
+[hidden],
+#template,
+template {
+  display: none;
+}

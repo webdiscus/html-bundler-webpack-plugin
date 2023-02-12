@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "HTML bundler plugin for webpack handels HTML templates as entry point and extracts CSS, JS, images from their sources loaded in HTML.",
   "keywords": [
     "webpack",

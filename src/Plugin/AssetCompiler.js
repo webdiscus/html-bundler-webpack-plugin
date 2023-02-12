@@ -709,7 +709,7 @@ class AssetCompiler {
           verboseList.add({
             type: 'module',
             header: pluginModule.verboseHeader,
-            sourceFile,
+            sourceFile: sourceRequest,
             outputPath: moduleOutputPath,
           });
         }

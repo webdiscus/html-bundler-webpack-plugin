@@ -420,6 +420,12 @@ describe('extras: responsive images', () => {
   });
 });
 
+describe('verbose', () => {
+  test('verbose-module-inline', (done) => {
+    compareFileListAndContent(PATHS, 'verbose-module-inline', done);
+  });
+});
+
 // Test Messages
 
 describe('warning tests', () => {

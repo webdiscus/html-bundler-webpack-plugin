@@ -1,0 +1,95 @@
+{% extends "src/views/layouts/default.html" %}
+
+<!-- set variables used in layout -->
+{% set title="Demo" %}
+
+{% block styles %}
+<!-- load specific page style -->
+<link href="./style.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+<!-- load specific page script -->
+<script src="./demo.js"></script>
+{% endblock %}
+
+{% block content %}
+<section>
+  <div class="container flex-column center-x">
+    <h1>Demo</h1>
+    <div class="teaser">
+      This is demonstration how to load icons, file and inline images in HTML.
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container flex-column center-x">{{ myVar }}</div>
+</section>
+
+<section>
+  <div class="container flex-column center-x">
+    <h2>Load image as file by size > 1K</h2>
+    <div class="teaser">
+      The image is loaded as file.
+    </div>
+    <!-- load as file: @images/dolphin.jpg -->
+    <img class="image" src="@images/dolphin.jpg" alt="dolphin">
+  </div>
+</section>
+
+<section>
+  <div class="container flex-column center-x">
+    <h2>Inline image by size <= 1K</h2>
+    <div class="teaser">
+      The SVG image is inlined as SVG tag.
+    </div>
+    <!-- inline by size: @images/icons/webpack.svg-->
+    <img class="image" src="@images/icons/webpack.svg" alt="webpack">
+  </div>
+</section>
+
+<section>
+  <div class="container flex-column center-x">
+    <h2>Inline image using "?inline" query</h2>
+    <div class="teaser">
+      The PNG image is inlined as data-URL.
+    </div>
+    <!-- inline using query: @images/icons/webicon-mac.png?inline -->
+    <img class="image" src="@images/icons/webicon-mac.png?inline" alt="mac">
+  </div>
+</section>
+
+<section>
+  <div class="container flex-column center-x">
+    <h2>Icons</h2>
+    <div class="teaser">
+      Example of Material Symbols
+    </div>
+
+    <div class="icon-list">
+      <div class="icon-item">
+        <div class="mat-symbol">home</div>
+        <div class="caption">home</div>
+      </div>
+      <div class="icon-item">
+        <div class="mat-symbol">search</div>
+        <div class="caption">search</div>
+      </div>
+      <div class="icon-item">
+        <div class="mat-symbol">menu</div>
+        <div class="caption">menu</div>
+      </div>
+      <div class="icon-item">
+        <div class="mat-symbol">settings</div>
+        <div class="caption">settings</div>
+      </div>
+      <div class="icon-item">
+        <div class="mat-symbol">language</div>
+        <div class="caption">language</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

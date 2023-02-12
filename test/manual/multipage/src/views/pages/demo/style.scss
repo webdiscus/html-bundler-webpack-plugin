@@ -1,0 +1,35 @@
+@use '@styles/main.scss';
+@use '@styles/abstracts/_variables.scss' as var;
+
+h1 {
+  color: seagreen;
+}
+
+.image {
+  width: 120px;
+}
+
+.icon-item {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  width: 95px;
+  margin-bottom: 25px;
+
+  .mat-symbol {
+    font-size: 48px;
+    margin-bottom: 5px;
+    color: #444;
+  }
+
+  .caption {
+    margin-top: 5px;
+    width: 100%;
+    font-size: 14px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

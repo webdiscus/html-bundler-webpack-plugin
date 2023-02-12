@@ -1,0 +1,10 @@
+@use 'material-icons';
+@use 'material-symbols';
+
+.mat-icon {
+  @extend .material-icons-outlined;
+}
+
+.mat-symbol {
+  @extend .material-symbols-outlined;
+}

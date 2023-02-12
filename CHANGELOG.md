@@ -1,5 +1,10 @@
 # Change log
 
+## 0.10.1 (2023-02-12)
+- fix: error by display verbose inlined module
+- test: add verbose test when a module is inlined
+- test: add manual test for multiple pages with inlined resources
+
 ## 0.10.0 (2023-02-11)
 - feat: improve verbose information output for extracted scripts
 - fix: resolve scripts in diff pages generated from one template

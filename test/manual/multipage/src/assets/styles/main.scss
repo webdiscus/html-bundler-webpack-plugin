@@ -1,0 +1,19 @@
+// Base
+@use 'base/normalize';
+@use 'base/space';
+@use 'base/layout';
+
+// App font: load your font
+//@use 'base/fonts/arial' as font;
+//@use 'base/fonts/helvetica' as font;
+@use 'base/fonts/roboto' as font;
+
+@use 'base/typography' with (
+  $font-family: font.$font-family,
+);
+
+// Icons
+@use 'base/mat-icons';
+
+// Page layout: header, main, footer
+@use 'pages/default-layout';

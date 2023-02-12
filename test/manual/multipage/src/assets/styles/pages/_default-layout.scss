@@ -1,0 +1,129 @@
+@use '../abstracts/variables' as var;
+
+// sticky header height normal, no scrolling
+$header-max-height: 100px;
+// sticky header height by scrolling
+$header-min-height: 60px;
+
+// main content
+$content-padding-x: 50px;
+
+// footer
+$footer-text-color: #b1c4d0;
+$footer-bg-color: #15384f;
+
+.header-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: sticky;
+  top: $header-min-height - $header-max-height;
+  min-height: $header-max-height;
+  margin-bottom: var.$gap-lg;
+  background-color: #fff;
+  box-shadow: 0 0 17px rgba(0, 0, 0, 0.3);
+
+  .header-content {
+    position: sticky;
+    display: flex;
+    top: 0;
+    height: $header-min-height;
+    width: 100%;
+    max-width: var.$content-max-width;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: $content-padding-x;
+    padding-right: $content-padding-x;
+
+    > * {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+    }
+
+    > :first-child,
+    > :last-child {
+      flex: 0 0 18%;
+      max-width: 18%;
+    }
+
+    > :first-child {
+      justify-content: flex-start;
+    }
+
+    > :last-child {
+      justify-content: flex-end;
+    }
+
+    > :not(:first-child):not(:last-child) {
+      flex-grow: 1;
+
+      > :not(:first-child) {
+        margin-left: var.$gap-lg;
+      }
+    }
+  }
+
+  .app-logo {
+    max-height: 60px;
+    min-height: 40px;
+    margin-right: var.$gap-lg;
+  }
+}
+
+.main-container {
+  display: flex;
+  flex: 1 0 auto;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: var.$content-max-width;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $content-padding-x;
+  padding-right: $content-padding-x;
+}
+
+.footer-container {
+  margin-top: var.$gap-lg;
+  padding: 30px 50px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  color: $footer-text-color;
+  background-color: $footer-bg-color;
+
+  .footer-content {
+  }
+
+  a {
+    color: $footer-text-color;
+  }
+}
+
+section {
+  &:not(:first-of-type) {
+    margin-top: var.$gap-lg;
+  }
+
+  .container {
+    padding: var.$gap-lg * 1.5;
+    background-color: #fff;
+
+    > :first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+.teaser {
+  margin-bottom: var.$gap-lg;
+}

@@ -13,8 +13,9 @@ module.exports = {
   },
 
   plugins: [
-    // zero config
-    new HtmlBundlerPlugin(),
+    new HtmlBundlerPlugin({
+      verbose: true,
+    }),
   ],
 
   module: {
@@ -22,6 +23,17 @@ module.exports = {
       {
         test: /\.html$/,
         loader: HtmlBundlerPlugin.loader,
+      },
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+      {
+        test: /.(png|jpe?g|ico|svg)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/img/[name].[hash:8][ext]',
+        },
       },
     ],
   },
