@@ -295,6 +295,14 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
 
+  test('option minify HTML', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify', done);
+  });
+
+  test('option minify HTML with custom options', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-options', done);
+  });
+
   test('option entry', (done) => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
@@ -317,12 +325,30 @@ describe('loader options', () => {
     compareFileListAndContent(PATHS, 'loader-option-sources-attrs-filter', done);
   });
 
+  test('preprocessor by defaults', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-default', done);
+  });
+
+  test('preprocessor disabled', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-disabled', done);
+  });
+});
+
+describe('loader options for templating', () => {
+  test('preprocessor with Eta', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
+  });
+
   test('preprocessor with EJS', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs', done);
   });
 
   test('preprocessor with handlebars', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
+  });
+
+  test('preprocessor with Mustache', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-mustache', done);
   });
 
   test('preprocessor for simple multipage', (done) => {

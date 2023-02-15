@@ -16,9 +16,9 @@ module.exports = {
         index: {
           import: './src/home.hbs',
           data: {
-            title: 'Breaking Bad',
-            firstname: 'Walter',
-            lastname: 'Heisenberg',
+            title: 'Home',
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
           },
         },
       },

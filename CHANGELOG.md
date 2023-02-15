@@ -1,5 +1,36 @@
 # Change log
 
+## 1.0.0 (2023-02-14) Stable release
+### Changes:
+Defaults, HTML templates defined in the entry are processed via Eta (same EJS syntax) templating engine.
+If you have pure HTML file you can disable this processing to save the compilation time:
+```js
+  {
+    test: /\.html$/,
+    loader: HtmlBundlerPlugin.loader,
+    options: {
+      preprocessor: false, // <= disable default processing
+    },
+  },
+  ```
+
+### Features:
+
+- feat: add the default template loader in Webpack `module.rule`.\
+  In most cases, the default loader options are used.
+  You can omit the template loader in `module.rule`, 
+  then the default template loader will be added automatically:
+  ```js
+  {
+    test: /\.(html|ejs|eta)$/,
+    loader: HtmlBundlerPlugin.loader,
+  },
+  ```
+- feat: add the `Eta` templating engine (smaller and faster alternative to `EJS` with same syntax) as the default preprocessor.
+  If no preprocessor option is specified, Eta is used in the preprocessor.
+- feat: add `minify` option
+- test: add tests for the default loader and the default preprocessor
+
 ## 0.10.1 (2023-02-12)
 - fix: error by display verbose inlined module
 - test: add verbose test when a module is inlined
@@ -106,7 +137,7 @@
 ## 0.4.0 (2023-01-20)
 - feat: add support for `<input>` `<audio>` `<video>` `<track>` tags
 - fix: automatic publicPath must be empty string when used HMR
-- fix: corrupted inline JS code when code contains '$$' chars chain
+- fix: corrupted inline JS code when code contains `$$` chars chain
 
 ## 0.3.1 (2023-01-19)
 - refactor: optimize parsing of source
@@ -128,7 +159,7 @@
 - docs: update readme
 
 ## 0.1.0 (2023-01-12)
-First release:
+First beta release:
 - feat: handle HTML files from webpack entry
 - feat: resolve the Webpack alias in the source file name
 - feat: add `js` plugin option to extract JavaScript files from source scripts loaded in HTML via a `<script>` tag and generates a separate file for it

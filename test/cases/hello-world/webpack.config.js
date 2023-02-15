@@ -16,13 +16,4 @@ module.exports = {
     // zero config
     new HtmlBundlerPlugin(),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-    ],
-  },
 };

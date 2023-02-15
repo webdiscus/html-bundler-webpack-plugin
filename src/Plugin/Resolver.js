@@ -307,7 +307,7 @@ class Resolver {
     // bypass the asset/inline as inline SVG
     if (AssetInline.isInlineSvg(request, issuerFile)) return request;
 
-    // require script in tag <script src=require('./main.js')>, set an asset filename via replaceSourceFilesInCompilation()
+    // require script in tag <script src=require('./main.js')>
     const scriptFile = AssetScript.resolveFile(rawRequest);
 
     if (scriptFile != null) {

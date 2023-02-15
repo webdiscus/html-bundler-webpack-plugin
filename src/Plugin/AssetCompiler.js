@@ -171,6 +171,39 @@ class AssetCompiler {
   }
 
   /**
+   * Called when a compiler object is initialized.
+   * Abstract method should be overridden in child class.
+   *
+   * @param {Compiler} compiler The instance of the webpack compiler.
+   * @abstract
+   */
+  initialize(compiler) {}
+
+  /**
+   * Called after asset sources have been rendered in the next stage `processAssets`.
+   * Abstract method should be overridden in child class.
+   *
+   * @param {Compilation} compilation The instance of the webpack compilation.
+   * @param {Function} callback This method is async. The callback must be called to let the webpack compiler continue.
+   * @abstract
+   * @async
+   */
+  afterRenderModules(compilation, callback) {}
+
+  /**
+   * Called after the processAssets hook had finished without error.
+   * Abstract method should be overridden in child class.
+   *
+   * @param {Compilation} compilation The instance of the webpack compilation.
+   * @param {string} sourceFile The source filename of asset.
+   * @param {string} assetFile The output filename of asset.
+   * @param {string} source The source of compiled asset.
+   * @return {string|undefined}
+   * @abstract
+   */
+  afterProcess(compilation, { sourceFile, assetFile, source }) {}
+
+  /**
    * Entries defined in plugin options are merged with Webpack entry option.
    *
    * @param {{}} options The Webpack options where entry contains additional 'data' property.
@@ -234,6 +267,8 @@ class AssetCompiler {
   apply(compiler) {
     if (!this.enabled) return;
 
+    this.initialize(compiler);
+
     const { webpack, options } = compiler;
     const webpackOutput = options.output;
     const { extractJs } = this.options;
@@ -286,10 +321,6 @@ class AssetCompiler {
 
     if (!this.options.sourcePath) this.options.sourcePath = this.webpackContext;
     if (!this.options.outputPath) this.options.outputPath = this.webpackOutputPath;
-
-    compiler.hooks.initialize.tap(pluginName, () => {
-      // reserved for future feature
-    });
 
     // options.entry
     this.initializeWebpackEntry(options);
@@ -345,10 +376,20 @@ class AssetCompiler {
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
       // after render sources
-      compilation.hooks.processAssets.tap(
-        { name: pluginName, stage: compilation.PROCESS_ASSETS_STAGE_ADDITIONAL },
-        (assets) => {
-          AssetTrash.clearCompilation(compilation);
+      compilation.hooks.processAssets.tapAsync(
+        { name: pluginName, stage: compilation.PROCESS_ASSETS_STAGE_REPORT },
+        (assets, callback) => {
+          const result = this.afterRenderModules(compilation);
+
+          if (typeof result?.then !== 'function') {
+            // if result is not a promise
+            callback();
+            return;
+          }
+
+          result.then(() => {
+            callback();
+          });
         }
       );
 
@@ -772,39 +813,43 @@ class AssetCompiler {
    * @note: Only at this stage the js file has the final hashed name.
    */
   afterProcessAssets() {
+    const options = this.options;
     const compilation = this.compilation;
-    const RawSource = compilation.compiler.webpack.sources.RawSource;
+    const { compiler, assets } = compilation;
+    const { RawSource } = compiler.webpack.sources;
+    const afterProcess = typeof options.afterProcess === 'function' ? options.afterProcess : null;
 
-    if (this.options.extractComments !== true) {
+    if (options.extractComments !== true) {
       AssetTrash.removeComments(compilation);
     }
 
-    AssetScript.replaceSourceFilesInCompilation(compilation);
+    AssetScript.substituteOutputFilenames(compilation);
     AssetInline.insertInlineSvg(compilation);
     AssetSource.inlineSource(compilation);
 
-    for (const assetFile in compilation.assets) {
+    for (const assetFile in assets) {
       const sourceFile = Asset.findSourceFile(assetFile) || AssetScript.findSourceFile(assetFile);
-      const source = compilation.assets[assetFile].source();
-      const result = this.afterProcess(compilation, { sourceFile, assetFile, source });
+      const source = assets[assetFile].source();
+      let newContent = this.afterProcess(compilation, { sourceFile, assetFile, source });
 
-      if (result != null) {
-        compilation.updateAsset(assetFile, new RawSource(result));
+      if (afterProcess && assetFile.endsWith('.html')) {
+        try {
+          // TODO: test not yet documented experimental feature
+          let result = afterProcess(newContent || source, { sourceFile, assetFile });
+          if (result) newContent = result;
+        } catch (err) {
+          throw new Error(err);
+        }
+      }
+
+      if (newContent != null) {
+        compilation.updateAsset(assetFile, new RawSource(newContent));
       }
     }
-  }
 
-  /**
-   * Abstract method should be overridden in child class.
-   *
-   * @param {Compilation} compilation The instance of the webpack compilation.
-   * @param {string} sourceFile The source filename of asset.
-   * @param {string} assetFile The output filename of asset.
-   * @param {string} source The source of compiled asset.
-   * @return {string|undefined}
-   * @abstract
-   */
-  afterProcess(compilation, { sourceFile, assetFile, source }) {}
+    // remove all unused assets from compilation
+    AssetTrash.clearCompilation(compilation);
+  }
 
   /**
    * Render the module source code generated by a loader.

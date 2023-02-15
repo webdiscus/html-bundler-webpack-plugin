@@ -3,6 +3,7 @@ const Asset = require('./Asset');
 const AssetEntry = require('./AssetEntry');
 const ScriptCollection = require('./ScriptCollection');
 const { isWin, pathToPosix } = require('./Utils');
+const AssetTrash = require('./AssetTrash');
 
 class AssetScript {
   static index = {};
@@ -99,12 +100,12 @@ class AssetScript {
   }
 
   /**
-   * Replace all required source filenames with generating asset filenames.
+   * Replace all resolved source filenames with generating output filenames.
    * Note: this method must be called in the afterProcessAssets compilation hook.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
-  static replaceSourceFilesInCompilation(compilation) {
+  static substituteOutputFilenames(compilation) {
     const {
       assets,
       assetsInfo,
@@ -117,16 +118,8 @@ class AssetScript {
       },
     } = compilation;
     const usedScripts = new Map();
-    const realSplitFiles = new Set();
-    const allSplitFiles = new Set();
-    const trashFiles = new Set();
+    const splitFiles = new Set();
     const scripts = ScriptCollection.getAll().entries();
-
-    for (let chunk of chunks) {
-      if (chunk.chunkReason && chunk.chunkReason.startsWith('split chunk')) {
-        allSplitFiles.add(...chunk.files);
-      }
-    }
 
     // in the content, replace the source script file with the output filename
     for (let [sourceFile, asset] of scripts) {
@@ -169,16 +162,15 @@ class AssetScript {
               if (pos > -1) {
                 // note: the str.replace(searchValue, replaceValue) is buggy when the replaceValue contains chars chain '$$'
                 newContent = content.slice(0, pos) + source + content.slice(pos + sourceFile.length);
-                trashFiles.add(assetFile);
+                AssetTrash.add(assetFile);
               }
             } else {
               newContent = content.replace(sourceFile, assetFile);
-              realSplitFiles.add(chunkFile);
-
               // set relation between source file and generated output filenames
               asset.chunkFiles.add(chunkFile);
               // set relation between output issuer file and generated asset chunks used in issuer
               issuerAssets.push(assetFile);
+              splitFiles.add(chunkFile);
             }
           } else {
             // extract original script tag with all attributes for usage it as template for chunks
@@ -201,12 +193,11 @@ class AssetScript {
               if (!chunkScripts.has(chunkFile)) {
                 const assetFile = Asset.getOutputFile(chunkFile, issuerAssetFilename);
 
-                // set relation between output issuer file and generated asset chunks used in issuer
-                issuerAssets.push(assetFile);
-
                 scriptTags += tmplScriptStart + assetFile + tmplScriptEnd;
                 chunkScripts.add(chunkFile);
-                realSplitFiles.add(chunkFile);
+                splitFiles.add(chunkFile);
+                // set relation between output issuer file and generated asset chunks used in issuer
+                issuerAssets.push(assetFile);
               }
             }
 
@@ -226,15 +217,14 @@ class AssetScript {
     }
 
     // remove generated unused split files
-    for (let file of allSplitFiles) {
-      if (!realSplitFiles.has(file)) {
-        compilation.deleteAsset(file);
+    for (let { chunkReason, files } of chunks) {
+      if (chunkReason && chunkReason.startsWith('split chunk')) {
+        for (let file of files) {
+          if (!splitFiles.has(file)) {
+            AssetTrash.add(file);
+          }
+        }
       }
-    }
-
-    // remove trash files
-    for (let file of trashFiles) {
-      compilation.deleteAsset(file);
     }
   }
 }

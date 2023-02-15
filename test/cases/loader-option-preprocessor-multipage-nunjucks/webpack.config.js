@@ -14,10 +14,11 @@ const entryData = {
   },
   about: {
     title: 'About',
-    actors: [
+    headline: 'Breaking Bad',
+    people: [
       {
         firstname: 'Walter',
-        lastname: 'White, "Heisenberg"',
+        lastname: 'White',
       },
       {
         firstname: 'Jesse',

@@ -9,9 +9,9 @@
 {% endblock %}
 
 {% block content %}
-  <h1>Main characters</h1>
+  <h1>{{ headline }}</h1>
   <ul>
-  {% for item in actors %}
+  {% for item in people %}
     <li class="name">{{ item.firstname }} {{ item.lastname }}</li>
   {% endfor %}
   </ul>

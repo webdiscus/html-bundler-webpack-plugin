@@ -50,7 +50,7 @@ class AssetTrash {
         const sourceFilename = filename.replace(suffix, '');
         const source = compilation.assets[sourceFilename].source();
         compilation.updateAsset(sourceFilename, new RawSource(source.replace(commentRegexp, '')));
-        compilation.deleteAsset(filename);
+        this.add(filename);
       }
     }
   }

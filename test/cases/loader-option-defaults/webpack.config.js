@@ -12,18 +12,31 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: 'src/views/index.html',
+        index: {
+          import: './src/index.html',
+          data: {
+            title: 'Home',
+            headline: 'Breaking Bad',
+            name: {
+              firstname: 'Walter',
+              lastname: 'White',
+            },
+          },
+        },
       },
     }),
   ],
 
-  module: {
-    rules: [
-      {
-        // TODO: implement default loader
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-    ],
-  },
+  // Test the default loader.
+  // If the `HtmlBundlerPlugin.loader` loader is not defined in Webpack `module.rule`,
+  // then the loader will be added:
+
+  // module: {
+  //   rules: [
+  //     {
+  //       test: /\.(html)$/,
+  //       loader: HtmlBundlerPlugin.loader,
+  //     },
+  //   ],
+  // },
 };

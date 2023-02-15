@@ -1,4 +1,5 @@
 const { merge } = require('webpack-merge');
+const Eta = require('eta');
 const HtmlBundler = require('./HtmlBundler');
 const PluginService = require('../Plugin/PluginService');
 const ScriptCollection = require('../Plugin/ScriptCollection');
@@ -22,7 +23,23 @@ const compile = function (content, callback) {
   const loaderOptions = loaderContext.getOptions() || {};
   const webpackOptions = loaderContext._compiler.options || {};
   const { rootContext: context, resource, resourcePath: filename, resourceQuery } = loaderContext;
-  const preprocessor = typeof loaderOptions.preprocessor === 'function' ? loaderOptions.preprocessor : null;
+
+  // The default preprocessor use the Eta templating engine, because:
+  // - smaller and faster alternative to EJS with the same syntax
+  // - compatible with html-webpack-plugin (EJS is used by default)
+  // - have the smallest size, 2KB gzipped
+  // - continuously maintained
+  // Although, the best html templating engine is nunjucks.
+  // It is recommended to use the powerful nunjucks.
+
+  let preprocessor = null;
+  if (typeof loaderOptions.preprocessor === 'function') {
+    preprocessor = loaderOptions.preprocessor;
+  } else if (loaderOptions.preprocessor !== false) {
+    // note: set the `useWith: true` option to use data in template without `it.` scope
+    preprocessor = (content, { data }) => Eta.render(content, data, { useWith: true });
+  }
+
   let basedir = loaderOptions.basedir || context;
   let customData = {};
   let compileResult;
@@ -85,7 +102,7 @@ const compile = function (content, callback) {
   });
 
   try {
-    if (preprocessor !== null) {
+    if (preprocessor != null) {
       content = preprocessor(content, loaderContext);
     }
   } catch (error) {
