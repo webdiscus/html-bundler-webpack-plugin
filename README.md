@@ -23,11 +23,12 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 💡 **Highlights**
 
-- You can define an HTML template as an **entry point**.
-- You can specify source scripts and styles directly in HTML using `<script>` and `<link>` tags.
-- You can inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
-- You can use a template engine such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/) **without template loaders**.
-- You can pass a data into the template.
+- An HTML template is an **entry point**.
+- Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>` tags.
+- Resolving source **assets** specified in default attributes `href` `src` `srcset` etc.
+- Inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
+- Using template engines [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others **without template loaders**.
+- Support for both `async` and `sync` preprocessor
 
 > If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
@@ -116,11 +117,12 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to use a template engine](#recipe-template-engine)
+     - [Eta](#using-template-eta)
+     - [EJS](#using-template-ejs)
      - [Handlebars](#using-template-handlebars)
      - [Mustache](#using-template-mustache)
      - [Nunjucks](#using-template-nunjucks)
-     - [EJS](#using-template-ejs)
-     - [Eta](#using-template-eta)
+     - [LiquidJS](#using-template-liquidjs)
      - [Pug](https://github.com/webdiscus/pug-plugin)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
@@ -143,21 +145,22 @@ See the [complete Webpack configuration](#simple-webpack-config).
 - `inline SVG` as `utf-8` data-URL in CSS
 - support the `auto` publicPath
 - enable/disable extraction of comments to `*.LICENSE.txt` file
-- supports all JS template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/) and others
+- supports all JS template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
 - minification of generated HTML
 
 Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
-| Package                                                                                   | Features                                                            | 
-|-------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                    | creates HTML and inject `script` tag for compiled JS file into HTML |
-| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)     | injects `link` tag for processed CSS file into HTML                 |
-| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts) | removes generated empty JS files                                    |
-| [html-loader](https://github.com/webpack-contrib/html-loader)                             | exports HTML                                                        |
-| [style-loader](https://github.com/webpack-contrib/style-loader)                           | injects an inline CSS into HTML                                     |
-| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)               | injects an inline SVG icon into HTML                                |
-| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                     | resolves a relative URL in CSS                                      |
-| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                            | encodes a SVG data-URL as utf8                                      |
+| Package                                                                                                 | Features                                                            | 
+|---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
+| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
+| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
+| [html-loader](https://github.com/webpack-contrib/html-loader)                                           | exports HTML                                                        |
+| [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin) | inline JS and CSS into HTML from sources                            |
+| [style-loader](https://github.com/webpack-contrib/style-loader)                                         | injects an inline CSS into HTML                                     |
+| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                             | injects an inline SVG icon into HTML                                |
+| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
+| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
 
 
 <a id="install" name="install" href="#install"></a>
@@ -200,7 +203,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         // define templates here
-        'index': { // => dist/index.html (key is output filename w/o '.html')
+        index: { // => dist/index.html (key is output filename w/o '.html')
           import: 'src/views/home/index.html', // template file
           data: { title: 'Homepage', name: 'Heisenberg' } // pass variables into template
         },
@@ -491,8 +494,6 @@ The `postprocess` have the following arguments:
 - `info: ResourceInfo` - an info about current file
 - `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
 
-If return `null` then the rendered result is ignored and will be saved a result from the loader.
-
 The `ResourceInfo` have the following properties:
 
 - `verbose: boolean` - whether information should be displayed
@@ -501,6 +502,9 @@ The `ResourceInfo` have the following properties:
 - `sourceFile: string` - a full path of the source file
 - `outputPath: string` - a full path of the output directory
 - `assetFile: string` - an output asset file relative by outputPath
+
+Return new content as a `string`.
+If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
 
 <a id="option-minify" name="option-minify" href="#option-minify"></a>
@@ -599,6 +603,8 @@ By default, resolves source files in the following tags and attributes:
 | `link`   | `href` (for `type="text/css"` or `rel="stylesheet"`) `imagesrcset` (for `as="image"`) |
 | `script` | `src`                                                                                 |
 | `img`    | `src` `srcset`                                                                        |
+| `image`  | `href`                                                                                |
+| `use`    | `href`                                                                                |
 | `input`  | `src` (for `type="image"`)                                                            |
 | `source` | `src` `srcset`                                                                        |
 | `audio`  | `src`                                                                                 |
@@ -606,23 +612,10 @@ By default, resolves source files in the following tags and attributes:
 | `video`  | `src` `poster`                                                                        |
 | `object` | `data`                                                                                |
 
-To disable the processing of all attributes, set the `sources` option as `false`.
+> **Warning**
+> 
+> Don't use the [deprecated](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/xlink:href) `xlink:href` attribute by the `image` and `use` tags.
 
-> **Note**
-> 
-> Automatically are processed only attributes containing a relative path or Webpack alias:
-> - `src="./image.png"` - a relative path to local directory
-> - `src="../../assets/image.png"` - a relative path to parent directory
-> - `src="@images/image.png"` - an image directory as Webpack alias
-> 
-> Url values are not processed:
-> - `src="https://example.com/img/image.png"`
-> - `src="//example.com/img/image.png"`
-> - `src="/img/image.png"`
-> 
-> Others not file values are ignored, e.g.:
-> - `src="data:image/png; ..."`
-> - `src="javascript: ..."`
 
 The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
 The argument is an object containing the properties:
@@ -633,6 +626,24 @@ The argument is an object containing the properties:
 - `resourcePath: string` - a path of the HTML template
 
 The processing of an attribute can be ignored by returning `false`.
+
+To disable the processing of all attributes, set the `sources` option as `false`.
+
+> **Note**
+>
+> Automatically are processed only attributes containing a relative path or Webpack alias:
+> - `src="./image.png"` or `src="image.png"` - an asset in the local directory
+> - `src="../../assets/image.png"` - a relative path to parent directory
+> - `src="@images/image.png"` - an image directory as Webpack alias
+>
+> Url values are not processed:
+> - `src="https://example.com/img/image.png"`
+> - `src="//example.com/img/image.png"`
+> - `src="/img/image.png"`
+>
+> Others not file values are ignored, e.g.:
+> - `src="data:image/png; ..."`
+> - `src="javascript: ..."`
 
 Examples of using argument properties:
 ```js
@@ -760,12 +771,12 @@ Type:
 type preprocessor = (
   content: string,
   loaderContext: LoaderContext
-) => HTMLElement;
+) => string|Promise;
 ```
 
 The default `preprocessor` use the [Eta](https://eta.js.org) templating engine:
 ```js
-preprocessor = (template, { data }) => Eta.render(template, data, { useWith: true });
+preprocessor = (template, { data }) => Eta.render(template, data, { async: true, useWith: true });
 ```
 
 > **Note**
@@ -773,7 +784,7 @@ preprocessor = (template, { data }) => Eta.render(template, data, { useWith: tru
 > The `Eta` has the same EJS syntax, is only 2KB gzipped and is much fasted than EJS.
 > 
 
-The `content` is the raw content of a file.\
+The `template` is the raw content of a template.\
 The `loaderContext` is the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context) object contained useful properties:
 - `mode: string` - a Webpack mode: `production`, `development`, `none`
 - `rootContext: string` - a path to Webpack context
@@ -785,7 +796,25 @@ The preprocessor is called for each entry file, before processing of the content
 This function can be used to compile the template with a template engine,
 such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks), etc.
 
-For example, pass a variable in the template using the **default EJS-like** syntax:
+Return new content as a `string` or `Promise` for async processing.
+
+The example how to use `Promise` for own `async` processing function:
+
+```js
+{
+  preprocessor: (template, { data }) =>
+    new Promise((resolve, reject) => {
+      try {
+        const result = render(template, data); // render is your processing function
+        resolve(result);
+      } catch (error) {
+        reject(error);
+      }
+    })
+}
+```
+
+You can use variables in the template with the default `EJS` syntax:
 ```html
 <html>
 <body>
@@ -794,7 +823,7 @@ For example, pass a variable in the template using the **default EJS-like** synt
 </html>
 ```
 
-If used a HTML file or a template with the EJS-like syntax, then the `HtmlBundlerPlugin.loader` can be omitted in the _Webpack config_:
+To pass variables in the template use the `data` property:
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
@@ -819,7 +848,12 @@ module.exports = {
 
 ```
 
-For example, there is used non-default Mustache-like template syntax:
+> **Note**
+> 
+> The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
+
+
+Here is an example using a non-default Mustache-like template syntax:
 ```html
 <html>
 <body>
@@ -828,7 +862,7 @@ For example, there is used non-default Mustache-like template syntax:
 </html>
 ```
 
-Then add the `preprocessor` to use your custom template engine:
+Add the `preprocessor` to use your custom template engine:
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const Handlebars = require('handlebars');
@@ -1194,17 +1228,146 @@ module: {
 ## How to use a template engine
 
 Using the [preprocessor](#loader-option-preprocessor), you can compile any template with a template engine such as:
+- [Eta](https://eta.js.org)
+- [EJS](https://ejs.co)
 - [Handlebars](https://handlebarsjs.com)
 - [Mustache](https://github.com/janl/mustache.js)
-- [Nunjucks](https://mozilla.github.io/nunjucks/) 
-- [EJS](https://ejs.co)
-- [Eta](https://eta.js.org)
+- [Nunjucks](https://mozilla.github.io/nunjucks/)
+- [LiquidJS](https://github.com/harttle/liquidjs)
 - and others
 
 > **Note**
 > 
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
-> This plugin works on the same codebase but has additional Pug-specific features.
+> This plugin works on the same codebase but has additional Pug-specific options and features.
+
+
+<a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
+#### Using the Eta 
+_Supported "out of the box"_
+
+`Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
+
+For example, there is the template _index.eta_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    <% for (let i = 0; i < people.length; i++) {%>
+    <li><%= people[i] %>></li>
+    <% } %>
+  </ul>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Eta = require('eta');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|ejs|eta)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.eta',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|ejs|eta)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          // note: set the `useWith: true` for compatibility with EJS
+          preprocessor: (template, { data }) => Eta.render(template, data, { useWith: true }), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+> **Note**
+>
+> The [default loader](default-loader) already support the Eta. You can omit it in Webpack config.
+
+<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
+> **Warning**
+>
+> For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
+> to use variables in template without the Eta-specific `it.` scope
+ 
+
+<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
+#### Using the EJS
+_Supported "out of the box"_
+
+For example, there is the template _index.ejs_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    <% for (let i = 0; i < people.length; i++) {%>
+    <li><%= people[i] %>></li>
+    <% } %>
+  </ul>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const ejs = require('ejs');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|ejs)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.ejs',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|ejs)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (template, { data }) => ejs.render(template, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+> **Note**
+>
+> The [default loader](default-loader) already support the EJS. You can omit it in Webpack config.
+
 
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
 #### Using the Handlebars
@@ -1327,6 +1490,7 @@ module.exports = {
 
 ```
 
+
 <a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
 #### Using the Nunjucks
 
@@ -1380,18 +1544,18 @@ module.exports = {
 
 ```
 
-<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
-#### Using the EJS
+<a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
+#### Using the LiquidJS
 
-For example, there is the template _index.ejs_
+For example, there is the template _index.liquidjs_
 ```html
 <html>
 <body>
   <h1>{{ headline }}!</h1>
   <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
+    {% for name in people %}
+    <li class="name">{{ name }}</li>
+    {% endfor %}
   </ul>
 </body>
 </html>
@@ -1401,15 +1565,17 @@ Add the template compiler to `preprocessor`:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const ejs = require('ejs');
+const { Liquid } = require('liquidjs');
+
+const LiquidEngine = new Liquid();
 
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|ejs)$/, // <= change
+      test: /\.(html|liquidjs)$/, // <= change
       entry: {
         index: {
-          import: './src/index.ejs',
+          import: './src/index.liquidjs',
           data: {
             headline: 'Breaking Bad',
             people: ['Walter White', 'Jesse Pinkman'],
@@ -1421,10 +1587,11 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(html|ejs)$/, // <= change
+        test: /\.(html|liquidjs)$/, // <= change
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (template, { data }) => ejs.render(template, data), // <= change
+          // async parseAndRender method return promise
+          preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data), // <= change
         },
       },
     ],
@@ -1432,76 +1599,6 @@ module.exports = {
 };
 
 ```
-
-> **Note**
-> 
-> The [default loader](default-loader) already support the EJS. You can omit it in Webpack config.
-
-<a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
-#### Using the Eta
-
-`Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
-
-For example, there is the template _index.eta_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
-  </ul>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Eta = require('eta');
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|ejs|eta)$/, // <= change
-      entry: {
-        index: {
-          import: './src/index.eta',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|ejs|eta)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // note: set the `useWith: true` for compatibility with EJS
-          preprocessor: (template, { data }) => Eta.render(template, data, { useWith: true }), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
-> **Note**
->
-> The [default loader](default-loader) already support the Eta. You can omit it in Webpack config.
-
-<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
-> **Warning**
-> 
-> For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option 
-> to use variables in template without the Eta-specific `it.` scope
 
 
 <a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>

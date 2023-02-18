@@ -1,0 +1,14 @@
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  <h1>{{ headline }}</h1>
+  <ul class="people">
+    {% for name in people %}
+    <li>{{ name }}</li>
+    {% endfor %}
+  </ul>
+  <img src="apple.png" alt="apple" />
+</body>
+</html>

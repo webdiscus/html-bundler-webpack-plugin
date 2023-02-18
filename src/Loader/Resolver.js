@@ -14,10 +14,12 @@ class Resolver {
   static hasPlugins = false;
 
   /**
-   * @param {string} basedir The the root directory of absolute paths.
+   * @param {string} rootContext The the root path of the project.
+   * @param {string} basedir The the root directory option of absolute paths.
    * @param {{}} options The webpack `resolve` options.
    */
-  static init({ basedir, options }) {
+  static init({ rootContext, basedir, options }) {
+    this.rootContext = rootContext;
     this.basedir = basedir;
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;
@@ -54,12 +56,13 @@ class Resolver {
    * Resolve filename.
    *
    * @param {string} file The file to resolve.
-   * @param {string} templateFile The template file.
+   * @param {string} issuer The issuer of resource.
    * @param {string} [type = 'default'] The require type: 'default', 'script', 'style'.
    * @return {string}
    */
-  static resolve(file, templateFile, type = 'default') {
-    const context = path.dirname(templateFile);
+  static resolve(file, issuer, type = 'default') {
+    const [filename] = issuer.split('?', 1);
+    const context = path.dirname(filename);
     const isScript = type === 'script';
     const isStyle = type === 'style';
     let isAliasArray = false;
@@ -90,7 +93,7 @@ class Resolver {
       try {
         resolvedFile = isStyle ? this.resolveStyle(context, request) : this.resolveFile(context, request);
       } catch (error) {
-        resolveException(error, file, templateFile);
+        resolveException(error, file, path.relative(this.rootContext, issuer));
       }
     }
 

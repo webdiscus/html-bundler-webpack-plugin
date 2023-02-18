@@ -1,9 +1,8 @@
 const ansis = require('ansis');
-const { red, redBright, yellow, cyan, green } = require('ansis/colors');
+const { bgRed, redBright, yellow, cyan } = require('ansis/colors');
 const { loaderName } = require('../config');
 
-const loaderHeader = `\n${red`[${loaderName}]`}`;
-const filterHeader = `\n${red`[${loaderName}:filter]`}`;
+const loaderHeader = `\n${bgRed.whiteBright` ${loaderName} `}`;
 const loaderHeaderHtml = `<span style="color:#e36049">[${loaderName}]</span>`;
 let lastError = null;
 
@@ -41,56 +40,61 @@ const LoaderError = function (message, error = '') {
  * @throws {Error}
  */
 const resolveException = (error, file, templateFile) => {
-  const message = `${loaderHeader} The file ${yellow(file)} can't be resolved in the template:\n` + cyan(templateFile);
+  const message =
+    `${loaderHeader} The file ${yellow`'${file}'`} can't be resolved in the template ` + cyan(templateFile);
 
   LoaderError(message, error);
 };
 
 /**
- * @param {Error} error
- * @returns {string}
- */
-const getCompileErrorMessage = (error) => {
-  return `${loaderHeader} Template compilation failed.\n` + error.toString();
-};
-
-/**
+ * Return error string as HTML to display the error in browser by HMR.
+ *
  * @param {string} error
- * @param {string} requireHmrScript
+ * @param {string} hmr
  * @returns {string}
  */
-const errorTemplateHtml = (error, requireHmrScript) => {
+const errorToHtml = (error, hmr) => {
   let message = error.replace(/\n/g, '<br>');
   message = ansis.strip(message);
   message = message.replace(`[${loaderName}]`, loaderHeaderHtml);
 
   return `<!DOCTYPE html><html>
-<head><script src="${requireHmrScript}"></script></head>
+<head><script src="${hmr}"></script></head>
 <body><div>${message}</div></body></html>`.replace(/\n/g, '');
 };
 
 /**
  * @param {Error} error
- * @param {string} requireHmrScript
+ * @param {string} file
  * @returns {string}
  */
-const getCompileErrorHtml = (error, requireHmrScript) => {
-  return errorTemplateHtml(getCompileErrorMessage(error), requireHmrScript);
+const preprocessorErrorToString = (error, file) => {
+  return `${loaderHeader} Preprocessor failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
 /**
  * @param {Error} error
- * @param {string} requireHmrScript
+ * @param {string} file
  * @returns {string}
  */
-const getExecuteTemplateFunctionErrorMessage = (error, requireHmrScript) => {
-  return errorTemplateHtml(error.toString(), requireHmrScript);
+const compileErrorToString = (error, file) => {
+  return `${loaderHeader} Template compilation failed\nFile: ${cyan(file)}\n` + error.toString();
+};
+
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @returns {string}
+ */
+const exportErrorToString = (error, file) => {
+  return `${loaderHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
 module.exports = {
   LoaderError,
+  errorToHtml,
   resolveException,
-  getExecuteTemplateFunctionErrorMessage,
-  getCompileErrorMessage,
-  getCompileErrorHtml,
+  preprocessorErrorToString,
+  compileErrorToString,
+  exportErrorToString,
 };

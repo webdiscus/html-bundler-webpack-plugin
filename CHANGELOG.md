@@ -1,5 +1,19 @@
 # Change log
 
+## 1.1.0 (2023-02-18)
+- feat: add support for both `async` and `sync` preprocessor, the preprocessor should return a string or a promise.
+  This can be used for async templating engines like `LiquidJs`, `EJS`, `Nunjucks`.
+- feat: add resolving of `href` attribute in the SVG `<image>` and `<use>` tags, by defaults 
+  ```html
+  <svg><image href="image.png"></image></svg>
+  <svg><use href="icons.svg#home"></use></svg>
+  ```
+- feat: improve error handling in the loader
+- fix: add only unique optional sources attribute
+- test: add async tests for templating engines LiquidJS, EJS, Nunjucks
+- core: update dev packages
+- docs: add in readme description of new features
+
 ## 1.0.0 (2023-02-14) Stable release
 ### Changes:
 Defaults, HTML templates defined in the entry are processed via Eta (same EJS syntax) templating engine.

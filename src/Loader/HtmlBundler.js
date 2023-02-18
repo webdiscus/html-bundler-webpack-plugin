@@ -74,7 +74,7 @@ class HtmlBundler {
    * Resolve all source resource in HTML.
    *
    * @param {string} html The source HTML string.
-   * @param {string} issuer The absolute filename.
+   * @param {string} issuer The template file.
    * @param {Array<object>} sources The list of sources tags and attributes.
    * @return {string}
    */

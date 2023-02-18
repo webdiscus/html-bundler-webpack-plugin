@@ -1,6 +1,7 @@
 const Resolver = require('../Resolver');
 const ScriptCollection = require('../../Plugin/ScriptCollection');
 const { hmrFile } = require('../Utils');
+const { errorToHtml } = require('../Messages/Exeptions');
 
 /**
  * Render into HTML and export a JS module.
@@ -49,7 +50,7 @@ class RenderMethod {
   loaderRequireScript(file, issuer) {
     const resolvedFile = Resolver.resolve(file, issuer, 'script');
 
-    ScriptCollection.add(resolvedFile);
+    ScriptCollection.add(resolvedFile, issuer);
 
     return `\\u0027 + require(\\u0027${resolvedFile}\\u0027) + \\u0027`;
   }
@@ -81,18 +82,19 @@ class RenderMethod {
   /**
    * Export code with error message.
    *
-   * @param {Error} error
-   * @param {Function} getErrorMessage
+   * @param {string} message The error message.
+   * @param {string} issuer The issuer where the error occurred.
    * @return {string}
    */
-  exportError(error, getErrorMessage) {
-    const requireHmrScript = `' + require('${hmrFile}') + '`;
-    const errStr = error.toString().replace(/'/g, "\\'");
-    const message = getErrorMessage.call(null, errStr, requireHmrScript);
+  exportError(message, issuer) {
+    message = message.replace(/'/g, "\\'");
 
-    ScriptCollection.add(hmrFile);
+    const hmr = `' + require('${hmrFile}') + '`;
+    const output = errorToHtml(message, hmr);
 
-    return this.exportCode + "'" + message + "';";
+    ScriptCollection.add(hmrFile, issuer);
+
+    return this.exportCode + "'" + output + "';";
   }
 }
 

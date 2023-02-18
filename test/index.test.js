@@ -332,6 +332,10 @@ describe('loader options', () => {
   test('preprocessor disabled', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-disabled', done);
   });
+
+  test('preprocessor return null', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-return-null', done);
+  });
 });
 
 describe('loader options for templating', () => {
@@ -341,6 +345,10 @@ describe('loader options for templating', () => {
 
   test('preprocessor with EJS', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs', done);
+  });
+
+  test('preprocessor with EJS async', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs-async', done);
   });
 
   test('preprocessor with handlebars', (done) => {
@@ -356,7 +364,19 @@ describe('loader options for templating', () => {
   });
 
   test('preprocessor for multipage with nunjucks', (done) => {
-    compareFileListAndContent(PATHS, 'loader-option-preprocessor-multipage-nunjucks', done);
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-nunjucks-multipage', done);
+  });
+
+  test('preprocessor for multipage with nunjucks async', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-nunjucks-async-multipage', done);
+  });
+
+  test('preprocessor with liquid', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid', done);
+  });
+
+  test('preprocessor with liquid async', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid-async', done);
   });
 });
 
@@ -471,7 +491,34 @@ describe('warning tests', () => {
   });
 });
 
-describe('exception tests', () => {
+describe('loader exceptions', () => {
+  test('exception preprocessor', (done) => {
+    const containString = 'Preprocessor failed';
+    exceptionContain(PATHS, 'msg-exception-loader-preprocessor', containString, done);
+  });
+
+  test('exception compile: missing the closing', (done) => {
+    const containString = `missing the closing '>' char`;
+    exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag', containString, done);
+  });
+
+  test('exception compile: missing the closing at eof', (done) => {
+    const containString = `missing the closing '>' char`;
+    exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag-eof', containString, done);
+  });
+
+  test('exception compile: resolve file', (done) => {
+    const containString = `can't be resolved in the template`;
+    exceptionContain(PATHS, 'msg-exception-loader-resolve-file', containString, done);
+  });
+
+  test('exception export', (done) => {
+    const containString = 'Export of compiled template failed';
+    exceptionContain(PATHS, 'msg-exception-loader-export', containString, done);
+  });
+});
+
+describe('plugin exceptions', () => {
   test('exception test: previous error', (done) => {
     const containString = 'previous error';
 
@@ -503,38 +550,23 @@ describe('exception tests', () => {
     }
   });
 
-  test('exception: resolve file', (done) => {
-    const containString = `can't be resolved in the template`;
-    exceptionContain(PATHS, 'msg-exception-resolve-file', containString, done);
-  });
-
   test('exception: @import CSS is not supported', (done) => {
     const containString = `Disable the 'import' option in 'css-loader'`;
-    exceptionContain(PATHS, 'msg-exception-import-css-rule', containString, done);
+    exceptionContain(PATHS, 'msg-exception-plugin-import-css-rule', containString, done);
   });
 
   test('exception: option modules', (done) => {
     const containString = 'must be the array of';
-    exceptionContain(PATHS, 'msg-exception-option-modules', containString, done);
+    exceptionContain(PATHS, 'msg-exception-plugin-option-modules', containString, done);
   });
 
   test('exception: execute postprocess', (done) => {
     const containString = 'Postprocess is failed';
-    exceptionContain(PATHS, 'msg-exception-execute-postprocess', containString, done);
+    exceptionContain(PATHS, 'msg-exception-plugin-execute-postprocess', containString, done);
   });
 
   test('exception: multiple chunks with same filename', (done) => {
     const containString = 'Multiple chunks emit assets to the same filename';
-    exceptionContain(PATHS, 'msg-exception-multiple-chunks-same-filename', containString, done);
-  });
-
-  test('exception: missing the closing', (done) => {
-    const containString = `missing the closing '>' char`;
-    exceptionContain(PATHS, 'msg-exception-close-tag', containString, done);
-  });
-
-  test('exception: missing the closing at eof', (done) => {
-    const containString = `missing the closing '>' char`;
-    exceptionContain(PATHS, 'msg-exception-close-tag-eof', containString, done);
+    exceptionContain(PATHS, 'msg-exception-plugin-multiple-chunks-same-filename', containString, done);
   });
 });

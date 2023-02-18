@@ -7,10 +7,6 @@ const { isInline } = require('../Loader/Utils');
 class ScriptCollection {
   static files = new Map();
 
-  static init({ issuer }) {
-    this.issuer = issuer;
-  }
-
   /**
    * @param {string} file The source file.
    * @return {boolean}
@@ -23,8 +19,9 @@ class ScriptCollection {
    * Add a unique script file by current issuer.
    *
    * @param {string} resource The source file, including query.
+   * @param {string} issuer The issuer of resource.
    */
-  static add(resource) {
+  static add(resource, issuer) {
     const [file, query] = resource.split('?', 1);
 
     let item = this.files.get(file);
@@ -41,9 +38,9 @@ class ScriptCollection {
     }
 
     // add only unique issuer
-    if (!item.issuers.find(({ request }) => request === this.issuer)) {
+    if (!item.issuers.find(({ request }) => request === issuer)) {
       item.issuers.push({
-        request: this.issuer,
+        request: issuer,
         assets: new Map(),
       });
     }

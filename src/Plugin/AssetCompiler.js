@@ -375,19 +375,14 @@ class AssetCompiler {
       // render source code of modules
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
-      // after render sources
+      // after render module's sources
+      // note: only here is possible to modify an asset content via async function
       compilation.hooks.processAssets.tapAsync(
         { name: pluginName, stage: compilation.PROCESS_ASSETS_STAGE_REPORT },
         (assets, callback) => {
           const result = this.afterRenderModules(compilation);
 
-          if (typeof result?.then !== 'function') {
-            // if result is not a promise
-            callback();
-            return;
-          }
-
-          result.then(() => {
+          Promise.resolve(result).then(() => {
             callback();
           });
         }
@@ -834,7 +829,7 @@ class AssetCompiler {
 
       if (afterProcess && assetFile.endsWith('.html')) {
         try {
-          // TODO: test not yet documented experimental feature
+          // TODO: test not yet documented experimental feature and rename it to other name
           let result = afterProcess(newContent || source, { sourceFile, assetFile });
           if (result) newContent = result;
         } catch (err) {

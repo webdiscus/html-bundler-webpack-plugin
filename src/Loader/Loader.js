@@ -1,5 +1,5 @@
 const { merge } = require('webpack-merge');
-const { isWin, parseQuery, pathToPosix } = require('./Utils');
+const { parseQuery } = require('./Utils');
 const RenderMethod = require('./methods/RenderMethod');
 
 class Loader {
@@ -12,12 +12,12 @@ class Loader {
   ];
 
   /**
-   * @param {string} filename The template file.
+   * @param {string} resourcePath The template file.
    * @param {string} resourceQuery The URL query of template.
    * @param {{}} options The loader options.
    * @param {{}} customData The custom data.
    */
-  static init({ filename: templateFile, resourceQuery, options, customData }) {
+  static init({ resourcePath: templateFile, resourceQuery, options, customData }) {
     const { data, esModule, method, name: templateName, self: useSelf } = options;
 
     // the rule: a query method override a global method defined in the loader options
@@ -86,12 +86,12 @@ class Loader {
   /**
    * Export code with error message.
    *
-   * @param {Error} error
-   * @param {Function} getErrorMessage
+   * @param {string} message
+   * @param {string} issuer The issuer where the error occurred.
    * @return {string}
    */
-  static exportError(error, getErrorMessage) {
-    return this.compiler.exportError(error, getErrorMessage);
+  static exportError(message, issuer) {
+    return this.compiler.exportError(message, issuer);
   }
 }
 
