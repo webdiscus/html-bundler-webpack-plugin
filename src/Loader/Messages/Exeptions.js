@@ -90,6 +90,15 @@ const exportErrorToString = (error, file) => {
   return `${loaderHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @returns {string}
+ */
+const unknownErrorToString = (error, file) => {
+  return `${loaderHeader} Unknown error\nFile: ${cyan(file)}\n` + error.toString();
+};
+
 module.exports = {
   LoaderError,
   errorToHtml,
@@ -97,4 +106,5 @@ module.exports = {
   preprocessorErrorToString,
   compileErrorToString,
   exportErrorToString,
+  unknownErrorToString,
 };

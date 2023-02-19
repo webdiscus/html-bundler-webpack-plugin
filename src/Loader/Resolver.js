@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
+
+const Options = require('./Options');
 const Dependency = require('./Dependency');
 const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('./Utils');
@@ -15,12 +17,12 @@ class Resolver {
 
   /**
    * @param {string} rootContext The the root path of the project.
-   * @param {string} basedir The the root directory option of absolute paths.
-   * @param {{}} options The webpack `resolve` options.
    */
-  static init({ rootContext, basedir, options }) {
+  static init(rootContext) {
+    const options = Options.getWebpackResolve();
+
     this.rootContext = rootContext;
-    this.basedir = basedir;
+    this.basedir = Options.getBasedir();
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;
     this.hasPlugins = options.plugins && Object.keys(options.plugins).length > 0;

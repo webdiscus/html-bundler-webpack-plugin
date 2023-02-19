@@ -1,4 +1,5 @@
 const Loader = require('./Loader');
+const Options = require('./Options');
 const { isWin, isInline, pathToPosix } = require('./Utils');
 
 const spaceChars = [' ', '\t', '\n', '\r', '\f'];
@@ -67,7 +68,7 @@ const indexOfChar = (search, content, startPos = 0, except = '') => {
  */
 const isStyle = (tag) => /rel=".*stylesheet.*"/.test(tag) || /type="text\/css"/.test(tag);
 
-class HtmlBundler {
+class Template {
   static sources = [];
 
   /**
@@ -75,10 +76,15 @@ class HtmlBundler {
    *
    * @param {string} html The source HTML string.
    * @param {string} issuer The template file.
-   * @param {Array<object>} sources The list of sources tags and attributes.
    * @return {string}
    */
-  static compile(html, issuer, sources) {
+  static compile(html, issuer) {
+    const sources = Options.getSources();
+
+    if (sources === false) {
+      return html;
+    }
+
     this.sources = sources;
     this.issuer = issuer;
 
@@ -420,4 +426,4 @@ class HtmlBundler {
   }
 }
 
-module.exports = HtmlBundler;
+module.exports = Template;

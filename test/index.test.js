@@ -2,7 +2,7 @@ import { compareFileListAndContent, exceptionContain, stdoutContain } from './ut
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Plugin/Utils';
 import AssetEntry from '../src/Plugin/AssetEntry';
-import HtmlBundler from '../src/Loader/HtmlBundler';
+import HtmlBundler from '../src/Loader/Template';
 import { PATHS } from './config';
 
 beforeAll(() => {});
@@ -338,6 +338,12 @@ describe('loader options', () => {
   });
 });
 
+describe('loader options (non-documented)', () => {
+  test('watchFiles', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-watchFiles', done);
+  });
+});
+
 describe('loader options for templating', () => {
   test('preprocessor with Eta', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
@@ -450,6 +456,10 @@ describe('special cases', () => {
   test('resolve values with invalid syntax', (done) => {
     compareFileListAndContent(PATHS, 'resolve-values-invalid-syntax', done);
   });
+
+  test('resolve assets without extension', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-assets-without-ext', done);
+  });
 });
 
 describe('extras: responsive images', () => {
@@ -492,9 +502,14 @@ describe('warning tests', () => {
 });
 
 describe('loader exceptions', () => {
-  test('exception preprocessor', (done) => {
+  test('exception sync preprocessor', (done) => {
     const containString = 'Preprocessor failed';
     exceptionContain(PATHS, 'msg-exception-loader-preprocessor', containString, done);
+  });
+
+  test('exception async preprocessor', (done) => {
+    const containString = 'Preprocessor failed';
+    exceptionContain(PATHS, 'msg-exception-loader-preprocessor-async', containString, done);
   });
 
   test('exception compile: missing the closing', (done) => {

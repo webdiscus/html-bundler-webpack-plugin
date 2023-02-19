@@ -904,7 +904,7 @@ class AssetCompiler {
     try {
       content = isFunction(compiledCode) ? compiledCode() : compiledCode;
     } catch (error) {
-      executeTemplateFunctionException(error, sourceFile, code);
+      executeTemplateFunctionException(error, sourceFile);
     }
 
     if (pluginModule) {

@@ -1,5 +1,11 @@
 # Change log
 
+## 1.1.1 (2023-02-19)
+- fix: handling an issue when used an async preprocessor
+- refactor: optimize handling of loader options
+- test: add test case for issue in async preprocessor
+- docs: improve readme
+
 ## 1.1.0 (2023-02-18)
 - feat: add support for both `async` and `sync` preprocessor, the preprocessor should return a string or a promise.
   This can be used for async templating engines like `LiquidJs`, `EJS`, `Nunjucks`.

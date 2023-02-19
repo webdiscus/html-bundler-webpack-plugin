@@ -51,7 +51,7 @@ Add source scripts and styles directly to HTML:
 </html>
 ```
 
-The generated HTML contains output filenames of processed source files:
+The generated HTML contains output filenames of processed source files and `link` `script` tags remain in their places:
 
 ```html
 <html>
@@ -277,11 +277,11 @@ If all your templates have `.html`, `.ejs` or `.eta` extensions you don't need t
 Type: `object` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property.
 
-Define your HTML files or templates in the entry option.
+Define your HTML templates in the entry option.
 
-HTML is a starting point for collecting all the dependencies used in your web application.
+An HTML template is a starting point for collecting all the dependencies used in your web application.
 Specify source scripts (JS, TS) and styles (CSS, SCSS, LESS, etc.) directly in HTML.
-The plugin automatically extracts JS, CSS from their sources specified in HTML.
+The plugin automatically extracts JS and CSS whose source files are specified in an HTML template.
 
 #### Simple syntax
 
@@ -511,7 +511,7 @@ If return `null`, the result processed via Webpack plugin is ignored and will be
 ### `minify`
 Type: `Object|string|boolean` Default: `false`
 
-For minification is used the [html-minifier-terser](https://github.com/terser/html-minifier-terser) with the following `default options`:
+For minification generated HTML is used the [html-minifier-terser](https://github.com/terser/html-minifier-terser) with the following `default options`:
 ```js
 {
   collapseWhitespace: true,
@@ -537,7 +537,7 @@ Possible values:
 ### `extractComments`
 Type: `boolean` Default: `false`
 
-Enable / disable extraction of comments to `*.LICENSE.txt` file.
+Enable/disable extracting comments from source scripts to the `*.LICENSE.txt` file.
 
 When using `splitChunks` optimization for node modules containing comments,
 Webpack extracts those comments into a separate text file.
@@ -565,8 +565,11 @@ The `default loader`:
 }
 ```
 
-The default loader handels HTML files and `EJS`-like templates. 
-You can omit this loader in Webpack `modules.rules`, the `default loader` will be added automatically.
+You can omit the loader in Webpack `modules.rules`.
+If the `HtmlBundlerPlugin.loader` is not configured, the plugin add it with default options automatically.
+
+The default loader handels HTML files and `EJS`-like templates.
+
 
 > **Warning**
 >
@@ -769,7 +772,7 @@ module.exports = {
 Type:
 ```ts
 type preprocessor = (
-  content: string,
+  template: string,
   loaderContext: LoaderContext
 ) => string|Promise;
 ```
@@ -784,7 +787,7 @@ preprocessor = (template, { data }) => Eta.render(template, data, { async: true,
 > The `Eta` has the same EJS syntax, is only 2KB gzipped and is much fasted than EJS.
 > 
 
-The `template` is the raw content of a template.\
+The `template` is the raw content of a template file defined in the [`entry`](#option-entry) option.\
 The `loaderContext` is the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context) object contained useful properties:
 - `mode: string` - a Webpack mode: `production`, `development`, `none`
 - `rootContext: string` - a path to Webpack context
@@ -798,23 +801,27 @@ such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://h
 
 Return new content as a `string` or `Promise` for async processing.
 
-The example how to use `Promise` for own `async` processing function:
+The usage example for your own `sync` render function:
+
+```js
+{
+  preprocessor: (template, { data }) => render(template, data)
+}
+```
+
+The example of using `Promise` for your own `async` render function:
 
 ```js
 {
   preprocessor: (template, { data }) =>
-    new Promise((resolve, reject) => {
-      try {
-        const result = render(template, data); // render is your processing function
-        resolve(result);
-      } catch (error) {
-        reject(error);
-      }
+    new Promise((resolve) => {
+      const result = render(template, data);
+      resolve(result);
     })
 }
 ```
 
-You can use variables in the template with the default `EJS` syntax:
+You can use variables in the template with the `EJS` syntax:
 ```html
 <html>
 <body>
@@ -833,7 +840,7 @@ module.exports = {
       entry: {
         index: { // => dist/index.html
           import: './src/views/index.html',
-          data: { name: 'Heisenberg' }
+          data: { name: 'Heisenberg' } // <= pass data into template via preprocessor
         },
       },
     }),

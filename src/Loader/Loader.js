@@ -1,6 +1,7 @@
 const { merge } = require('webpack-merge');
 const { parseQuery } = require('./Utils');
 const RenderMethod = require('./methods/RenderMethod');
+const Options = require('./Options');
 
 class Loader {
   static compiler = null;
@@ -14,11 +15,9 @@ class Loader {
   /**
    * @param {string} resourcePath The template file.
    * @param {string} resourceQuery The URL query of template.
-   * @param {{}} options The loader options.
-   * @param {{}} customData The custom data.
    */
-  static init({ resourcePath: templateFile, resourceQuery, options, customData }) {
-    const { data, esModule, method, name: templateName, self: useSelf } = options;
+  static init({ resourcePath: templateFile, resourceQuery }) {
+    const { data, esModule, method, name: templateName, self: useSelf } = Options.get();
 
     // the rule: a query method override a global method defined in the loader options
     const queryData = parseQuery(resourceQuery);
@@ -38,7 +37,7 @@ class Loader {
       delete queryData[query];
     }
 
-    this.data = merge(data || {}, customData || {}, queryData);
+    this.data = merge(data || {}, queryData);
   }
 
   /**

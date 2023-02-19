@@ -79,10 +79,9 @@ const resolveException = (file, issuer) => {
 /**
  * @param {Error} error
  * @param {string} sourceFile
- * @param {string} source
  * @throws {Error}
  */
-const executeTemplateFunctionException = (error, sourceFile, source) => {
+const executeTemplateFunctionException = (error, sourceFile) => {
   const message = `${header} Failed to execute the template function'.\nSource file: '${cyan(sourceFile)}'`;
 
   PluginError(message, error);
@@ -94,7 +93,7 @@ const executeTemplateFunctionException = (error, sourceFile, source) => {
  * @throws {Error}
  */
 const postprocessException = (error, info) => {
-  const message = `${header} Postprocess is failed'.\n` + `Source file: '${cyan(info.sourceFile)}'.`;
+  const message = `${header} Postprocess is failed'.\nSource file: '${cyan(info.sourceFile)}'.`;
 
   PluginError(message, error);
 };

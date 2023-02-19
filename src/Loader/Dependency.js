@@ -1,31 +1,17 @@
-const { isWin } = require('./Utils');
 const path = require('path');
+const { isWin } = require('./Utils');
+const Options = require('./Options');
 
 /**
  * Dependencies in code for watching a changes.
  */
 class Dependency {
   static files = new Set();
-  static watchFiles = [/\.(html|js.{0,2}|.?js|ts.?|md|txt)$/i];
   static loaderContext = null;
-  static isInit = false;
+  static watchFiles = [];
 
-  static init({ loaderContext, watchFiles }) {
-    // avoid double push in array by watching
-    if (!this.isInit && watchFiles != null) {
-      this.isInit = true;
-
-      if (!Array.isArray(watchFiles)) watchFiles = [watchFiles];
-
-      for (let i = 0; i < watchFiles.length; i++) {
-        let re = watchFiles[i];
-        if (re.constructor.name !== 'RegExp') {
-          re = new RegExp(re);
-        }
-        this.watchFiles.push(re);
-      }
-    }
-
+  static init(loaderContext) {
+    this.watchFiles = Options.getWatchFiles();
     this.loaderContext = loaderContext;
   }
 

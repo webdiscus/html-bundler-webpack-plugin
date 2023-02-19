@@ -1,12 +1,16 @@
 const path = require('path');
-const Eta = require('eta');
-const HtmlBundler = require('./HtmlBundler');
 const PluginService = require('../Plugin/PluginService');
-const Dependency = require('./Dependency');
-const Resolver = require('./Resolver');
+const Template = require('./Template');
 const Loader = require('./Loader');
-const { getSourcesOption } = require('./Utils');
-const { preprocessorErrorToString, compileErrorToString, exportErrorToString } = require('./Messages/Exeptions');
+const Resolver = require('./Resolver');
+const Dependency = require('./Dependency');
+const Options = require('./Options');
+const {
+  preprocessorErrorToString,
+  compileErrorToString,
+  exportErrorToString,
+  unknownErrorToString,
+} = require('./Messages/Exeptions');
 
 /**
  * @param {string} content The HTML template.
@@ -15,91 +19,71 @@ const { preprocessorErrorToString, compileErrorToString, exportErrorToString } =
  */
 const loader = function (content, callback) {
   const loaderContext = this;
-  const loaderOptions = loaderContext.getOptions() || {};
-  const webpackOptions = loaderContext._compiler.options || {};
-  const { rootContext: context, resource, resourcePath, resourceQuery } = loaderContext;
-  const sourcesOption = getSourcesOption(loaderOptions.sources);
+  const { rootContext, resource, resourcePath, resourceQuery } = loaderContext;
+  let stage = '';
 
-  // note: the default preprocessor use the Eta templating engine
-  let preprocessor = null;
-  if (typeof loaderOptions.preprocessor === 'function') {
-    preprocessor = loaderOptions.preprocessor;
-  } else if (loaderOptions.preprocessor !== false) {
-    // note: set the `useWith: true` option to use data in template without `it.` scope
-    preprocessor = (content, { data }) => Eta.render(content, data, { async: true, useWith: true });
-  }
-
-  let basedir = loaderOptions.basedir || context;
-  let customData = {};
-
-  if (basedir.slice(-1) !== '/') basedir += '/';
-  if (loaderContext.cacheable != null) loaderContext.cacheable(true);
+  Options.init(loaderContext);
 
   // prevent double initialisation with same options, occurs when many entry files used in one webpack config
-  if (!PluginService.isCached(context)) {
-    Resolver.init({
-      rootContext: context,
-      basedir,
-      options: webpackOptions.resolve || {},
-    });
+  if (!PluginService.isCached(rootContext)) {
+    Resolver.init(rootContext);
   }
 
-  Loader.init({
-    resourcePath,
-    resourceQuery,
-    options: loaderOptions,
-    customData,
-  });
+  Loader.init({ resourcePath, resourceQuery });
+  Dependency.init(loaderContext);
 
-  Dependency.init({
-    loaderContext,
-    watchFiles: loaderOptions.watchFiles,
-  });
+  new Promise((resolve) => {
+    const preprocessor = Options.getPreprocessor();
+    let result;
+    stage = 'preprocessor';
 
-  // note: the preprocessor can return a promise
-  new Promise((resolve, reject) => {
-    try {
-      let result;
-      if (preprocessor != null) {
-        result = preprocessor(content, loaderContext);
-      }
-      resolve(result != null ? result : content);
-    } catch (error) {
-      const message = preprocessorErrorToString(error, path.relative(context, resourcePath));
-      reject(message);
+    if (preprocessor != null) {
+      // the preprocessor can return a string, promise or null
+      result = preprocessor(content, loaderContext);
     }
+    resolve(result != null ? result : content);
   })
     .then((value) => {
-      try {
-        return loaderOptions.sources === false ? value : HtmlBundler.compile(value, resource, sourcesOption);
-      } catch (error) {
-        const message = compileErrorToString(error, path.relative(context, resourcePath));
-        Dependency.watch();
-
-        return Promise.reject(message);
-      }
+      stage = 'compile';
+      return Template.compile(value, resource);
     })
     .then((value) => {
-      try {
-        return Loader.export(value);
-      } catch (error) {
-        const message = exportErrorToString(error, path.relative(context, resourcePath));
-        return Promise.reject(message);
-      }
+      stage = 'export';
+      return Loader.export(value);
     })
     .then((value) => {
       Dependency.watch();
       callback(null, value);
     })
     .catch((error) => {
-      const browserError = Loader.exportError(error, resource);
-      callback(error, browserError);
+      const issuer = path.relative(rootContext, resourcePath);
+      let message;
+
+      switch (stage) {
+        case 'preprocessor':
+          message = preprocessorErrorToString(error, issuer);
+          break;
+        case 'compile':
+          message = compileErrorToString(error, issuer);
+          Dependency.watch();
+          break;
+        case 'export':
+          message = exportErrorToString(error, issuer);
+          break;
+        default:
+          message = unknownErrorToString(error, issuer);
+      }
+
+      const browserError = Loader.exportError(message, resource);
+      callback(message, browserError);
     });
 };
 
 module.exports = function (content, map, meta) {
   const loaderContext = this;
   const callback = loaderContext.async();
+
+  if (loaderContext.cacheable != null) loaderContext.cacheable(true);
 
   // note: the 'entryData' is the custom property defined in the plugin
   // set the origin 'data' property of loader context,
