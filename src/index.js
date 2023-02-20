@@ -1,6 +1,7 @@
 const { minify } = require('html-minifier-terser');
 const AssetCompiler = require('./Plugin/AssetCompiler');
 const loader = require.resolve('./Loader');
+const { isWin } = require('./Common/Helpers');
 
 /**
  * @typedef {Object} PluginOptions
@@ -65,7 +66,11 @@ class Plugin extends AssetCompiler {
       loader,
     };
 
-    const existsLoader = webpackLoaders.find((rule) => JSON.stringify(rule).indexOf(loader) > -1);
+    const existsLoader = webpackLoaders.find((rule) => {
+      let ruleStr = JSON.stringify(rule);
+      if (isWin) ruleStr = ruleStr.replaceAll(/\\\\/g, '\\');
+      return ruleStr.indexOf(loader) > -1;
+    });
 
     if (existsLoader == null) {
       webpackLoaders.push(defaultLoader);

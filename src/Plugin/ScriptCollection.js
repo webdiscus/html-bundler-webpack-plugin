@@ -1,3 +1,5 @@
+const path = require('path');
+const { isWin } = require('../Common/Helpers');
 const { isInline } = require('../Loader/Utils');
 
 /**
@@ -36,6 +38,9 @@ class ScriptCollection {
       };
       this.files.set(file, item);
     }
+
+    // normalize slashes for windows
+    if (isWin) issuer = path.normalize(issuer);
 
     // add only unique issuer
     if (!item.issuers.find(({ request }) => request === issuer)) {

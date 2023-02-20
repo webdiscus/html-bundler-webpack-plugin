@@ -1,1 +1,0 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[621],{815:(e,t,s)=>{const n=s(784),o=s(667),r=s(14);console.log("Fixture script"),e.exports={lorem:n,libA:o,libB:r}},667:e=>{const t={name:"Lib A",getName(){return this.name}};e.exports=t},14:e=>{const t={name:"Lib B",getName(){return this.name}};e.exports=t}}]);

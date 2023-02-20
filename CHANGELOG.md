@@ -1,5 +1,9 @@
 # Change log
 
+## 1.1.2 (2023-02-20)
+- fix: resolving of assets under Windows
+- docs: update readme
+
 ## 1.1.1 (2023-02-19)
 - fix: handling an issue when used an async preprocessor
 - refactor: optimize handling of loader options
@@ -62,7 +66,7 @@ If you have pure HTML file you can disable this processing to save the compilati
 - fix: warning for duplicate files when many html files are generated from one template
 - refactor: optimise code structure, code cleanup
 - refactor: optimize code for processing of scripts
-- test: add base and advanced test template for issues
+- test: add base and advanced test template for new issues
 - chore: add GitHub CONTRIBUTING.md
 - chore: add GitHub PULL_REQUEST_TEMPLATE.md
 - chore: add GitHub ISSUE_TEMPLATE

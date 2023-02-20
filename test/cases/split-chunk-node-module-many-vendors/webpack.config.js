@@ -46,14 +46,9 @@ module.exports = {
         vendor: {
           //test: /[\\/]node_modules[\\/]/,
           test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // use it when in Pug is defined CSS from node modules to exclude CSS from group
-          name(module) {
-            // save many modules from same scope as `scope-module.js`
-            //const name = module.resourceResolveData.descriptionFileData.name.replace('@', '').replace('/', '-');
-
-            // save many modules from same scope in scope directory
-            const name = module.resourceResolveData.descriptionFileData.name.replace('@', '');
-
-            return `npm.${name}`;
+          name(module, chunks, groupName) {
+            const moduleName = module.resourceResolveData.descriptionFileData.name.replace('@', '');
+            return `${groupName}.${moduleName}`;
           },
           enforce: true,
         },

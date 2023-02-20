@@ -2,7 +2,7 @@ import { compareFileListAndContent, exceptionContain, stdoutContain } from './ut
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Plugin/Utils';
 import AssetEntry from '../src/Plugin/AssetEntry';
-import HtmlBundler from '../src/Loader/Template';
+import Template from '../src/Loader/Template';
 import { PATHS } from './config';
 
 beforeAll(() => {});
@@ -34,7 +34,7 @@ describe('misc unit tests', () => {
 describe('parse attributes unit tests', () => {
   test('parseAttr without attr', (done) => {
     const source = '<img alt="apple">';
-    const received = HtmlBundler.parseAttr(source, 'src');
+    const received = Template.parseAttr(source, 'src');
     const expected = false;
     expect(received).toEqual(expected);
     done();
@@ -42,7 +42,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseAttr empty value', (done) => {
     const source = '<img src="">';
-    const received = HtmlBundler.parseAttr(source, 'src');
+    const received = Template.parseAttr(source, 'src');
     const expected = {
       attr: 'src',
       startPos: 10,
@@ -55,7 +55,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseAttr value', (done) => {
     const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = HtmlBundler.parseAttr(source, 'src');
+    const received = Template.parseAttr(source, 'src');
     const expected = {
       attr: 'src',
       startPos: 10,
@@ -68,7 +68,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset single value', (done) => {
     const source = '<source srcset="img1.png">';
-    const received = HtmlBundler.parseAttr(source, 'srcset');
+    const received = Template.parseAttr(source, 'srcset');
     const expected = {
       attr: 'srcset',
       startPos: 16,
@@ -87,7 +87,7 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset multi values', (done) => {
     const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = HtmlBundler.parseAttr(source, 'srcset');
+    const received = Template.parseAttr(source, 'srcset');
     const expected = {
       attr: 'srcset',
       startPos: 28,
@@ -105,28 +105,28 @@ describe('parse attributes unit tests', () => {
 
 describe('resolve parsed values', () => {
   test('https://example.com/style.css', (done) => {
-    const received = HtmlBundler.resolve({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
+    const received = Template.resolve({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
     const expected = false;
     expect(received).toEqual(expected);
     done();
   });
 
   test('http://example.com/style.css', (done) => {
-    const received = HtmlBundler.resolve({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
+    const received = Template.resolve({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
     const expected = false;
     expect(received).toEqual(expected);
     done();
   });
 
   test('//style.css', (done) => {
-    const received = HtmlBundler.resolve({ type: 'style', file: '//style.css', issuer: '' });
+    const received = Template.resolve({ type: 'style', file: '//style.css', issuer: '' });
     const expected = false;
     expect(received).toEqual(expected);
     done();
   });
 
   test('/style.css', (done) => {
-    const received = HtmlBundler.resolve({ type: 'style', file: '/style.css', issuer: '' });
+    const received = Template.resolve({ type: 'style', file: '/style.css', issuer: '' });
     const expected = false;
     expect(received).toEqual(expected);
     done();
@@ -137,7 +137,7 @@ describe('parse tags unit tests', () => {
   test('parse single tag img', (done) => {
     //const html = `<img src="img1.png" alt="logo"><img src="img1.png" srcset="img2.png 100w, img3.png 500w, img4.png 1000w">`;
     const html = `<img src="img1.png" alt="logo">`;
-    const received = HtmlBundler.parseTag(html, { tag: 'img', attributes: ['src'] });
+    const received = Template.parseTag(html, { tag: 'img', attributes: ['src'] });
     const expected = [
       {
         tag: 'img',
@@ -253,6 +253,10 @@ describe('plugin options', () => {
 
   test('output.publicPath = "/"', (done) => {
     compareFileListAndContent(PATHS, 'option-output-public-path-root', done);
+  });
+
+  test('output.publicPath = "/sub-path/"', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-custom', done);
   });
 
   test('option sourcePath and outputPath (default)', (done) => {

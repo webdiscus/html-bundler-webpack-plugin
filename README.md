@@ -1958,10 +1958,10 @@ module.exports = {
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // split JS only, ignore CSS modules
-          // save node module under own name
-          name(module) {
-            const name = module.resourceResolveData.descriptionFileData.name.replace('@', '');
-            return `npm.${name}`;
+          // save chunk under a name
+          name(module, chunks, groupName) {
+            const moduleName = module.resourceResolveData.descriptionFileData.name.replace('@', '');
+            return `${groupName}.${moduleName}`;
           },
         },
       },
