@@ -33,7 +33,7 @@ class Plugin extends AssetCompiler {
       test: /\.(html|ejs)$/,
       enabled: true,
       verbose: false,
-      minify: false, // TODO: implement
+      minify: false,
       sourcePath: null,
       outputPath: null,
       filename: '[name].html',

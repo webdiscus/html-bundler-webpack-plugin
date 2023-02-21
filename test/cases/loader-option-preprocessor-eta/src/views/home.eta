@@ -3,12 +3,16 @@
   <title><%= title %></title>
 </head>
 <body>
+  <!-- test root template path -->
+  <%~ includeFile('/src/views/partials/header') %>
   <h1><%= headline %></h1>
   <ul class="people">
     <% for (let i = 0; i < people.length; i++) {%>
     <li><%= people[i] %>></li>
     <% } %>
   </ul>
-  <img src="apple.png" alt="apple" />
+  <img src="../images/apple.png" alt="apple" />
+  <!-- test views template path -->
+  <%~ includeFile('partials/footer') %>
 </body>
 </html>

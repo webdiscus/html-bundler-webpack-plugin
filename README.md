@@ -90,6 +90,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
 > How to create multiple HTML pages with html-bundler-webpack-plugin, see the [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate).
 
 
+<a id="contents" name="contents" href="#contents"></a>
 ## Contents
 
 1. [Features](#features)
@@ -250,7 +251,7 @@ module.exports = {
 > Both places have the same effect, but `js.filename` has priority over `output.filename`.
 ---
 
-
+#### [↑ back to contents](#contents)
 <a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
 ## Plugin options
 
@@ -338,6 +339,7 @@ Usage example:
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
 > But the `data` property can only be defined in the `entry` option of the plugin.
 
+#### [↑ back to contents](#contents)
 <a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>
 ### `outputPath`
 Type: `string` Default: `webpack.options.output.path`
@@ -364,6 +366,7 @@ The output filename relative by the [`outputPath`](#option-outputPath) option.
   - `@return {string}` The name or template string of output file.
 
 
+#### [↑ back to contents](#contents)
 <a id="option-css" name="option-css" href="#option-css"></a>
 ### `css`
 Type: `Object`\
@@ -417,7 +420,7 @@ If you want to have a different output filename, you can use the `filename` opti
 > Don't use `mini-css-extract-plugin` or `style-loader`, they are not required more.\
 > The `html-bundler-webpack-plugin` extracts CSS much faster than other plugins and resolves all asset URLs in CSS, therefore the `resolve-url-loader` is redundant too.
 
-
+#### [↑ back to contents](#contents)
 <a id="option-js" name="option-js" href="#option-js"></a>
 ### `js`
 Type: `Object`\
@@ -461,7 +464,7 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
-
+#### [↑ back to contents](#contents)
 <a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
 ### `postprocess`
 Type:
@@ -506,7 +509,7 @@ The `ResourceInfo` have the following properties:
 Return new content as a `string`.
 If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
-
+#### [↑ back to contents](#contents)
 <a id="option-minify" name="option-minify" href="#option-minify"></a>
 ### `minify`
 Type: `Object|string|boolean` Default: `false`
@@ -553,6 +556,7 @@ Display information about all processed files.
 
 ---
 
+#### [↑ back to contents](#contents)
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
 ## Loader options
 
@@ -767,6 +771,7 @@ module.exports = {
 ```
 
 
+#### [↑ back to contents](#contents)
 <a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
 ### `preprocessor`
 Type:
@@ -779,7 +784,14 @@ type preprocessor = (
 
 The default `preprocessor` use the [Eta](https://eta.js.org) templating engine:
 ```js
-preprocessor = (template, { data }) => Eta.render(template, data, { async: true, useWith: true });
+const config = {
+  // defaults async is false, because the `includeFile()` function is sync,
+  // wenn async is true then must be used `await includeFile()`
+  async: false,
+  useWith: true, // to use data in template without `it.` scope
+  root: process.cwd(),
+};
+preprocessor = (template, { data }) => Eta.render(template, data, config);
 ```
 
 > **Note**
@@ -893,9 +905,9 @@ module.exports = {
 
 See more examples by [How to use a template engine](#recipe-template-engine).
 
-
 ---
 
+#### [↑ back to contents](#contents)
 <a id="setup-hmr" name="setup-hmr" href="#setup-hmr"></a>
 ## Setup HMR live reload
 
@@ -925,9 +937,9 @@ module.exports = {
 > <script src="./hmr.js"></script>
 > ```
 
-
 ---
 
+#### [↑ back to contents](#contents)
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
 ## How to use source images in HTML
 
@@ -976,6 +988,9 @@ The generated HTML contains hashed output images filenames:
 </html>
 ```
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-responsive-images" name="recipe-responsive-images" href="#recipe-responsive-images"></a>
 ## How to resize and generate responsive images
 
@@ -1048,6 +1063,9 @@ module.exports = {
 
 ```
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
 ## How to preload source fonts in HTML
 
@@ -1096,7 +1114,9 @@ The generated HTML contains output fonts filenames:
 > 
 > You don't need a plugin to copy files from source directory to public.
 
+---
 
+#### [↑ back to contents](#contents)
 <a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
 ## How to inline CSS in HTML
 
@@ -1145,6 +1165,9 @@ The generated HTML contains inline CSS already processed via Webpack:
 >
 > To enable source map in inline CSS set the Webpack option `devtool`.
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
 ## How to inline JS in HTML
 
@@ -1194,6 +1217,9 @@ The generated HTML contains inline JS already compiled via Webpack:
 >
 > To enable source map in inline JS set the Webpack option `devtool`.
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
 ## How to inline SVG, PNG images in HTML
 
@@ -1231,6 +1257,9 @@ module: {
 }
 ```
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
 ## How to use a template engine
 
@@ -1250,7 +1279,7 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 
 
 <a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
-#### Using the Eta 
+### Using the Eta 
 _Supported "out of the box"_
 
 `Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
@@ -1265,6 +1294,7 @@ For example, there is the template _index.eta_
     <li><%= people[i] %>></li>
     <% } %>
   </ul>
+  <%~ includeFile('/src/views/partials/footer') %>
 </body>
 </html>
 ```
@@ -1274,6 +1304,14 @@ Add the template compiler to `preprocessor`:
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const Eta = require('eta');
+
+const EtaConfig = {
+  // defaults async is false, because the `includeFile()` function is sync,
+  // wenn async is true then must be used `await includeFile()`
+  async: false,
+  useWith: true, // to use data in template without `it.` scope
+  root: process.cwd(),
+};
 
 module.exports = {
   plugins: [
@@ -1296,8 +1334,7 @@ module.exports = {
         test: /\.(html|ejs|eta)$/, // <= change
         loader: HtmlBundlerPlugin.loader,
         options: {
-          // note: set the `useWith: true` for compatibility with EJS
-          preprocessor: (template, { data }) => Eta.render(template, data, { useWith: true }), // <= change
+          preprocessor: (template, { data }) => Eta.render(template, data, EtaConfig), // <= change
         },
       },
     ],
@@ -1315,11 +1352,11 @@ module.exports = {
 >
 > For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
 > to use variables in template without the Eta-specific `it.` scope
- 
 
+#### [↑ back to contents](#contents)
 <a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
-#### Using the EJS
-_Supported "out of the box"_
+### Using the EJS
+_Basic support "out of the box"_
 
 For example, there is the template _index.ejs_
 ```html
@@ -1331,6 +1368,7 @@ For example, there is the template _index.ejs_
     <li><%= people[i] %>></li>
     <% } %>
   </ul>
+  <%- include('/src/views/partials/footer.html'); %>
 </body>
 </html>
 ```
@@ -1340,6 +1378,13 @@ Add the template compiler to `preprocessor`:
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const ejs = require('ejs');
+
+// create EJS options
+const ejsConfig = {
+  root: process.cwd(), // define root template path when using `include()`
+  async: true, // optional, async rendering
+  
+}
 
 module.exports = {
   plugins: [
@@ -1362,7 +1407,7 @@ module.exports = {
         test: /\.(html|ejs)$/, // <= change
         loader: HtmlBundlerPlugin.loader,
         options: {
-          preprocessor: (template, { data }) => ejs.render(template, data), // <= change
+          preprocessor: (template, { data }) => ejs.render(template, data, ejsConfig), // <= change
         },
       },
     ],
@@ -1373,11 +1418,12 @@ module.exports = {
 
 > **Note**
 >
-> The [default loader](default-loader) already support the EJS. You can omit it in Webpack config.
+> The [default loader](default-loader) already support the simple syntax of EJS. 
+> You can omit it in Webpack config when you don't use `include()`.
 
-
+#### [↑ back to contents](#contents)
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
-#### Using the Handlebars
+### Using the Handlebars
 
 For example, there is the template _index.hbs_
 ```html
@@ -1446,8 +1492,9 @@ module.exports = {
 > })
 > ```
 
+#### [↑ back to contents](#contents)
 <a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
-#### Using the Mustache
+### Using the Mustache
 
 For example, there is the template _index.mustache_
 ```html
@@ -1497,9 +1544,9 @@ module.exports = {
 
 ```
 
-
+#### [↑ back to contents](#contents)
 <a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
-#### Using the Nunjucks
+### Using the Nunjucks
 
 For example, there is the template _index.njk_
 ```html
@@ -1551,8 +1598,9 @@ module.exports = {
 
 ```
 
+#### [↑ back to contents](#contents)
 <a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
-#### Using the LiquidJS
+### Using the LiquidJS
 
 For example, there is the template _index.liquidjs_
 ```html
@@ -1607,7 +1655,9 @@ module.exports = {
 
 ```
 
+---
 
+#### [↑ back to contents](#contents)
 <a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>
 ## How to pass data into multiple templates
 
@@ -1809,6 +1859,9 @@ The generated _dist/about.html_
 </html>
 ```
 
+---
+
+#### [↑ back to contents](#contents)
 <a id="recipe-split-chunks" name="recipe-split-chunks" href="#recipe-split-chunks"></a>
 ### How to config `splitChunks`
 
@@ -1851,6 +1904,11 @@ For example, in a template are used the scripts and styles from `node_modules`:
 </body>
 </html>
 ```
+
+> **Note**
+> 
+> In the generated HTML all script tags remain in their original places and split chunks will be added there,
+> in the order that Webpack generated.
 
 In this use case the `optimization.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
 ```js
@@ -1909,7 +1967,9 @@ module.exports = {
 > </html>
 > ```
 
+---
 
+#### [↑ back to contents](#contents)
 <a id="recipe-split-many-modules" name="recipe-split-many-modules" href="#recipe-split-many-modules"></a>
 ### How to split multiple node modules and save under own names
 
@@ -1972,15 +2032,16 @@ module.exports = {
 
 The split files will be saved like this:
 ```
-dist/js/npm.popperjs/core.f96a1152.js <- the `popperjs/core` used in bootstrap will be extracted too
-dist/js/npm.bootstrap.f69a4e44.js
-dist/js/npm.underscore.4e44f69a.js
+dist/js/vendor.popperjs/core.f96a1152.js <- `popperjs/core` is extracted from bootstrap
+dist/js/vendor.bootstrap.f69a4e44.js
+dist/js/vendor.underscore.4e44f69a.js
 dist/js/runtime.9cd0e0f9.js <- common runtime code
 dist/js/script.3010da09.js
 ```
 
 ---
 
+#### [↑ back to contents](#contents)
 ## Also See
 
 - [ansis][ansis] - The Node.js lib for ANSI color styling of text in terminal

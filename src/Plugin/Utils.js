@@ -1,8 +1,6 @@
 const path = require('path');
 
-const { isWin, isFunction, pathToPosix, parseQuery, outToConsole } = require('../Common/Helpers');
-
-const workingDir = process.env.PWD;
+const { isWin, isFunction, workingDir, pathToPosix, parseQuery, outToConsole } = require('../Common/Helpers');
 
 /**
  * Return path of file relative by working directory.

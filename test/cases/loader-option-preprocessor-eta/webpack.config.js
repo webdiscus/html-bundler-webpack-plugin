@@ -2,6 +2,15 @@ const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 const Eta = require('eta');
 
+const EtaConfig = {
+  // defaults async is false, because the `includeFile()` function is sync,
+  // wenn async is true then must be used `await includeFile()`
+  async: false,
+  useWith: true, // to use data in template without `it.` scope
+  root: process.cwd(),
+  views: path.join(process.cwd(), 'src/views/'),
+};
+
 module.exports = {
   mode: 'production',
 
@@ -14,7 +23,7 @@ module.exports = {
       test: /\.(html|ejs|eta)$/,
       entry: {
         index: {
-          import: './src/home.eta',
+          import: './src/views/home.eta',
           data: {
             title: 'Home',
             headline: 'Breaking Bad',
@@ -31,8 +40,7 @@ module.exports = {
         test: /\.(html|ejs|eta)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          // note: set the `useWith: true` option to use data in template without `it.` scope
-          preprocessor: (content, { data }) => Eta.render(content, data, { useWith: true }),
+          preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
         },
       },
       {

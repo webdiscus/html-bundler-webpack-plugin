@@ -2,10 +2,7 @@ const path = require('path');
 const JSON5 = require('json5');
 
 const isWin = path.sep === '\\';
-
-const isFunction = (value) => typeof value === 'function';
-
-const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
+const workingDir = process.env.PWD;
 
 /**
  * Converts the win path to POSIX standard.
@@ -20,7 +17,11 @@ const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
  */
 const pathToPosix = (value) => value.replace(/\\/g, '/');
 
+const isFunction = (value) => typeof value === 'function';
+
 const isJSON = (str) => typeof str === 'string' && str.length > 1 && str[0] === '{' && str[str.length - 1] === '}';
+
+const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 /**
  * Parse the url query.
@@ -77,4 +78,5 @@ module.exports = {
   pathToPosix,
   parseQuery,
   outToConsole,
+  workingDir,
 };

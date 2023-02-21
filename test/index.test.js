@@ -353,6 +353,10 @@ describe('loader options for templating', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
   });
 
+  test('preprocessor with Eta', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta-async', done);
+  });
+
   test('preprocessor with EJS', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs', done);
   });

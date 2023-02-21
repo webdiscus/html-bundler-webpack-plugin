@@ -1,19 +1,29 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
+const Eta = require('eta');
+
+const EtaConfig = {
+  // defaults async is false, because the `includeFile()` function is sync,
+  // wenn async is true then must be used `await includeFile()`
+  async: true,
+  useWith: true, // to use data in template without `it.` scope
+  root: process.cwd(),
+  views: path.join(process.cwd(), 'src/views/'),
+};
 
 module.exports = {
   mode: 'production',
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
 
   plugins: [
     new HtmlBundlerPlugin({
+      test: /\.(html|ejs|eta)$/,
       entry: {
         index: {
-          import: './src/views/home.html',
+          import: './src/views/home.eta',
           data: {
             title: 'Home',
             headline: 'Breaking Bad',
@@ -26,8 +36,13 @@ module.exports = {
 
   module: {
     rules: [
-      // test the Eta as the default template engine used in the default preprocessor
-
+      {
+        test: /\.(html|ejs|eta)$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
+        },
+      },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

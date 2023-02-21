@@ -1,19 +1,19 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('../../../..');
 
 module.exports = {
   mode: 'production',
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
 
   plugins: [
     new HtmlBundlerPlugin({
+      test: /\.(html|ejs|eta)$/,
       entry: {
         index: {
-          import: './src/views/home.html',
+          import: './src/views/home.eta',
           data: {
             title: 'Home',
             headline: 'Breaking Bad',
@@ -26,8 +26,6 @@ module.exports = {
 
   module: {
     rules: [
-      // test the Eta as the default template engine used in the default preprocessor
-
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',
@@ -36,5 +34,18 @@ module.exports = {
         },
       },
     ],
+  },
+
+  // enable HMR with live reload
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
+    watchFiles: {
+      paths: ['src/**/*.*'],
+      options: {
+        usePolling: true,
+      },
+    },
   },
 };

@@ -126,8 +126,15 @@ class Options {
     }
 
     if (this.options.preprocessor !== false) {
-      // note: set the `useWith: true` option to use data in template without `it.` scope
-      return (template, { data = {} }) => Eta.render(template, data, { async: true, useWith: true });
+      const config = {
+        // defaults async is false, because the `includeFile()` function is sync,
+        // wenn async is true then must be used `await includeFile()`
+        async: false,
+        useWith: true, // to use data in template without `it.` scope
+        root: process.cwd(),
+      };
+
+      return (template, { data = {} }) => Eta.render(template, data, config);
     }
 
     return null;

@@ -1,5 +1,14 @@
 # Change log
 
+## 1.2.0 (2023-02-21)
+- feat: set the config option `root` of the Eta preprocessor as current working dir by defaults, 
+  now you can use the template root path, e.g.:
+  ```html
+  <%~ includeFile('/src/views/partials/header') %>
+  ```
+- test: add test `async` preprocessor for Eta
+- docs: add `back to contents` navigation in readme, improve readme
+
 ## 1.1.2 (2023-02-20)
 - fix: resolving of assets under Windows
 - docs: update readme
