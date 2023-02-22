@@ -14,7 +14,7 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-🚀 The best modern alternative to html-webpack-plugin.
+🚀 The best modern alternative to _html-webpack-plugin_.
 
 This plugin allows to use an HTML template as a starting point for all dependencies used in your web application.
 All source files of scripts, styles, images specified in HTML are processed automatically.
@@ -23,14 +23,21 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 💡 **Highlights**
 
-- An HTML template is an **entry point**.
+- An **entry point** is an HTML template.
 - Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>` tags.
 - Resolving source **assets** specified in default attributes `href` `src` `srcset` etc.
 - Inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
 - Using template engines [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others **without template loaders**.
 - Support for both `async` and `sync` preprocessor
 
-> If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
+✅ **Profit**
+
+You specify all the source scripts and styles in **one right place** (in HTML), 
+instead of defining them in **many non-logic places**: 
+defining JS files in Webpack Entry (🥴),
+importing SCSS into a JS file (an absolute anti-pattern 🤯).
+
+❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
 ### Simple usage example
 
@@ -39,9 +46,9 @@ Add source scripts and styles directly to HTML:
 ```html
 <html>
 <head>
-  <!-- load source style here -->
+  <!-- load source styles here -->
   <link href="./style.scss" rel="stylesheet">
-  <!-- load source script here -->
+  <!-- load source scripts here and/or in body -->
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
@@ -51,7 +58,8 @@ Add source scripts and styles directly to HTML:
 </html>
 ```
 
-The generated HTML contains output filenames of processed source files and `link` `script` tags remain in their places:
+The generated HTML contains the output filenames of the processed source files,
+while the `script` and `link` tags remain in place:
 
 ```html
 <html>
@@ -1110,7 +1118,7 @@ Add the template compiler to `preprocessor`:
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const ejs = require('ejs');
 
-// create EJS options
+// create EJS config
 const ejsConfig = {
   root: process.cwd(), // define root template path when using `include()`
   async: true, // optional, async rendering
