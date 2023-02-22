@@ -1,3 +1,6 @@
+const fs = require('fs');
+const isLocalEnv = fs.existsSync('.local');
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -201,7 +204,7 @@ module.exports = {
   // testSequencer: '@jest/test-sequencer',
 
   // Default timeout of a test in milliseconds.
-  testTimeout: 10000,
+  testTimeout: isLocalEnv ? 1000 : 10000,
 
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
   // testURL: "http://localhost",

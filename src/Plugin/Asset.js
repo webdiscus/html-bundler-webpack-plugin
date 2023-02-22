@@ -97,7 +97,7 @@ class Asset {
       return isWin ? pathToPosix(outputFilename) : outputFilename;
     }
 
-    return path.posix.join(this.publicPath, assetFile);
+    return this.publicPath + '' + assetFile;
   }
 
   /**

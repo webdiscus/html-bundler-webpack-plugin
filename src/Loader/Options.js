@@ -130,7 +130,7 @@ class Options {
         // defaults async is false, because the `includeFile()` function is sync,
         // wenn async is true then must be used `await includeFile()`
         async: false,
-        useWith: true, // to use data in template without `it.` scope
+        useWith: true, // allow to use variables in template without `it.` scope
         root: process.cwd(),
       };
 

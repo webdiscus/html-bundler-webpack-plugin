@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.local
 _ignored
 package-lock.json
 coverage

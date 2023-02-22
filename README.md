@@ -95,6 +95,12 @@ See the [complete Webpack configuration](#simple-webpack-config).
 
 1. [Features](#features)
 2. [Install and Quick start](#install)
+3. [Webpack options](#webpack-options)
+   - [output](#webpack-option-output)
+     - [path](#webpack-option-output-path)
+     - [publicPath](#webpack-option-output-publicPath)
+     - [filename](#webpack-option-output-filename)
+   - [entry](#webpack-option-entry)
 3. [Plugin options](#plugin-options)
    - [test](#option-test) (process only templates matching RegExp)
    - [entry](#option-entry) (define HTML templates)
@@ -109,7 +115,15 @@ See the [complete Webpack configuration](#simple-webpack-config).
 3. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
-4. [Setup HMR live reload](#setup-hmr)
+4. [Template engines](#recipe-template-engine)
+   - [Eta](#using-template-eta)
+   - [EJS](#using-template-ejs)
+   - [Handlebars](#using-template-handlebars)
+   - [Mustache](#using-template-mustache)
+   - [Nunjucks](#using-template-nunjucks)
+   - [LiquidJS](#using-template-liquidjs)
+   - [Pug](https://github.com/webdiscus/pug-plugin)
+5. [Setup HMR live reload](#setup-hmr)
 5. [Recipes](#recipes)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
@@ -117,14 +131,6 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
-   - [How to use a template engine](#recipe-template-engine)
-     - [Eta](#using-template-eta)
-     - [EJS](#using-template-ejs)
-     - [Handlebars](#using-template-handlebars)
-     - [Mustache](#using-template-mustache)
-     - [Nunjucks](#using-template-nunjucks)
-     - [LiquidJS](#using-template-liquidjs)
-     - [Pug](https://github.com/webdiscus/pug-plugin)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
@@ -252,6 +258,82 @@ module.exports = {
 ---
 
 #### [↑ back to contents](#contents)
+<a id="webpack-options" name="webpack-options" href="#webpack-options"></a>
+## Webpack options
+
+Important Webpack options used to properly configure this plugin.
+
+<a id="webpack-option-output" name="webpack-options-output" href="#webpack-options-output"></a>
+<a id="webpack-option-output-path" name="webpack-options-output-path" href="#webpack-options-output-path"></a>
+### `output.path`
+Type: `string` Default: `path.join(process.cwd(), 'dist')`
+
+The root output directory for all processed files, as an absolute path.\
+You can omit this option, then all generated files will be saved under `dist/` in your project directory.
+
+<a id="webpack-option-output-publicPath" name="webpack-options-output-publicPath" href="#webpack-options-output-publicPath"></a>
+### `output.publicPath`
+Type: `string|function` Default: `auto`
+
+The value of the option is prefixed to every URL created by this plugin.
+If the value is not the empty string or `auto`, then the option must end with `/`.
+
+The possible values:
+- `publicPath: 'auto'` - automatically determines a path of an asset relative of their issuer.
+  The generated HTML page can be opened directly form the local directory and all js, css and images will be loaded in a browser.
+- `publicPath: ''` - a path relative to an HTML page, in the same directory. The resulting path is different from a path generated with  `auto`.
+- `publicPath: '/'` - a path relative to `document root` directory on a server
+- `publicPath: '/assets/'` - a sub path relative to `document root` directory on a server
+- `publicPath: '//cdn.example.com/'` - an external URL with the same protocol (`http://` or `https://`)
+- `publicPath: 'https://cdn.example.com/'` - an external URL with the `https://` protocol only
+
+<a id="webpack-option-output-filename" name="webpack-options-output-filename" href="#webpack-options-output-filename"></a>
+### `output.filename`
+Type: `string|function` Default: `[name].js`
+
+The output name of a generated JS file.\
+Highly recommended to define the filename in the Plugin option [`js.filename`](#option-js).
+
+The output name of a generated CSS file is determined in the Plugin option [`css.filename`](#option-css).
+
+Define output JS and CSS filenames in the Plugin option, in one place:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      js: {
+        // define the output name of a generated JS file here
+        filename: 'assets/js/[name].[contenthash:8].js',
+      },
+      css: {
+        // define the output name of a generated CSS file here
+        filename: 'assets/css/[name].[contenthash:8].css',
+      },
+    }),
+  ],
+};
+```
+
+<a id="webpack-option-entry" name="webpack-options-entry" href="#webpack-options-entry"></a>
+### `entry`
+
+The starting point to build the bundle.
+
+> **Note**
+> 
+> Using this plugin an `entry point` is an HTML template.
+> All script and style source files must be specified in the HTML template.
+
+You can use the Webpack `entry` option to define HTML templates,
+but it is highly recommended to define all templates in plugin option [`entry`](#option-entry),
+because it has an additional `data` property (not available in the Webpack entry) 
+to pass custom variables into the HTML template.
+
+For details see the [plugin option `entry`](#option-entry).
+
+#### [↑ back to contents](#contents)
 <a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
 ## Plugin options
 
@@ -276,9 +358,9 @@ If all your templates have `.html`, `.ejs` or `.eta` extensions you don't need t
 <a id="option-entry" name="option-entry" href="#option-entry"></a>
 ### `entry`
 Type: `object` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
-plus additional `data` property.
+plus additional `data` property to pass custom variables into the HTML template.
 
-Define your HTML templates in the entry option.
+Define all your HTML templates in the `entry` option.
 
 An HTML template is a starting point for collecting all the dependencies used in your web application.
 Specify source scripts (JS, TS) and styles (CSS, SCSS, LESS, etc.) directly in HTML.
@@ -319,13 +401,15 @@ Usage example:
 ```js
 {
   entry: {
+    // output ./dist/pages/about/index.html
     'pages/about/index': { // output file as the key
-      import: 'src/views/about.html', // source template file
+      import: 'src/views/about.html',
       data: {
         title: 'About',
       }
     },
 
+    // output ./dist/pages/contact/index.html
     contact: {
       import: 'src/views/contact.html',
       filename: 'pages/contact/index.html', // output file as the 'filename' property
@@ -903,9 +987,407 @@ module.exports = {
 
 ```
 
-See more examples by [How to use a template engine](#recipe-template-engine).
+---
+
+
+#### [↑ back to contents](#contents)
+<a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
+## Template engines
+
+Using the [preprocessor](#loader-option-preprocessor), you can compile any template with a template engine such as:
+- [Eta](https://eta.js.org)
+- [EJS](https://ejs.co)
+- [Handlebars](https://handlebarsjs.com)
+- [Mustache](https://github.com/janl/mustache.js)
+- [Nunjucks](https://mozilla.github.io/nunjucks/)
+- [LiquidJS](https://github.com/harttle/liquidjs)
+- and others
+
+> **Note**
+>
+> For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
+> This plugin works on the same codebase but has additional Pug-specific options and features.
+
+
+<a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
+### Using the Eta
+_Supported "out of the box"_
+
+`Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
+
+For example, there is the template _index.eta_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    <% for (let i = 0; i < people.length; i++) {%>
+    <li><%= people[i] %>></li>
+    <% } %>
+  </ul>
+  <%~ includeFile('/src/views/partials/footer') %>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Eta = require('eta');
+
+const EtaConfig = {
+  // defaults async is false, because the `includeFile()` function is sync,
+  // wenn async is true then must be used `await includeFile()`
+  async: false,
+  useWith: true, // to use data in template without `it.` scope
+  root: process.cwd(),
+};
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|ejs|eta)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.eta',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|ejs|eta)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (template, { data }) => Eta.render(template, data, EtaConfig), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+> **Note**
+>
+> The [default loader](default-loader) already support the Eta. You can omit it in Webpack config.
+
+<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
+> **Warning**
+>
+> For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
+> to use variables in template without the Eta-specific `it.` scope
+
+#### [↑ back to contents](#contents)
+<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
+### Using the EJS
+_Basic support "out of the box"_
+
+For example, there is the template _index.ejs_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    <% for (let i = 0; i < people.length; i++) {%>
+    <li><%= people[i] %>></li>
+    <% } %>
+  </ul>
+  <%- include('/src/views/partials/footer.html'); %>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const ejs = require('ejs');
+
+// create EJS options
+const ejsConfig = {
+  root: process.cwd(), // define root template path when using `include()`
+  async: true, // optional, async rendering
+  
+}
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|ejs)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.ejs',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|ejs)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (template, { data }) => ejs.render(template, data, ejsConfig), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+> **Note**
+>
+> The [default loader](default-loader) already support the simple syntax of EJS.
+> You can omit it in Webpack config when you don't use `include()`.
+
+#### [↑ back to contents](#contents)
+<a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
+### Using the Handlebars
+
+For example, there is the template _index.hbs_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    {{#each people}}
+    <li>{{this}}</li>
+    {{/each}}
+  </ul>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Handlebars = require('handlebars');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|hbs)$/, // add the option to match *.hbs files in entry
+      entry: {
+        index: { // output dist/imdex.html
+          import: './src/index.hbs',
+          // pass data into the preprocessor
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|hbs)$/, // must match the files specified in the entry
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          // compiles *.hbs files to HTML
+          preprocessor: (template, { data }) => Handlebars.compile(template)(data),
+        },
+      },
+    ],
+  },
+};
+
+```
+
+> **Note**
+>
+> If you use a template with a specific extension other than `.html` `.ejs` or `.eta`,
+> specify that extension in the `test` option of the plugin.
+>
+> For example, when using the Handlebars template with `.hbs` extension:
+> ```js
+> new HtmlBundlerPlugin({
+>   test: /\.(html|hbs)$/, // <= specify all extensions used in entry
+>   entry: {
+>     index: './src/views/home.hbs',
+>   },
+> })
+> ```
+
+#### [↑ back to contents](#contents)
+<a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
+### Using the Mustache
+
+For example, there is the template _index.mustache_
+```html
+<html>
+<body>
+  <h1>{{ headline }}</h1>
+  <ul class="people">
+    {{#people}}
+    <li>{{.}}</li>
+    {{/people}}
+  </ul>
+</body>
+</html>
+```
+
+Change Webpack config according to:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Mustache = require('mustache');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|mustache)$/, // <= change
+      index: {
+        import: './src/index.mustache',
+        data: {
+          headline: 'Breaking Bad',
+          people: ['Walter White', 'Jesse Pinkman'],
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|mustache)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (template, { data }) => Mustache.render(template, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+#### [↑ back to contents](#contents)
+<a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
+### Using the Nunjucks
+
+For example, there is the template _index.njk_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    {% for name in people %}
+    <li class="name">{{ name }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const Nunjucks = require('nunjucks');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|njk)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.njk',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|njk)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: (template, { data }) => Nunjucks.renderString(template, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
+
+#### [↑ back to contents](#contents)
+<a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
+### Using the LiquidJS
+
+For example, there is the template _index.liquidjs_
+```html
+<html>
+<body>
+  <h1>{{ headline }}!</h1>
+  <ul class="people">
+    {% for name in people %}
+    <li class="name">{{ name }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
+```
+
+Add the template compiler to `preprocessor`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const { Liquid } = require('liquidjs');
+
+const LiquidEngine = new Liquid();
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(html|liquidjs)$/, // <= change
+      entry: {
+        index: {
+          import: './src/index.liquidjs',
+          data: {
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(html|liquidjs)$/, // <= change
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          // async parseAndRender method return promise
+          preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data), // <= change
+        },
+      },
+    ],
+  },
+};
+
+```
 
 ---
+
 
 #### [↑ back to contents](#contents)
 <a id="setup-hmr" name="setup-hmr" href="#setup-hmr"></a>
@@ -1259,403 +1741,6 @@ module: {
 
 ---
 
-#### [↑ back to contents](#contents)
-<a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
-## How to use a template engine
-
-Using the [preprocessor](#loader-option-preprocessor), you can compile any template with a template engine such as:
-- [Eta](https://eta.js.org)
-- [EJS](https://ejs.co)
-- [Handlebars](https://handlebarsjs.com)
-- [Mustache](https://github.com/janl/mustache.js)
-- [Nunjucks](https://mozilla.github.io/nunjucks/)
-- [LiquidJS](https://github.com/harttle/liquidjs)
-- and others
-
-> **Note**
-> 
-> For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
-> This plugin works on the same codebase but has additional Pug-specific options and features.
-
-
-<a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
-### Using the Eta 
-_Supported "out of the box"_
-
-`Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
-
-For example, there is the template _index.eta_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
-  </ul>
-  <%~ includeFile('/src/views/partials/footer') %>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Eta = require('eta');
-
-const EtaConfig = {
-  // defaults async is false, because the `includeFile()` function is sync,
-  // wenn async is true then must be used `await includeFile()`
-  async: false,
-  useWith: true, // to use data in template without `it.` scope
-  root: process.cwd(),
-};
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|ejs|eta)$/, // <= change
-      entry: {
-        index: {
-          import: './src/index.eta',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|ejs|eta)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Eta.render(template, data, EtaConfig), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
-> **Note**
->
-> The [default loader](default-loader) already support the Eta. You can omit it in Webpack config.
-
-<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
-> **Warning**
->
-> For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
-> to use variables in template without the Eta-specific `it.` scope
-
-#### [↑ back to contents](#contents)
-<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
-### Using the EJS
-_Basic support "out of the box"_
-
-For example, there is the template _index.ejs_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
-  </ul>
-  <%- include('/src/views/partials/footer.html'); %>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const ejs = require('ejs');
-
-// create EJS options
-const ejsConfig = {
-  root: process.cwd(), // define root template path when using `include()`
-  async: true, // optional, async rendering
-  
-}
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|ejs)$/, // <= change
-      entry: {
-        index: {
-          import: './src/index.ejs',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|ejs)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => ejs.render(template, data, ejsConfig), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
-> **Note**
->
-> The [default loader](default-loader) already support the simple syntax of EJS. 
-> You can omit it in Webpack config when you don't use `include()`.
-
-#### [↑ back to contents](#contents)
-<a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
-### Using the Handlebars
-
-For example, there is the template _index.hbs_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {{#each people}}
-    <li>{{this}}</li>
-    {{/each}}
-  </ul>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Handlebars = require('handlebars');
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|hbs)$/, // add the option to match *.hbs files in entry
-      entry: {
-        index: { // output dist/imdex.html
-          import: './src/index.hbs',
-          // pass data into the preprocessor
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|hbs)$/, // must match the files specified in the entry
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // compiles *.hbs files to HTML
-          preprocessor: (template, { data }) => Handlebars.compile(template)(data),
-        },
-      },
-    ],
-  },
-};
-
-```
-
-> **Note**
->
-> If you use a template with a specific extension other than `.html` `.ejs` or `.eta`,
-> specify that extension in the `test` option of the plugin.
-> 
-> For example, when using the Handlebars template with `.hbs` extension:
-> ```js
-> new HtmlBundlerPlugin({
->   test: /\.(html|hbs)$/, // <= specify all extensions used in entry
->   entry: {
->     index: './src/views/home.hbs',
->   },
-> })
-> ```
-
-#### [↑ back to contents](#contents)
-<a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
-### Using the Mustache
-
-For example, there is the template _index.mustache_
-```html
-<html>
-<body>
-  <h1>{{ headline }}</h1>
-  <ul class="people">
-    {{#people}}
-    <li>{{.}}</li>
-    {{/people}}
-  </ul>
-</body>
-</html>
-```
-
-Change Webpack config according to:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Mustache = require('mustache');
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|mustache)$/, // <= change
-      index: {
-        import: './src/index.mustache',
-        data: {
-          headline: 'Breaking Bad',
-          people: ['Walter White', 'Jesse Pinkman'],
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|mustache)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Mustache.render(template, data), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
-#### [↑ back to contents](#contents)
-<a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
-### Using the Nunjucks
-
-For example, there is the template _index.njk_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {% for name in people %}
-    <li class="name">{{ name }}</li>
-    {% endfor %}
-  </ul>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Nunjucks = require('nunjucks');
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|njk)$/, // <= change
-      entry: {
-        index: {
-          import: './src/index.njk',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|njk)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Nunjucks.renderString(template, data), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
-#### [↑ back to contents](#contents)
-<a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
-### Using the LiquidJS
-
-For example, there is the template _index.liquidjs_
-```html
-<html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {% for name in people %}
-    <li class="name">{{ name }}</li>
-    {% endfor %}
-  </ul>
-</body>
-</html>
-```
-
-Add the template compiler to `preprocessor`:
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const { Liquid } = require('liquidjs');
-
-const LiquidEngine = new Liquid();
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      test: /\.(html|liquidjs)$/, // <= change
-      entry: {
-        index: {
-          import: './src/index.liquidjs',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|liquidjs)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // async parseAndRender method return promise
-          preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data), // <= change
-        },
-      },
-    ],
-  },
-};
-
-```
-
----
 
 #### [↑ back to contents](#contents)
 <a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>

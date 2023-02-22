@@ -1,5 +1,9 @@
 # Change log
 
+## 1.2.1 (2023-02-22)
+- fix: resolve correct output asset path when the publicPath is a URL
+- docs: add description of important Webpack options used to properly configure the plugin
+
 ## 1.2.0 (2023-02-21)
 - feat: set the config option `root` of the Eta preprocessor as current working dir by defaults, 
   now you can use the template root path, e.g.:

@@ -259,6 +259,10 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-output-public-path-custom', done);
   });
 
+  test('output.publicPath = "http://localhost:8080/"', (done) => {
+    compareFileListAndContent(PATHS, 'option-output-public-path-url', done);
+  });
+
   test('option sourcePath and outputPath (default)', (done) => {
     compareFileListAndContent(PATHS, 'option-default-path', done);
   });
