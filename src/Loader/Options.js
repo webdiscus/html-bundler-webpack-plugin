@@ -1,4 +1,5 @@
 const Eta = require('eta');
+const PluginService = require('../Plugin/PluginService');
 
 /**
  * @typedef OptionSources
@@ -9,7 +10,7 @@ const Eta = require('eta');
 
 class Options {
   static isInit = false;
-  static defaultWatchFiles = [/\.(html|js.{0,2}|.?js|ts.?|md|txt)$/i];
+  static watchFiles = {};
 
   static init(loaderContext) {
     const { rootContext } = loaderContext;
@@ -19,7 +20,10 @@ class Options {
     this.options = options;
     this.rootContext = rootContext;
 
-    // init basedir
+    // init basedir, allow to configure template root path used in a templating engine
+    // TODO (reserved for future):
+    //  - OR move the `basedir` option to Plugin Options
+    //  - OR create new `templatingOptions` option in Plugin to pass this object into default engine
     let { basedir } = options;
     if (!basedir) basedir = rootContext;
     if (basedir.slice(-1) !== '/') basedir += '/';
@@ -31,23 +35,63 @@ class Options {
     this.isInit = true;
   }
 
-  // TODO: manual test with serve and add info in readme
   static initWatchFiles() {
-    let watchFiles = this.options.watchFiles;
-    this.watchFiles = [...this.defaultWatchFiles];
+    if (!PluginService.isWatchMode()) return;
 
-    //if (this.isInit && watchFiles) return;
+    const watchFilesOption = PluginService.getOptions().watchFiles;
+    const watchFiles = {
+      // watch files only in the directories, defaults is the project directory
+      paths: [],
 
-    if (watchFiles != null) {
-      if (!Array.isArray(watchFiles)) watchFiles = [watchFiles];
+      // watch only files matched to RegExps,
+      // if empty (defaults) then watch all files, except ignored
+      files: [],
 
-      for (let item of watchFiles) {
-        if (item.constructor.name !== 'RegExp') {
-          item = new RegExp(item);
+      // ignore paths and files matched to RegExps
+      ignore: [
+        /[\\/](node_modules|dist|test)$/, // dirs
+        /[\\/]\..+$/, // hidden dirs and files: .git, .idea, .gitignore, etc.
+        /package(?:-lock)*.json$/,
+        /webpack\.(.+)\.js$/,
+        /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/,
+      ],
+    };
+
+    if (watchFilesOption) {
+      const { paths, files, ignore } = watchFilesOption;
+
+      if (paths) {
+        const entries = Array.isArray(paths) ? paths : [paths];
+        for (let item of entries) {
+          watchFiles.paths.push(item);
         }
-        this.watchFiles.push(item);
+      }
+      if (watchFiles.paths.length === 0) {
+        watchFiles.paths.push(this.rootContext);
+      }
+
+      if (files) {
+        const entries = Array.isArray(files) ? files : [files];
+        for (let item of entries) {
+          if (item.constructor.name !== 'RegExp') {
+            item = new RegExp(item);
+          }
+          watchFiles.files.push(item);
+        }
+      }
+
+      if (ignore) {
+        const entries = Array.isArray(ignore) ? ignore : [ignore];
+        for (let item of entries) {
+          if (item.constructor.name !== 'RegExp') {
+            item = new RegExp(item);
+          }
+          watchFiles.ignore.push(item);
+        }
       }
     }
+
+    this.watchFiles = watchFiles;
   }
 
   /**

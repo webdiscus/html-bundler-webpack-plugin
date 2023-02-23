@@ -22,6 +22,7 @@ const loader = function (content, callback) {
   const { rootContext, resource, resourcePath, resourceQuery } = loaderContext;
   let stage = '';
 
+  // the options must be initialized before others
   Options.init(loaderContext);
 
   // prevent double initialisation with same options, occurs when many entry files used in one webpack config
@@ -96,10 +97,10 @@ module.exports = function (content, map, meta) {
 
   loader.call(loaderContext, content, (error, result) => {
     if (error) {
-      // if HMR is disabled interrupt the compilation process
-      if (loaderContext.hot !== true) return callback(error);
+      // interrupt the compilation process if the watch mode is false
+      if (!PluginService.isWatchMode()) return callback(error);
 
-      // if HMR is enabled emit an error that will be displayed in the output
+      // if watch mode is true, emit an error that will be displayed in the output
       // it will not interrupt the compilation process
       loaderContext.emitError(error);
     }

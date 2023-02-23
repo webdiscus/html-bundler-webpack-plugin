@@ -120,6 +120,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [minify](#option-minify) (minification of generated HTML)
    - [extractComments](#option-extractComments)
    - [verbose](#option-verbose)
+   - [watchFiles](#option-watchFiles)
 3. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
@@ -646,7 +647,93 @@ Type: `boolean` Default: `false`
 
 Display information about all processed files.
 
+
+#### [↑ back to contents](#contents)
+<a id="option-watchFiles" name="option-watchFiles" href="#option-watchFiles"></a>
+### `watchFiles`
+Type:
+```ts
+type watchFiles = {
+  paths?: Array<string>;
+  files?: Array<RegExp>;
+  ignore?: Array<RegExp>;
+}
+```
+
+Default:
+```js
+watchFiles: {
+  paths: ['./'], // projeckt root directory
+  files: [], // if empty, watch all files in `paths`, except `ignore`
+  ignore: [
+    /[\\/](node_modules|dist|test)$/, // ignore standard project dirs
+    /[\\/]\..+$/, // ignore hidden dirs and files, e.g.: .git, .idea, .gitignore, etc.
+    /package(?:-lock)*.json$/, // ingnore npm files
+    /webpack\.(.+)\.js$/, // ignore Webpack config files
+    /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/, // ignore binary assets
+  ],
+}
+```
+
+Allow to configure paths and files to watch file changes in `watch`or `serv` mode.
+
+#### Properties:
+
+- `paths` -  A list of relative or absolute paths to directories where should be watched `files`.
+- `files` - Watch the files specified in `paths`, except `ignore`, that match the regular expressions.
+- `ignore` - Ignore the specified paths or files, that match the regular expressions.
+
+To reduce  CPU or memory usage, it is recommended to at least specify the source files directory in the `paths`.
+
+For example, your project contains many files and folders in the project directory, 
+while all source files are in `./src/` directory, then add it to the `paths`:
+
+```js
+watchFiles: {
+  paths: ['src'],
+},
+```
+
+If the source directory contains many binary files, e.g. `.pdf` `.mov` `.wav` etc., then add them to the `ignore`:
+
+```js
+watchFiles: {
+  paths: ['src'],
+  ignore: [
+    /\.(pdf|mov|wav)$/,
+  ]
+},
+```
+
+or you can add the whole folders to the `ignore`, e.g.:
+
+```js
+watchFiles: {
+  paths: ['src'],
+  ignore: [
+    /[\\/]src[\\/]audio/,
+    /[\\/]src[\\/]image/,
+    /[\\/]src[\\/]video/,
+  ]
+},
+```
+
+Please consider already ignored files by default, see above.
+
+If the source directory contains too many subdirectories and different types of files, 
+then you can specify only those files that should be watched.
+
+```js
+watchFiles: {
+  paths: ['src'],
+  files: [
+    /\.(html|ejs|ts|js|scss|css)$/,
+  ]
+},
+```
+
 ---
+
 
 #### [↑ back to contents](#contents)
 <a id="loader-options" name="loader-options" href="#loader-options"></a>

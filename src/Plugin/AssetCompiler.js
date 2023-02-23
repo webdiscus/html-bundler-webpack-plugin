@@ -330,6 +330,8 @@ class AssetCompiler {
 
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
+      PluginService.setWatchMode(true);
+
       const { publicPath } = compiler.options.output;
       if (publicPath == null || publicPath === 'auto') {
         // By using watch/serve browsers not support an automatic publicPath in HMR script injected into inlined JS,

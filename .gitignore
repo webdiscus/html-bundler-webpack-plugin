@@ -2,9 +2,9 @@
 .idea
 .local
 _ignored
-package-lock.json
 coverage
 coverage.lcov
 node_modules
 dist
 test/output/
+**/package-lock.json

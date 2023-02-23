@@ -1,5 +1,8 @@
 # Change log
 
+## 1.3.0 (2023-02-23)
+- feat: add `watchFiles` option to configure paths and files to watch file changes
+
 ## 1.2.1 (2023-02-22)
 - fix: resolve correct output asset path when the publicPath is a URL
 - docs: add description of important Webpack options used to properly configure the plugin

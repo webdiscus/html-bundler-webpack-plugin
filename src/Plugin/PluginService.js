@@ -6,6 +6,8 @@ class PluginService {
   static used = false;
   static options = null;
   static contextCache = new Set();
+  static compiler = null;
+  static watchMode = false;
 
   /**
    * Set use state of the plugin.
@@ -19,6 +21,22 @@ class PluginService {
   static init(options) {
     this.used = true;
     this.options = options;
+  }
+
+  /**
+   * @param {boolean} mode The mode is true when Webpack run as watch/serve.
+   */
+  static setWatchMode(mode) {
+    this.watchMode = mode;
+  }
+
+  /**
+   * Returns plugin options.
+   *
+   * @return {null}
+   */
+  static getOptions() {
+    return this.options;
   }
 
   /**
@@ -36,6 +54,10 @@ class PluginService {
    */
   static isUsed() {
     return this.used;
+  }
+
+  static isWatchMode() {
+    return this.watchMode;
   }
 
   static isCached(context) {

@@ -1,9 +1,11 @@
 const ansis = require('ansis');
-const { bgRed, redBright, yellow, cyan } = require('ansis/colors');
+const { bgRed, redBright, yellow, cyan, green } = require('ansis/colors');
 const { loaderName } = require('../config');
+const { pluginName } = require('../../config');
 
 const loaderHeader = `\n${bgRed.whiteBright` ${loaderName} `}`;
 const loaderHeaderHtml = `<span style="color:#e36049">[${loaderName}]</span>`;
+const pluginHeader = `\n${bgRed.whiteBright` ${pluginName} `}`;
 let lastError = null;
 
 class LoaderException extends Error {
@@ -29,7 +31,10 @@ const LoaderError = function (message, error = '') {
     lastError = error.toString();
     throw new Error(lastError);
   }
-  lastError = message + `\n\n${redBright`Original Error:`}\n` + error;
+  lastError = message;
+
+  if (error) lastError += `\n\n${redBright`Original Error:`}\n` + error;
+
   throw new LoaderException(lastError);
 };
 
@@ -44,6 +49,19 @@ const resolveException = (error, file, templateFile) => {
     `${loaderHeader} The file ${yellow`'${file}'`} can't be resolved in the template ` + cyan(templateFile);
 
   LoaderError(message, error);
+};
+
+/**
+ * @param {string} dir Not founded directory.
+ * @param {Array} paths The `watchFiles.paths` option.
+ */
+const watchPathsException = (dir, paths) => {
+  const message =
+    `${pluginHeader} The watch directory not found ${yellow`'${dir}'`}.\n` +
+    `Check the ${green`watchFiles.paths`} option:\n` +
+    cyan(JSON.stringify(paths, null, '  '));
+
+  LoaderError(message, '');
 };
 
 /**
@@ -103,6 +121,7 @@ module.exports = {
   LoaderError,
   errorToHtml,
   resolveException,
+  watchPathsException,
   preprocessorErrorToString,
   compileErrorToString,
   exportErrorToString,
