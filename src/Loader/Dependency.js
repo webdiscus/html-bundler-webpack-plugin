@@ -61,9 +61,7 @@ class Dependency {
     const { loaderContext } = this;
     const files = Array.from(this.files);
 
-    if (loaderContext != null) {
-      files.forEach(loaderContext.addDependency);
-    }
+    files.forEach(loaderContext.addDependency);
   }
 
   /**

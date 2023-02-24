@@ -1,7 +1,9 @@
 const { merge } = require('webpack-merge');
-const { parseQuery } = require('./Utils');
+const PluginService = require('../Plugin/PluginService');
+const Resolver = require('./Resolver');
 const RenderMethod = require('./methods/RenderMethod');
 const Options = require('./Options');
+const { parseQuery } = require('./Utils');
 
 class Loader {
   static compiler = null;
@@ -13,14 +15,19 @@ class Loader {
   ];
 
   /**
-   * @param {string} resourcePath The template file.
-   * @param {string} resourceQuery The URL query of template.
+   * @param {Object} loaderContext
    */
-  static init({ resourcePath: templateFile, resourceQuery }) {
+  static init(loaderContext) {
+    const { rootContext, resourcePath: templateFile, resourceQuery } = loaderContext;
     const { data, esModule, method, name: templateName, self: useSelf } = Options.get();
 
     // the rule: a query method override a global method defined in the loader options
     const queryData = parseQuery(resourceQuery);
+
+    // prevent double initialisation with same options, occurs when many entry files used in one webpack config
+    if (!PluginService.isCached(rootContext)) {
+      Resolver.init(rootContext);
+    }
 
     this.compiler = this.compilerFactory({
       method,

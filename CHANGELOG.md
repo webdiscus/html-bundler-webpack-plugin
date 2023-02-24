@@ -1,5 +1,9 @@
 # Change log
 
+## 1.3.1 (2023-02-24)
+- fix: after an error, restore watching without restarting
+- refactor: improve the loader code
+
 ## 1.3.0 (2023-02-23)
 - feat: add `watchFiles` option to configure paths and files to watch file changes
 

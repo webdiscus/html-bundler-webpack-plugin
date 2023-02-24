@@ -162,7 +162,7 @@ class Options {
    * Returns preprocessor.
    * Note: the default preprocessor use the Eta templating engine.
    *
-   * @return {null|(function(string, {data?: {}}): Promise|string)}
+   * @return {null|(function(string, {data?: {}}): Promise|string|null)}
    */
   static getPreprocessor() {
     if (typeof this.options.preprocessor === 'function') {

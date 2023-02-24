@@ -2,7 +2,6 @@ const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const Template = require('./Template');
 const Loader = require('./Loader');
-const Resolver = require('./Resolver');
 const Dependency = require('./Dependency');
 const Options = require('./Options');
 const {
@@ -13,24 +12,33 @@ const {
 } = require('./Messages/Exeptions');
 
 /**
- * @param {string} content The HTML template.
- * @param {function(error: Error|null, result: string?)?} callback The asynchronous callback function.
- * @return {string|undefined}
+ * @param {string} content
+ * @param {any} map
+ * @param {any} meta
  */
-const loader = function (content, callback) {
+const loader = function (content, map, meta) {
   const loaderContext = this;
-  const { rootContext, resource, resourcePath, resourceQuery } = loaderContext;
+  const loaderCallback = loaderContext.async();
+  const { loaderIndex, rootContext, resource, resourcePath } = loaderContext;
   let stage = '';
+
+  const callback = (error, result) => {
+    if (error) {
+      // in build mode, abort the compilation process and display an error in the output
+      if (!PluginService.isWatchMode()) return loaderCallback(error);
+
+      // in watch mode, display an error in the output without abort the compilation process
+      loaderContext.emitError(error);
+    }
+
+    loaderCallback(null, result, map, meta);
+  };
+
+  if (loaderContext.cacheable != null) loaderContext.cacheable(true);
 
   // the options must be initialized before others
   Options.init(loaderContext);
-
-  // prevent double initialisation with same options, occurs when many entry files used in one webpack config
-  if (!PluginService.isCached(rootContext)) {
-    Resolver.init(rootContext);
-  }
-
-  Loader.init({ resourcePath, resourceQuery });
+  Loader.init(loaderContext);
   Dependency.init(loaderContext);
 
   new Promise((resolve) => {
@@ -39,7 +47,12 @@ const loader = function (content, callback) {
     stage = 'preprocessor';
 
     if (preprocessor != null) {
-      // the preprocessor can return a string, promise or null
+      // set data specified in 'entry' option of the plugin
+      if (loaderContext.entryData != null) {
+        const loaderObject = loaderContext.loaders[loaderIndex];
+        loaderObject.data = loaderContext.entryData;
+        delete loaderContext.entryData;
+      }
       result = preprocessor(content, loaderContext);
     }
     resolve(result != null ? result : content);
@@ -76,35 +89,10 @@ const loader = function (content, callback) {
       }
 
       const browserError = Loader.exportError(message, resource);
+
+      Dependency.watch();
       callback(message, browserError);
     });
 };
 
-module.exports = function (content, map, meta) {
-  const loaderContext = this;
-  const callback = loaderContext.async();
-
-  if (loaderContext.cacheable != null) loaderContext.cacheable(true);
-
-  // note: the 'entryData' is the custom property defined in the plugin
-  // set the origin 'data' property of loader context,
-  // see https://webpack.js.org/api/loaders/#thisdata
-  if (loaderContext.entryData != null) {
-    const loader = loaderContext.loaders[loaderContext.loaderIndex];
-    loader.data = loaderContext.entryData;
-    delete loaderContext.entryData;
-  }
-
-  loader.call(loaderContext, content, (error, result) => {
-    if (error) {
-      // interrupt the compilation process if the watch mode is false
-      if (!PluginService.isWatchMode()) return callback(error);
-
-      // if watch mode is true, emit an error that will be displayed in the output
-      // it will not interrupt the compilation process
-      loaderContext.emitError(error);
-    }
-
-    callback(null, result, map, meta);
-  });
-};
+module.exports = loader;

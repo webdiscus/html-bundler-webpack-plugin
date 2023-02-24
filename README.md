@@ -25,7 +25,7 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 - An **entry point** is an HTML template.
 - Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>` tags.
-- Resolving source **assets** specified in default attributes `href` `src` `srcset` etc.
+- Resolving source **assets** specified in standard attributes `href` `src` `srcset` etc.
 - Inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
 - Using template engines [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others **without template loaders**.
 - Support for both `async` and `sync` preprocessor
@@ -34,8 +34,7 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 You specify all the source scripts and styles in **one right place** (in HTML), 
 instead of defining them in **many non-logic places**: 
-defining JS files in Webpack Entry (🥴),
-importing SCSS into a JS file (an absolute anti-pattern 🤯).
+defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 

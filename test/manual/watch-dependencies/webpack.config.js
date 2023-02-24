@@ -3,6 +3,7 @@ const HtmlBundlerPlugin = require('../../..');
 
 module.exports = {
   mode: 'production',
+  stats: 'minimal',
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -41,7 +42,7 @@ module.exports = {
 
   // enable HMR with live reload
   devServer: {
-    hot: false,
+    //hot: false,
     static: {
       directory: path.join(__dirname, 'dist'),
     },
