@@ -1,6 +1,7 @@
 import path from 'path';
+import ansis from 'ansis';
 import { readDirRecursiveSync, readTextFileSync } from './file';
-import { compile } from './webpack';
+import { compile, watch } from './webpack';
 
 /**
  * This is the patch for some environments, like `jest`.
@@ -54,12 +55,43 @@ export const exceptionContain = function (PATHS, relTestCasePath, containString,
     });
 };
 
+export const watchExceptionContain = function (PATHS, relTestCasePath, containString, done) {
+  watch(PATHS, relTestCasePath, {}, (watching) => {
+    watching.close();
+  })
+    .then(() => {
+      throw new Error('the test should throw an error');
+    })
+    .catch((error) => {
+      expect(error.toString()).toContain(containString);
+      done();
+    });
+};
+
 export const stdoutContain = function (PATHS, relTestCasePath, containString, done) {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   compile(PATHS, relTestCasePath, {}).then(() => {
     const { calls } = stdout.mock;
     const output = calls.length > 0 ? calls[0][0] : '';
+
+    stdout.mockClear();
+    stdout.mockRestore();
+
+    expect(output).toContain(containString);
+    done();
+  });
+};
+
+export const watchStdoutContain = function (PATHS, relTestCasePath, containString, done) {
+  const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
+
+  watch(PATHS, relTestCasePath, {}, (watching) => {
+    watching.close();
+  }).then(() => {
+    const { calls } = stdout.mock;
+    let output = calls.length > 0 ? calls[0][0] : '';
+    output = ansis.strip(output);
 
     stdout.mockClear();
     stdout.mockRestore();

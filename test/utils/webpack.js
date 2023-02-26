@@ -47,6 +47,7 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
     }
 
     const compiler = webpack(config);
+
     compiler.run((error, stats) => {
       if (error) {
         reject('[webpack compiler] ' + error);
@@ -56,6 +57,49 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
       if (stats.hasErrors()) {
         reject('[webpack compiler stats] ' + stats.toString());
         return;
+      }
+
+      resolve(stats);
+    });
+  });
+
+export const watch = (
+  PATHS,
+  testCasePath,
+  webpackOpts,
+  onWatch = (watching) => {
+    watching.close((err) => {
+      console.log('Watching Ended.', err);
+    });
+  }
+) =>
+  new Promise((resolve, reject) => {
+    let config;
+
+    try {
+      config = prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
+    } catch (error) {
+      reject('[webpack watch prepare config] ' + error.toString());
+      return;
+    }
+
+    const compiler = webpack(config);
+
+    const watching = compiler.watch({ aggregateTimeout: 100, poll: undefined }, (error, stats) => {
+      if (error) {
+        reject('[webpack watch] ' + error);
+        watching.close();
+        return;
+      }
+
+      if (stats.hasErrors()) {
+        reject('[webpack watch stats] ' + stats.toString());
+        watching.close();
+        return;
+      }
+
+      if (typeof onWatch === 'function') {
+        onWatch(watching);
       }
 
       resolve(stats);

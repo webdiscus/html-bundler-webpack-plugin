@@ -1,4 +1,10 @@
-import { compareFileListAndContent, exceptionContain, stdoutContain } from './utils/helpers';
+import {
+  compareFileListAndContent,
+  exceptionContain,
+  stdoutContain,
+  watchExceptionContain,
+  watchStdoutContain,
+} from './utils/helpers';
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Plugin/Utils';
 import AssetEntry from '../src/Plugin/AssetEntry';
@@ -161,12 +167,6 @@ describe('parse tags unit tests', () => {
 });
 
 describe('AssetEntry unit tests', () => {
-  test('inEntry false', (done) => {
-    const received = AssetEntry.inEntry('file.js');
-    expect(received).toBeFalsy();
-    done();
-  });
-
   test('reset', (done) => {
     AssetEntry.compilationEntryNames = new Set(['home', 'about']);
     AssetEntry.reset();
@@ -316,6 +316,30 @@ describe('plugin options', () => {
   });
 });
 
+describe('option watchFiles', () => {
+  test('watchFiles.paths', (done) => {
+    const containString = `
+- src/index.html
+- src/main.js
+- src/style.css`;
+    watchStdoutContain(PATHS, 'option-watchFiles-paths', containString, done);
+  });
+
+  test('watchFiles.files', (done) => {
+    const containString = `
+- src/index.html
+- src/style.css`;
+    watchStdoutContain(PATHS, 'option-watchFiles-files', containString, done);
+  });
+
+  test('watchFiles.ignore', (done) => {
+    const containString = `
+- src/index.html
+- src/main.js`;
+    watchStdoutContain(PATHS, 'option-watchFiles-ignore', containString, done);
+  });
+});
+
 describe('loader options', () => {
   test('defaults option when in module.rules is not defined', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-defaults', done);
@@ -343,12 +367,6 @@ describe('loader options', () => {
 
   test('preprocessor return null', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-return-null', done);
-  });
-});
-
-describe('loader options (non-documented)', () => {
-  test('watchFiles', (done) => {
-    compareFileListAndContent(PATHS, 'loader-option-watchFiles', done);
   });
 });
 
@@ -542,6 +560,11 @@ describe('loader exceptions', () => {
   test('exception export', (done) => {
     const containString = 'Export of compiled template failed';
     exceptionContain(PATHS, 'msg-exception-loader-export', containString, done);
+  });
+
+  test('watchFiles.paths: dir not found', (done) => {
+    const containString = `The watch directory not found`;
+    watchExceptionContain(PATHS, 'msg-exception-plugin-option-watchFiles-paths', containString, done);
   });
 });
 

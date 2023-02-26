@@ -1,21 +1,10 @@
 const { pluginName } = require('../../config');
 const { pathRelativeByPwd, outToConsole, isFunction } = require('../Utils');
-const {
-  green,
-  greenBright,
-  cyan,
-  cyanBright,
-  magenta,
-  yellowBright,
-  black,
-  gray,
-  ansi,
-  yellow,
-} = require('ansis/colors');
+const { green, greenBright, cyan, cyanBright, magenta, yellowBright, black, ansi, yellow } = require('ansis/colors');
 const Asset = require('../Asset');
 
 const grayBright = ansi(245);
-const header = black.bgGreen`[${pluginName}]`;
+const header = black.bgGreen` ${pluginName} `;
 
 // max width of labels in first column
 const padWidth = 12;

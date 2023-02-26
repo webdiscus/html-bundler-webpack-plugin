@@ -1,5 +1,6 @@
 const Eta = require('eta');
 const PluginService = require('../Plugin/PluginService');
+const { outToConsole } = require('../Common/Helpers');
 
 /**
  * @typedef OptionSources
@@ -38,7 +39,6 @@ class Options {
   static initWatchFiles() {
     if (!PluginService.isWatchMode()) return;
 
-    const watchFilesOption = PluginService.getOptions().watchFiles;
     const watchFiles = {
       // watch files only in the directories, defaults is the project directory
       paths: [],
@@ -51,43 +51,41 @@ class Options {
       ignore: [
         /[\\/](node_modules|dist|test)$/, // dirs
         /[\\/]\..+$/, // hidden dirs and files: .git, .idea, .gitignore, etc.
-        /package(?:-lock)*.json$/,
+        /package(?:-lock)*\.json$/,
         /webpack\.(.+)\.js$/,
         /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/,
       ],
     };
 
-    if (watchFilesOption) {
-      const { paths, files, ignore } = watchFilesOption;
+    const { paths, files, ignore } = PluginService.getOptions().getWatchFiles();
 
-      if (paths) {
-        const entries = Array.isArray(paths) ? paths : [paths];
-        for (let item of entries) {
-          watchFiles.paths.push(item);
-        }
+    if (paths) {
+      const entries = Array.isArray(paths) ? paths : [paths];
+      for (let item of entries) {
+        watchFiles.paths.push(item);
       }
-      if (watchFiles.paths.length === 0) {
-        watchFiles.paths.push(this.rootContext);
-      }
+    }
+    if (watchFiles.paths.length < 1) {
+      watchFiles.paths.push(this.rootContext);
+    }
 
-      if (files) {
-        const entries = Array.isArray(files) ? files : [files];
-        for (let item of entries) {
-          if (item.constructor.name !== 'RegExp') {
-            item = new RegExp(item);
-          }
-          watchFiles.files.push(item);
+    if (files) {
+      const entries = Array.isArray(files) ? files : [files];
+      for (let item of entries) {
+        if (item.constructor.name !== 'RegExp') {
+          item = new RegExp(item);
         }
+        watchFiles.files.push(item);
       }
+    }
 
-      if (ignore) {
-        const entries = Array.isArray(ignore) ? ignore : [ignore];
-        for (let item of entries) {
-          if (item.constructor.name !== 'RegExp') {
-            item = new RegExp(item);
-          }
-          watchFiles.ignore.push(item);
+    if (ignore) {
+      const entries = Array.isArray(ignore) ? ignore : [ignore];
+      for (let item of entries) {
+        if (item.constructor.name !== 'RegExp') {
+          item = new RegExp(item);
         }
+        watchFiles.ignore.push(item);
       }
     }
 

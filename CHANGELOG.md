@@ -1,5 +1,13 @@
 # Change log
 
+## 1.4.0 (2023-02-26)
+- feat: display watch files in watch/serv mode when verbose option is enabled
+- feat: add `auto` value for the `verbose` option
+- refactor: improve the code structure
+- test: add tests for watch mode
+- chore: add GitHub test badge
+- docs: improve readme
+
 ## 1.3.1 (2023-02-24)
 - fix: after an error, restore watching without restarting
 - refactor: improve the loader code

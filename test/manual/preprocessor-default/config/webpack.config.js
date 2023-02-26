@@ -5,7 +5,8 @@ module.exports = {
   mode: 'production',
 
   output: {
-    path: path.join(__dirname, 'dist/'),
+    // note: when webpack config is loaded from subdirectory, must be used process.cwd() instead of __dirname
+    path: path.join(process.cwd(), 'dist/'),
   },
 
   plugins: [
@@ -21,6 +22,7 @@ module.exports = {
           },
         },
       },
+      verbose: true,
     }),
   ],
 
@@ -39,7 +41,7 @@ module.exports = {
   // enable HMR with live reload
   devServer: {
     static: {
-      directory: path.join(__dirname, 'dist'),
+      directory: path.join(process.cwd(), 'dist'),
     },
     watchFiles: {
       paths: ['src/**/*.*'],

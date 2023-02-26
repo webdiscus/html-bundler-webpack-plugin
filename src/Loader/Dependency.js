@@ -2,7 +2,9 @@ const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const Options = require('./Options');
 const { isWin } = require('./Utils');
+const { verboseWatchFiles } = require('./Messages/Info');
 const { watchPathsException } = require('./Messages/Exeptions');
+const { outToConsole } = require('../Common/Helpers');
 
 /**
  * Dependencies in code for watching a changes.
@@ -62,6 +64,10 @@ class Dependency {
     const files = Array.from(this.files);
 
     files.forEach(loaderContext.addDependency);
+
+    if (PluginService.getOptions().isVerbose()) {
+      verboseWatchFiles([...this.files]);
+    }
   }
 
   /**

@@ -2,12 +2,17 @@
  * The plugin services for common usage.
  * The instance available both in the plugin and loader.
  */
+
+/** @typedef {import('Options')} PluginOptionInstance */
+
 class PluginService {
+  /** @type PluginOptionInstance Provide to use the plugin option instance in the loader. */
+  static #options = null;
+
   static used = false;
-  static options = null;
   static contextCache = new Set();
   static compiler = null;
-  static watchMode = false;
+  static watchMode;
 
   /**
    * Set use state of the plugin.
@@ -16,11 +21,12 @@ class PluginService {
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
-   * @param {{}} options The options of the plugin.
+   * @param {PluginOptionInstance} options The plugin options instance.
    */
   static init(options) {
     this.used = true;
-    this.options = options;
+    this.#options = options;
+    this.watchMode = false;
   }
 
   /**
@@ -31,25 +37,16 @@ class PluginService {
   }
 
   /**
-   * Returns plugin options.
+   * Returns plugin options instance.
    *
-   * @return {null}
+   * @return {PluginOptionInstance}
    */
   static getOptions() {
-    return this.options;
+    return this.#options;
   }
 
   /**
-   * Return a list of resolve restrictions to restrict the paths that a request can be resolved on.
-   * @see https://webpack.js.org/configuration/resolve/#resolverestrictions
-   * @return {Array<RegExp|string>}
-   */
-  static getStyleRestrictions() {
-    return this.options ? [this.options.extractCss?.test] : [];
-  }
-
-  /**
-   * Whether is the plugin used.
+   * Whether the plugin is defined in Webpack configuration.
    * @return {boolean}
    */
   static isUsed() {

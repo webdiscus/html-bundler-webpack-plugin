@@ -25,6 +25,7 @@ module.exports = {
         //files: [/\.(html|js|sc?ss)$/],
         //ignore: [],
       },
+      verbose: true,
     }),
   ],
 

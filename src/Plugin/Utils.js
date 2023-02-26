@@ -1,22 +1,4 @@
-const path = require('path');
-
-const { isWin, isFunction, workingDir, pathToPosix, parseQuery, outToConsole } = require('../Common/Helpers');
-
-/**
- * Return path of file relative by working directory.
- *
- * @param {string} file
- * @return {string}
- */
-const pathRelativeByPwd = (file) => {
-  if (file.startsWith(workingDir)) {
-    let relPath = path.relative(workingDir, file);
-
-    return path.extname(file) ? relPath : path.join(relPath, path.sep);
-  }
-
-  return file;
-};
+const { isWin, isFunction, pathRelativeByPwd, pathToPosix, parseQuery, outToConsole } = require('../Common/Helpers');
 
 /**
  * Parse resource path and raw query from request.

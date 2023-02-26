@@ -2,7 +2,7 @@ const { black, yellow, cyan, magenta } = require('ansis/colors');
 const { pluginName } = require('../../config');
 const { outToConsole, parseRequest } = require('../Utils');
 
-const header = `\n${black.bgYellow`[${pluginName}] WARNING`} `;
+const header = `\n${black.bgYellow` ${pluginName} `}${black.bgAnsi(227)` WARNING `} `;
 
 const duplicateScriptWarning = (request, issuer) => {
   const { resource } = parseRequest(request);

@@ -11,6 +11,7 @@
 [![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen "npm package")](https://www.npmjs.com/package/html-bundler-webpack-plugin "download npm package")
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/html-bundler-webpack-plugin/peer/webpack)](https://webpack.js.org/)
+[![Test](https://github.com/webdiscus/html-bundler-webpack-plugin/actions/workflows/test.yml/badge.svg)](https://github.com/webdiscus/html-bundler-webpack-plugin/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
@@ -113,8 +114,8 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [entry](#option-entry) (define HTML templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
-   - [css](#option-css) (output filename of extracted CSS)
    - [js](#option-js) (output filename of extracted JS)
+   - [css](#option-css) (output filename of extracted CSS)
    - [postprocess](#option-postprocess)
    - [minify](#option-minify) (minification of generated HTML)
    - [extractComments](#option-extractComments)
@@ -443,19 +444,69 @@ The output directory for processed file. This directory can be relative by `webp
 ### `filename`
 Type: `string | Function` Default: `[name].html`
 
-The output filename relative by the [`outputPath`](#option-outputPath) option.
+The HTML output filename relative by the [`outputPath`](#option-outputPath) option.
 
-- If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
+If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
   - `[id]` The ID of the chunk.
-  - `[name]` Only filename without extension or path.
+  - `[name]` The filename without extension or path.
   - `[contenthash]` The hash of the content.
   - `[contenthash:nn]` The `nn` is the length of hashes (defaults to 20).
-- If type is `Function` then following arguments are available in the function:
+
+If type is `Function` then following arguments are available in the function:
   - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
     - `pathData.filename` the full path to source file
     - `pathData.chunk.name` the name of entry key
   - `@param {AssetInfo} assetInfo` Mostly this object is empty.
   - `@return {string}` The name or template string of output file.
+
+
+#### [↑ back to contents](#contents)
+<a id="option-js" name="option-js" href="#option-js"></a>
+### `js`
+Type: `Object`\
+Default properties:
+```js
+{
+  filename: '[name].js', 
+  outputPath: null,
+  verbose: false,
+}
+```
+
+- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).\
+- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `verbose` - enable/disable display process information for styles
+
+The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
+
+This is the option to extract JS from a script source file specified in the HTML tag:
+```html
+<script src="./main.js"></script>
+```
+
+The default JS output filename is `[name].js`.
+You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      js: {
+        filename: 'assets/js/[name].[contenthash:8].js',
+      },
+    }),
+  ],
+};
+```
+
+The `[name]` is the base filename script.
+For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
+If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
+
+> **Note**
+>
+> To display all extracted JS files, enable the [`verbose`](#option-verbose) option.
 
 
 #### [↑ back to contents](#contents)
@@ -512,49 +563,9 @@ If you want to have a different output filename, you can use the `filename` opti
 > Don't use `mini-css-extract-plugin` or `style-loader`, they are not required more.\
 > The `html-bundler-webpack-plugin` extracts CSS much faster than other plugins and resolves all asset URLs in CSS, therefore the `resolve-url-loader` is redundant too.
 
-#### [↑ back to contents](#contents)
-<a id="option-js" name="option-js" href="#option-js"></a>
-### `js`
-Type: `Object`\
-Default properties:
-```js
-{
-  filename: '[name].js', 
-  outputPath: null,
-  verbose: false,
-}
-```
-
-- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).\
-- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
-- `verbose` - enable/disable display process information for styles
-
-The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
-
-This is the option to extract JS from a script source file specified in the HTML tag:
-```html
-<script src="./main.js"></script>
-```
-
-The default JS output filename is `[name].js`. 
-You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
-      },
-    }),
-  ],
-};
-```
-
-The `[name]` is the base filename script.
-For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
-If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
+> **Note**
+>
+> To display all extracted CSS files, enable the [`verbose`](#option-verbose) option.
 
 #### [↑ back to contents](#contents)
 <a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
@@ -622,10 +633,10 @@ For minification generated HTML is used the [html-minifier-terser](https://githu
 ```
 
 Possible values:
-- `false` - the default value disable minification
+- `false` - disable minification
 - `true` - enable minification with default options
 - `auto` - in `development` mode disable minification, in `production` mode enable minification
-- `{}` - the object to set custom options, this object are merged with default options, see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
+- `{}` - an object to set custom options, this object are merged with `default options`, see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
 
 
 <a id="option-extractComments" name="option-extractComments" href="#option-extractComments"></a>
@@ -642,9 +653,18 @@ But if you want to extract files like `*.LICENSE.txt`, set this option to `true`
 
 <a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
 ### `verbose`
-Type: `boolean` Default: `false`
+Type: `string|boolean` Default: `false`
 
-Display information about all processed files.
+The verbose option allow to display detailed processing information in console.
+
+Possible values:
+- `false` - do not display information
+- `true` - display information
+- `auto` - in `development` mode enable verbose, in `production` mode disable verbose
+
+> **Note**
+> 
+> If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
 
 
 #### [↑ back to contents](#contents)
@@ -662,19 +682,19 @@ type watchFiles = {
 Default:
 ```js
 watchFiles: {
-  paths: ['./'], // projeckt root directory
+  paths: ['./'], // project root directory
   files: [], // if empty, watch all files in `paths`, except `ignore`
   ignore: [
     /[\\/](node_modules|dist|test)$/, // ignore standard project dirs
     /[\\/]\..+$/, // ignore hidden dirs and files, e.g.: .git, .idea, .gitignore, etc.
-    /package(?:-lock)*.json$/, // ingnore npm files
+    /package(?:-lock)*\.json$/, // ingnore npm files
     /webpack\.(.+)\.js$/, // ignore Webpack config files
     /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/, // ignore binary assets
   ],
 }
 ```
 
-Allow to configure paths and files to watch file changes in `watch`or `serv` mode.
+Allow to configure paths and files to watch file changes in `watch` or `serv` mode.
 
 #### Properties:
 
@@ -731,6 +751,9 @@ watchFiles: {
 },
 ```
 
+> **Note**
+> 
+> To display all watched files, enable the [`verbose`](#option-verbose) option.
 ---
 
 

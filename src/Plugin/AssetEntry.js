@@ -1,5 +1,29 @@
 const path = require('path');
 const { isFunction } = require('./Utils');
+const Options = require('./Options');
+
+/**
+ * @typedef {Object} AssetEntryOptions
+ * @property {string} name The key of webpack entry.
+ * @property {string} file The output asset file with absolute path.
+ * @property {string} assetFile The output asset file with relative path by webpack output path.
+ *   Note: the method compilation.emitAsset() use this file as key of assets object
+ *   and save the file relative by output path, defined in webpack.options.output.path.
+ * @property {string|function(PathData, AssetInfo): string} filenameTemplate The filename template or function.
+ * @property {string} filename The asset filename.
+ *  The template strings support only these substitutions: [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
+ *  See https://webpack.js.org/configuration/output/#outputfilename
+ * @property {string} request The full path of import file with query.
+ * @property {string} importFile The import file only w/o query.
+ * @property {string} outputPath
+ * @property {string} sourcePath
+ * @property {{name: string, type: string}} library Define the output a js file.
+ *  See https://webpack.js.org/configuration/output/#outputlibrary
+ * @property {function(string, AssetInfo, Compilation): string} [postprocess = null] The post process for extracted content from entry.
+ * @property {function(): string|null =} extract
+ * @property {Array} resources
+ * @property {boolean|string} [verbose = false] Show an information by handles of the entry in a postprocess.
+ */
 
 class AssetEntry {
   /** @type {Map<string, AssetEntryOptions>} */
@@ -8,6 +32,10 @@ class AssetEntry {
 
   static compilation = null;
   static EntryPlugin = null;
+
+  // the id to bind loader with data passed into template via entry.data
+  static dataIndex = 1;
+  static data = new Map();
 
   /**
    * @param {string} outputPath The Webpack output path.
@@ -32,11 +60,85 @@ class AssetEntry {
     return this.entryMap.get(name);
   }
 
+  static getData(id) {
+    return this.data.get(id);
+  }
+
+  /**
+   * @param {Array<Object>} entries
+   * @param {Object} entryLibrary
+   */
+  static addEntries(entries, { entryLibrary }) {
+    for (let name in entries) {
+      const entry = entries[name];
+      const importFile = entry.import[0];
+      let request = importFile;
+      let [sourceFile] = importFile.split('?', 1);
+      const module = Options.getModule(sourceFile);
+      let { filename: filenameTemplate, sourcePath, outputPath, postprocess, extract } = Options.get();
+      let verbose = Options.isVerbose();
+
+      if (!Options.isEntry(sourceFile) && !module) continue;
+
+      if (!entry.library) entry.library = entryLibrary;
+
+      if (module) {
+        if (module.hasOwnProperty('verbose')) verbose = Options.isTrue(module.verbose, false);
+        if (module.filename) filenameTemplate = module.filename;
+        if (module.sourcePath) sourcePath = module.sourcePath;
+        if (module.outputPath) outputPath = module.outputPath;
+        if (module.postprocess) postprocess = module.postprocess;
+        if (module.extract) extract = module.extract;
+      }
+      if (entry.filename) filenameTemplate = entry.filename;
+
+      if (!path.isAbsolute(sourceFile)) {
+        request = path.join(sourcePath, request);
+        sourceFile = path.join(sourcePath, sourceFile);
+        entry.import[0] = path.join(sourcePath, importFile);
+      }
+
+      /** @type {AssetEntryOptions} */
+      const assetEntryOptions = {
+        name,
+        filenameTemplate,
+        filename: undefined,
+        file: undefined,
+        request,
+        importFile: sourceFile,
+        sourcePath,
+        outputPath,
+        library: entry.library,
+        postprocess: isFunction(postprocess) ? postprocess : null,
+        extract: isFunction(extract) ? extract : null,
+        verbose,
+      };
+
+      if (entry.data) {
+        // IMPORTANT: when the entry contains same source file for many chunks, for example:
+        // {
+        //   page1: { import: 'src/template.html', data: { title: 'A'} },
+        //   page2: { import: 'src/template.html', data: { title: 'B'} },
+        // }
+        // add an unique identifier of the entry to execute a loader for all templates,
+        // otherwise Webpack call a loader only for the first template.
+        // See 'webpack/lib/NormalModule.js:identifier()'.
+
+        entry.layer = `__entryDataId=${this.dataIndex}`;
+        this.data.set(`${this.dataIndex}`, entry.data);
+        this.dataIndex++;
+      }
+
+      this.#add(entry, assetEntryOptions);
+    }
+  }
+
   /**
    * @param {{}} entry The webpack entry object.
    * @param {AssetEntryOptions} assetEntryOptions
+   * @private
    */
-  static add(entry, assetEntryOptions) {
+  static #add(entry, assetEntryOptions) {
     const { name, outputPath, filenameTemplate } = assetEntryOptions;
     const relativeOutputPath = path.isAbsolute(outputPath)
       ? path.relative(this.webpackOutputPath, outputPath)
@@ -74,7 +176,7 @@ class AssetEntry {
    */
   static addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
     // skip duplicate entries
-    if (this.inEntry(name, importFile)) return false;
+    if (this.#exists(name, importFile)) return false;
 
     const entry = {
       name,
@@ -103,7 +205,7 @@ class AssetEntry {
       verbose: false,
     };
 
-    this.add(entry, assetEntryOptions);
+    this.#add(entry, assetEntryOptions);
     this.compilationEntryNames.add(name);
 
     // adds the entry of the script from the template to the compilation
@@ -134,8 +236,9 @@ class AssetEntry {
    * @param {string} name The name of the entry.
    * @param {string} file The source file.
    * @return {boolean}
+   * @private
    */
-  static inEntry(name, file) {
+  static #exists(name, file) {
     const entry = this.entryMap.get(name);
     return entry && entry.importFile === file;
   }

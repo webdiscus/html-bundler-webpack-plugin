@@ -1,36 +1,21 @@
 const { minify } = require('html-minifier-terser');
+const Options = require('./Plugin/Options');
 const AssetCompiler = require('./Plugin/AssetCompiler');
 const loader = require.resolve('./Loader');
 const { isWin } = require('./Common/Helpers');
 
 /**
- * @typedef {Object} PluginOptions
- * @property {RegExp} [test = /\.(html)$/] The search for a match of entry files.
- * @property {boolean} [enabled = true] Enable/disable the plugin.
- * @property {boolean} [verbose = false] Show the information at processing entry files.
+ * @typedef {PluginOptions} HtmlBundlerPluginOptions
  * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
- * @property {string|null} [sourcePath = options.context] The absolute path to sources.
- * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].html'] The file name of output file.
- *   See https://webpack.js.org/configuration/output/#outputfilename.
- *   Must be an absolute or a relative by the context path.
- * @property {function(string, ResourceInfo, Compilation): string|null} postprocess The post process for extracted content from entry.
- * @property {Array<ModuleOptions>} [modules = []]
- * @property {ModuleOptions|{}} css The options for embedded plugin module to extract CSS.
- * @property {ExtractJsOptions|{}} js The options for embedded plugin module to extract CSS.
- * @property {boolean} [`extractComments` = false] Whether comments shall be extracted to a separate file.
- *   If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
- *   This option enable/disable storing of *.LICENSE.txt file.
- *   For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
  */
 
 class Plugin extends AssetCompiler {
   /**
-   * @param {PluginOptions|{}} options
+   * @param {HtmlBundlerPluginOptions|{}} options
    */
   constructor(options = {}) {
     const PluginOptions = {
-      test: /\.(html|ejs)$/,
+      test: /\.(html|ejs|eta)$/,
       enabled: true,
       verbose: false,
       minify: false,
@@ -62,7 +47,7 @@ class Plugin extends AssetCompiler {
     // Note: the default templating engine is Eta.
     // Eta is a smaller and faster alternative to EJS with the same syntax.
     const defaultLoader = {
-      test: /\.(html|ejs|eta)$/,
+      test: Options.get().test,
       loader,
     };
 
@@ -86,12 +71,12 @@ class Plugin extends AssetCompiler {
    * @async
    */
   afterRenderModules(compilation) {
-    const options = this.options;
     const { compiler, assets } = compilation;
-    const { mode } = compiler.options;
     const { RawSource } = compiler.webpack.sources;
-    const isProductionMode = mode == null || mode === 'production';
     const promises = [];
+
+    const options = Options.get();
+    let isMinify = Options.isTrue(options.minify, false);
     let minifyOptions;
 
     // https://github.com/terser/html-minifier-terser#options-quick-reference
@@ -107,10 +92,10 @@ class Plugin extends AssetCompiler {
       minifyJS: true,
     };
 
-    if (options.minify === true || (isProductionMode && options.minify === 'auto')) {
+    if (isMinify) {
       minifyOptions = defaultMinifyOptions;
-    } else if (typeof options.minify === 'object' && options.minify !== null) {
-      minifyOptions = { ...defaultMinifyOptions, ...this.options.minify };
+    } else if (options.minify !== null && typeof options.minify === 'object') {
+      minifyOptions = { ...defaultMinifyOptions, ...options.minify };
     } else {
       return;
     }

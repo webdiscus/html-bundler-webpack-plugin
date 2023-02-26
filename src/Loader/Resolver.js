@@ -50,8 +50,19 @@ class Resolver {
       mainFields: ['style', 'browser', 'sass', 'main'],
       mainFiles: ['_index', 'index'],
       extensions: ['.scss', '.sass', '.css'],
-      restrictions: PluginService.getStyleRestrictions(),
+      restrictions: this.getStyleResolveRestrictions(),
     });
+  }
+
+  /**
+   * Return a list of resolve restrictions to restrict the paths that a request can be resolved on.
+   * @see https://webpack.js.org/configuration/resolve/#resolverestrictions
+   * @return {Array<RegExp|string>}
+   */
+  static getStyleResolveRestrictions() {
+    const restrictions = PluginService.getOptions().getCss().test;
+
+    return Array.isArray(restrictions) ? restrictions : [restrictions];
   }
 
   /**

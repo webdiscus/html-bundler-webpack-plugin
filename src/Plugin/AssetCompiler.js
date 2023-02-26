@@ -8,9 +8,9 @@ const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator'
 const { pluginName } = require('../config');
 const { isWin, pathToPosix, isFunction, toCommonJS } = require('./Utils');
 
+const Options = require('./Options');
 const PluginService = require('./PluginService');
 const ScriptCollection = require('./ScriptCollection');
-const extractCss = require('./Modules/extractCss');
 
 const Resolver = require('./Resolver');
 const UrlDependency = require('./UrlDependency');
@@ -31,11 +31,7 @@ const {
   verboseExtractScript,
 } = require('./Messages/Info');
 
-const {
-  optionModulesException,
-  executeTemplateFunctionException,
-  postprocessException,
-} = require('./Messages/Exception');
+const { executeTemplateFunctionException, postprocessException } = require('./Messages/Exception');
 
 /** @typedef {import('webpack').Compiler} Compiler */
 /** @typedef {import('webpack').Compilation} Compilation */
@@ -52,7 +48,7 @@ const {
  * @typedef {Object} ModuleOptions
  * @property {RegExp} test The search for a match of entry files.
  * @property {boolean} [enabled = true] Enable/disable the plugin.
- * @property {boolean} [verbose = false] Show the information at processing entry files.
+ * @property {boolean|string} [verbose = false] Show the information at processing entry files.
  * @property {string} [sourcePath = options.context] The absolute path to sources.
  * @property {string} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
@@ -61,37 +57,14 @@ const {
  */
 
 /**
- * @typedef {Object} ExtractJsOptions
- * @property {boolean} [verbose = false] Show the information at processing entry files.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
- */
-
-/**
  * @typedef {ModuleOptions} ModuleProps
  * @property {boolean} [`inline` = false] Whether inline CSS should contain inline source map.
  */
 
 /**
- * @typedef {Object} AssetEntryOptions
- * @property {string} name The key of webpack entry.
- * @property {string} file The output asset file with absolute path.
- * @property {string} assetFile The output asset file with relative path by webpack output path.
- *   Note: the method compilation.emitAsset() use this file as key of assets object
- *   and save the file relative by output path, defined in webpack.options.output.path.
- * @property {string|function(PathData, AssetInfo): string} filenameTemplate The filename template or function.
- * @property {string} filename The asset filename.
- *  The template strings support only these substitutions: [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
- *  See https://webpack.js.org/configuration/output/#outputfilename
- * @property {string} request The full path of import file with query.
- * @property {string} importFile The import file only w/o query.
- * @property {string} outputPath
- * @property {string} sourcePath
- * @property {{name: string, type: string}} library Define the output a js file.
- *  See https://webpack.js.org/configuration/output/#outputlibrary
- * @property {function(string, AssetInfo, Compilation): string} [postprocess = null] The post process for extracted content from entry.
- * @property {function(): string|null =} extract
- * @property {Array} resources
- * @property {boolean} [verbose = false] Show an information by handles of the entry in a postprocess.
+ * @typedef {Object} ExtractJsOptions
+ * @property {boolean|string} [verbose = false] Show the information at processing entry files.
+ * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
  */
 
 /**
@@ -110,54 +83,22 @@ const verboseList = new Set();
 let RawSource, HotUpdateChunk;
 
 class AssetCompiler {
-  /** @type {PluginOptions} */
-  options = {};
-
   entryLibrary = {
     name: 'return',
     type: 'jsonp', // compiles JS from source into HTML string via Function()
   };
 
-  // the id to bind loader with data passed into template via entry.data
-  entryDataIndex = 1;
-  entryDataCache = new Map();
-
-  // webpack's options and modules
-  webpackContext = '';
-  webpackOutputPath = '';
-
-  // current entry point during dependency compilation
-  /** @type AssetEntryOptions */
+  /** @type AssetEntryOptions The current entry point during dependency compilation. */
   currentEntryPoint;
 
   /**
    * @param {PluginOptions|{}} options
    */
   constructor(options = {}) {
-    this.options = options;
-    this.enabled = this.options.enabled !== false;
-    this.verbose = this.options.verbose === true;
-
-    if (options.modules && !Array.isArray(options.modules)) {
-      optionModulesException(options.modules);
-    }
-
-    let extractCssOptions = extractCss(options.css);
-    const moduleExtractCssOptions = this.options.modules.find(
-      (item) => item.test.source === extractCssOptions.test.source
-    );
-
-    if (moduleExtractCssOptions) {
-      extractCssOptions = moduleExtractCssOptions;
-    } else {
-      this.options.modules.unshift(extractCssOptions);
-    }
-
-    this.options.extractCss = extractCssOptions;
-    this.options.extractJs = options.js || {};
+    Options.init(options);
 
     // let know the loader that the plugin is being used
-    PluginService.init(this.options);
+    PluginService.init(Options);
 
     // bind the instance context for using these methods as references in Webpack hooks
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
@@ -204,140 +145,40 @@ class AssetCompiler {
   afterProcess(compilation, { sourceFile, assetFile, source }) {}
 
   /**
-   * Entries defined in plugin options are merged with Webpack entry option.
-   *
-   * @param {{}} options The Webpack options where entry contains additional 'data' property.
-   */
-  initializeWebpackEntry(options) {
-    let { entry } = options;
-    const pluginEntry = this.options.entry;
-
-    // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
-    if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
-      // set empty entry to avoid Webpack error
-      entry = {};
-    }
-
-    if (pluginEntry) {
-      for (const key in pluginEntry) {
-        const entry = pluginEntry[key];
-
-        if (entry.import == null) {
-          pluginEntry[key] = { import: [entry] };
-          continue;
-        }
-
-        if (!Array.isArray(entry.import)) {
-          entry.import = [entry.import];
-        }
-      }
-
-      options.entry = { ...entry, ...pluginEntry };
-
-      // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
-      options.experiments.layers = true;
-    }
-  }
-
-  /**
-   * Get plugin module depend on type of source file.
-   *
-   * @param {string} sourceFile The source file of asset.
-   * @returns {ModuleOptions|undefined}
-   */
-  getModule(sourceFile) {
-    return this.options.modules.find((module) => module.enabled !== false && module.test.test(sourceFile));
-  }
-
-  /**
-   * Whether the source file is an entry file.
-   *
-   * @param {string} sourceFile
-   * @return {boolean}
-   */
-  isEntry(sourceFile) {
-    const [file] = sourceFile.split('?', 1);
-    return this.options.test.test(file);
-  }
-
-  /**
    * Apply plugin.
    * @param {{}} compiler
    */
   apply(compiler) {
-    if (!this.enabled) return;
+    if (!Options.isEnabled()) return;
 
-    this.initialize(compiler);
-
-    const { webpack, options } = compiler;
-    const webpackOutput = options.output;
-    const { extractJs } = this.options;
+    const { webpack } = compiler;
 
     RawSource = webpack.sources.RawSource;
     HotUpdateChunk = webpack.HotUpdateChunk;
 
-    // save using webpack options
-    this.webpackContext = options.context;
-    this.webpackOutputPath = webpackOutput.path || path.join(__dirname, 'dist');
-
-    // define js output filename
-    if (!webpackOutput.filename) {
-      webpackOutput.filename = '[name].js';
-    }
-    if (extractJs.filename) {
-      webpackOutput.filename = extractJs.filename;
-    } else {
-      extractJs.filename = webpackOutput.filename;
-    }
-
-    // resolve js filename by outputPath
-    if (extractJs.outputPath) {
-      const filename = extractJs.filename;
-
-      extractJs.filename = isFunction(filename)
-        ? (pathData, assetInfo) => this.resolveOutputFilename(filename(pathData, assetInfo), extractJs.outputPath)
-        : this.resolveOutputFilename(extractJs.filename, extractJs.outputPath);
-
-      webpackOutput.filename = extractJs.filename;
-    }
+    Options.initWebpack(compiler.options);
+    Options.enableLibraryType(this.entryLibrary.type);
+    this.initialize(compiler);
 
     Asset.init({
-      outputPath: this.webpackOutputPath,
-      publicPath: webpackOutput.publicPath,
+      outputPath: Options.webpackOptions.output.path,
+      publicPath: Options.webpackOptions.output.publicPath,
     });
     AssetResource.init(compiler);
-    AssetEntry.setWebpackOutputPath(this.webpackOutputPath);
+    AssetEntry.setWebpackOutputPath(Options.webpackOptions.output.path);
 
     // clear caches by tests for webpack serve/watch
     AssetScript.clear();
     Resolver.clear();
     AssetEntry.clear();
 
-    // enable library type
-    const libraryType = this.entryLibrary.type;
-    if (webpackOutput.enabledLibraryTypes.indexOf(libraryType) < 0) {
-      webpackOutput.enabledLibraryTypes.push(libraryType);
-    }
-
-    if (!this.options.sourcePath) this.options.sourcePath = this.webpackContext;
-    if (!this.options.outputPath) this.options.outputPath = this.webpackOutputPath;
-
-    // options.entry
-    this.initializeWebpackEntry(options);
-
     // entry options
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
+      Options.initWatchMode();
       PluginService.setWatchMode(true);
-
-      const { publicPath } = compiler.options.output;
-      if (publicPath == null || publicPath === 'auto') {
-        // By using watch/serve browsers not support an automatic publicPath in HMR script injected into inlined JS,
-        // the output.publicPath must be an empty string.
-        compiler.options.output.publicPath = '';
-      }
     });
 
     // this compilation
@@ -346,7 +187,7 @@ class AssetCompiler {
 
       Resolver.init({
         fs: normalModuleFactory.fs.fileSystem,
-        rootContext: this.webpackContext,
+        rootContext: Options.rootPath,
       });
 
       UrlDependency.init({
@@ -369,8 +210,11 @@ class AssetCompiler {
       NormalModule.getCompilationHooks(compilation).loader.tap(pluginName, (loaderContext, module) => {
         if (typeof module.layer === 'string' && module.layer.startsWith('__entryDataId')) {
           const [, entryDataId] = module.layer.split('=', 2);
-          loaderContext.entryData = this.entryDataCache.get(entryDataId);
-          loaderContext.data = this.entryDataCache.get(entryDataId);
+          // loaderContext.entryData = this.entryDataCache.get(entryDataId);
+          // loaderContext.data = this.entryDataCache.get(entryDataId);
+
+          loaderContext.entryData = AssetEntry.getData(entryDataId);
+          loaderContext.data = AssetEntry.getData(entryDataId);
         }
       });
 
@@ -404,68 +248,7 @@ class AssetCompiler {
    * @param {Object<name:string, entry: Object>} entries The webpack entries.
    */
   afterProcessEntry(context, entries) {
-    const extensionRegexp = this.options.test;
-
-    for (let name in entries) {
-      const entry = entries[name];
-      let { filename: filenameTemplate, sourcePath, outputPath, postprocess, extract, verbose } = this.options;
-      const importFile = entry.import[0];
-      let request = importFile;
-      let [sourceFile] = importFile.split('?', 1);
-      const module = this.getModule(sourceFile);
-
-      if (!extensionRegexp.test(sourceFile) && !module) continue;
-      if (!entry.library) entry.library = this.entryLibrary;
-
-      if (module) {
-        if (module.hasOwnProperty('verbose')) verbose = module.verbose;
-        if (module.filename) filenameTemplate = module.filename;
-        if (module.sourcePath) sourcePath = module.sourcePath;
-        if (module.outputPath) outputPath = module.outputPath;
-        if (module.postprocess) postprocess = module.postprocess;
-        if (module.extract) extract = module.extract;
-      }
-      if (entry.filename) filenameTemplate = entry.filename;
-
-      if (!path.isAbsolute(sourceFile)) {
-        request = path.join(sourcePath, request);
-        sourceFile = path.join(sourcePath, sourceFile);
-        entry.import[0] = path.join(sourcePath, importFile);
-      }
-
-      /** @type {AssetEntryOptions} */
-      const assetEntryOptions = {
-        name,
-        filenameTemplate,
-        filename: undefined,
-        file: undefined,
-        request,
-        importFile: sourceFile,
-        sourcePath,
-        outputPath,
-        library: entry.library,
-        postprocess: isFunction(postprocess) ? postprocess : null,
-        extract: isFunction(extract) ? extract : null,
-        verbose,
-      };
-
-      if (entry.data) {
-        // IMPORTANT: when the entry contains same source file for many chunks, for example:
-        // {
-        //   page1: { import: 'src/template.html', data: { title: 'A'} },
-        //   page2: { import: 'src/template.html', data: { title: 'B'} },
-        // }
-        // add an unique identifier of the entry to execute a loader for all templates,
-        // otherwise Webpack call a loader only for the first template.
-        // See 'webpack/lib/NormalModule.js:identifier()'.
-
-        entry.layer = `__entryDataId=${this.entryDataIndex}`;
-        this.entryDataCache.set(`${this.entryDataIndex}`, entry.data);
-        this.entryDataIndex++;
-      }
-
-      AssetEntry.add(entry, assetEntryOptions);
-    }
+    AssetEntry.addEntries(entries, { entryLibrary: this.entryLibrary });
   }
 
   /**
@@ -482,20 +265,18 @@ class AssetCompiler {
     // ignore data-URL
     if (request.startsWith('data:')) return;
 
-    if (issuer && issuer.length > 0) {
-      const extractCss = this.options.extractCss;
-      if (extractCss.enabled && extractCss.test.test(issuer) && resourceFile.endsWith('.js')) {
-        // ignore runtime scripts of a loader, because a style can't have a javascript dependency
-        return false;
-      }
+    if (issuer) {
+      // ignore and exclude from compilation the runtime script of a css loader
+      if (Options.isStyle(issuer) && resourceFile.endsWith('.js')) return false;
 
       const scriptFile = AssetScript.resolveFile(request);
+
       if (scriptFile) {
         const name = AssetScript.getUniqueName(scriptFile);
         const isAdded = AssetEntry.addToCompilation({
           name,
           importFile: scriptFile,
-          filenameTemplate: this.options.extractJs.filename,
+          filenameTemplate: Options.getJs().filename,
           context,
           issuer,
         });
@@ -524,7 +305,7 @@ class AssetCompiler {
    * @return {Array} Returns only alternative requests not related to entry files.
    */
   filterAlternativeRequests(requests, options) {
-    return requests.filter((item) => !this.isEntry(item.request));
+    return requests.filter((item) => !Options.isEntry(item.request));
   }
 
   /**
@@ -542,7 +323,7 @@ class AssetCompiler {
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
 
     if (type === 'asset/inline' || type === 'asset') {
-      AssetInline.add(resource, issuer, this.isEntry(issuer));
+      AssetInline.add(resource, issuer, Options.isEntry(issuer));
     }
 
     if (resolveData.dependencyType === 'url') {
@@ -598,7 +379,8 @@ class AssetCompiler {
    * @param {Object} codeGenerationResults
    */
   renderManifest(result, { chunk, chunkGraph, outputOptions, codeGenerationResults }) {
-    const { compilation, verbose } = this;
+    const { compilation } = this;
+    const verbose = Options.isVerbose();
 
     if (chunk instanceof HotUpdateChunk) return;
 
@@ -624,19 +406,19 @@ class AssetCompiler {
       const inline = Asset.isInline(resourceResolveData.query) || module.type === 'asset/source';
       const { issuer } = resourceResolveData.context;
       const [sourceFile] = sourceRequest.split('?', 1);
-      let issuerFile = !issuer || this.isEntry(issuer) ? entry.importFile : issuer;
+      let issuerFile = !issuer || Options.isEntry(issuer) ? entry.importFile : issuer;
 
       if (module.type === 'javascript/auto') {
         // do nothing for scripts because webpack itself compiles and extracts JS files from scripts
         if (AssetScript.isScript(module)) {
           if (entry.importFile === issuer) {
-            const verbose = this.options.extractJs.verbose || entry.verbose;
+            const { verbose, outputPath } = Options.getJs();
 
-            if (verbose && issuerFile !== sourceFile) {
+            if ((verbose || entry.verbose) && issuerFile !== sourceFile) {
               verboseList.add({
                 type: 'script',
                 sourceFile,
-                outputPath: this.options.extractJs.outputPath || this.webpackOutputPath,
+                outputPath,
               });
             }
           }
@@ -693,7 +475,7 @@ class AssetCompiler {
         }
 
         // asset supported via the plugin module
-        const pluginModule = this.getModule(sourceFile);
+        const pluginModule = Options.getModule(sourceFile);
         if (pluginModule == null) continue;
 
         const source = module.originalSource();
@@ -726,7 +508,7 @@ class AssetCompiler {
 
         // apply outputPath option for plugin module, e.g. for 'css'
         if (pluginModule.test.test(sourceFile)) {
-          assetFile = this.resolveOutputFilename(assetFile, pluginModule.outputPath);
+          assetFile = Options.resolveOutputFilename(assetFile, pluginModule.outputPath);
         }
 
         Resolver.addAsset(sourceRequest, assetFile);
@@ -810,13 +592,11 @@ class AssetCompiler {
    * @note: Only at this stage the js file has the final hashed name.
    */
   afterProcessAssets() {
-    const options = this.options;
     const compilation = this.compilation;
     const { compiler, assets } = compilation;
     const { RawSource } = compiler.webpack.sources;
-    const afterProcess = typeof options.afterProcess === 'function' ? options.afterProcess : null;
 
-    if (options.extractComments !== true) {
+    if (!Options.isExtractComments()) {
       AssetTrash.removeComments(compilation);
     }
 
@@ -828,16 +608,9 @@ class AssetCompiler {
       const sourceFile = Asset.findSourceFile(assetFile) || AssetScript.findSourceFile(assetFile);
       const source = assets[assetFile].source();
       let newContent = this.afterProcess(compilation, { sourceFile, assetFile, source });
+      let res = Options.afterProcess(newContent || source, { sourceFile, assetFile });
 
-      if (afterProcess && assetFile.endsWith('.html')) {
-        try {
-          // TODO: test not yet documented experimental feature and rename it to other name
-          let result = afterProcess(newContent || source, { sourceFile, assetFile });
-          if (result) newContent = result;
-        } catch (err) {
-          throw new Error(err);
-        }
-      }
+      if (res != null) newContent = res;
 
       if (newContent != null) {
         compilation.updateAsset(assetFile, new RawSource(newContent));
@@ -895,7 +668,7 @@ class AssetCompiler {
 
     const contextOptions = {
       require: Resolver.require,
-      // the `module.id` is required for `css-loader`, in module extractCss expected as source path
+      // the `module.id` is required for `css-loader`, in module extract CSS expected as the source path
       module: { id: sourceFile },
     };
     const contextObject = vm.createContext(contextOptions);
@@ -981,7 +754,7 @@ class AssetCompiler {
             verboseExtractResource({
               entity,
               sourceFile,
-              outputPath: this.webpackOutputPath,
+              outputPath: Options.webpackOptions.output.path,
             });
             break;
           }
@@ -1003,26 +776,6 @@ class AssetCompiler {
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
-  }
-
-  /**
-   * @param {string} filename The output filename.
-   * @param {string | null} outputPath The output path.
-   * @return {string}
-   */
-  resolveOutputFilename(filename, outputPath) {
-    if (!outputPath) return filename;
-
-    let relativeOutputPath = path.isAbsolute(outputPath)
-      ? path.relative(this.webpackOutputPath, outputPath)
-      : outputPath;
-
-    if (relativeOutputPath) {
-      if (isWin) relativeOutputPath = pathToPosix(relativeOutputPath);
-      filename = path.posix.join(relativeOutputPath, filename);
-    }
-
-    return filename;
   }
 }
 

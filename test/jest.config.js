@@ -1,5 +1,6 @@
 const fs = require('fs');
-const isLocalEnv = fs.existsSync('.local');
+const path = require('path');
+const isLocalEnv = fs.existsSync(path.join(__dirname, '.local'));
 
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html

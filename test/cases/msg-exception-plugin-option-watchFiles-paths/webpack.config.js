@@ -6,26 +6,18 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
 
   plugins: [
     new HtmlBundlerPlugin({
+      verbose: true,
       entry: {
         index: './src/index.html',
       },
+
+      watchFiles: {
+        paths: ['not-exists-dir'],
+      },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          watchFiles: /\.(s?css)$/i,
-        },
-      },
-    ],
-  },
 };
