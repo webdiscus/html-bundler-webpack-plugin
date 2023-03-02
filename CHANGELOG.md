@@ -1,5 +1,16 @@
 # Change log
 
+## 1.5.0 (2023-03-02)
+- feat: add the `loaderOptions` to the plugin option to allow defining loader options with the plugin.
+  No need to additionally specify the template loader in `module.rules`.
+  You can specify plugin and loader options in one place, in plugin options.
+- feat(experimental): add the `cacheable` loader option to disable caching of loader results, can be useful in a specific use case
+- fix: the default `watchFiles.paths` value is now a first-level subdirectory of a template, relative to root context.
+  E.g. the template path is `./src/views/index.html` then the default watching dir is `./src`.
+- fix: watching a changes in template partials
+- test: add manual test for watching changes in partials used in multiple page configuration
+- docs: update readme
+
 ## 1.4.0 (2023-02-26)
 - feat: display watch files in watch/serv mode when verbose option is enabled
 - feat: add `auto` value for the `verbose` option

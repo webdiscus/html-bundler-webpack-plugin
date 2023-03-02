@@ -58,7 +58,7 @@ class Plugin extends AssetCompiler {
     });
 
     if (existsLoader == null) {
-      webpackLoaders.push(defaultLoader);
+      webpackLoaders.unshift(defaultLoader);
     }
   }
 

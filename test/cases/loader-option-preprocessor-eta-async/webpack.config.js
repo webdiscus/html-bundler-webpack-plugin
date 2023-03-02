@@ -31,18 +31,22 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|ejs|eta)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
-        },
-      },
+      // the same options as in loaderOptions
+      // {
+      //   test: /\.(html|ejs|eta)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

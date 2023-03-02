@@ -59,18 +59,21 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
+      loaderOptions: {
+        preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
-        },
-      },
+      // {
+      //   test: /\.html$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
+      //   },
+      // },
       {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader', 'sass-loader'],

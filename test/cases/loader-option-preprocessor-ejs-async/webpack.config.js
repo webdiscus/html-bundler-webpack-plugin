@@ -22,19 +22,24 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // return promise
+        preprocessor: (content, { rootContext: root, data }) => ejs.render(content, data, { root, async: true }),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|ejs)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // return promise
-          preprocessor: (content, { data }) => ejs.render(content, data, { async: true }),
-        },
-      },
+      // the same options as in loaderOptions
+      // {
+      //   test: /\.(html|ejs)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     // return promise
+      //     preprocessor: (content, { data }) => ejs.render(content, data, { async: true }),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

@@ -24,19 +24,23 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // test preprocessor return null, has same effect as `preprocessor: false`
+        preprocessor: () => null,
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // test preprocessor return null, has same effect as `preprocessor: false`
-          preprocessor: () => null,
-        },
-      },
+      // {
+      //   test: /\.(html)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     // test preprocessor return null, has same effect as `preprocessor: false`
+      //     preprocessor: () => null,
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

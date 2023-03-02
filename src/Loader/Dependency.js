@@ -1,10 +1,9 @@
 const path = require('path');
 const PluginService = require('../Plugin/PluginService');
+const AssetEntry = require('../Plugin/AssetEntry');
 const Options = require('./Options');
 const { isWin } = require('./Utils');
 const { verboseWatchFiles } = require('./Messages/Info');
-const { watchPathsException } = require('./Messages/Exeptions');
-const { outToConsole } = require('../Common/Helpers');
 
 /**
  * Dependencies in code for watching a changes.
@@ -12,29 +11,27 @@ const { outToConsole } = require('../Common/Helpers');
 class Dependency {
   /** The file system used by Webpack */
   static fileSystem = null;
-  static files = new Set();
+  static files = null;
   static loaderContext = null;
   static watchFiles = {};
+  static #entryFiles = [];
 
   static init(loaderContext) {
+    if (!PluginService.isWatchMode()) return;
+
     const { rootContext } = loaderContext;
 
-    this.watchFiles = Options.getWatchFiles();
     this.loaderContext = loaderContext;
+    this.fileSystem = loaderContext.fs.fileSystem;
+    this.watchFiles = Options.getWatchFiles();
+    this.#entryFiles = AssetEntry.getEntryFiles();
+    this.addFile = this.addFile.bind(this);
+    this.files = new Set();
 
-    if (this.fileSystem == null) {
-      this.fileSystem = loaderContext._compilation.fileSystemInfo.fs.fileSystem;
-    }
-
-    if (PluginService.isWatchMode()) {
-      for (const watchDir of this.watchFiles.paths) {
-        const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
-        const files = this.#readDirRecursiveSync(dir);
-
-        for (const file of files) {
-          this.#addFile(file);
-        }
-      }
+    for (const watchDir of this.watchFiles.paths) {
+      const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
+      const files = this.#readDirRecursiveSync(dir);
+      files.forEach(this.addFile);
     }
   }
 
@@ -50,7 +47,21 @@ class Dependency {
     const noFiles = files.length < 1;
 
     if (!ignore.find((regex) => regex.test(file)) && (noFiles || files.find((regex) => regex.test(file)))) {
-      this.#addFile(file);
+      this.addFile(file);
+    }
+  }
+
+  /**
+   * @param {string} file
+   * @private
+   */
+  static addFile(file) {
+    file = isWin ? path.normalize(file) : file;
+    this.files.add(file);
+
+    // delete the file from require.cache to reload cached file after change
+    if (file in require.cache) {
+      delete require.cache[file];
     }
   }
 
@@ -61,24 +72,20 @@ class Dependency {
     if (!PluginService.isWatchMode()) return;
 
     const { loaderContext } = this;
+    const entryFiles = this.#entryFiles;
     const files = Array.from(this.files);
 
-    files.forEach(loaderContext.addDependency);
+    for (let file of files) {
+      if (entryFiles.indexOf(file) < 0) {
+        // the dependency already contains the current resource file,
+        // add for watching only files not defined in the entry to avoid unnecessary rebuilding of all templates
+        loaderContext.addDependency(file);
+      }
+    }
 
     if (PluginService.getOptions().isVerbose()) {
       verboseWatchFiles([...this.files]);
     }
-  }
-
-  /**
-   * @param {string} file
-   * @private
-   */
-  static #addFile(file) {
-    file = isWin ? path.normalize(file) : file;
-    this.files.add(file);
-    // delete the file from require.cache to reload cached file after change
-    if (require.cache[file]) delete require.cache[file];
   }
 
   /**
@@ -92,10 +99,6 @@ class Dependency {
     const fs = this.fileSystem;
     const { files, ignore } = this.watchFiles;
     const noFiles = files.length < 1;
-
-    if (!fs.existsSync(dir)) {
-      watchPathsException(dir, this.watchFiles.paths);
-    }
 
     /**
      * @param {string} dir

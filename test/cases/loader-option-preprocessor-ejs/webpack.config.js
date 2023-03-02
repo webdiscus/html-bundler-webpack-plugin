@@ -22,18 +22,22 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (content, { rootContext: root, data }) => ejs.render(content, data, { root }),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|ejs)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => ejs.render(content, data),
-        },
-      },
+      // the same options as in loaderOptions
+      // {
+      //   test: /\.(html|ejs)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => ejs.render(content, data),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

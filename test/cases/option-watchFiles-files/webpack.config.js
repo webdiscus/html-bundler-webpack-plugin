@@ -24,20 +24,16 @@ module.exports = {
         // output filename of extracted CSS
         filename: 'assets/css/[name].[contenthash:8].css',
       },
+
       watchFiles: {
         paths: ['src'],
-        files: [/\.(html|css)/],
+        files: [/\.(html|css)$/],
       },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
       {
         test: /.css$/,
         use: ['css-loader'],

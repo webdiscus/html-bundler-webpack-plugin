@@ -1,6 +1,10 @@
+const fs = require('fs');
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 const Handlebars = require('handlebars');
+
+// create the 'include' helper to load partials in a template
+Handlebars.registerHelper('include', (filename) => fs.readFileSync(`${process.cwd()}/${filename}`, 'utf8'));
 
 module.exports = {
   mode: 'production',
@@ -22,18 +26,22 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (content, { data }) => Handlebars.compile(content)(data),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|hbs)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => Handlebars.compile(content)(data),
-        },
-      },
+      // the same options as in loaderOptions
+      // {
+      //   test: /\.(html|hbs)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => Handlebars.compile(content)(data),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

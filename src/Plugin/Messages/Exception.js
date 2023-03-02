@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { green, cyan, cyanBright, yellow, white, blueBright, black } = require('ansis/colors');
+const { green, cyan, cyanBright, yellow, white, whiteBright, blueBright, black } = require('ansis/colors');
 const { pluginName } = require('../../config');
 
-const header = `\n${black.bgRedBright` ${pluginName} `}`;
+const header = `\n${whiteBright.bgRedBright` ${pluginName} `}`;
 let lastError = null;
 
 class PluginException extends Error {

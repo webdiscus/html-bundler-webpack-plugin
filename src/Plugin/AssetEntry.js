@@ -29,6 +29,7 @@ class AssetEntry {
   /** @type {Map<string, AssetEntryOptions>} */
   static entryMap = new Map();
   static compilationEntryNames = new Set();
+  static entryFiles = [];
 
   static compilation = null;
   static EntryPlugin = null;
@@ -62,6 +63,13 @@ class AssetEntry {
 
   static getData(id) {
     return this.data.get(id);
+  }
+
+  /**
+   * @return {Array<string>}
+   */
+  static getEntryFiles() {
+    return this.entryFiles;
   }
 
   /**
@@ -129,6 +137,7 @@ class AssetEntry {
         this.dataIndex++;
       }
 
+      this.entryFiles.push(sourceFile);
       this.#add(entry, assetEntryOptions);
     }
   }
@@ -249,6 +258,7 @@ class AssetEntry {
    */
   static clear() {
     this.entryMap.clear();
+    this.entryFiles.length = 0;
   }
 
   /**

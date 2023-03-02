@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 const { Liquid } = require('liquidjs');
-const LiquidEngine = new Liquid();
+const LiquidEngine = new Liquid({ root: process.cwd() });
 
 module.exports = {
   mode: 'production',
@@ -23,19 +23,23 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // async parseAndRender method return promise
+        preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|liquid)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // async parseAndRender method return promise
-          preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
-        },
-      },
+      // {
+      //   test: /\.(html|liquid)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     // async parseAndRender method return promise
+      //     preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

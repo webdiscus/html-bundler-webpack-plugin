@@ -1,10 +1,8 @@
 const ansis = require('ansis');
 const { bgRed, redBright, yellow, cyan, green } = require('ansis/colors');
-const { loaderName } = require('../config');
 const { pluginName } = require('../../config');
 
-const loaderHeader = `\n${bgRed.whiteBright` ${loaderName} `}`;
-const loaderHeaderHtml = `<span style="color:#e36049">[${loaderName}]</span>`;
+const pluginHeaderHtml = `<span style="color:#e36049">[${pluginName}]</span>`;
 const pluginHeader = `\n${bgRed.whiteBright` ${pluginName} `}`;
 let lastError = null;
 
@@ -46,7 +44,7 @@ const LoaderError = function (message, error = '') {
  */
 const resolveException = (error, file, templateFile) => {
   const message =
-    `${loaderHeader} The file ${yellow`'${file}'`} can't be resolved in the template ` + cyan(templateFile);
+    `${pluginHeader} The file ${yellow`'${file}'`} can't be resolved in the template ` + cyan(templateFile);
 
   LoaderError(message, error);
 };
@@ -72,9 +70,9 @@ const watchPathsException = (dir, paths) => {
  * @returns {string}
  */
 const errorToHtml = (error, hmr) => {
-  let message = error.replace(/\n/g, '<br>');
-  message = ansis.strip(message);
-  message = message.replace(`[${loaderName}]`, loaderHeaderHtml);
+  let message = ansis.strip(error.toString());
+  message = message.replace(`${pluginName}`, pluginHeaderHtml);
+  message = message.replace(/\n/g, '<br>').replace(/'/g, "\\'");
 
   return `<!DOCTYPE html><html>
 <head><script src="${hmr}"></script></head>
@@ -87,7 +85,7 @@ const errorToHtml = (error, hmr) => {
  * @returns {string}
  */
 const preprocessorErrorToString = (error, file) => {
-  return `${loaderHeader} Preprocessor failed\nFile: ${cyan(file)}\n` + error.toString();
+  return `${pluginHeader} Preprocessor failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
 /**
@@ -96,7 +94,7 @@ const preprocessorErrorToString = (error, file) => {
  * @returns {string}
  */
 const compileErrorToString = (error, file) => {
-  return `${loaderHeader} Template compilation failed\nFile: ${cyan(file)}\n` + error.toString();
+  return `${pluginHeader} Template compilation failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
 /**
@@ -105,16 +103,7 @@ const compileErrorToString = (error, file) => {
  * @returns {string}
  */
 const exportErrorToString = (error, file) => {
-  return `${loaderHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + error.toString();
-};
-
-/**
- * @param {Error} error
- * @param {string} file
- * @returns {string}
- */
-const unknownErrorToString = (error, file) => {
-  return `${loaderHeader} Unknown error\nFile: ${cyan(file)}\n` + error.toString();
+  return `${pluginHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + error.toString();
 };
 
 module.exports = {
@@ -125,5 +114,4 @@ module.exports = {
   preprocessorErrorToString,
   compileErrorToString,
   exportErrorToString,
-  unknownErrorToString,
 };

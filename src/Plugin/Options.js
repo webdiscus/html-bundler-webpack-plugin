@@ -26,6 +26,7 @@ const { optionModulesException } = require('./Messages/Exception');
  * @property {Array<ModuleOptions>=} [modules = []] For inner usage only.
  * @property {Object=} extractJs For inner usage only.
  * @property {Object=} extractCss For inner usage only.
+ * @property {Object=} loaderOptions Options defined in plugin but provided for the loader. Experimental.
  */
 
 class Options {
@@ -199,6 +200,13 @@ class Options {
     return this.options;
   }
 
+  /**
+   * @return {RegExp}
+   */
+  static getFilterRegexp() {
+    return this.options.test;
+  }
+
   static getJs() {
     return this.options.extractJs;
   }
@@ -234,7 +242,9 @@ class Options {
     let result;
 
     try {
-      // TODO: test not yet documented experimental feature and rename it to other name
+      // TODO:
+      //   - add dependencies (entry-point => all assets used in the template) as argument
+      //   - test not yet documented experimental feature
       result = this.options.afterProcess(content, { sourceFile, assetFile });
     } catch (err) {
       throw new Error(err);

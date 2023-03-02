@@ -43,18 +43,21 @@ module.exports = {
           data: entryData['3'],
         },
       },
+      loaderOptions: {
+        preprocessor: (content, { data }) => render(content, data),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => render(content, data),
-        },
-      },
+      // {
+      //   test: /\.(html)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => render(content, data),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

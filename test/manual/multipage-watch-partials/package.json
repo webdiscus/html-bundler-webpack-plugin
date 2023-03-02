@@ -1,0 +1,13 @@
+{
+  "description": "IMPORTANT: use node modules from root project directory, because the Webpack instance MUST be one, otherwise appear the error: The 'compilation' argument must be an instance of Compilation.",
+  "workspaces": [
+    "../../../"
+  ],
+  "scripts": {
+    "start": "webpack serve --mode=development --config ./webpack.dev.js",
+    "watch": "webpack watch --mode=development --config ./webpack.dev.js",
+    "build": "webpack --mode=production --progress --config ./webpack.prod.js"
+  },
+  "devDependencies": {
+  }
+}

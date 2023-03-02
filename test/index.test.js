@@ -4,6 +4,7 @@ import {
   stdoutContain,
   watchExceptionContain,
   watchStdoutContain,
+  watchStdoutCompare,
 } from './utils/helpers';
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Plugin/Utils';
@@ -320,8 +321,7 @@ describe('option watchFiles', () => {
   test('watchFiles.paths', (done) => {
     const containString = `
 - src/index.html
-- src/main.js
-- src/style.css`;
+- templates/footer.html`;
     watchStdoutContain(PATHS, 'option-watchFiles-paths', containString, done);
   });
 
@@ -333,10 +333,10 @@ describe('option watchFiles', () => {
   });
 
   test('watchFiles.ignore', (done) => {
-    const containString = `
+    const containString = ` html-bundler-webpack-plugin  Watch files
 - src/index.html
 - src/main.js`;
-    watchStdoutContain(PATHS, 'option-watchFiles-ignore', containString, done);
+    watchStdoutCompare('toBeStringIgnoringWhitespace', PATHS, 'option-watchFiles-ignore', containString, done);
   });
 });
 
@@ -375,7 +375,7 @@ describe('loader options for templating', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
   });
 
-  test('preprocessor with Eta', (done) => {
+  test('preprocessor with Eta async', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta-async', done);
   });
 
@@ -413,6 +413,10 @@ describe('loader options for templating', () => {
 
   test('preprocessor with liquid async', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid-async', done);
+  });
+
+  test('preprocessor with multiple templating engines', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs-hbs', done);
   });
 });
 

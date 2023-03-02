@@ -82,15 +82,13 @@ class RenderMethod {
   /**
    * Export code with error message.
    *
-   * @param {string} message The error message.
+   * @param {string|Error} error The error.
    * @param {string} issuer The issuer where the error occurred.
    * @return {string}
    */
-  exportError(message, issuer) {
-    message = message.replace(/'/g, "\\'");
-
+  exportError(error, issuer) {
     const hmr = `' + require('${hmrFile}') + '`;
-    const output = errorToHtml(message, hmr);
+    const output = errorToHtml(error, hmr);
 
     ScriptCollection.add(hmrFile, issuer);
 

@@ -1,6 +1,8 @@
 const Eta = require('eta');
 const PluginService = require('../Plugin/PluginService');
-const { outToConsole } = require('../Common/Helpers');
+const path = require('path');
+const { isWin, pathToPosix } = require('../Common/Helpers');
+const { watchPathsException } = require('./Messages/Exeptions');
 
 /**
  * @typedef OptionSources
@@ -10,86 +12,33 @@ const { outToConsole } = require('../Common/Helpers');
  */
 
 class Options {
-  static isInit = false;
-  static watchFiles = {};
+  /** The file system used by Webpack */
+  static fileSystem = null;
+  static #watchFiles = {};
+  static #webpackOptions;
+  static #options;
+  static #rootContext;
+  static #resourcePath;
 
   static init(loaderContext) {
-    const { rootContext } = loaderContext;
-    const options = loaderContext.getOptions() || {};
+    const { rootContext, resourcePath } = loaderContext;
+    const options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
 
-    this.webpackOptions = loaderContext._compiler.options || {};
-    this.options = options;
-    this.rootContext = rootContext;
+    this.fileSystem = loaderContext.fs.fileSystem;
+    this.#webpackOptions = loaderContext._compiler.options || {};
+    this.#options = options;
+    this.#rootContext = rootContext;
+    this.#resourcePath = resourcePath;
 
-    // init basedir, allow to configure template root path used in a templating engine
-    // TODO (reserved for future):
-    //  - OR move the `basedir` option to Plugin Options
-    //  - OR create new `templatingOptions` option in Plugin to pass this object into default engine
-    let { basedir } = options;
-    if (!basedir) basedir = rootContext;
-    if (basedir.slice(-1) !== '/') basedir += '/';
-    this.options.basedir = basedir;
+    // TODO (sourcePath option is experimental, reserved for future):
+    // basedir, allow to configure assets root path used for resolving files specified in attributes (`sources` option)
+    let sourcePath = options.sourcePath != null ? options.sourcePath : rootContext;
+    this.#options.basedir = sourcePath.slice(-1) === path.sep ? sourcePath : sourcePath + path.sep;
 
-    this.initWatchFiles();
+    this.#initWatchFiles();
 
-    // it must be at the last position
-    this.isInit = true;
-  }
-
-  static initWatchFiles() {
-    if (!PluginService.isWatchMode()) return;
-
-    const watchFiles = {
-      // watch files only in the directories, defaults is the project directory
-      paths: [],
-
-      // watch only files matched to RegExps,
-      // if empty (defaults) then watch all files, except ignored
-      files: [],
-
-      // ignore paths and files matched to RegExps
-      ignore: [
-        /[\\/](node_modules|dist|test)$/, // dirs
-        /[\\/]\..+$/, // hidden dirs and files: .git, .idea, .gitignore, etc.
-        /package(?:-lock)*\.json$/,
-        /webpack\.(.+)\.js$/,
-        /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/,
-      ],
-    };
-
-    const { paths, files, ignore } = PluginService.getOptions().getWatchFiles();
-
-    if (paths) {
-      const entries = Array.isArray(paths) ? paths : [paths];
-      for (let item of entries) {
-        watchFiles.paths.push(item);
-      }
-    }
-    if (watchFiles.paths.length < 1) {
-      watchFiles.paths.push(this.rootContext);
-    }
-
-    if (files) {
-      const entries = Array.isArray(files) ? files : [files];
-      for (let item of entries) {
-        if (item.constructor.name !== 'RegExp') {
-          item = new RegExp(item);
-        }
-        watchFiles.files.push(item);
-      }
-    }
-
-    if (ignore) {
-      const entries = Array.isArray(ignore) ? ignore : [ignore];
-      for (let item of entries) {
-        if (item.constructor.name !== 'RegExp') {
-          item = new RegExp(item);
-        }
-        watchFiles.ignore.push(item);
-      }
-    }
-
-    this.watchFiles = watchFiles;
+    // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
+    if (loaderContext.cacheable != null) loaderContext.cacheable(this.#options?.cacheable !== false);
   }
 
   /**
@@ -98,7 +47,7 @@ class Options {
    * @return {{}}
    */
   static get() {
-    return this.options;
+    return this.#options;
   }
 
   /**
@@ -106,7 +55,7 @@ class Options {
    * @return {string}
    */
   static getBasedir() {
-    return this.options.basedir;
+    return this.#options.basedir;
   }
 
   /**
@@ -115,7 +64,7 @@ class Options {
    * @return {Array<OptionSources>|false}
    */
   static getSources = () => {
-    const { sources } = this.options;
+    const { sources } = this.#options;
 
     if (sources === false) return false;
 
@@ -163,17 +112,17 @@ class Options {
    * @return {null|(function(string, {data?: {}}): Promise|string|null)}
    */
   static getPreprocessor() {
-    if (typeof this.options.preprocessor === 'function') {
-      return this.options.preprocessor;
+    if (typeof this.#options.preprocessor === 'function') {
+      return this.#options.preprocessor;
     }
 
-    if (this.options.preprocessor !== false) {
+    if (this.#options.preprocessor !== false) {
       const config = {
         // defaults async is false, because the `includeFile()` function is sync,
         // wenn async is true then must be used `await includeFile()`
         async: false,
         useWith: true, // allow to use variables in template without `it.` scope
-        root: process.cwd(),
+        root: this.#rootContext,
       };
 
       return (template, { data = {} }) => Eta.render(template, data, config);
@@ -183,11 +132,103 @@ class Options {
   }
 
   static getWatchFiles() {
-    return this.watchFiles;
+    return this.#watchFiles;
   }
 
   static getWebpackResolve() {
-    return this.webpackOptions.resolve || {};
+    return this.#webpackOptions.resolve || {};
+  }
+
+  static #initWatchFiles() {
+    if (!PluginService.isWatchMode()) return;
+
+    const watchFiles = {
+      // watch files only in the directories,
+      // defaults is first-level subdirectory of a template, relative to root context
+      paths: [],
+
+      // watch only files matched to RegExps,
+      // if empty then watch all files, except ignored
+      files: [PluginService.getOptions().getFilterRegexp()],
+
+      // ignore paths and files matched to RegExps
+      ignore: [
+        /[\\/](node_modules|dist|test)$/, // dirs
+        /[\\/]\..+$/, // hidden dirs and files: .git, .idea, .gitignore, etc.
+        /package(?:-lock)*\.json$/,
+        /webpack\.(.+)\.js$/,
+        /\.(je?pg|png|ico|gif|webp|svg|woff2?|ttf|otf|eot)$/,
+      ],
+    };
+
+    const fs = this.fileSystem;
+    const { paths, files, ignore } = PluginService.getOptions().getWatchFiles();
+    const watchDirs = new Set([this.#autodetectWatchPath()]);
+    const rootContext = this.#rootContext;
+
+    if (paths) {
+      const entries = Array.isArray(paths) ? paths : [paths];
+      for (let watchDir of entries) {
+        const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
+        if (!fs.existsSync(dir)) {
+          watchPathsException(dir, paths);
+        }
+        watchDirs.add(dir);
+      }
+    }
+    // set the list of unique watch directories
+    watchFiles.paths = Array.from(watchDirs);
+
+    if (files) {
+      const entries = Array.isArray(files) ? files : [files];
+      for (let item of entries) {
+        if (item.constructor.name !== 'RegExp') {
+          item = new RegExp(item);
+        }
+        watchFiles.files.push(item);
+      }
+    }
+
+    if (ignore) {
+      const entries = Array.isArray(ignore) ? ignore : [ignore];
+      for (let item of entries) {
+        if (item.constructor.name !== 'RegExp') {
+          item = new RegExp(item);
+        }
+        watchFiles.ignore.push(item);
+      }
+    }
+
+    this.#watchFiles = watchFiles;
+  }
+
+  /**
+   * Autodetect a watch directory.
+   * Defaults, it is first-level subdirectory of a template, relative to root context.
+   *
+   * For examples:
+   * ./home.html => ./
+   * ./src/home.html => ./src
+   * ./src/views/home.html => ./src
+   * ./app/views/home.html => ./app
+   *
+   * @return {string}
+   * @private
+   */
+  static #autodetectWatchPath() {
+    let watchPath = this.#rootContext;
+    let filePath = path.dirname(this.#resourcePath);
+
+    if (filePath.startsWith(this.#rootContext) && watchPath !== filePath) {
+      let subdir = filePath.replace(this.#rootContext, '');
+      if (isWin) subdir = pathToPosix(subdir);
+
+      let pos = subdir.indexOf('/', 1);
+      if (pos > 0) subdir = subdir.slice(0, pos);
+      watchPath = path.join(this.#rootContext, subdir);
+    }
+
+    return watchPath;
   }
 }
 

@@ -22,18 +22,21 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (content, { data }) => Mustache.render(content, data),
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html|mustache)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => Mustache.render(content, data),
-        },
-      },
+      // {
+      //   test: /\.(html|mustache)$/,
+      //   loader: HtmlBundlerPlugin.loader,
+      //   options: {
+      //     preprocessor: (content, { data }) => Mustache.render(content, data),
+      //   },
+      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

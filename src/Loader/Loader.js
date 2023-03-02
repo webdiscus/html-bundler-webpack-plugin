@@ -97,7 +97,7 @@ class Loader {
    * @return {string}
    */
   static exportError(message, issuer) {
-    return this.compiler.exportError(message, issuer);
+    return this.compiler?.exportError(message, issuer) || message.toString();
   }
 }
 

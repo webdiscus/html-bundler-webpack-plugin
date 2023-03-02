@@ -83,7 +83,7 @@ export const stdoutContain = function (PATHS, relTestCasePath, containString, do
   });
 };
 
-export const watchStdoutContain = function (PATHS, relTestCasePath, containString, done) {
+export const watchStdoutCompare = function (methodName, PATHS, relTestCasePath, expectedString, done) {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   watch(PATHS, relTestCasePath, {}, (watching) => {
@@ -96,7 +96,17 @@ export const watchStdoutContain = function (PATHS, relTestCasePath, containStrin
     stdout.mockClear();
     stdout.mockRestore();
 
-    expect(output).toContain(containString);
+    if (methodName === 'toBeStringIgnoringWhitespace') {
+      expectedString = expectedString.replace(/\s+/g, ' ').trim();
+      output = output.replace(/\s+/g, ' ').trim();
+      methodName = 'toBe';
+    }
+
+    expect(output)[methodName](expectedString);
     done();
   });
+};
+
+export const watchStdoutContain = function (PATHS, relTestCasePath, containString, done) {
+  watchStdoutCompare('toContain', PATHS, relTestCasePath, containString, done);
 };

@@ -25,18 +25,14 @@ module.exports = {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
       watchFiles: {
-        paths: ['src'],
+        // test to autodetect the path of a template defined in the entry
+        paths: ['templates'], // this is additional path where are not detectable files
       },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
       {
         test: /.css$/,
         use: ['css-loader'],

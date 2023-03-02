@@ -7,11 +7,14 @@
 
 class PluginService {
   /** @type PluginOptionInstance Provide to use the plugin option instance in the loader. */
-  static #options = null;
+  static #options = {};
 
-  static used = false;
+  // options defined in the plugin but provided to the loader
+  static #loaderOptions = {};
+
+  static #used = false;
   static contextCache = new Set();
-  static compiler = null;
+  static compiler = {};
   static watchMode;
 
   /**
@@ -24,8 +27,9 @@ class PluginService {
    * @param {PluginOptionInstance} options The plugin options instance.
    */
   static init(options) {
-    this.used = true;
+    this.#used = true;
     this.#options = options;
+    this.#loaderOptions = options.get().loaderOptions || {};
     this.watchMode = false;
   }
 
@@ -46,11 +50,20 @@ class PluginService {
   }
 
   /**
+   * Returns options defined in plugin but provided for the loader.
+   *
+   * @return {Object}
+   */
+  static getLoaderOptions() {
+    return this.#loaderOptions;
+  }
+
+  /**
    * Whether the plugin is defined in Webpack configuration.
    * @return {boolean}
    */
   static isUsed() {
-    return this.used;
+    return this.#used;
   }
 
   static isWatchMode() {
@@ -69,7 +82,7 @@ class PluginService {
    * Used for tests to reset state after each test case.
    */
   static reset() {
-    this.used = false;
+    this.#used = false;
     this.contextCache.clear();
   }
 }

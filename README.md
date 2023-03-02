@@ -33,8 +33,8 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 ✅ **Profit**
 
-You specify all the source scripts and styles in **one right place** (in HTML), 
-instead of defining them in **many non-logic places**: 
+You specify all the source scripts and styles in **one right place** (in HTML),
+instead of defining them in **many non-logic places**:
 defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
@@ -121,6 +121,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [extractComments](#option-extractComments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watchFiles)
+   - [loaderOptions](#option-loaderOptions)
 3. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
@@ -141,6 +142,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
+   - [How to use some different template engines](#recipe-diff-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
 
@@ -255,13 +257,13 @@ module.exports = {
 ```
 
 > **Note**
-> 
+>
 > No additional template loader required. The plugin handels `EJS`-like templates automatically.
 > If you use non-EJS-like templates (e.g. Handlebars), see the [preprocessor](#loader-option-preprocessor) option to use any template engine.
 
 
 > **Note**
-> 
+>
 > To define the JS output filename, use the `js.filename` option of the plugin, don't use Webpack's `output.filename`.
 > Both places have the same effect, but `js.filename` has priority over `output.filename`.
 ---
@@ -331,13 +333,13 @@ module.exports = {
 The starting point to build the bundle.
 
 > **Note**
-> 
+>
 > Using this plugin an `entry point` is an HTML template.
 > All script and style source files must be specified in the HTML template.
 
 You can use the Webpack `entry` option to define HTML templates,
 but it is highly recommended to define all templates in plugin option [`entry`](#option-entry),
-because it has an additional `data` property (not available in the Webpack entry) 
+because it has an additional `data` property (not available in the Webpack entry)
 to pass custom variables into the HTML template.
 
 For details see the [plugin option `entry`](#option-entry).
@@ -378,7 +380,7 @@ The plugin automatically extracts JS and CSS whose source files are specified in
 #### Simple syntax
 
 The key of an entry object is the `output file` w/o extension, relative by the [`outputPath`](#option-outputPath) option.\
-The value is the `source file`, absolute or relative by the Webpack config file. 
+The value is the `source file`, absolute or relative by the Webpack config file.
 
 ```js
 {
@@ -428,7 +430,7 @@ Usage example:
 ```
 
 > **Note**
-> 
+>
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
 > But the `data` property can only be defined in the `entry` option of the plugin.
 
@@ -447,17 +449,17 @@ Type: `string | Function` Default: `[name].html`
 The HTML output filename relative by the [`outputPath`](#option-outputPath) option.
 
 If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
-  - `[id]` The ID of the chunk.
-  - `[name]` The filename without extension or path.
-  - `[contenthash]` The hash of the content.
-  - `[contenthash:nn]` The `nn` is the length of hashes (defaults to 20).
+- `[id]` The ID of the chunk.
+- `[name]` The filename without extension or path.
+- `[contenthash]` The hash of the content.
+- `[contenthash:nn]` The `nn` is the length of hashes (defaults to 20).
 
 If type is `Function` then following arguments are available in the function:
-  - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
-    - `pathData.filename` the full path to source file
-    - `pathData.chunk.name` the name of entry key
-  - `@param {AssetInfo} assetInfo` Mostly this object is empty.
-  - `@return {string}` The name or template string of output file.
+- `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
+  - `pathData.filename` the full path to source file
+  - `pathData.chunk.name` the name of entry key
+- `@param {AssetInfo} assetInfo` Mostly this object is empty.
+- `@return {string}` The name or template string of output file.
 
 
 #### [↑ back to contents](#contents)
@@ -538,7 +540,7 @@ This is the option to extract CSS from a style source file specified in the HTML
 > Don't import source styles in JavaScript! Styles must be specified directly in HTML.
 > Don't define source JS files in Webpack entry! Scripts must be specified directly in HTML.
 
-The default CSS output filename is `[name].css`. 
+The default CSS output filename is `[name].css`.
 You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
 
 ```js
@@ -581,7 +583,7 @@ type postprocess = (
 type ResourceInfo = {
   verbose: boolean,
   isEntry: boolean,
-  filename: 
+  filename:
     | string
     | ((pathData: PathData) => string),
   sourceFile: string,
@@ -663,7 +665,7 @@ Possible values:
 - `auto` - in `development` mode enable verbose, in `production` mode disable verbose
 
 > **Note**
-> 
+>
 > If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
 
 
@@ -682,8 +684,8 @@ type watchFiles = {
 Default:
 ```js
 watchFiles: {
-  paths: ['./'], // project root directory
-  files: [], // if empty, watch all files in `paths`, except `ignore`
+  paths: ['./src'], 
+  files: [/\.(html|ejs|eta)$/],
   ignore: [
     /[\\/](node_modules|dist|test)$/, // ignore standard project dirs
     /[\\/]\..+$/, // ignore hidden dirs and files, e.g.: .git, .idea, .gitignore, etc.
@@ -694,68 +696,120 @@ watchFiles: {
 }
 ```
 
-Allow to configure paths and files to watch file changes in `watch` or `serv` mode.
+Allow to configure paths and files to watch file changes for rebuild in `watch` or `serv` mode.
+
+> **Note**
+>
+> To watch changes with a `live reload` in the browser, you must additionally configure the `watchFiles` in `devServer`,
+> see [setup HRM](#setup-hmr).
 
 #### Properties:
 
-- `paths` -  A list of relative or absolute paths to directories where should be watched `files`.
+- `paths` -  A list of relative or absolute paths to directories where should be watched `files`.\
+  The watching path for each template defined in the entry will be autodetect as the first level subdirectory of the template relative to the project's root path.
+  E.g., the template `./src/views/index.html` has the watching path of `./src`.
+
 - `files` - Watch the files specified in `paths`, except `ignore`, that match the regular expressions.
+  Defaults, are watched only files that match the [`test`](#option-test) plugin option.
+
 - `ignore` - Ignore the specified paths or files, that match the regular expressions.
 
-To reduce  CPU or memory usage, it is recommended to at least specify the source files directory in the `paths`.
 
-For example, your project contains many files and folders in the project directory, 
-while all source files are in `./src/` directory, then add it to the `paths`:
+For example, all source files are in the `./src` directory,
+while some partials included in a template are in `./vendor/` directory, then add it to the `paths`:
 
 ```js
 watchFiles: {
-  paths: ['src'],
+  paths: ['vendor'],
 },
 ```
 
-If the source directory contains many binary files, e.g. `.pdf` `.mov` `.wav` etc., then add them to the `ignore`:
+If you want watch changes in some special files used in your template that are only loaded through the template engine,
+add them to the `files` property:
 
 ```js
 watchFiles: {
-  paths: ['src'],
-  ignore: [
-    /\.(pdf|mov|wav)$/,
-  ]
-},
-```
-
-or you can add the whole folders to the `ignore`, e.g.:
-
-```js
-watchFiles: {
-  paths: ['src'],
-  ignore: [
-    /[\\/]src[\\/]audio/,
-    /[\\/]src[\\/]image/,
-    /[\\/]src[\\/]video/,
-  ]
-},
-```
-
-Please consider already ignored files by default, see above.
-
-If the source directory contains too many subdirectories and different types of files, 
-then you can specify only those files that should be watched.
-
-```js
-watchFiles: {
-  paths: ['src'],
+  paths: ['vendor'],
   files: [
-    /\.(html|ejs|ts|js|scss|css)$/,
+    /data\.(js|json)$/,
   ]
 },
 ```
+
+To exclude watching of files defined in `paths` and `files`, you can use the `ignore` property.
+This option has the prio over paths and files.
 
 > **Note**
-> 
+>
 > To display all watched files, enable the [`verbose`](#option-verbose) option.
----
 
+
+#### [↑ back to contents](#contents)
+<a id="option-loaderOptions" name="option-loaderOptions" href="#option-loaderOptions"></a>
+### `loaderOptions`
+
+This is the reference to the [loader options](#loader-options).
+You can specify loader options here in the plugin options to avoid explicitly defining the `HtmlBundlerPlugin.loader` in `module.rules`.
+The `HtmlBundlerPlugin.loader` will be added automatically.
+
+For example, both configurations are functionally identical:
+
+_1) the variant using the `loaderOptions`_ (recommended for common use cases)
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.ejs',
+      },
+      loaderOptions: {
+        // option to resolve files specified in non-standard attributes 'data-src', 'data-srcset'
+        sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'], }],
+        // option to compile a template into HTML
+        preprocessor: (template, { data }) => require('ejs').render(template, data),
+      },
+    }),
+  ],
+};
+```
+
+_2) the variant using the `module.rules`_
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.ejs',
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /.(html|ejs)$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'], }],
+          preprocessor: (template, { data }) => require('ejs').render(template, data),
+        }
+      },
+    ],
+  },
+};
+```
+
+For common use cases, the first option is recommended. So your config is smaller and cleaner.
+
+The second variant use only for special cases, e.g. when you have templates with different syntax.
+An example see by [How to use some different template engines](#recipe-diff-templates).
+
+
+> **Note**
+>
+> Options defined in `module.rules` take precedence over the same options defined in `loaderOptions`.
+---
 
 #### [↑ back to contents](#contents)
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
@@ -821,9 +875,8 @@ By default, resolves source files in the following tags and attributes:
 | `object` | `data`                                                                                |
 
 > **Warning**
-> 
+>
 > Don't use the [deprecated](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/xlink:href) `xlink:href` attribute by the `image` and `use` tags.
-
 
 The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
 The argument is an object containing the properties:
@@ -998,7 +1051,6 @@ preprocessor = (template, { data }) => Eta.render(template, data, config);
 > **Note**
 >
 > The `Eta` has the same EJS syntax, is only 2KB gzipped and is much fasted than EJS.
-> 
 
 The `template` is the raw content of a template file defined in the [`entry`](#option-entry) option.\
 The `loaderContext` is the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context) object contained useful properties:
@@ -1008,7 +1060,7 @@ The `loaderContext` is the [Loader Context](https://webpack.js.org/api/loaders/#
 - `resourcePath: string` - a template file
 - `data: object|null` - variables passed form [`entry`](#option-entry)
 
-The preprocessor is called for each entry file, before processing of the content. 
+The preprocessor is called for each entry file, before processing of the content.
 This function can be used to compile the template with a template engine,
 such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks), etc.
 
@@ -1069,7 +1121,7 @@ module.exports = {
 ```
 
 > **Note**
-> 
+>
 > The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
 
 
@@ -1104,6 +1156,9 @@ module.exports = {
 
 ```
 
+> **Note**
+>
+> It is recommended to define all loader options in the [`loaderOptions`](#option-loaderOptions) by the plugin options.
 ---
 
 
@@ -1164,7 +1219,7 @@ const EtaConfig = {
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|ejs|eta)$/, // <= change
+      //test: /\.(html|ejs|eta)$/, // <= defaults, these extension are already defined
       entry: {
         index: {
           import: './src/index.eta',
@@ -1174,26 +1229,18 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (template, { data }) => Eta.render(template, data, EtaConfig),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|ejs|eta)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Eta.render(template, data, EtaConfig), // <= change
-        },
-      },
-    ],
-  },
 };
 
 ```
 
 > **Note**
 >
-> The [default loader](default-loader) already support the Eta. You can omit it in Webpack config.
+> The [default loader](default-loader) already support the Eta. You can omit the preprocessor in Webpack config.
 
 <a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
 > **Warning**
@@ -1231,13 +1278,12 @@ const ejs = require('ejs');
 const ejsConfig = {
   root: process.cwd(), // define root template path when using `include()`
   async: true, // optional, async rendering
-  
 }
 
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|ejs)$/, // <= change
+      //test: /\.(html|ejs)$/, // <= defaults, these extension are already defined
       entry: {
         index: {
           import: './src/index.ejs',
@@ -1247,19 +1293,11 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (template, { data }) => ejs.render(template, data, ejsConfig),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|ejs)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => ejs.render(template, data, ejsConfig), // <= change
-        },
-      },
-    ],
-  },
 };
 
 ```
@@ -1267,7 +1305,7 @@ module.exports = {
 > **Note**
 >
 > The [default loader](default-loader) already support the simple syntax of EJS.
-> You can omit it in Webpack config when you don't use `include()`.
+> You can omit the preprocessor in Webpack config when you don't use `include()`.
 
 #### [↑ back to contents](#contents)
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
@@ -1296,7 +1334,7 @@ const Handlebars = require('handlebars');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|hbs)$/, // add the option to match *.hbs files in entry
+      test: /\.(html|hbs)$/, // add the test option to match *.hbs files in entry
       entry: {
         index: { // output dist/imdex.html
           import: './src/index.hbs',
@@ -1307,20 +1345,12 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // compiles *.hbs files to HTML
+        preprocessor: (template, { data }) => Handlebars.compile(template)(data),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|hbs)$/, // must match the files specified in the entry
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // compiles *.hbs files to HTML
-          preprocessor: (template, { data }) => Handlebars.compile(template)(data),
-        },
-      },
-    ],
-  },
 };
 
 ```
@@ -1358,7 +1388,7 @@ For example, there is the template _index.mustache_
 </html>
 ```
 
-Change Webpack config according to:
+Add the template compiler to `preprocessor`:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -1367,7 +1397,7 @@ const Mustache = require('mustache');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|mustache)$/, // <= change
+      test: /\.(html|mustache)$/, // add the test option to match *.mustache files in entry
       index: {
         import: './src/index.mustache',
         data: {
@@ -1375,19 +1405,11 @@ module.exports = {
           people: ['Walter White', 'Jesse Pinkman'],
         },
       },
+      loaderOptions: {
+        preprocessor: (template, { data }) => Mustache.render(template, data),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|mustache)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Mustache.render(template, data), // <= change
-        },
-      },
-    ],
-  },
 };
 
 ```
@@ -1419,7 +1441,7 @@ const Nunjucks = require('nunjucks');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|njk)$/, // <= change
+      test: /\.(html|njk)$/, // add the test option to match *.njk files in entry
       entry: {
         index: {
           import: './src/index.njk',
@@ -1429,19 +1451,11 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|njk)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (template, { data }) => Nunjucks.renderString(template, data), // <= change
-        },
-      },
-    ],
-  },
 };
 
 ```
@@ -1475,7 +1489,7 @@ const LiquidEngine = new Liquid();
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|liquidjs)$/, // <= change
+      test: /\.(html|liquidjs)$/, // add the test option to match *.liquidjs files in entry
       entry: {
         index: {
           import: './src/index.liquidjs',
@@ -1485,20 +1499,12 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // async parseAndRender method return a promise
+        preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
+      },
     }),
   ],
-  module: {
-    rules: [
-      {
-        test: /\.(html|liquidjs)$/, // <= change
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          // async parseAndRender method return promise
-          preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data), // <= change
-        },
-      },
-    ],
-  },
 };
 
 ```
@@ -1710,7 +1716,7 @@ The generated HTML contains output fonts filenames:
 ```
 
 > **Note**
-> 
+>
 > You don't need a plugin to copy files from source directory to public.
 
 ---
@@ -1892,20 +1898,20 @@ _src/views/pages/home/index.html_
 {% extends "src/views/layouts/default.html" %}
 
 {% block styles %}
-  <!-- load source style -->
-  <link href="./home.scss" rel="stylesheet">
+<!-- load source style -->
+<link href="./home.scss" rel="stylesheet">
 {% endblock %}
 
 {% block scripts %}
-  <!-- load source script -->
-  <script src="./home.js" defer="defer"></script>
+<!-- load source script -->
+<script src="./home.js" defer="defer"></script>
 {% endblock %}
 
 {% block content %}
-  <h1>{{ filmTitle }}</h1>
-  <p>Location: {{ location }}</p>
-  <!-- @images is the Webpack alias for the source images directory -->
-  <img src="@images/{{ imageFile }}">
+<h1>{{ filmTitle }}</h1>
+<p>Location: {{ location }}</p>
+<!-- @images is the Webpack alias for the source images directory -->
+<img src="@images/{{ imageFile }}">
 {% endblock %}
 ```
 
@@ -1914,20 +1920,20 @@ _src/views/pages/about/index.html_
 {% extends "src/views/layouts/default.html" %}
 
 {% block styles %}
-  <link href="./about.scss" rel="stylesheet">
+<link href="./about.scss" rel="stylesheet">
 {% endblock %}
 
 {% block scripts %}
-  <script src="./about.js" defer="defer"></script>
+<script src="./about.js" defer="defer"></script>
 {% endblock %}
 
 {% block content %}
-  <h1>Main characters</h1>
-  <ul>
+<h1>Main characters</h1>
+<ul>
   {% for item in actors %}
-    <li class="name">{{ item.firstname }} {{ item.lastname }}</li>
+  <li class="name">{{ item.firstname }} {{ item.lastname }}</li>
   {% endfor %}
-  </ul>
+</ul>
 {% endblock %}
 ```
 
@@ -1988,19 +1994,14 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
+      loaderOptions: {
+        // render template with page-specific variables defined in entry
+        preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+      },
     }),
   ],
   module: {
     rules: [
-      // templates
-      {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader, //  HTML template loader
-        options: {
-          // render template with page-specific variables defined in entry
-          preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
-        },
-      },
       // styles
       {
         test: /\.(css|sass|scss)$/,
@@ -2063,6 +2064,63 @@ The generated _dist/about.html_
 
 ---
 
+
+#### [↑ back to contents](#contents)
+<a id="recipe-diff-templates" name="recipe-diff-templates" href="#recipe-diff-templates"></a>
+## How to use some different template engines
+
+When you have many templates with different syntax, you can use a separate module rules for each template engine.
+For example, in your project are mixed templates with EJS and Handlebars syntax.
+```
+- src/views/ejs/home.ejs
+- src/views/hbs/about.hbs
+```
+
+To handle different templates, define the `test` plugin option that must match those templates and
+add a preprocessor for each template type in the module rules.
+
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const ejs = require('ejs');
+const Handlebars = require('handlebars');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      test: /\.(ejs|hbs)$/, // <= specify extensions for all template types here
+      entry: {
+        index: 'src/views/ejs/home.ejs', // EJS template
+        about: 'src/views/hbs/about.hbs', // Handlebars template
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      // the rule for EJS
+      {
+        test: /\.ejs$/,
+        loader: HtmlBundlerPlugin.loader, // universal template loader
+        options: {
+          preprocessor: (content, { data }) => ejs.render(content, data),
+        },
+      },
+      // the rule for Handlebars
+      {
+        test: /\.hbs$/,
+        loader: HtmlBundlerPlugin.loader, // universal template loader
+        options: {
+          preprocessor: (content, { data }) => Handlebars.compile(content)(data),
+        },
+      },
+    ],
+  },
+};
+```
+
+---
+
+
 #### [↑ back to contents](#contents)
 <a id="recipe-split-chunks" name="recipe-split-chunks" href="#recipe-split-chunks"></a>
 ### How to config `splitChunks`
@@ -2108,7 +2166,7 @@ For example, in a template are used the scripts and styles from `node_modules`:
 ```
 
 > **Note**
-> 
+>
 > In the generated HTML all script tags remain in their original places and split chunks will be added there,
 > in the order that Webpack generated.
 

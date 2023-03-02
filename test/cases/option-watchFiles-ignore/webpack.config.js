@@ -26,18 +26,14 @@ module.exports = {
       },
       watchFiles: {
         paths: ['src'],
-        ignore: [/\.(css)/],
+        files: [/\.(html|js|css)$/], // include files
+        ignore: [/\.(css)$/], // exclude files (has prio over `files` option)
       },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
       {
         test: /.css$/,
         use: ['css-loader'],
