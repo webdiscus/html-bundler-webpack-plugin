@@ -2,7 +2,6 @@ const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
-  //mode: 'production',
   mode: 'development',
 
   output: {
@@ -38,10 +37,6 @@ module.exports = {
 
   module: {
     rules: [
-      {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-      },
       {
         test: /\.(css|scss)$/,
         use: ['css-loader', 'sass-loader'],

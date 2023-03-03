@@ -1,5 +1,8 @@
 # Change log
 
+## 1.5.1 (2023-03-03)
+- fix: add LF after each generated script tag in dev mode for pretty HTML formatting
+
 ## 1.5.0 (2023-03-02)
 - feat: add the `loaderOptions` to the plugin option to allow defining loader options with the plugin.
   No need to additionally specify the template loader in `module.rules`.
