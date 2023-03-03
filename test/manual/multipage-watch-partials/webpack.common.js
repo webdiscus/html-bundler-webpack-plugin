@@ -1,7 +1,10 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
+const isDev = process.env.NODE_ENV === 'development';
+
 module.exports = {
+  mode: isDev ? 'development' : 'production',
   devtool: false,
   stats: 'minimal',
 
@@ -35,7 +38,9 @@ module.exports = {
         preprocessor: (template, { rootContext, data }) =>
           require('ejs').render(template, data, { root: path.join(rootContext, 'src/views') }),
       },
+      verbose: 'auto',
       //verbose: true,
+      //verbose: false,
     }),
   ],
 

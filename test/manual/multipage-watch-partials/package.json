@@ -4,9 +4,9 @@
     "../../../"
   ],
   "scripts": {
-    "start": "webpack serve --mode=development --config ./webpack.dev.js",
-    "watch": "webpack watch --mode=development --config ./webpack.dev.js",
-    "build": "webpack --mode=production --progress --config ./webpack.prod.js"
+    "start": "webpack serve --mode=development --node-env development --config ./webpack.dev.js",
+    "watch": "webpack watch --mode=development --node-env development --config ./webpack.dev.js",
+    "build": "webpack --mode=production --node-env production --progress --config ./webpack.prod.js"
   },
   "devDependencies": {
   }

@@ -91,7 +91,7 @@ class AssetEntry {
       if (!entry.library) entry.library = entryLibrary;
 
       if (module) {
-        if (module.hasOwnProperty('verbose')) verbose = Options.isTrue(module.verbose, false);
+        if (module.hasOwnProperty('verbose')) verbose = Options.toBool(module.verbose, false, false);
         if (module.filename) filenameTemplate = module.filename;
         if (module.sourcePath) sourcePath = module.sourcePath;
         if (module.outputPath) outputPath = module.outputPath;

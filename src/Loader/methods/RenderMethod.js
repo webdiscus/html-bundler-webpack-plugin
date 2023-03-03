@@ -19,8 +19,16 @@ class RenderMethod {
    * @return {string}
    */
   decodeReservedChars(str) {
-    const match = /('|\\u0026|\\u0027|\\u0060|\n)/g;
-    const replacements = { '\\u0026': '&', '\\u0027': "'", '\\u0060': "\\'", "'": "\\'", '\n': '\\n' };
+    const match = /('|\\u0026|\\u0027|\\u0060|\n|\r|\\)/g;
+    const replacements = {
+      '\\u0026': '&',
+      '\\u0027': "'",
+      '\\u0060': "\\'",
+      "'": "\\'",
+      '\n': '\\n',
+      '\r': '\\r',
+      '\\': '\\\\',
+    };
     const replacer = (value) => replacements[value];
 
     return str.replace(match, replacer);

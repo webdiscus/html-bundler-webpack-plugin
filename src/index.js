@@ -76,7 +76,7 @@ class Plugin extends AssetCompiler {
     const promises = [];
 
     const options = Options.get();
-    let isMinify = Options.isTrue(options.minify, false);
+    let isMinify = Options.toBool(options.minify, true, false);
     let minifyOptions;
 
     // https://github.com/terser/html-minifier-terser#options-quick-reference

@@ -76,9 +76,9 @@ class Options {
     this.webpackOptions = options;
     this.rootPath = options.context;
     this.prodMode = options.mode == null || options.mode === 'production';
-    this.verbose = this.isTrue(this.options.verbose, false);
-    extractJs.verbose = this.isTrue(extractJs.verbose, false);
-    extractCss.verbose = this.isTrue(extractCss.verbose, false);
+    this.verbose = this.toBool(this.options.verbose, false, false);
+    extractJs.verbose = this.toBool(extractJs.verbose, false, false);
+    extractCss.verbose = this.toBool(extractCss.verbose, false, false);
 
     if (!webpackOutput.path) webpackOutput.path = path.join(this.context, 'dist');
 
@@ -190,10 +190,19 @@ class Options {
     return this.options.test.test(file);
   }
 
-  static isTrue(value, defaultValue) {
+  /**
+   * Resolve undefined|true|false|'auto' value depend on current Webpack mode dev/prod.
+   *
+   * @param {boolean|string|undefined} value The value one of true, false, 'auto'.
+   * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
+   * @param {boolean} defaultValue Returns default value when value is undefined.
+   * @return {boolean}
+   */
+  static toBool(value, autoValue, defaultValue) {
     if (value == null) return defaultValue;
+    if (value === true || value === false) return value;
 
-    return value === true || (this.prodMode === true && value === 'auto');
+    return value === 'auto' && this.prodMode === autoValue;
   }
 
   static get() {

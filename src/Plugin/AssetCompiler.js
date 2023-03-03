@@ -649,9 +649,10 @@ class AssetCompiler {
     pluginModule,
   }) {
     let code = source.source();
+    let result;
 
     if (!code) {
-      // TODO: reproduce this case and write test
+      // TODO: reproduce this case in test
       // the source is empty when webpack config contains an error
       return null;
     }
@@ -671,13 +672,12 @@ class AssetCompiler {
       // the `module.id` is required for `css-loader`, in module extract CSS expected as the source path
       module: { id: sourceFile },
     };
-    const contextObject = vm.createContext(contextOptions);
-    const script = new vm.Script(code, { filename: sourceFile });
-    const compiledCode = script.runInContext(contextObject) || '';
-    let content;
 
     try {
-      content = isFunction(compiledCode) ? compiledCode() : compiledCode;
+      const script = new vm.Script(code, { filename: sourceFile });
+      const contextObject = vm.createContext(contextOptions);
+      const compiledCode = script.runInContext(contextObject) || '';
+      result = isFunction(compiledCode) ? compiledCode() : compiledCode;
     } catch (error) {
       executeTemplateFunctionException(error, sourceFile);
     }
@@ -685,7 +685,7 @@ class AssetCompiler {
     if (pluginModule) {
       if (pluginModule.extract) {
         pluginModule.inline = inline;
-        content = pluginModule.extract(content, assetFile, this.compilation);
+        result = pluginModule.extract(result, assetFile, this.compilation);
       }
       if (pluginModule.postprocess) {
         const resourceInfo = {
@@ -697,7 +697,7 @@ class AssetCompiler {
           filename: filenameTemplate,
         };
         try {
-          content = pluginModule.postprocess(content, resourceInfo, this.compilation);
+          result = pluginModule.postprocess(result, resourceInfo, this.compilation);
         } catch (error) {
           postprocessException(error, resourceInfo);
         }
@@ -705,11 +705,11 @@ class AssetCompiler {
     }
 
     if (inline) {
-      AssetSource.setSource(sourceRequest, this.currentEntryPoint.filename, content);
+      AssetSource.setSource(sourceRequest, this.currentEntryPoint.filename, result);
       return null;
     }
 
-    return content;
+    return result;
   }
 
   /**

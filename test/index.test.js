@@ -10,6 +10,7 @@ import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Plugin/Utils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Template from '../src/Loader/Template';
+import Options from '../src/Plugin/Options';
 import { PATHS } from './config';
 
 beforeAll(() => {});
@@ -173,6 +174,56 @@ describe('AssetEntry unit tests', () => {
     AssetEntry.reset();
     const received = AssetEntry.compilationEntryNames;
     expect(received).toEqual(new Set());
+    done();
+  });
+});
+
+describe('plugin options unit tests', () => {
+  test('isTrue: defaultValue', (done) => {
+    const received = Options.toBool(undefined, false, true);
+    expect(received).toEqual(true);
+    done();
+  });
+
+  test('isTrue: value false', (done) => {
+    Options.prodMode = true;
+    const received = Options.toBool(false, true, true);
+    expect(received).toEqual(false);
+    done();
+  });
+
+  test('isTrue: value true', (done) => {
+    Options.prodMode = true;
+    const received = Options.toBool(true, false, false);
+    expect(received).toEqual(true);
+    done();
+  });
+
+  test('isTrue: "auto", autoValue = true, prod mode', (done) => {
+    Options.prodMode = true;
+    const received = Options.toBool('auto', true, false);
+    expect(received).toEqual(true);
+    done();
+  });
+
+  test('isTrue: "auto", autoValue = false, prod mode', (done) => {
+    Options.prodMode = true;
+    const received = Options.toBool('auto', false, false);
+    expect(received).toEqual(false);
+    done();
+  });
+
+  test('isTrue: "auto", autoValue = true, dev mode', (done) => {
+    Options.prodMode = false;
+    const received = Options.toBool('auto', true, false);
+    expect(received).toEqual(false);
+    done();
+  });
+
+  test('isTrue: "auto", autoValue = false, dev mode', (done) => {
+    Options.prodMode = false;
+    const received = Options.toBool('auto', false, false);
+    expect(received).toEqual(true);
     done();
   });
 });
@@ -493,6 +544,14 @@ describe('special cases', () => {
 
   test('resolve assets without extension', (done) => {
     compareFileListAndContent(PATHS, 'resolve-assets-without-ext', done);
+  });
+
+  test('Template with CRLF line separator', (done) => {
+    compareFileListAndContent(PATHS, 'template-clrf', done);
+  });
+
+  test('encode / decode reserved HTML chars', (done) => {
+    compareFileListAndContent(PATHS, 'decode-chars', done);
   });
 });
 

@@ -1,5 +1,9 @@
 # Change log
 
+## 1.5.2 (2023-03-03)
+- fix: correct loader export when template contain CRLF line separators
+- fix: correct resolve `auto` value for `verbose` option
+
 ## 1.5.1 (2023-03-03)
 - fix: add LF after each generated script tag in dev mode for pretty HTML formatting
 
