@@ -1,6 +1,6 @@
 const { black, yellow, cyan, magenta } = require('ansis/colors');
 const { pluginName } = require('../../config');
-const { outToConsole, parseRequest } = require('../Utils');
+const { outToConsole, parseRequest } = require('../../Common/Helpers');
 
 const header = `\n${black.bgYellow` ${pluginName} `}${black.bgAnsi(227)` WARNING `} `;
 

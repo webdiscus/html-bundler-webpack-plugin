@@ -48,7 +48,7 @@ module.exports = {
   optimization: {
     splitChunks: {
       cacheGroups: {
-        //chunks: 'all', // DON'T use default splitting, it's break compilation process in pug-plugin
+        //chunks: 'all', // DON'T use default splitting, it's break compilation process in the plugin
         scripts: {
           // split scripts only, because webpack compile all assets such as css, html, into JS module
           test: /\.(js|ts)$/,

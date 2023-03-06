@@ -1,10 +1,8 @@
 const path = require('path');
-const Asset = require('./Asset');
 const AssetEntry = require('./AssetEntry');
 const AssetTrash = require('./AssetTrash');
 const Options = require('./Options');
 const ScriptCollection = require('./ScriptCollection');
-const { isWin, pathToPosix } = require('./Utils');
 
 class AssetScript {
   static index = {};
@@ -38,7 +36,6 @@ class AssetScript {
   static isScript(module) {
     if (module.__isScript == null) {
       let [scriptFile] = module.resource.split('?', 1);
-      if (isWin) scriptFile = pathToPosix(scriptFile);
       module.__isScript = ScriptCollection.has(scriptFile);
     }
 

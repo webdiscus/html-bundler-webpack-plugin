@@ -7,7 +7,7 @@ import {
   watchStdoutCompare,
 } from './utils/helpers';
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
-import { parseQuery } from '../src/Plugin/Utils';
+import { parseQuery } from '../src/Common/Helpers';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Template from '../src/Loader/Template';
 import Options from '../src/Plugin/Options';

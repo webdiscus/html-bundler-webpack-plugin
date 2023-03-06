@@ -5,7 +5,6 @@ const ResolverFactory = require('enhanced-resolve');
 
 const Options = require('./Options');
 const PluginService = require('../Plugin/PluginService');
-const { isWin, pathToPosix } = require('./Utils');
 const { resolveException } = require('./Messages/Exeptions');
 
 class Resolver {
@@ -113,7 +112,7 @@ class Resolver {
       resolvedFile = this.resolveScriptExtension(resolvedFile);
     }
 
-    return isWin ? pathToPosix(resolvedFile) : resolvedFile;
+    return resolvedFile;
   }
 
   /**

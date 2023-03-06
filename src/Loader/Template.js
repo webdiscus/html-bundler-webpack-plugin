@@ -1,7 +1,6 @@
 const PluginService = require('../Plugin/PluginService');
 const Loader = require('./Loader');
 const Options = require('./Options');
-const { isWin, pathToPosix } = require('./Utils');
 
 const spaceChars = [' ', '\t', '\n', '\r', '\f'];
 
@@ -94,8 +93,6 @@ class Template {
     const result = this.normalizeTagsList(tags);
     let output = '';
     let pos = 0;
-
-    if (isWin) issuer = pathToPosix(issuer);
 
     for (let { type, file, startPos, endPos } of result) {
       const resolvedFile = this.resolve({ type, file, issuer });

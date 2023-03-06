@@ -1,6 +1,6 @@
 const path = require('path');
 const extractCssModule = require('./Modules/extractCss');
-const { isWin, isFunction, pathToPosix } = require('./Utils');
+const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const { optionModulesException } = require('./Messages/Exception');
 
 /**
