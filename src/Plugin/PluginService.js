@@ -78,10 +78,10 @@ class PluginService {
   }
 
   /**
-   * Reset states.
-   * Used for tests to reset state after each test case.
+   * Called when the compiler is closing.
+   * Used for tests to reset data after each test case.
    */
-  static reset() {
+  static shutdown() {
     this.#used = false;
     this.contextCache.clear();
   }

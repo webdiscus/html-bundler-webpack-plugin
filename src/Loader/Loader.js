@@ -92,12 +92,12 @@ class Loader {
   /**
    * Export code with error message.
    *
-   * @param {string} message
+   * @param {Error} error
    * @param {string} issuer The issuer where the error occurred.
    * @return {string}
    */
-  static exportError(message, issuer) {
-    return this.compiler?.exportError(message, issuer) || message.toString();
+  static exportError(error, issuer) {
+    return this.compiler?.exportError(error, issuer) || error.toString();
   }
 }
 

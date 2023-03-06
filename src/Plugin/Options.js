@@ -1,5 +1,5 @@
 const path = require('path');
-const extractCss = require('./Modules/extractCss');
+const extractCssModule = require('./Modules/extractCss');
 const { isWin, isFunction, pathToPosix } = require('./Utils');
 const { optionModulesException } = require('./Messages/Exception');
 
@@ -48,20 +48,14 @@ class Options {
       optionModulesException(options.modules);
     }
 
-    let extractCssOptions = extractCss(options.css);
-    const moduleExtractCssOptions = options.modules.find((item) => item.test.source === extractCssOptions.test.source);
+    const extractCssOptions = extractCssModule(options.css);
 
-    if (moduleExtractCssOptions) {
-      extractCssOptions = moduleExtractCssOptions;
-    } else {
-      this.options.modules.unshift(extractCssOptions);
-    }
-
-    if (!options.watchFiles) this.options.watchFiles = {};
-
+    this.options.modules.unshift(extractCssOptions);
     this.options.extractJs = options.js || {};
     this.options.extractCss = extractCssOptions;
     this.options.afterProcess = isFunction(options.afterProcess) ? options.afterProcess : null;
+
+    if (!options.watchFiles) this.options.watchFiles = {};
   }
 
   /**
@@ -71,21 +65,19 @@ class Options {
    */
   static initWebpack(options) {
     const webpackOutput = options.output;
-    const { extractJs } = this.options;
+    const { extractJs, extractCss } = this.options;
 
     this.webpackOptions = options;
     this.rootPath = options.context;
     this.prodMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
     extractJs.verbose = this.toBool(extractJs.verbose, false, false);
+    extractJs.inline = this.toBool(extractJs.inline, false, false);
     extractCss.verbose = this.toBool(extractCss.verbose, false, false);
+    extractCss.inline = this.toBool(extractCss.inline, false, false);
 
-    if (!webpackOutput.path) webpackOutput.path = path.join(this.context, 'dist');
+    this.#initWebpackOutput(webpackOutput);
 
-    // define js output filename
-    if (!webpackOutput.filename) {
-      webpackOutput.filename = '[name].js';
-    }
     if (extractJs.filename) {
       webpackOutput.filename = extractJs.filename;
     } else {
@@ -118,6 +110,38 @@ class Options {
       // By using watch/serve browsers not support an automatic publicPath in HMR script injected into inlined JS,
       // the output.publicPath must be an empty string.
       this.webpackOptions.output.publicPath = '';
+    }
+  }
+
+  static #initWebpackOutput(output) {
+    let { publicPath } = output;
+    if (!output.path) output.path = path.join(this.context, 'dist');
+
+    // define js output filename
+    if (!output.filename) {
+      output.filename = '[name].js';
+    }
+
+    if (typeof publicPath === 'function') {
+      publicPath = publicPath.call(null, {});
+    }
+    if (publicPath === undefined) {
+      publicPath = 'auto';
+    }
+
+    // reset initial states
+    this.isAutoPublicPath = false;
+    this.isUrlPublicPath = false;
+    this.isRelativePublicPath = false;
+    this.webpackPublicPath = publicPath;
+    this.webpackOutputPath = output.path;
+
+    if (publicPath === 'auto') {
+      this.isAutoPublicPath = true;
+    } else if (/^(\/\/|https?:\/\/)/i.test(publicPath)) {
+      this.isUrlPublicPath = true;
+    } else if (!publicPath.startsWith('/')) {
+      this.isRelativePublicPath = true;
     }
   }
 
@@ -163,10 +187,6 @@ class Options {
     return this.prodMode === false;
   }
 
-  static isProdMode() {
-    return this.prodMode === true;
-  }
-
   static isVerbose() {
     return this.verbose;
   }
@@ -177,6 +197,40 @@ class Options {
 
   static isStyle(file) {
     return this.options.extractCss.enabled && this.options.extractCss.test.test(file);
+  }
+
+  /**
+   * Whether the resource should be inlined.
+   *
+   * @param {string} resource The resource request with a query.
+   * @param {boolean} defaultValue When resource query doesn't have the `inline` parameter then return default value.
+   * @return {boolean}
+   */
+  static #isInlineResource(resource, defaultValue) {
+    const [, query] = resource.split('?', 2);
+    const value = new URLSearchParams(query).get('inline');
+
+    return this.toBool(value, false, defaultValue);
+  }
+
+  /**
+   * Whether the JS resource should be inlined.
+   *
+   * @param {string} resource
+   * @return {boolean}
+   */
+  static isInlineJs(resource) {
+    return this.#isInlineResource(resource, this.options.extractJs.inline);
+  }
+
+  /**
+   * Whether the CSS resource should be inlined.
+   *
+   * @param {string} resource
+   * @return {boolean}
+   */
+  static isInlineCss(resource) {
+    return this.#isInlineResource(resource, this.options.extractCss.inline);
   }
 
   /**
@@ -191,7 +245,7 @@ class Options {
   }
 
   /**
-   * Resolve undefined|true|false|'auto' value depend on current Webpack mode dev/prod.
+   * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
    *
    * @param {boolean|string|undefined} value The value one of true, false, 'auto'.
    * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
@@ -200,6 +254,9 @@ class Options {
    */
   static toBool(value, autoValue, defaultValue) {
     if (value == null) return defaultValue;
+    // note: if parameter is defined without a value or value is empty then the value is true
+    if (value === '' || value === 'true') return true;
+    if (value === 'false') return false;
     if (value === true || value === false) return value;
 
     return value === 'auto' && this.prodMode === autoValue;
@@ -238,7 +295,62 @@ class Options {
     return this.options.modules.find((module) => module.enabled !== false && module.test.test(sourceFile));
   }
 
+  static getWebpackOutputPath() {
+    return this.webpackOptions.output.path;
+  }
+
   /**
+   * Get the output path of the asset.
+   *
+   * @param {string | null} assetFile The output asset filename relative by output path.
+   * @return {string}
+   */
+  static getAssetOutputPath(assetFile = null) {
+    let isAutoRelative = assetFile && this.isRelativePublicPath && !assetFile.endsWith('.html');
+
+    if (this.isAutoPublicPath || isAutoRelative) {
+      if (!assetFile) return '';
+
+      const fullFilename = path.resolve(this.webpackOutputPath, assetFile);
+      const context = path.dirname(fullFilename);
+      const publicPath = path.relative(context, this.webpackOutputPath) + '/';
+
+      return isWin ? pathToPosix(publicPath) : publicPath;
+    }
+
+    return this.webpackPublicPath;
+  }
+
+  /**
+   * Get the output asset file regards the publicPath.
+   *
+   * @param {string} assetFile The output asset filename relative by output path.
+   * @param {string} issuer The output issuer filename relative by output path.
+   * @return {string}
+   */
+  static getAssetOutputFile(assetFile, issuer) {
+    let isAutoRelative = issuer && this.isRelativePublicPath && !issuer.endsWith('.html');
+
+    // if public path is relative, then a resource using not in the template file must be auto resolved
+    if (this.isAutoPublicPath || isAutoRelative) {
+      if (!issuer) return assetFile;
+
+      const issuerFullFilename = path.resolve(this.webpackOutputPath, issuer);
+      const context = path.dirname(issuerFullFilename);
+      const file = path.posix.join(this.webpackOutputPath, assetFile);
+      const outputFilename = path.relative(context, file);
+
+      return isWin ? pathToPosix(outputFilename) : outputFilename;
+    }
+
+    return this.webpackPublicPath + '' + assetFile;
+  }
+
+  /**
+   * TODO:
+   *  - add dependencies (entry-point => all assets used in the template) as argument
+   *  - test not yet documented experimental feature
+   *
    * @param {string} content
    * @param {string} sourceFile
    * @param {string} assetFile
@@ -251,9 +363,6 @@ class Options {
     let result;
 
     try {
-      // TODO:
-      //   - add dependencies (entry-point => all assets used in the template) as argument
-      //   - test not yet documented experimental feature
       result = this.options.afterProcess(content, { sourceFile, assetFile });
     } catch (err) {
       throw new Error(err);

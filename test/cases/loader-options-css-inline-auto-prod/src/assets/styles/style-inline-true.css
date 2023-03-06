@@ -1,0 +1,10 @@
+.inline-true {
+  color: orangered;
+}
+
+.inline-true-img {
+  border: 2px solid orangered;
+  width: 160px;
+  height: 130px;
+  background-image: url("@images/apple.png");
+}

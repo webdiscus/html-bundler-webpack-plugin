@@ -1,6 +1,6 @@
 const path = require('path');
+const Options = require('./Options');
 const { isWin } = require('../Common/Helpers');
-const { isInline } = require('../Loader/Utils');
 
 /**
  * Store of script files from `script` tag for sharing with the plugin.
@@ -24,15 +24,14 @@ class ScriptCollection {
    * @param {string} issuer The issuer of resource.
    */
   static add(resource, issuer) {
-    const [file, query] = resource.split('?', 1);
+    const [file] = resource.split('?', 1);
 
     let item = this.files.get(file);
     if (!item) {
       item = {
         name: undefined,
         file,
-        query,
-        inline: isInline(resource),
+        inline: Options.isInlineJs(resource),
         issuers: [],
         chunkFiles: new Set(),
       };

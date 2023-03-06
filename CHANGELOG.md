@@ -1,5 +1,20 @@
 # Change log
 
+## 1.6.0 (2023-03-06)
+- feat: add `css.inline` option, replaces the functionality of `style-loader`.\
+  The values of `inline` option:
+  - false - extract processed CSS in an output file, defaults
+  - true - inline processed CSS into HTML via `style` tag
+  - 'auto' - in development mode - inline CSS, in production mode - extract in a file
+- feat: add `js.inline` option to inline extracted JS into HTML
+- feat: add to the `?inline` query parameter  for JS and CSS files the values: `false`, `true`, `'auto'`.\
+  Note: the query parameter takes precedence over global `js.inline` or `css.inline` option.
+- fix: emit a loader exception as an instance of Error instead a string
+- fix: throw exception when the loader is used but the `HtmlBundlerPlugin` is not initialized in Webpack plugins option
+- refactor: optimize and improve the code
+- test: add tests for inline CSS and JS
+- docs: update readme with new features
+
 ## 1.5.2 (2023-03-03)
 - fix: correct loader export when template contain CRLF line separators
 - fix: correct resolve `auto` value for `verbose` option

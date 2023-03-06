@@ -38,7 +38,7 @@ module.exports = {
         preprocessor: (template, { rootContext, data }) =>
           require('ejs').render(template, data, { root: path.join(rootContext, 'src/views') }),
       },
-      verbose: 'auto',
+      //verbose: 'auto',
       //verbose: true,
       //verbose: false,
     }),

@@ -53,7 +53,7 @@ const { executeTemplateFunctionException, postprocessException } = require('./Me
  * @property {string} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
  * @property {function(string, ResourceInfo, Compilation): string|null =} postprocess The post process for extracted content from entry.
- * @property {function(sourceMaps: string, assetFile: string, compilation: Compilation): string|null =} extract
+ * @property {function(compilation: Compilation, {source: string, assetFile: string, inline: boolean} ): string|null =} extract
  */
 
 /**
@@ -160,26 +160,21 @@ class AssetCompiler {
     Options.enableLibraryType(this.entryLibrary.type);
     this.initialize(compiler);
 
-    Asset.init({
-      outputPath: Options.webpackOptions.output.path,
-      publicPath: Options.webpackOptions.output.publicPath,
-    });
     AssetResource.init(compiler);
-    AssetEntry.setWebpackOutputPath(Options.webpackOptions.output.path);
 
     // clear caches by tests for webpack serve/watch
     AssetScript.clear();
     Resolver.clear();
     AssetEntry.clear();
 
-    // entry options
-    compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
-
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
       Options.initWatchMode();
       PluginService.setWatchMode(true);
     });
+
+    // entry options
+    compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
@@ -239,6 +234,8 @@ class AssetCompiler {
     });
 
     compiler.hooks.done.tap(pluginName, this.done);
+    compiler.hooks.shutdown.tap(pluginName, this.shutdown);
+    compiler.hooks.watchClose.tap(pluginName, this.shutdown);
   }
 
   /**
@@ -403,13 +400,12 @@ class AssetCompiler {
 
       if (!sourceRequest || AssetInline.isDataUrl(sourceRequest)) continue;
 
-      const inline = Asset.isInline(resourceResolveData.query) || module.type === 'asset/source';
       const { issuer } = resourceResolveData.context;
       const [sourceFile] = sourceRequest.split('?', 1);
       let issuerFile = !issuer || Options.isEntry(issuer) ? entry.importFile : issuer;
 
       if (module.type === 'javascript/auto') {
-        // do nothing for scripts because webpack itself compiles and extracts JS files from scripts
+        // extract JS: do nothing for scripts because webpack itself compiles and extracts JS files from scripts
         if (AssetScript.isScript(module)) {
           if (entry.importFile === issuer) {
             const { verbose, outputPath } = Options.getJs();
@@ -447,7 +443,7 @@ class AssetCompiler {
           }
 
           assetModules.add({
-            inline,
+            inline: false,
             // resourceInfo
             isEntry: true,
             verbose: entry.verbose,
@@ -513,11 +509,14 @@ class AssetCompiler {
 
         Resolver.addAsset(sourceRequest, assetFile);
 
+        // extract CSS
+        const inline = Asset.isStyle(module) ? Options.isInlineCss(resourceResolveData.query) : false;
+
         if (inline) {
           AssetSource.add(sourceRequest);
         }
 
-        // skip already processed file assets, but all inline assets must be processed
+        // skip already processed asset except inlined asset
         if (isCached && !inline) {
           continue;
         }
@@ -684,12 +683,12 @@ class AssetCompiler {
 
     if (pluginModule) {
       if (pluginModule.extract) {
-        pluginModule.inline = inline;
-        result = pluginModule.extract(result, assetFile, this.compilation);
+        result = pluginModule.extract(this.compilation, { source: result, assetFile, inline });
       }
       if (pluginModule.postprocess) {
         const resourceInfo = {
           isEntry,
+          inline,
           verbose,
           outputPath,
           sourceFile,
@@ -776,6 +775,13 @@ class AssetCompiler {
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
+  }
+
+  /**
+   * Called when the compiler is closing or a watching compilation has stopped.
+   */
+  shutdown() {
+    PluginService.shutdown();
   }
 }
 

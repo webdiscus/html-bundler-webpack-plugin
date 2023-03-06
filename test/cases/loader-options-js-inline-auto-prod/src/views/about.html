@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>About</title>
+
+  <!-- file JS -->
+  <script src="@scripts/script-inline-false.js?inline=false" defer="defer"></script>
+
+  <!-- inline JS: ?inline=true -->
+  <script src="@scripts/script-inline-true.js?inline=true" defer="defer"></script>
+
+  <!-- inline JS: ?inline -->
+  <script src="@scripts/script-inline.js?inline" defer="defer"></script>
+
+  <!-- inline/file JS: ?inline=auto -->
+  <script src="@scripts/script-auto.js?inline=auto" defer="defer"></script>
+
+  <!-- inline/file JS: depend on js.inline option -->
+  <script src="@scripts/script.js"></script>
+
+</head>
+<body>
+  <h1>About</h1>
+  <div class="js-image-script-inline-false"></div>
+  <div class="js-image-script-inline-true"></div>
+</body>
+</html>

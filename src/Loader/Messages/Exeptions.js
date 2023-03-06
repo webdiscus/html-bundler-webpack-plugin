@@ -1,6 +1,8 @@
 const ansis = require('ansis');
-const { bgRed, redBright, yellow, cyan, green } = require('ansis/colors');
+const { bgRed, yellow, cyan, green, ansi256, cyanBright } = require('ansis/colors');
 const { pluginName } = require('../../config');
+
+const redBright = ansi256(203);
 
 const pluginHeaderHtml = `<span style="color:#e36049">[${pluginName}]</span>`;
 const pluginHeader = `\n${bgRed.whiteBright` ${pluginName} `}`;
@@ -80,30 +82,49 @@ const errorToHtml = (error, hmr) => {
 };
 
 /**
- * @param {Error} error
- * @param {string} file
- * @returns {string}
+ * @returns {Error}
  */
-const preprocessorErrorToString = (error, file) => {
-  return `${pluginHeader} Preprocessor failed\nFile: ${cyan(file)}\n` + error.toString();
+const notInitializedPluginError = () => {
+  return new LoaderException(
+    redBright(
+      `${pluginHeader} Illegal usage of the loader.\n` +
+        `This loader should be used only with the ${green`HtmlBundlerPlugin`} initialized in the ${yellow`Webpack 'plugins' option`}!\n` +
+        `See the documentation: ${cyanBright`https://github.com/webdiscus/html-bundler-webpack-plugin`}`
+    )
+  );
 };
 
 /**
  * @param {Error} error
  * @param {string} file
- * @returns {string}
+ * @returns {Error}
  */
-const compileErrorToString = (error, file) => {
-  return `${pluginHeader} Template compilation failed\nFile: ${cyan(file)}\n` + error.toString();
+const preprocessorError = (error, file) => {
+  return new LoaderException(
+    `${pluginHeader} Preprocessor failed\nFile: ${cyan(file)}\n` + (error.stack || error.message)
+  );
 };
 
 /**
  * @param {Error} error
  * @param {string} file
- * @returns {string}
+ * @returns {Error}
  */
-const exportErrorToString = (error, file) => {
-  return `${pluginHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + error.toString();
+const compileError = (error, file) => {
+  return new LoaderException(
+    `${pluginHeader} Template compilation failed\nFile: ${cyan(file)}\n` + (error.stack || error.message)
+  );
+};
+
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @returns {Error}
+ */
+const exportError = (error, file) => {
+  return new LoaderException(
+    `${pluginHeader} Export of compiled template failed\nFile: ${cyan(file)}\n` + (error.stack || error.message)
+  );
 };
 
 module.exports = {
@@ -111,7 +132,8 @@ module.exports = {
   errorToHtml,
   resolveException,
   watchPathsException,
-  preprocessorErrorToString,
-  compileErrorToString,
-  exportErrorToString,
+  notInitializedPluginError,
+  preprocessorError,
+  compileError,
+  exportError,
 };

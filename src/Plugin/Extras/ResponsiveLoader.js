@@ -1,6 +1,7 @@
 const vm = require('vm');
 const Asset = require('../Asset');
 const { isWin, parseQuery } = require('../Utils');
+const Options = require('../Options');
 
 class ResponsiveLoader {
   isUsed = false;
@@ -89,7 +90,7 @@ class ResponsiveLoader {
 
       if (source) {
         const contextObject = vm.createContext({
-          __webpack_public_path__: Asset.getPublicPath(issuerAssetFile),
+          __webpack_public_path__: Options.getAssetOutputPath(issuerAssetFile),
           module: { exports: {} },
         });
         const script = new vm.Script(source, { filename: sourceFile });
@@ -108,10 +109,10 @@ class ResponsiveLoader {
     // and add the original asset file to trash to remove it from compilation
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];
     if (assets.length === 1) {
-      asset = Asset.getOutputFile(assets[0], issuerAssetFile);
+      asset = Options.getAssetOutputFile(assets[0], issuerAssetFile);
     } else if (assets.length > 1 && sizes.length > 1) {
       asset = assets
-        .map((assetFile, index) => Asset.getOutputFile(assetFile, issuerAssetFile) + ` ${sizes[index]}w`)
+        .map((assetFile, index) => Options.getAssetOutputFile(assetFile, issuerAssetFile) + ` ${sizes[index]}w`)
         .join(',');
     }
 

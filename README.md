@@ -39,6 +39,7 @@ defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
+
 ### Simple usage example
 
 Add source scripts and styles directly to HTML:
@@ -114,8 +115,8 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [entry](#option-entry) (define HTML templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
-   - [js](#option-js) (output filename of extracted JS)
-   - [css](#option-css) (output filename of extracted CSS)
+   - [js](#option-js) (options to extract JS)
+   - [css](#option-css) (options to extract CSS)
    - [postprocess](#option-postprocess)
    - [minify](#option-minify) (minification of generated HTML)
    - [extractComments](#option-extractComments)
@@ -471,13 +472,18 @@ Default properties:
 {
   filename: '[name].js', 
   outputPath: null,
+  inline: false,
   verbose: false,
 }
 ```
 
-- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).\
+- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
-- `verbose` - enable/disable display process information for styles
+- `inline` - globally inline all extracted JS into HTML, available values:
+  - `false` - extract processed JS in an output file, defaults
+  - `true` - inline processed JS into HTML
+  - `'auto'` - in `development` mode - inline JS, in `production` mode - extract in a file
+- `verbose` - enable/disable display process information for scripts
 
 The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
 
@@ -526,8 +532,12 @@ Default properties:
 ```
 
 - `test` - an RegEpx to process all source styles that pass test assertion
-- `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).\
+- `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `inline` - globally inline all extracted CSS into HTML, available values:
+  - `false` - extract processed CSS in an output file, defaults
+  - `true` - inline processed CSS into HTML via `style` tag
+  - `'auto'` - in `development` mode - inline CSS, in `production` mode - extract in a file
 - `verbose` - enable/disable display process information for styles
 
 This is the option to extract CSS from a style source file specified in the HTML tag:
@@ -1725,7 +1735,32 @@ The generated HTML contains output fonts filenames:
 <a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
 ## How to inline CSS in HTML
 
-For example, the _style.scss_:
+There are two ways to inline CSS in HTML:
+- inline all CSS globally with `css.inline` [option](#option-css)
+- inline single CSS with `?inline` query added to a filename
+
+
+The `inline` option can take the following values: `false`, `true` and `'auto'`.
+For details see the [inline option](#option-css).
+
+> **Note**
+> 
+> The individual `?inline` query parameter takes precedence over the globally `css.inline` option.\
+> For example, if `css.inline = true` and in HTML a single file has the `?inline=false` query, 
+> this file will be extracted in an output file, while all other styles will be inlined.
+
+
+For example, there are two SCSS files:
+
+_main.scss_
+```scss
+$bgColor: steelblue;
+body {
+  background-color: $bgColor;
+}
+```
+
+_style.scss_:
 ```scss
 $color: red;
 h1 {
@@ -1733,13 +1768,72 @@ h1 {
 }
 ```
 
-Add the `?inline` query to the source filename which you want to inline:
+There is the _./src/views/index.html_ with both style files:
+
 ```html
 <html>
 <head>
-  <!-- load style as file -->
   <link href="./main.scss" rel="stylesheet" />
-  <!-- inline style -->
+  <link href="./style.scss" rel="stylesheet" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+To inline all CSS globally add the `css.inline` option:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html',
+      },
+      css: {
+        inline: true, // <= all style files will be inlined into HTML
+        filename: 'css/[name].[contenthash:8].css',
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+    ],
+  },
+};
+```
+
+The generated HTML contains inlined CSS:
+```html
+<html>
+<head>
+  <style>
+    body{ background-color: steelblue; }
+  </style>
+  <style>
+    h1{ color: red; }
+  </style>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+To inline a single CSS, add the `?inline` query to a style file which you want to inline:
+
+```html
+<html>
+<head>
+  <!-- file CSS -->
+  <link href="./main.scss" rel="stylesheet" />
+  <!-- inline CSS -->
   <link href="./style.scss?inline" rel="stylesheet" />
 </head>
 <body>
@@ -1753,9 +1847,9 @@ The generated HTML contains inline CSS already processed via Webpack:
 ```html
 <html>
 <head>
-  <!-- load style as file -->
+  <!-- file CSS -->
   <link href="/assets/css/main.05e4dd86.css" rel="stylesheet">
-  <!-- inline style -->
+  <!-- inline CSS -->
   <style>
     h1{color: red;}
   </style>
@@ -1768,7 +1862,7 @@ The generated HTML contains inline CSS already processed via Webpack:
 
 > **Note**
 >
-> To enable source map in inline CSS set the Webpack option `devtool`.
+> To enable source map in inline CSS set the Webpack option [`devtool`](https://webpack.js.org/configuration/devtool/#devtool).
 
 ---
 
@@ -1776,18 +1870,91 @@ The generated HTML contains inline CSS already processed via Webpack:
 <a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
 ## How to inline JS in HTML
 
-For example, the _script.js_:
+There are two ways to inline CSS in HTML:
+- inline all JS globally with `js.inline` [option](#option-js)
+- inline single JS with `?inline` query added to a filename
+
+The `inline` option can take the following values: `false`, `true` and `'auto'`.
+For details see the [inline option](#option-js).
+
+> **Note**
+>
+> The individual `?inline` query parameter takes precedence over the globally `js.inline` option.\
+> For example, if `js.inline = true` and in HTML a single file has the `?inline=false` query,
+> this file will be extracted in an output file, while all other scripts will be inlined.
+
+For example, there are two JS files:
+
+_main.js_
+
 ```js
-console.log('Hello JS!');
+console.log('>> main.js');
 ```
 
-Add the `?inline` query to the source filename which you want to inline:
+_script.js_
+```js
+console.log('>> script.js');
+```
+
+There is the _./src/views/index.html_ with both script files:
+
 ```html
 <html>
 <head>
-  <!-- load script as file -->
   <script src="./main.js" defer="defer"></script>
-  <!-- inline script -->
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <script src="./script.js"></script>
+</body>
+</html>
+```
+
+
+To inline all JS globally add the `js.inline` option:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html',
+      },
+      js: {
+        inline: true, // <= all script files will be inlined into HTML
+        filename: 'js/[name].[contenthash:8].js',
+      },
+    }),
+  ],
+};
+```
+
+The generated HTML contains inlined JS scripts:
+```html
+<html>
+<head>
+  <script>
+    (()=>{"use strict";console.log(">> main.js")})();
+  </script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <script>
+    (()=>{"use strict";console.log(">> script.js")})();
+  </script>
+</body>
+</html>
+```
+
+To inline a single JS file, add the `?inline` query to a script file which you want to inline:
+
+```html
+<html>
+<head>
+  <!-- file JS -->
+  <script src="./main.js" defer="defer"></script>
+  <!-- inline JS -->
   <script src="./script.js?inline"></script>
 </head>
 <body>
@@ -1801,11 +1968,11 @@ The generated HTML contains inline JS already compiled via Webpack:
 ```html
 <html>
 <head>
-  <!-- load style as file -->
+  <!-- file JS -->
   <script src="assets/js/main.992ba657.js" defer="defer"></script>
-  <!-- inline script -->
+  <!-- inline JS -->
   <script>
-    (()=>{"use strict";console.log("Hello JS!")})();
+    (()=>{"use strict";console.log(">> script.js")})();
   </script>
 </head>
 <body>

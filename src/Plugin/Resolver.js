@@ -5,6 +5,7 @@ const AssetScript = require('./AssetScript');
 const AssetSource = require('./AssetSource');
 const { duplicateScriptWarning, duplicateStyleWarning } = require('./Messages/Warning');
 const { resolveException } = require('./Messages/Exception');
+const Options = require('./Options');
 
 class Resolver {
   static fs = null;
@@ -41,7 +42,7 @@ class Resolver {
    * For each new chunk must be cleaned.
    * Note: same module can have many issuers and can be saved under different asset filenames.
    *
-   * @type {Map<string, {issuers:Map, originalAssetFile:string, moduleHandler?:Function<originalAssetFile:string, issuer:string>}>}
+   * @type {Map<string, {issuers:Map, originalAssetFile:string, moduleHandler?:(originalAssetFile:string, issuer:string) => string}>}
    */
   static data = new Map();
 
@@ -245,29 +246,29 @@ class Resolver {
    * @return {string|null}
    */
   static resolveAsset(sourceFile) {
-    const { entryPoint, issuerRequest: issuer } = this;
-    const issuerInline = AssetSource.isInline(issuer);
     const item = this.data.get(sourceFile);
-    let assetOutputFile;
 
     if (!item) return null;
 
+    const { entryPoint, issuerRequest, issuerFile: issuer } = this;
     const key = this.getAssetKey(issuer, entryPoint);
     const assetFile = item.issuers.get(key);
+    const isInlinedIssuer = AssetSource.isInline(issuerRequest);
 
-    if (assetFile && !issuerInline) return assetFile;
+    if (assetFile && !isInlinedIssuer) return assetFile;
 
     const { originalAssetFile, moduleHandler } = item;
+    let assetOutputFile;
 
     if (originalAssetFile != null) {
       // normalize output asset files
       if (AssetInline.isDataUrl(originalAssetFile)) {
         assetOutputFile = originalAssetFile;
       } else {
-        const issuerAssetFile = issuerInline ? entryPoint.filename : Asset.findAssetFile(issuer);
+        const issuerAssetFile = isInlinedIssuer ? entryPoint.filename : Asset.findAssetFile(issuer);
 
         if (issuerAssetFile) {
-          assetOutputFile = Asset.getOutputFile(originalAssetFile, issuerAssetFile);
+          assetOutputFile = Options.getAssetOutputFile(originalAssetFile, issuerAssetFile);
         }
       }
     } else if (moduleHandler != null) {

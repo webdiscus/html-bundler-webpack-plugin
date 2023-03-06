@@ -156,7 +156,7 @@ class AssetScript {
           // replace source filename with asset filename
           if (chunkFiles.length === 1) {
             const chunkFile = chunkFiles.values().next().value;
-            const assetFile = Asset.getOutputFile(chunkFile, issuerAssetFilename);
+            const assetFile = Options.getAssetOutputFile(chunkFile, issuerAssetFilename);
 
             if (asset.inline === true) {
               const source = assets[chunkFile].source();
@@ -164,7 +164,8 @@ class AssetScript {
               if (pos > -1) {
                 // note: the str.replace(searchValue, replaceValue) is buggy when the replaceValue contains chars chain '$$'
                 newContent = content.slice(0, pos) + source + content.slice(pos + sourceFile.length);
-                AssetTrash.add(assetFile);
+                // note: the keys in compilation.assets are exact the chunkFile
+                AssetTrash.add(chunkFile);
               }
             } else {
               newContent = content.replace(sourceFile, assetFile);
@@ -193,7 +194,7 @@ class AssetScript {
               // avoid generate a script of the same split chunk used in different js files required in one template file,
               // happens when used optimisation.splitChunks
               if (!chunkScripts.has(chunkFile)) {
-                const assetFile = Asset.getOutputFile(chunkFile, issuerAssetFilename);
+                const assetFile = Options.getAssetOutputFile(chunkFile, issuerAssetFilename);
 
                 if (scriptTags) scriptTags += LF;
                 scriptTags += tmplScriptStart + assetFile + tmplScriptEnd;

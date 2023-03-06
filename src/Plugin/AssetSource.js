@@ -5,13 +5,13 @@ class AssetSource {
   static data = new Map();
 
   /**
-   * @param {string} file
+   * @param {string} resource The filename including a query.
    * @return {boolean}
    */
-  static isInline(file) {
+  static isInline(resource) {
     // fix: a file resolved in the loader is always in posix format,
     // but in the plugin the file can be in win format, therefore normalize the file
-    return this.data.has(path.normalize(file));
+    return this.data.has(path.normalize(resource));
   }
 
   /**

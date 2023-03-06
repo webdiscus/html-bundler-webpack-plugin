@@ -1,3 +1,5 @@
+const Options = require('./Options');
+
 /**
  * AssetTrash singleton.
  * Accumulate and remove junk assets from compilation.
@@ -33,6 +35,7 @@ class AssetTrash {
     this.trash.forEach((file) => {
       compilation.deleteAsset(file);
     });
+
     this.reset();
   }
 

@@ -1,6 +1,3 @@
-const path = require('path');
-const { isWin, pathToPosix } = require('./Utils');
-
 class Asset {
   /**
    * The cache of resolved output asset filenames.
@@ -16,89 +13,6 @@ class Asset {
    * @type {Object<file: string, index: number>}
    */
   static fileIndex = {};
-
-  /**
-   *
-   * @param {string} outputPath
-   * @param {string | undefined} publicPath
-   */
-  static init({ outputPath, publicPath }) {
-    if (typeof publicPath === 'function') {
-      publicPath = publicPath.call(null, {});
-    }
-
-    this.outputPath = outputPath;
-    this.publicPath = publicPath === undefined ? 'auto' : publicPath;
-
-    // reset initial states
-    this.isAutoPublicPath = false;
-    this.isUrlPublicPath = false;
-    this.isRelativePublicPath = false;
-
-    if (this.publicPath === 'auto') {
-      this.isAutoPublicPath = true;
-    } else if (/^(\/\/|https?:\/\/)/i.test(this.publicPath)) {
-      this.isUrlPublicPath = true;
-    } else if (!this.publicPath.startsWith('/')) {
-      this.isRelativePublicPath = true;
-    }
-  }
-
-  /**
-   * Reset settings.
-   * Called before each compilation after changes by `webpack serv/watch`.
-   */
-  static reset() {
-    this.fileIndex = {};
-    this.files.clear();
-  }
-
-  /**
-   * Get the publicPath.
-   *
-   * @param {string | null} assetFile The output asset filename relative by output path.
-   * @return {string}
-   */
-  static getPublicPath(assetFile = null) {
-    let isAutoRelative = assetFile && this.isRelativePublicPath && !assetFile.endsWith('.html');
-
-    if (this.isAutoPublicPath || isAutoRelative) {
-      if (!assetFile) return '';
-
-      const fullFilename = path.resolve(this.outputPath, assetFile);
-      const context = path.dirname(fullFilename);
-      const publicPath = path.relative(context, this.outputPath) + '/';
-
-      return isWin ? pathToPosix(publicPath) : publicPath;
-    }
-
-    return this.publicPath;
-  }
-
-  /**
-   * Get the output asset file regards the publicPath.
-   *
-   * @param {string} assetFile The output asset filename relative by output path.
-   * @param {string} issuer The output issuer filename relative by output path.
-   * @return {string}
-   */
-  static getOutputFile(assetFile, issuer) {
-    let isAutoRelative = issuer && this.isRelativePublicPath && !issuer.endsWith('.html');
-
-    // if public path is relative, then a resource using not in the template file must be auto resolved
-    if (this.isAutoPublicPath || isAutoRelative) {
-      if (!issuer) return assetFile;
-
-      const issuerFullFilename = path.resolve(this.outputPath, issuer);
-      const context = path.dirname(issuerFullFilename);
-      const file = path.posix.join(this.outputPath, assetFile);
-      const outputFilename = path.relative(context, file);
-
-      return isWin ? pathToPosix(outputFilename) : outputFilename;
-    }
-
-    return this.publicPath + '' + assetFile;
-  }
 
   /**
    * Add resolved module asset.
@@ -188,19 +102,12 @@ class Asset {
   }
 
   /**
-   * Whether request contains the `inline` URL query param.
-   *
-   * TODO: compare perf with url parse.
-   *
-   * @param {string} request
-   * @return {boolean}
+   * Reset settings.
+   * Called before each compilation after changes by `webpack serv/watch`.
    */
-  static isInline(request) {
-    if (!request) return false;
-
-    const [, query] = request.split('?', 2);
-
-    return query != null && /(?:^|&)inline(?:$|&)/.test(query);
+  static reset() {
+    this.fileIndex = {};
+    this.files.clear();
   }
 }
 

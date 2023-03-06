@@ -1,6 +1,7 @@
+const PluginService = require('../Plugin/PluginService');
 const Loader = require('./Loader');
 const Options = require('./Options');
-const { isWin, isInline, pathToPosix } = require('./Utils');
+const { isWin, pathToPosix } = require('./Utils');
 
 const spaceChars = [' ', '\t', '\n', '\r', '\f'];
 
@@ -70,6 +71,7 @@ const isStyle = (tag) => /rel=".*stylesheet.*"/.test(tag) || /type="text\/css"/.
 
 class Template {
   static sources = [];
+  static issuer;
 
   /**
    * Resolve all source resource in HTML.
@@ -168,6 +170,7 @@ class Template {
    * @return {Array<{}>}
    */
   static normalizeTagsList(tags) {
+    const pluginOptions = PluginService.getOptions();
     const result = [];
 
     for (let { type, startPos: tagStartPos, endPos: tagEndPos, attrs } of tags) {
@@ -190,7 +193,10 @@ class Template {
           let startPos = attrStartPos;
           let endPos = tagStartPos + attrEndOffset;
 
-          if (['style', 'script'].indexOf(type) >= 0 && isInline(value)) {
+          if (
+            (type === 'script' && pluginOptions.isInlineJs(value)) ||
+            (type === 'style' && pluginOptions.isInlineCss(value))
+          ) {
             // cut the source tag completely to inject an inline `<script>` or `<style>` tag
             startPos = tagStartPos;
             endPos = tagEndPos;

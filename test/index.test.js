@@ -419,6 +419,22 @@ describe('loader options', () => {
   test('preprocessor return null', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-return-null', done);
   });
+
+  test('css.inline auto, dev', (done) => {
+    compareFileListAndContent(PATHS, 'loader-options-css-inline-auto-dev', done);
+  });
+
+  test('css.inline auto, prod', (done) => {
+    compareFileListAndContent(PATHS, 'loader-options-css-inline-auto-prod', done);
+  });
+
+  test('js.inline auto, dev', (done) => {
+    compareFileListAndContent(PATHS, 'loader-options-js-inline-auto-dev', done);
+  });
+
+  test('js.inline auto, prod', (done) => {
+    compareFileListAndContent(PATHS, 'loader-options-js-inline-auto-prod', done);
+  });
 });
 
 describe('loader options for templating', () => {
@@ -628,6 +644,11 @@ describe('loader exceptions', () => {
   test('watchFiles.paths: dir not found', (done) => {
     const containString = `The watch directory not found`;
     watchExceptionContain(PATHS, 'msg-exception-plugin-option-watchFiles-paths', containString, done);
+  });
+
+  test('exception: loader used without the plugin', (done) => {
+    const containString = 'Illegal usage of the loader';
+    exceptionContain(PATHS, 'msg-exception-loader-no-plugin', containString, done);
   });
 });
 

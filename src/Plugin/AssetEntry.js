@@ -39,13 +39,6 @@ class AssetEntry {
   static data = new Map();
 
   /**
-   * @param {string} outputPath The Webpack output path.
-   */
-  static setWebpackOutputPath(outputPath) {
-    this.webpackOutputPath = outputPath;
-  }
-
-  /**
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
   static setCompilation(compilation) {
@@ -150,7 +143,7 @@ class AssetEntry {
   static #add(entry, assetEntryOptions) {
     const { name, outputPath, filenameTemplate } = assetEntryOptions;
     const relativeOutputPath = path.isAbsolute(outputPath)
-      ? path.relative(this.webpackOutputPath, outputPath)
+      ? path.relative(Options.getWebpackOutputPath(), outputPath)
       : outputPath;
 
     entry.filename = (pathData, assetInfo) => {
@@ -208,7 +201,7 @@ class AssetEntry {
       file: undefined,
       importFile,
       sourcePath: context,
-      outputPath: this.webpackOutputPath,
+      outputPath: Options.getWebpackOutputPath(),
       postprocess: undefined,
       extract: undefined,
       verbose: false,
