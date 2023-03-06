@@ -1,17 +1,31 @@
 // size < 1K, data-URL
-.data-url {
-  background: url('../images/icons/iphone.svg');
-}
-// size < 1K, data-URL
-.data-url {
+.data-url-png {
   background: url('../images/icons/iphone.png');
+  width: 100px;
+  height: 100px;
+  border: 1px solid chocolate;
+}
+
+// size < 1K, data-URL
+.data-url-svg {
+  background: url('../images/icons/imac.svg');
+  width: 100px;
+  height: 100px;
+  border: 1px solid chocolate;
 }
 
 // size > 1K then resource file
-.filename {
-  background: url('../images/pug-logo.svg');
+.file-svg {
+  background: url('../images/bild.svg');
+  background-size: auto;
+  width: 180px;
+  height: 140px;
+  border: 1px solid chocolate;
 }
 // size > 1K then resource file
-.filename {
-  background: url('../images/pug-logo.png');
+.file-png {
+  background: url('../images/bild.png');
+  width: 180px;
+  height: 140px;
+  border: 1px solid chocolate;
 }

@@ -1,21 +1,27 @@
 // size < 1K, data-URL
-.svg-data-url {
-  background: url('~Images/icons/iphone.svg');
+.data-url-svg {
+  background: url('~Images/icons/imac.svg');
+  width: 100px;
+  height: 100px;
+  border: 1px solid chocolate;
 }
 
 // size < 1K, data-URL
-.png-data-url {
+.data-url-png {
   background: url('~Images/icons/iphone.png');
+  width: 100px;
+  height: 100px;
+  border: 1px solid chocolate;
 }
 
-// size > 1K then resource file
-.svg-filename {
-  background: url('~Images/pug-logo.svg');
+// size > 1K, file
+.file-svg {
+  background: url('~Images/bild.svg');
 }
 
-// size > 1K then resource file
-.png-filename {
-  background: url('~Images/pug-logo.png');
+// size > 1K, file
+.file-png {
+  background: url('~Images/bild.png');
 }
 
 @font-face {

@@ -34,14 +34,6 @@ module.exports = {
 
   module: {
     rules: [
-      // the same options as in loaderOptions
-      // {
-      //   test: /\.(html|hbs)$/,
-      //   loader: HtmlBundlerPlugin.loader,
-      //   options: {
-      //     preprocessor: (content, { data }) => Handlebars.compile(content)(data),
-      //   },
-      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

@@ -9,23 +9,10 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      loaderOptions: {
+        // test error in preprocessor
+        preprocessor: (content, { data }) => UndefinedFuncion(),
+      },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html/,
-        use: [
-          {
-            loader: HtmlBundlerPlugin.loader,
-            options: {
-              // test error in preprocessor
-              preprocessor: (content, { data }) => UndefinedFuncion(),
-            },
-          },
-        ],
-      },
-    ],
-  },
 };

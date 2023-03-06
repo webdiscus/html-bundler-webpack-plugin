@@ -11,13 +11,18 @@
     <!-- caching test of the same resources used in another file. -->
 
     <!-- size < 2K, data-URL -->
-    <img src="~Images/icons/iphone.png" class="inline">
+    <img src="~Images/icons/iphone.png" alt="inline">
 
     <!-- size < 2K, inline SVG -->
-    <img src="~Images/icons/iphone.svg" class="inline">
+    <img src="~Images/icons/imac.svg" alt="inline">
 
-    <!-- size > 2K then resource file -->
-    <img src="~Images/pug-logo.png" class="file">
-    <img src="~Images/pug-logo.svg" class="file">
+    <!-- size > 2K, file -->
+    <img src="~Images/bild.png" alt="file">
+    <img src="~Images/bild.svg" alt="file">
+
+    <div class="data-url-svg"></div>
+    <div class="data-url-png"></div>
+    <div class="file-svg"></div>
+    <div class="file-png"></div>
   </body>
 </html>

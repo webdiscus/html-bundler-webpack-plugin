@@ -2,8 +2,8 @@
   <head>
     <title>Test</title>
     <link href="data:image/svg+xml,<svg version='1.1' id='Layer_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' viewBox='0 0 36 36' style='enable-background:new 0 0 36 36' xml:space='preserve'> <path fill-rule='evenodd' clip-rule='evenodd' fill='%23191717' d='M18,1.4C9,1.4,1.7,8.7,1.7,17.7c0,7.2,4.7,13.3,11.1,15.5 c0.8,0.1,1.1-0.4,1.1-0.8c0-0.4,0-1.4,0-2.8c-4.5,1-5.5-2.2-5.5-2.2c-0.7-1.9-1.8-2.4-1.8-2.4c-1.5-1,0.1-1,0.1-1 c1.6,0.1,2.5,1.7,2.5,1.7c1.5,2.5,3.8,1.8,4.7,1.4c0.1-1.1,0.6-1.8,1-2.2c-3.6-0.4-7.4-1.8-7.4-8.1c0-1.8,0.6-3.2,1.7-4.4 c-0.2-0.4-0.7-2.1,0.2-4.3c0,0,1.4-0.4,4.5,1.7c1.3-0.4,2.7-0.5,4.1-0.5c1.4,0,2.8,0.2,4.1,0.5c3.1-2.1,4.5-1.7,4.5-1.7 c0.9,2.2,0.3,3.9,0.2,4.3c1,1.1,1.7,2.6,1.7,4.4c0,6.3-3.8,7.6-7.4,8c0.6,0.5,1.1,1.5,1.1,3c0,2.2,0,3.9,0,4.5 c0,0.4,0.3,0.9,1.1,0.8c6.5-2.2,11.1-8.3,11.1-15.5C34.3,8.7,27,1.4,18,1.4z'/> </svg>" rel="icon" type='image/svg+xml' sizes='any' />
-    <link href="/assets/img/favicon-32px.0035c307.png" rel="icon" type='image/png' sizes='32x32' />
-    <link href="/assets/css/style.d1d3d1fb.css" rel="stylesheet" />
+    <link href="assets/img/favicon-32px.0035c307.png" rel="icon" type='image/png' sizes='32x32' />
+    <link href="assets/css/style.d26f6ae1.css" rel="stylesheet" />
   </head>
   <body>
     <h1>Home</h1>
@@ -11,13 +11,18 @@
     <!-- caching test of the same resources used in another file. -->
 
     <!-- size < 2K, data-URL -->
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" class="inline">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" alt="inline">
 
     <!-- size < 2K, inline SVG -->
-    <svg height="24" viewBox="0 0 24 24" width="24" class="inline"><path d="M0 0h24v24H0z" fill="none"/><path d="M15.5 1h-8C6.12 1 5 2.12 5 3.5v17C5 21.88 6.12 23 7.5 23h8c1.38 0 2.5-1.12 2.5-2.5v-17C18 2.12 16.88 1 15.5 1zm-4 21c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5-4H7V4h9v14z"/></svg>
+    <svg height="24" viewBox="0 0 24 24" width="24"><title>inline</title><path d="M0 0h24v24H0z" fill="none"/><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z"/></svg>
 
-    <!-- size > 2K then resource file -->
-    <img src="/assets/img/pug-logo.013353fe.png" class="file">
-    <img src="/assets/img/pug-logo.b0c23d5d.svg" class="file">
+    <!-- size > 2K, file -->
+    <img src="assets/img/bild.7b396424.png" alt="file">
+    <img src="assets/img/bild.840cdadf.svg" alt="file">
+
+    <div class="data-url-svg"></div>
+    <div class="data-url-png"></div>
+    <div class="file-svg"></div>
+    <div class="file-png"></div>
   </body>
 </html>

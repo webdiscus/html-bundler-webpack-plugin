@@ -17,17 +17,4 @@ module.exports = {
       },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html/,
-        use: [
-          {
-            loader: HtmlBundlerPlugin.loader,
-          },
-        ],
-      },
-    ],
-  },
 };

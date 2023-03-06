@@ -21,10 +21,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-      {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader', 'sass-loader'],
       },

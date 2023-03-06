@@ -74,20 +74,6 @@ module.exports = {
 
   module: {
     rules: [
-      // {
-      //   test: /\.html$/,
-      //   loader: HtmlBundlerPlugin.loader,
-      //   options: {
-      //     // async function must return a promise
-      //     preprocessor: (content, { data }) =>
-      //       new Promise((resolve, reject) => {
-      //         Nunjucks.renderString(content, data, (error, result) => {
-      //           if (!error) resolve(result);
-      //           else reject(error);
-      //         });
-      //       }),
-      //   },
-      // },
       {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader', 'sass-loader'],

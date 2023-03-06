@@ -19,10 +19,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-      {
         test: /\.(png|jpe?g|ico)/,
         type: 'asset/resource',
         generator: {

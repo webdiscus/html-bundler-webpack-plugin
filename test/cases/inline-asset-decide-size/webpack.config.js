@@ -12,7 +12,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -20,7 +19,7 @@ module.exports = {
       //verbose: true,
       entry: {
         index: './src/views/index.html',
-        about: './src/views/about.html',
+        'pages/about': './src/views/about.html',
       },
       js: {
         filename: '[name].[contenthash:8].js',
@@ -33,11 +32,6 @@ module.exports = {
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
       {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader', 'sass-loader'],

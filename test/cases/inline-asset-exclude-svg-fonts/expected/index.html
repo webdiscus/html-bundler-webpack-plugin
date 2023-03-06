@@ -1,20 +1,25 @@
 <html>
   <head>
     <title>Test</title>
-    <link href="/assets/css/style.ad786493.css" rel="stylesheet" />
+    <link href="assets/css/style.998d3ddc.css" rel="stylesheet" />
   </head>
   <body>
     <h1>Home</h1>
 
     <!-- size < 2K, data-URL -->
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" class="inline">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" alt="inline">
 
     <!-- size < 2K, inline SVG -->
-    <svg height="24" viewBox="0 0 24 24" width="24" class="inline"><path d="M0 0h24v24H0z" fill="none"/><path d="M15.5 1h-8C6.12 1 5 2.12 5 3.5v17C5 21.88 6.12 23 7.5 23h8c1.38 0 2.5-1.12 2.5-2.5v-17C18 2.12 16.88 1 15.5 1zm-4 21c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm4.5-4H7V4h9v14z"/></svg>
+    <svg height="24" viewBox="0 0 24 24" width="24"><title>inline</title><path d="M0 0h24v24H0z" fill="none"/><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z"/></svg>
 
-    <!-- size > 2K then resource file -->
-    <img src="/assets/img/delphin.69a6cdcb.jpeg" class="file">
-    <img src="/assets/img/pug-logo.013353fe.png" class="file">
-    <img src="/assets/img/pug-logo.b0c23d5d.svg" class="file">
+    <!-- size > 2K, file -->
+    <img src="assets/img/bild.3f286ead.jpg" alt="file">
+    <img src="assets/img/bild.7b396424.png" alt="file">
+    <img src="assets/img/bild.840cdadf.svg" alt="file">
+
+    <div class="data-url-svg"></div>
+    <div class="data-url-png"></div>
+    <div class="file-svg"></div>
+    <div class="file-png"></div>
   </body>
 </html>

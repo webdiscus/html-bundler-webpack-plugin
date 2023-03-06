@@ -19,24 +19,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: [
-            // image in SVG
-            {
-              tag: 'image',
-              attributes: ['href'],
-            },
-            // SVG image fragment
-            {
-              tag: 'use',
-              attributes: ['href'], // note: 'xlink:href' is deprecated and not supported in browsers
-            },
-          ],
-        },
-      },
-      {
         test: /\.(png|jpe?g|ico|svg)/,
         type: 'asset/resource',
         generator: {

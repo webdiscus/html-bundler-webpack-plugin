@@ -40,10 +40,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-      {
         test: /\.(png|jpg|jpeg)$/,
         type: 'asset/resource',
         generator: {

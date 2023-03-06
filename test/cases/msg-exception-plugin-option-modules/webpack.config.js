@@ -18,13 +18,4 @@ module.exports = {
       modules: {},
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-    ],
-  },
 };

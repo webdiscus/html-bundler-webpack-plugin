@@ -9,24 +9,11 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      loaderOptions: {
+        sources: false,
+        // simulate error by export of compiled result
+        preprocessor: (content, { data }) => false,
+      },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html/,
-        use: [
-          {
-            loader: HtmlBundlerPlugin.loader,
-            options: {
-              sources: false,
-              // simulate error by export of compiled result
-              preprocessor: (content, { data }) => false,
-            },
-          },
-        ],
-      },
-    ],
-  },
 };

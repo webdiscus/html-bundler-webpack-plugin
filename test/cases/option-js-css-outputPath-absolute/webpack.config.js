@@ -48,10 +48,6 @@ module.exports = {
         },
       },
       {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-      {
         test: /\.scss$/,
         use: ['css-loader', 'sass-loader'],
       },

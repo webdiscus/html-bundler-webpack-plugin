@@ -39,14 +39,6 @@ module.exports = {
 
   module: {
     rules: [
-      // the same options as in loaderOptions
-      // {
-      //   test: /\.(html|ejs|eta)$/,
-      //   loader: HtmlBundlerPlugin.loader,
-      //   options: {
-      //     preprocessor: (content, { data }) => Eta.render(content, data, EtaConfig),
-      //   },
-      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

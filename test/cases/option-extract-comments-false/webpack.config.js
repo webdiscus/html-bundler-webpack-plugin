@@ -32,13 +32,4 @@ module.exports = {
       extractComments: false, // disable extracting license into separate file *.LICENSE.txt
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-    ],
-  },
 };

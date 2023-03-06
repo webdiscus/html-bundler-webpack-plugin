@@ -19,7 +19,7 @@ beforeEach(() => {});
 
 describe('misc unit tests', () => {
   test('parseQuery array', (done) => {
-    const received = parseQuery('file.pug?key=val&arr[]=a&arr[]=1');
+    const received = parseQuery('file.html?key=val&arr[]=a&arr[]=1');
     const expected = {
       key: 'val',
       arr: ['a', '1'],
@@ -29,7 +29,7 @@ describe('misc unit tests', () => {
   });
 
   test('parseQuery json5', (done) => {
-    const received = parseQuery('file.pug?{sizes:[10,20,30], format: "webp"}');
+    const received = parseQuery('file.html?{sizes:[10,20,30], format: "webp"}');
     const expected = {
       format: 'webp',
       sizes: [10, 20, 30],
@@ -576,11 +576,11 @@ describe('extras: responsive images', () => {
     compareFileListAndContent(PATHS, 'responsive-images', done);
   });
 
-  test('require images in pug and in style', (done) => {
+  test('require images in template and in style', (done) => {
     compareFileListAndContent(PATHS, 'responsive-images-html-scss', done);
   });
 
-  test('require many duplicate images in pug and styles', (done) => {
+  test('require many duplicate images in template and styles', (done) => {
     compareFileListAndContent(PATHS, 'responsive-images-many-duplicates', done);
   });
 });

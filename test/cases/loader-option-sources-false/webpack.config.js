@@ -13,18 +13,9 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      loaderOptions: {
+        sources: false,
+      },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: false,
-        },
-      },
-    ],
-  },
 };

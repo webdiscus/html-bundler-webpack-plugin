@@ -60,20 +60,12 @@ module.exports = {
           },
         },
       },
-    }),
-  ],
 
-  module: {
-    rules: [
-      {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => {
-            return render(content, data);
-          },
+      loaderOptions: {
+        preprocessor: (content, { data }) => {
+          return render(content, data);
         },
       },
-    ],
-  },
+    }),
+  ],
 };

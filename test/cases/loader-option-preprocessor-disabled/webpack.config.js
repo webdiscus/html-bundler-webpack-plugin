@@ -24,19 +24,15 @@ module.exports = {
           },
         },
       },
+      loaderOptions: {
+        // test disable the default preprocessor
+        preprocessor: false,
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.(html)$/,
-        loader: HtmlBundlerPlugin.loader,
-        // test disable the default preprocessor
-        options: {
-          preprocessor: false,
-        },
-      },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

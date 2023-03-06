@@ -19,11 +19,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
-      {
         test: /\.(png|jpg|svg)/,
         type: 'asset/inline',
       },

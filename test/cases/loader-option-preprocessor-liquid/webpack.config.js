@@ -31,13 +31,6 @@ module.exports = {
 
   module: {
     rules: [
-      // {
-      //   test: /\.(html|liquid)$/,
-      //   loader: HtmlBundlerPlugin.loader,
-      //   options: {
-      //     preprocessor: (content, { data }) => LiquidEngine.parseAndRenderSync(content, data),
-      //   },
-      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

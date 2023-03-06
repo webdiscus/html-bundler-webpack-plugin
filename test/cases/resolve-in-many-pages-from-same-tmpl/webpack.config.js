@@ -51,25 +51,23 @@ module.exports = {
           },
         },
       },
+
       js: {
         filename: 'js/[name].[contenthash:8].js',
       },
+
       css: {
         filename: 'styles/css/[name].[contenthash:8].css',
+      },
+
+      loaderOptions: {
+        preprocessor: (content, { data }) => render(content, data),
       },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          preprocessor: (content, { data }) => render(content, data),
-        },
-      },
-
       {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader'],

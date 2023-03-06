@@ -206,9 +206,6 @@ class AssetCompiler {
       NormalModule.getCompilationHooks(compilation).loader.tap(pluginName, (loaderContext, module) => {
         if (typeof module.layer === 'string' && module.layer.startsWith('__entryDataId')) {
           const [, entryDataId] = module.layer.split('=', 2);
-          // loaderContext.entryData = this.entryDataCache.get(entryDataId);
-          // loaderContext.data = this.entryDataCache.get(entryDataId);
-
           loaderContext.entryData = AssetEntry.getData(entryDataId);
           loaderContext.data = AssetEntry.getData(entryDataId);
         }
@@ -398,11 +395,6 @@ class AssetCompiler {
 
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
-
-      // if (resourceResolveData && !resourceResolveData.context) {
-      //   console.log(' ##### ', {sourceRequest, resourceResolveData});
-      //   continue;
-      // }
 
       if (!sourceRequest || !resourceResolveData?.context || AssetInline.isDataUrl(sourceRequest)) continue;
 

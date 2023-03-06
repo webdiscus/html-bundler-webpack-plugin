@@ -24,25 +24,20 @@ module.exports = {
       js: {
         filename: '[name].[contenthash:8].js',
       },
+      loaderOptions: {
+        sources: [
+          {
+            tag: 'img',
+            // for property extracted via responsive-loader from an image file
+            attributes: ['data-src', 'width', 'height'],
+          },
+        ],
+      },
     }),
   ],
 
   module: {
     rules: [
-      {
-        test: /\.html/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: [
-            {
-              tag: 'img',
-              // for property extracted via responsive-loader from an image file
-              attributes: ['data-src', 'width', 'height'],
-            },
-          ],
-        },
-      },
-
       // images loader
       {
         test: /\.(gif|png|jpe?g|ico|svg|webp)$/i,

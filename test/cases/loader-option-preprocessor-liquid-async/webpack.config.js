@@ -32,14 +32,6 @@ module.exports = {
 
   module: {
     rules: [
-      // {
-      //   test: /\.(html|liquid)$/,
-      //   loader: HtmlBundlerPlugin.loader,
-      //   options: {
-      //     // async parseAndRender method return promise
-      //     preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
-      //   },
-      // },
       {
         test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',

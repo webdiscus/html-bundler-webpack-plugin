@@ -73,7 +73,7 @@ class Options {
       { tag: 'link', attributes: ['href', 'imagesrcset'] }, // 'imagesrcset' if rel="preload" and as="image"
       { tag: 'script', attributes: ['src'] },
       { tag: 'img', attributes: ['src', 'srcset'] },
-      { tag: 'image', attributes: ['href'] }, // <svg><image href="image.png"></image></svg>
+      { tag: 'image', attributes: ['href', 'xlink:href'] }, // <svg><image href="image.png"></image></svg>
       { tag: 'use', attributes: ['href'] }, // <svg><use href="icons.svg#home"></use></svg>
       { tag: 'input', attributes: ['src'] }, // type="image"
       { tag: 'source', attributes: ['src', 'srcset'] },

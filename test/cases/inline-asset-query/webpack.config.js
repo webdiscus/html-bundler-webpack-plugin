@@ -26,25 +26,21 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-      },
-
-      // image file, without query `?inline`
-      {
-        test: /\.(png|jpe?g|webp|ico|svg)$/i,
-        resourceQuery: { not: [/inline/] },
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
-        },
-      },
-
-      // inline svg, with query `?inline`
-      {
-        test: /\.(png|jpe?g|webp|ico|svg)$/i,
-        resourceQuery: /inline/,
-        type: 'asset/inline',
+        test: /[\\/]images[\\/].+(png|jpe?g|svg|webp|ico)$/i,
+        oneOf: [
+          // inline image using `?inline` query
+          {
+            resourceQuery: /inline/,
+            type: 'asset/inline',
+          },
+          // save to file
+          {
+            type: 'asset/resource',
+            generator: {
+              filename: 'assets/img/[name].[hash:8][ext]',
+            },
+          },
+        ],
       },
     ],
   },
