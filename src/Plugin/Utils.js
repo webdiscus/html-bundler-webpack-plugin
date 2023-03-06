@@ -1,16 +1,3 @@
-const { isWin, isFunction, pathRelativeByPwd, pathToPosix, parseQuery, outToConsole } = require('../Common/Helpers');
-
-/**
- * Parse resource path and raw query from request.
- *
- * @param {string} request
- * @return {{resource: string, query: string|null}}
- */
-const parseRequest = (request) => {
-  const [resource, query] = request.split('?');
-  return { resource, query };
-};
-
 /**
  * Transform source code from ESM to CommonJS.
  *
@@ -39,12 +26,5 @@ const toCommonJS = (code) => {
 };
 
 module.exports = {
-  isWin,
-  pathToPosix,
-  outToConsole,
-  pathRelativeByPwd,
-  parseQuery,
-  parseRequest,
-  isFunction,
   toCommonJS,
 };

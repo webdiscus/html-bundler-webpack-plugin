@@ -1,5 +1,4 @@
 const path = require('path');
-const { isWin, pathToPosix } = require('./Utils');
 
 class AssetSource {
   static data = new Map();
@@ -47,8 +46,6 @@ class AssetSource {
     const RawSource = compilation.compiler.webpack.sources.RawSource;
 
     for (let [sourceFile, item] of this.data) {
-      if (isWin) sourceFile = pathToPosix(sourceFile);
-
       for (let [assetFile, source] of item.issuers) {
         const asset = compilation.assets[assetFile];
         if (!asset) continue;

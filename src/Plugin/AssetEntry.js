@@ -1,6 +1,6 @@
 const path = require('path');
-const { isFunction } = require('./Utils');
 const Options = require('./Options');
+const { isFunction } = require('../Common/Helpers');
 
 /**
  * @typedef {Object} AssetEntryOptions

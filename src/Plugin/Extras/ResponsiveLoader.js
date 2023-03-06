@@ -1,7 +1,7 @@
 const vm = require('vm');
 const Asset = require('../Asset');
-const { isWin, parseQuery } = require('../Utils');
 const Options = require('../Options');
+const { isWin, parseQuery } = require('../../Common/Helpers');
 
 class ResponsiveLoader {
   isUsed = false;

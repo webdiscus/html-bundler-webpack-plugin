@@ -3,7 +3,7 @@ const PluginService = require('../Plugin/PluginService');
 const Resolver = require('./Resolver');
 const RenderMethod = require('./methods/RenderMethod');
 const Options = require('./Options');
-const { parseQuery } = require('./Utils');
+const { parseQuery } = require('../Common/Helpers');
 
 class Loader {
   static compiler = null;

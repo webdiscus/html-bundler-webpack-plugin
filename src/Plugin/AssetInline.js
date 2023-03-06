@@ -1,6 +1,3 @@
-const path = require('path');
-const { isWin } = require('./Utils');
-
 /**
  * @param {{key: string, value: string}} attrs
  * @param {Array<string>} exclude The list of excluded attributes from result.
@@ -109,7 +106,6 @@ class AssetInline {
    * @returns {string|null}
    */
   static getDataUrl(sourceFile, issuer) {
-    if (isWin) sourceFile = path.win32.normalize(sourceFile);
     const item = this.data.get(sourceFile);
 
     return item != null && item.cache != null && item.dataUrl.issuers.has(issuer) ? item.cache.dataUrl : null;

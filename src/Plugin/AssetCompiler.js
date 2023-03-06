@@ -6,7 +6,8 @@ const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
 const { pluginName } = require('../config');
-const { isWin, pathToPosix, isFunction, toCommonJS } = require('./Utils');
+const { isFunction } = require('../Common/Helpers');
+const { toCommonJS } = require('./Utils');
 
 const Options = require('./Options');
 const PluginService = require('./PluginService');
@@ -398,7 +399,12 @@ class AssetCompiler {
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
 
-      if (!sourceRequest || AssetInline.isDataUrl(sourceRequest)) continue;
+      // if (resourceResolveData && !resourceResolveData.context) {
+      //   console.log(' ##### ', {sourceRequest, resourceResolveData});
+      //   continue;
+      // }
+
+      if (!sourceRequest || !resourceResolveData?.context || AssetInline.isDataUrl(sourceRequest)) continue;
 
       const { issuer } = resourceResolveData.context;
       const [sourceFile] = sourceRequest.split('?', 1);
@@ -740,8 +746,7 @@ class AssetCompiler {
             break;
           }
           case 'script': {
-            const posixSourceFile = isWin ? pathToPosix(sourceFile) : sourceFile;
-            const entity = ScriptCollection.getEntity(posixSourceFile);
+            const entity = ScriptCollection.getEntity(sourceFile);
             verboseExtractScript({
               entity,
               outputPath,

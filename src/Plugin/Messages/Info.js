@@ -1,5 +1,5 @@
 const { pluginName } = require('../../config');
-const { pathRelativeByPwd, outToConsole, isFunction } = require('../Utils');
+const { pathRelativeByPwd, outToConsole, isFunction } = require('../../Common/Helpers');
 const { green, greenBright, cyan, cyanBright, magenta, yellowBright, black, ansi, yellow } = require('ansis/colors');
 const Asset = require('../Asset');
 

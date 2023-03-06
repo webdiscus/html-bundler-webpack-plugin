@@ -1,6 +1,4 @@
-const path = require('path');
 const Options = require('./Options');
-const { isWin } = require('../Common/Helpers');
 
 /**
  * Store of script files from `script` tag for sharing with the plugin.
@@ -37,9 +35,6 @@ class ScriptCollection {
       };
       this.files.set(file, item);
     }
-
-    // normalize slashes for windows
-    if (isWin) issuer = path.normalize(issuer);
 
     // add only unique issuer
     if (!item.issuers.find(({ request }) => request === issuer)) {

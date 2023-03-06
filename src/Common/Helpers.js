@@ -89,11 +89,23 @@ const parseQuery = (request) => {
   return result;
 };
 
+/**
+ * Parse resource path and raw query from request.
+ *
+ * @param {string} request
+ * @return {{resource: string, query: string|null}}
+ */
+const parseRequest = (request) => {
+  const [resource, query] = request.split('?');
+  return { resource, query };
+};
+
 module.exports = {
   isWin,
   isFunction,
   pathToPosix,
   parseQuery,
+  parseRequest,
   outToConsole,
   pathRelativeByPwd,
 };

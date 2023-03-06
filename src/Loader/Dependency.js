@@ -2,7 +2,6 @@ const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const AssetEntry = require('../Plugin/AssetEntry');
 const Options = require('./Options');
-const { isWin } = require('./Utils');
 const { verboseWatchFiles } = require('./Messages/Info');
 
 /**
@@ -56,7 +55,6 @@ class Dependency {
    * @private
    */
   static addFile(file) {
-    file = isWin ? path.normalize(file) : file;
     this.files.add(file);
 
     // delete the file from require.cache to reload cached file after change
