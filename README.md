@@ -246,7 +246,7 @@ module.exports = {
       },
       // images
       {
-        test: /\.(ico|png|jp?g|svg)/,
+        test: /\.(ico|png|jp?g|svg)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext][query]',

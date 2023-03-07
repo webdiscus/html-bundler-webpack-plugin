@@ -525,6 +525,10 @@ describe('inline styles & scripts', () => {
   test('inline script using URL query `?inline`', (done) => {
     compareFileListAndContent(PATHS, 'inline-script-query', done);
   });
+
+  test('inline script using when used runtimeChunk:single', (done) => {
+    compareFileListAndContent(PATHS, 'inline-script-runtimeChunk-single', done);
+  });
 });
 
 describe('split chunks', () => {

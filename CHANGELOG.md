@@ -1,5 +1,11 @@
 # Change log
 
+## 1.6.1 (2023-03-07)
+- fix: correct inline JS when used split chunks
+- refactor: optimize code for windows, clean up from needless code
+- test: add test for inline JS with split chunks
+- test: refactor and clean up tests
+
 ## 1.6.0 (2023-03-06)
 - feat: add `css.inline` option, replaces the functionality of `style-loader`.\
   The values of `inline` option:
