@@ -250,10 +250,10 @@ class Resolver {
 
     if (!item) return null;
 
-    const { entryPoint, issuerRequest, issuerFile: issuer } = this;
+    const { entryPoint, issuerRequest: issuer } = this;
     const key = this.getAssetKey(issuer, entryPoint);
     const assetFile = item.issuers.get(key);
-    const isInlinedIssuer = AssetSource.isInline(issuerRequest);
+    const isInlinedIssuer = AssetSource.isInline(issuer);
 
     if (assetFile && !isInlinedIssuer) return assetFile;
 

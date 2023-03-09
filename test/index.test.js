@@ -566,6 +566,10 @@ describe('special cases', () => {
     compareFileListAndContent(PATHS, 'resolve-assets-without-ext', done);
   });
 
+  test('resolve assets in entries with a query', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-in-entry-with-query', done);
+  });
+
   test('Template with CRLF line separator', (done) => {
     compareFileListAndContent(PATHS, 'template-clrf', done);
   });

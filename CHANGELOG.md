@@ -2,6 +2,8 @@
 
 ## 1.6.2 (2023-03-09)
 - fix: add missing node modules to compilation after rebuild
+- fix: resolve resources in the entry file containing a query
+- test: add tests for fixes
 
 ## 1.6.1 (2023-03-07)
 - fix: correct inline JS when used split chunks

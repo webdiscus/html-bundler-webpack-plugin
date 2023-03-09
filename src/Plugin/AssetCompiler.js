@@ -395,9 +395,10 @@ class AssetCompiler {
 
       if (!sourceRequest || !resourceResolveData?.context || AssetInline.isDataUrl(sourceRequest)) continue;
 
-      const { issuer } = resourceResolveData.context;
       const [sourceFile] = sourceRequest.split('?', 1);
-      let issuerFile = !issuer || Options.isEntry(issuer) ? entry.importFile : issuer;
+      const contextIssuer = resourceResolveData.context.issuer;
+      const issuer = contextIssuer === entry.importFile ? entry.request : contextIssuer;
+      const issuerFile = !issuer || Options.isEntry(issuer) ? entry.importFile : contextIssuer;
 
       if (module.type === 'javascript/auto') {
         // extract JS: do nothing for scripts because webpack itself compiles and extracts JS files from scripts
@@ -549,7 +550,7 @@ class AssetCompiler {
         });
       } else if (module.type === 'asset/resource') {
         // resource required in the template or in the CSS via url()
-        AssetResource.render(module, issuerFile, this.currentEntryPoint);
+        AssetResource.render(module, issuer, this.currentEntryPoint);
 
         if (verbose) {
           verboseList.add({

@@ -1,0 +1,10 @@
+h1 {
+  color: green;
+}
+
+.img {
+  background-image: url('./image.png');
+  width: 160px;
+  height: 130px;
+  border: 2px solid steelblue;
+}

@@ -63,17 +63,17 @@ class ResponsiveLoader {
    * because a processing happen in a later stage then used result in template.
    *
    * @param {Object} module The Webpack module of asset.
-   * @param {string} issuerFile The source file of issuer,
+   * @param {string} issuer The issuer of the module.
    * @returns {null|string} The compiled result as string to replace required resource with this result.
    */
-  getAsset(module, issuerFile) {
+  getAsset(module, issuer) {
     if (this.isUsed !== true) return null;
 
     const loaderOptions = this.findModuleLoaderOptions(module);
     if (loaderOptions == null) return null;
 
     const { resource: sourceFile, rawRequest, buildInfo } = module;
-    const issuerAssetFile = Asset.findAssetFile(issuerFile);
+    const issuerAssetFile = Asset.findAssetFile(issuer);
     const query = parseQuery(rawRequest);
     let asset = null;
     // the query `sizes` parameter has prio over options

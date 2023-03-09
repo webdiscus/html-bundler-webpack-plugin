@@ -67,9 +67,8 @@ class AssetScript {
    * Called before AssetScript.addDependency.
    */
   static optimizeDependencies() {
-    for (const [scriptFile, entry] of this.dependenciesCache) {
+    for (const entry of this.dependenciesCache.values()) {
       AssetEntry.addToCompilation(entry);
-      ScriptCollection.setName(scriptFile, entry.name);
     }
   }
 

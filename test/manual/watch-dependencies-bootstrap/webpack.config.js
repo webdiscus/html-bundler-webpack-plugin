@@ -21,17 +21,6 @@ module.exports = {
       css: {
         filename: 'css/[name].[contenthash:8].css',
       },
-
-      //configure paths to watch file changes
-      // watchFiles: {
-      //   paths: ['./src', './node_modules/bootstrap/dist/js'],
-      //   files: [/\.(html|js)$/],
-      //
-      //   //paths: ['./src'],
-      //   //files: [/\.(html|js|sc?ss)$/],
-      //   //ignore: [],
-      // },
-      //verbose: true,
     }),
   ],
 

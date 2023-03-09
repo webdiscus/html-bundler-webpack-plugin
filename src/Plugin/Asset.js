@@ -1,3 +1,5 @@
+const Options = require('./Options');
+
 class Asset {
   /**
    * The cache of resolved output asset filenames.
@@ -26,13 +28,21 @@ class Asset {
   }
 
   /**
-   * Find asset file by its source file.
+   * Find output asset file by its source request.
    *
-   * @param {string} sourceFile The source file.
+   * @param {string} request The source file including a query.
    * @return {string|null} The asset file.
    */
-  static findAssetFile(sourceFile) {
-    return this.files.get(sourceFile);
+  static findAssetFile(request) {
+    // Note: regard the request with a query only for entry.
+    // E.g., 'index.html?lang=en' and 'index.html?lang=de' may have different output filenames
+    // while 'style.css' and 'style.css?inline' have the same output filename
+
+    if (!Options.isEntry(request)) {
+      const [file] = request.split('?', 1);
+      request = file;
+    }
+    return this.files.get(request);
   }
 
   /**
