@@ -177,6 +177,14 @@ class AssetCompiler {
     // entry options
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
+    // after rebuild add missing dependencies from cache
+    compiler.hooks.make.tapAsync(pluginName, (compilation, callback) => {
+      if (PluginService.isWatchMode()) {
+        AssetScript.optimizeDependencies();
+      }
+      callback();
+    });
+
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
       this.compilation = compilation;
@@ -267,18 +275,7 @@ class AssetCompiler {
       const scriptFile = AssetScript.resolveFile(request);
 
       if (scriptFile) {
-        const name = AssetScript.getUniqueName(scriptFile);
-        const isAdded = AssetEntry.addToCompilation({
-          name,
-          importFile: scriptFile,
-          filenameTemplate: Options.getJs().filename,
-          context,
-          issuer,
-        });
-
-        ScriptCollection.setName(scriptFile, name);
-
-        return isAdded ? undefined : false;
+        return AssetScript.addDependency({ scriptFile, context, issuer });
       }
     }
 
@@ -766,12 +763,12 @@ class AssetCompiler {
       }
     }
 
-    verboseList.clear();
     Asset.reset();
     AssetEntry.reset();
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
+    verboseList.clear();
   }
 
   /**

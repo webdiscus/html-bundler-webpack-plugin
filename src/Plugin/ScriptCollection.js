@@ -95,7 +95,9 @@ class ScriptCollection {
    * Called before each compilation after changes by `webpack serv/watch`.
    */
   static reset() {
-    // reserved
+    this.files.forEach((item, key) => {
+      item.chunkFiles.clear();
+    });
   }
 }
 

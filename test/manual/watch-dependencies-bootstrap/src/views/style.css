@@ -1,0 +1,31 @@
+body {
+  text-align: center;
+  height: 100vw;
+}
+
+h1 {
+  color: olivedrab;
+  font-size: 28px;
+  margin: 20px 10px;
+}
+
+img {
+  margin: 20px;
+}
+
+header {
+  padding: 30px;
+  color: white;
+  font-size: 20px;
+  background-color: orangered;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 30px;
+  font-size: 18px;
+  color: white;
+  background-color: steelblue;
+}

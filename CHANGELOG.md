@@ -1,5 +1,8 @@
 # Change log
 
+## 1.6.2 (2023-03-09)
+- fix: add missing node modules to compilation after rebuild
+
 ## 1.6.1 (2023-03-07)
 - fix: correct inline JS when used split chunks
 - refactor: optimize code for windows, clean up from needless code

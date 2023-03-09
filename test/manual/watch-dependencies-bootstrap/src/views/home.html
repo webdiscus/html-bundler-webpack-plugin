@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+  <link rel="icon" href="apple.png">
+  <link href="bootstrap" rel="stylesheet">
+  <link href="./style.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-1.12.4.min.js" defer="defer"></script>
+  <script src="bootstrap" defer="defer"></script>
+  <script src="./main.js" defer="defer"></script>
+</head>
+<body>
+  <%~ includeFile('/src/views/partials/header') %>
+  <h1>Hello World!</h1>
+  <img src="apple.png">
+  <p><button type="button" class="btn-modal btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@mdo">Open modal</button></p>
+  <%~ includeFile('/src/views/partials/footer') %>
+  <%~ includeFile('/src/views/partials/modal.html') %>
+
+  <script src="./app.js"></script>
+  <script src="@test-fixtures/js"></script>
+</body>
+</html>

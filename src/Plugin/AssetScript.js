@@ -6,6 +6,7 @@ const ScriptCollection = require('./ScriptCollection');
 
 class AssetScript {
   static index = {};
+  static dependenciesCache = new Map();
 
   /**
    * Clear cache.
@@ -13,6 +14,7 @@ class AssetScript {
    */
   static clear() {
     this.index = {};
+    this.dependenciesCache.clear();
     ScriptCollection.clear();
   }
 
@@ -23,6 +25,52 @@ class AssetScript {
   static reset() {
     this.index = {};
     ScriptCollection.reset();
+  }
+
+  /**
+   * Add dependency to cache.
+   * After rebuild the scripts loaded from node modules will be added to compilation from the cache.
+   * Called after AssetScript.optimizeDependencies.
+   *
+   * @param {string} scriptFile
+   * @param {string} context
+   * @param {string} issuer
+   * @return {boolean|undefined}
+   */
+  static addDependency({ scriptFile, context, issuer }) {
+    if (this.dependenciesCache.has(scriptFile)) {
+      // skip already added dependencies by optimizeDependencies
+      return;
+    }
+
+    const name = this.getUniqueName(scriptFile);
+    const entry = {
+      name,
+      importFile: scriptFile,
+      filenameTemplate: Options.getJs().filename,
+      context,
+      issuer,
+    };
+
+    ScriptCollection.setName(scriptFile, name);
+
+    if (AssetEntry.addToCompilation(entry)) {
+      this.dependenciesCache.set(scriptFile, entry);
+      return;
+    }
+
+    return false;
+  }
+
+  /**
+   * Add missing node modules to compilation after rebuild.
+   * Called before AssetScript.addDependency.
+   */
+  static optimizeDependencies() {
+    for (const [scriptFile, entry] of this.dependenciesCache) {
+      AssetEntry.addToCompilation(entry);
+      ScriptCollection.setName(scriptFile, entry.name);
+    }
   }
 
   /**

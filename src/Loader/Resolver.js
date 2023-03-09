@@ -14,12 +14,13 @@ class Resolver {
   static hasPlugins = false;
 
   /**
-   * @param {string} rootContext The the root path of the project.
+   * @param {Object} loaderContext
    */
-  static init(rootContext) {
+  static init(loaderContext) {
     const options = Options.getWebpackResolve();
 
-    this.rootContext = rootContext;
+    this.loaderContext = loaderContext;
+    this.rootContext = loaderContext.rootContext;
     this.basedir = Options.getBasedir();
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;

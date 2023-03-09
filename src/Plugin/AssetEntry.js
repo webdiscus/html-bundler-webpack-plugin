@@ -213,6 +213,7 @@ class AssetEntry {
     // adds the entry of the script from the template to the compilation
     // see reference: node_modules/webpack/lib/EntryPlugin.js
     const entryDependency = this.EntryPlugin.createDependency(importFile, { name });
+
     this.compilation.addEntry(context, entryDependency, entry, (err) => {
       if (err) throw new Error(err);
     });

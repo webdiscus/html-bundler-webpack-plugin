@@ -26,7 +26,7 @@ class Loader {
 
     // prevent double initialisation with same options, occurs when many entry files used in one webpack config
     if (!PluginService.isCached(rootContext)) {
-      Resolver.init(rootContext);
+      Resolver.init(loaderContext);
     }
 
     this.compiler = this.compilerFactory({
