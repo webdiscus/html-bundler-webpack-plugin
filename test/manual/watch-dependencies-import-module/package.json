@@ -2,11 +2,16 @@
   "description": "IMPORTANT: don't install webpack here because the Webpack instance MUST be one, otherwise appear the error: The 'compilation' argument must be an instance of Compilation.",
   "scripts": {
     "start": "webpack serve --mode development",
-    "start:open": "webpack serve --mode development --open",
     "watch": "webpack watch --mode development",
     "build": "webpack --mode=production --progress"
   },
+  "dependencies": {
+    "bootstrap": "^5.2.3"
+  },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "file:../../.."
+    "html-bundler-webpack-plugin": "1.6.3",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
   }
 }

@@ -1,5 +1,10 @@
 # Change log
 
+## 1.6.3 (2023-03-13)
+- fix: correct rebuild the node modules specified in a template or imported in a script, after changes in the template of in the script
+- chore: update dev dependencies
+- test: add test for rebuild the node modules
+
 ## 1.6.2 (2023-03-09)
 - fix: add missing node modules to compilation after rebuild
 - fix: resolve resources in the entry file containing a query

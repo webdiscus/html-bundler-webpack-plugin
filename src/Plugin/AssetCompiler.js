@@ -177,14 +177,6 @@ class AssetCompiler {
     // entry options
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
-    // after rebuild add missing dependencies from cache
-    compiler.hooks.make.tapAsync(pluginName, (compilation, callback) => {
-      if (PluginService.isWatchMode()) {
-        AssetScript.optimizeDependencies();
-      }
-      callback();
-    });
-
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
       this.compilation = compilation;

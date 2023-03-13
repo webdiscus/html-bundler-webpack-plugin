@@ -63,16 +63,6 @@ class AssetScript {
   }
 
   /**
-   * Add missing node modules to compilation after rebuild.
-   * Called before AssetScript.addDependency.
-   */
-  static optimizeDependencies() {
-    for (const entry of this.dependenciesCache.values()) {
-      AssetEntry.addToCompilation(entry);
-    }
-  }
-
-  /**
    * @param {{__isScript?:boolean|undefined, resource:string}} module The Webpack chunk module.
    *    Properties:<br>
    *      __isScript is cached state whether the Webpack module was resolved as JavaScript;<br>

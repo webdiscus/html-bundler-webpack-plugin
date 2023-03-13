@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "HTML bundler plugin for webpack handels HTML template as entry point, extracts CSS and JS from their sources specified in HTML.",
   "keywords": [
     "webpack",
@@ -71,23 +71,23 @@
   },
   "dependencies": {
     "ansis": "1.5.5",
-    "eta": "^2.0.0",
+    "eta": "^2.0.1",
     "html-minifier-terser": "^7.1.0",
     "json5": "^2.2.3",
     "webpack-merge": "^5.8.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.12",
+    "@babel/core": "^7.21.0",
     "@babel/preset-env": "^7.20.2",
     "@test-fixtures/lorem": "0.0.2",
     "@test-fixtures/js": "0.0.2",
     "@test-fixtures/scss": "0.0.7",
     "@types/jest": "^29.4.0",
     "css-loader": "^6.7.3",
-    "ejs": "^3.1.8",
+    "ejs": "^3.1.9",
     "handlebars": "^4.7.7",
-    "jest": "^29.4.3",
-    "liquidjs": "^10.5.0",
+    "jest": "^29.5.0",
+    "liquidjs": "^10.6.1",
     "mustache": "^4.2.0",
     "nunjucks": "^3.2.3",
     "prettier": "^2.8.4",
@@ -95,7 +95,7 @@
     "sass": "^1.58.2",
     "sass-loader": "^13.2.0",
     "sharp": "^0.31.3",
-    "webpack": "^5.75.0",
+    "webpack": "^5.76.1",
     "webpack-cli": "5.0.1",
     "webpack-dev-server": "^4.11.1"
   }
