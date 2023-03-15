@@ -1,5 +1,10 @@
 # Change log
 
+## 1.6.4 (2023-03-15)
+- fix: add the enhanced-resolve to peerDependencies
+- chore: update dev dependencies
+- docs: add links to demo examples
+
 ## 1.6.3 (2023-03-13)
 - fix: correct rebuild the node modules specified in a template or imported in a script, after changes in the template of in the script
 - chore: update dev dependencies

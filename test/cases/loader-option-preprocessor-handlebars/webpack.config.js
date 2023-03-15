@@ -1,10 +1,18 @@
-const fs = require('fs');
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 const Handlebars = require('handlebars');
 
-// create the 'include' helper to load partials in a template
-Handlebars.registerHelper('include', (filename) => fs.readFileSync(`${process.cwd()}/${filename}`, 'utf8'));
+const PATHS = {
+  pages: path.join(__dirname, 'src/views/pages/'),
+  partials: path.join(__dirname, 'src/views/partials/'),
+  helpers: path.join(__dirname, 'src/views/helpers/'),
+};
+
+// register the 'include' helper to load partials in a template
+Handlebars.registerHelper(
+  'include',
+  require(path.join(PATHS.helpers, 'include'))({ root: PATHS.partials, ext: '.hbs' })
+);
 
 module.exports = {
   mode: 'production',
@@ -13,12 +21,18 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, 'src/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       test: /\.(html|hbs)$/,
       entry: {
         index: {
-          import: './src/home.hbs',
+          import: './src/views/pages/home.hbs',
           data: {
             title: 'Home',
             headline: 'Breaking Bad',

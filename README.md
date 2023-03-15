@@ -103,14 +103,14 @@ See the [complete Webpack configuration](#simple-webpack-config).
 ## Contents
 
 1. [Features](#features)
-2. [Install and Quick start](#install)
-3. [Webpack options](#webpack-options)
+1. [Install and Quick start](#install)
+1. [Webpack options](#webpack-options)
    - [output](#webpack-option-output)
      - [path](#webpack-option-output-path)
      - [publicPath](#webpack-option-output-publicPath)
      - [filename](#webpack-option-output-filename)
    - [entry](#webpack-option-entry)
-3. [Plugin options](#plugin-options)
+1. [Plugin options](#plugin-options)
    - [test](#option-test) (process only templates matching RegExp)
    - [entry](#option-entry) (define HTML templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
@@ -123,10 +123,10 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [verbose](#option-verbose)
    - [watchFiles](#option-watchFiles)
    - [loaderOptions](#option-loaderOptions)
-3. [Loader options](#loader-options)
+1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
-4. [Template engines](#recipe-template-engine)
+1. [Template engines](#recipe-template-engine)
    - [Eta](#using-template-eta)
    - [EJS](#using-template-ejs)
    - [Handlebars](#using-template-handlebars)
@@ -134,8 +134,8 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [Nunjucks](#using-template-nunjucks)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
-5. [Setup HMR live reload](#setup-hmr)
-5. [Recipes](#recipes)
+1. [Setup HMR live reload](#setup-hmr)
+1. [Recipes](#recipes)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
    - [How to preload source fonts in HTML](#recipe-preload-fonts)
@@ -146,6 +146,11 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to use some different template engines](#recipe-diff-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
+1. Demo examples
+   - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
+   - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
+   - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
+   - 10up / Animation Best Practices (`HTML`) [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 
 <a id="features" name="features" href="#features"></a>
 ## Features

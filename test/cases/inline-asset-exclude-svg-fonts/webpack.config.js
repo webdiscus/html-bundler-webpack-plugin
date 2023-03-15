@@ -46,7 +46,7 @@ module.exports = {
 
       // image files from 'images' directory
       {
-        test: /[\\/]images[\\/].+(png|jpe?g|svg|webp|ico)$/i,
+        test: /[\\/]images[\\/].+(png|jpe?g|webp|ico|svg)$/i,
         oneOf: [
           // auto inline by image size < 1 KB
           {

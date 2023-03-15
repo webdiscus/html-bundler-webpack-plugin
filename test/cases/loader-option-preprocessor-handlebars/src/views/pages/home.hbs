@@ -3,13 +3,14 @@
   <title>{{ title }}</title>
 </head>
 <body>
+  {{ include 'header' }}
   <h1>{{ headline }}</h1>
   <ul class="people">
     {{#each people}}
     <li>{{this}}</li>
     {{/each}}
   </ul>
-  <img src="apple.png" alt="apple" />
-  {{{ include '/src/footer.html' }}}
+  <img src="@images/apple.png" alt="apple" />
+  {{ include 'footer' }}
 </body>
 </html>
