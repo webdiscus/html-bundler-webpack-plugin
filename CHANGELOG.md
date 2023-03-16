@@ -1,5 +1,10 @@
 # Change log
 
+## 1.6.5 (2023-03-16)
+- fix: extra fix for yarn fans. Yarn can't correctly install packages form standard npm peerDependencies.
+  move the enhanced-resolve from peerDependencies into dependencies, it is needed for yarn only
+- test: add test for resolving the source manifest.json
+
 ## 1.6.4 (2023-03-15)
 - fix: add the enhanced-resolve to peerDependencies
 - chore: update dev dependencies

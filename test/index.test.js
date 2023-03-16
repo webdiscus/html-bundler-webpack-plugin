@@ -570,6 +570,10 @@ describe('special cases', () => {
     compareFileListAndContent(PATHS, 'resolve-in-entry-with-query', done);
   });
 
+  test('resolve manifest.json', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-manifest.json', done);
+  });
+
   test('Template with CRLF line separator', (done) => {
     compareFileListAndContent(PATHS, 'template-clrf', done);
   });

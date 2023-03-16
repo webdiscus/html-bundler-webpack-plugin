@@ -10,7 +10,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      verbose: true,
       entry: {
         index: './src/index.html',
       },
@@ -24,11 +23,6 @@ module.exports = {
         // output filename of extracted CSS
         filename: 'assets/css/[name].[contenthash:8].css',
       },
-      watchFiles: {
-        paths: ['src'],
-        files: [/\.(html|js|css)$/], // include files
-        ignore: [/\.(css)$/], // exclude files (has prio over `files` option)
-      },
     }),
   ],
 
@@ -39,11 +33,22 @@ module.exports = {
         use: ['css-loader'],
       },
 
+      // copy manifest to output path
+      {
+        test: /manifest\.json$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[name][ext]',
+        },
+      },
+
       {
         test: /\.(png|jpe?g|ico|svg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
+          // TODO: replace in manifest the source images
+          //filename: 'assets/img/[name].[hash:8][ext]',
+          filename: 'assets/img/[name][ext]',
         },
       },
     ],
