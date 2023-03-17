@@ -1,10 +1,5 @@
 const path = require('path');
 
-const { isWin, pathToPosix } = require('../Common/Helpers');
-
-let hmrFile = path.join(__dirname, 'Hmr/hot-update.js');
-if (isWin) hmrFile = pathToPosix(hmrFile);
-
 /**
  * Inject a string before closing </head> tag.
  *
@@ -47,7 +42,7 @@ const injectBefore = (content, string, before = []) => {
 };
 
 module.exports = {
-  hmrFile,
+  hmrFile: path.join(__dirname, 'Hmr/hot-update.js'),
   injectBeforeEndHead,
   injectBeforeEndBody,
 };
