@@ -74,7 +74,7 @@ module.exports = {
       },
 
       // {
-      //   test: /\.(png|jpe?g|ico)/,
+      //   test: /\.(png|jpe?g|ico)$/,
       //   type: 'asset/resource',
       //   generator: {
       //     filename: 'assets/img/[name].[hash:8][ext]',

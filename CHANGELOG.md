@@ -1,5 +1,9 @@
 # Change log
 
+## 1.8.0 (2023-03-18)
+- feat: add `asset/source` support for SVG to inline it in HTML
+- test: add test to inline SVG using the `asset/source` type
+
 ## 1.7.0 (2023-03-17)
 - feat: add hot update file to HTML in serv mode when there is no script in template, to reload page after changes
 - chore: update dev dependencies

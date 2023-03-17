@@ -13,7 +13,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         vendor: {
-          test: /\.(js|ts)/,
+          test: /\.(js|ts)$/,
           name: 'vendors',
           chunks: 'all',
         },

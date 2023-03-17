@@ -30,7 +30,7 @@ module.exports = {
       },
 
       {
-        test: /\.(ico|png|jp?g)/,
+        test: /\.(ico|png|jp?g)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext][query]',
@@ -38,7 +38,7 @@ module.exports = {
       },
 
       {
-        test: /\.(eot|ttf|woff|woff2)/,
+        test: /\.(eot|ttf|woff|woff2)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/fonts/[name][ext][query]',

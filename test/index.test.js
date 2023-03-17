@@ -554,6 +554,10 @@ describe('inline images', () => {
   test('inline-asset-svg-favicon', (done) => {
     compareFileListAndContent(PATHS, 'inline-asset-svg-favicon', done);
   });
+
+  test('inline-asset-source-svg', (done) => {
+    compareFileListAndContent(PATHS, 'inline-asset-source-svg', done);
+  });
 });
 
 describe('inline styles & scripts', () => {

@@ -19,7 +19,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(png|jpg|svg)/,
+        test: /\.(png|jpg|svg)$/,
         type: 'asset/inline',
       },
     ],

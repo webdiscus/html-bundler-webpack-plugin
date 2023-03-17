@@ -48,7 +48,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(png|jpe?g|ico|svg)/,
+        test: /\.(png|jpe?g|ico|svg)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext][query]',

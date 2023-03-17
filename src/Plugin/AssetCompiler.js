@@ -306,7 +306,7 @@ class AssetCompiler {
 
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
 
-    if (type === 'asset/inline' || type === 'asset') {
+    if (type === 'asset/inline' || type === 'asset' || (type === 'asset/source' && AssetInline.isSvgFile(resource))) {
       AssetInline.add(resource, issuer, Options.isEntry(issuer));
     }
 
@@ -558,6 +558,18 @@ class AssetCompiler {
             type: module.type,
             sourceFile: sourceRequest,
           });
+        }
+      } else if (module.type === 'asset/source') {
+        // support the source type for SVG only
+        if (AssetInline.isSvgFile(sourceFile)) {
+          AssetInline.render({ module, chunk, codeGenerationResults, issuerAssetFile: entry.filename });
+
+          if (verbose) {
+            verboseList.add({
+              type: module.type,
+              sourceFile: sourceRequest,
+            });
+          }
         }
       }
     }

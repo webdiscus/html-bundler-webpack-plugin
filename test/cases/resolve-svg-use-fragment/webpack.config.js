@@ -19,7 +19,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(png|jpe?g|ico|svg)/,
+        test: /\.(png|jpe?g|ico|svg)$/,
         type: 'asset/resource',
         generator: {
           // test: resolve SVG file with fragment w/o '[fragment]' in filename

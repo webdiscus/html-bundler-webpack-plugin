@@ -33,7 +33,7 @@ module.exports = {
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(png|jpg|jpeg|ico)/,
+        test: /\.(png|jpg|jpeg|ico)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext]',

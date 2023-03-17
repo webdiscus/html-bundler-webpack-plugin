@@ -64,7 +64,7 @@ module.exports = {
       },
 
       {
-        test: /\.(png|jpe?g|ico)/,
+        test: /\.(png|jpe?g|ico)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext]',
@@ -72,7 +72,7 @@ module.exports = {
       },
 
       {
-        test: /\.(eot|ttf|woff|woff2)/,
+        test: /\.(eot|ttf|woff|woff2)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/fonts/[name][ext]',
