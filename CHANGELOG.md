@@ -1,5 +1,10 @@
 # Change log
 
+## 1.7.0 (2023-03-17)
+- feat: add hot update file to HTML in serv mode when there is no script in template, to reload page after changes
+- chore: update dev dependencies
+- docs: update readme
+
 ## 1.6.5 (2023-03-16)
 - fix: extra fix for yarn fans. Yarn can't correctly install packages form standard npm peerDependencies.
   move the enhanced-resolve from peerDependencies into dependencies, it is needed for yarn only

@@ -10,6 +10,7 @@ import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Common/Helpers';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Template from '../src/Loader/Template';
+import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
 import { PATHS } from './config';
 
@@ -34,6 +35,48 @@ describe('misc unit tests', () => {
       format: 'webp',
       sizes: [10, 20, 30],
     };
+    expect(received).toEqual(expected);
+    done();
+  });
+});
+
+describe('utils unit tests', () => {
+  test('injectBeforeEndHead', (done) => {
+    const html = `<html><head><title>test</title></head><body><p>body</p></body></html>`;
+    const received = injectBeforeEndHead(html, `<script src="test.js"></script>`);
+    const expected = `<html><head><title>test</title><script src="test.js"></script></head><body><p>body</p></body></html>`;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('injectBeforeEndHead without head', (done) => {
+    const html = `<html><body><p>body</p></body></html>`;
+    const received = injectBeforeEndHead(html, `<script src="test.js"></script>`);
+    const expected = `<html><body><p>body</p><script src="test.js"></script></body></html>`;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('injectBeforeEndBody', (done) => {
+    const html = `<html><head><title>test</title></head><body><p>body</p></body></html>`;
+    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
+    const expected = `<html><head><title>test</title></head><body><p>body</p><script src="test.js"></script></body></html>`;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('injectBeforeEndBody without body', (done) => {
+    const html = `<html><head><title>test</title></head><p>body</p></html>`;
+    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
+    const expected = `<html><head><title>test</title></head><p>body</p><script src="test.js"></script></html>`;
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('injectBeforeEndBody without html', (done) => {
+    const html = `<p>body</p>`;
+    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
+    const expected = `<p>body</p><script src="test.js"></script>`;
     expect(received).toEqual(expected);
     done();
   });

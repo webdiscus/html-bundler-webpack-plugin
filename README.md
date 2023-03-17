@@ -112,7 +112,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [entry](#webpack-option-entry)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (process only templates matching RegExp)
-   - [entry](#option-entry) (define HTML templates)
+   - [entry](#option-entry) (define templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
@@ -134,7 +134,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [Nunjucks](#using-template-nunjucks)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
-1. [Setup HMR live reload](#setup-hmr)
+1. [Setup HMR (Live Reload)](#setup-hmr)
 1. [Recipes](#recipes)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
@@ -150,7 +150,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
-   - 10up / Animation Best Practices (`HTML`) [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
+   - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
@@ -716,7 +716,7 @@ Allow to configure paths and files to watch file changes for rebuild in `watch` 
 > **Note**
 >
 > To watch changes with a `live reload` in the browser, you must additionally configure the `watchFiles` in `devServer`,
-> see [setup HRM](#setup-hmr).
+> see [setup HMR](#setup-hmr).
 
 #### Properties:
 
@@ -1529,9 +1529,9 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 <a id="setup-hmr" name="setup-hmr" href="#setup-hmr"></a>
-## Setup HMR live reload
+## Setup HMR (Live Reload)
 
-To enable live reload by changes any file add in the Webpack config the `devServer` option:
+To enable live reload after changes add in the Webpack config the `devServer` option:
 ```js
 module.exports = {
   // enable HMR with live reload
@@ -1549,15 +1549,8 @@ module.exports = {
 };
 ```
 
-> **Note**
->
-> Live reload works only if in HTML used a JS file. This is specific of Webpack.
-> If your HTML has not a JS, then create one empty JS file, e.g. `hmr.js` and add it in the HTML:
-> ```html
-> <script src="./hmr.js"></script>
-> ```
-
 ---
+
 
 #### [↑ back to contents](#contents)
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>

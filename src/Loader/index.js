@@ -2,11 +2,10 @@ const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const Template = require('./Template');
 const Loader = require('./Loader');
+const RenderMode = require('./Modes/RenderMode');
 const Dependency = require('./Dependency');
 const Options = require('./Options');
 const { notInitializedPluginError, preprocessorError, compileError, exportError } = require('./Messages/Exeptions');
-
-const RenderMethod = require('./methods/RenderMethod');
 
 /**
  * @param {string} content
@@ -62,7 +61,7 @@ const loader = function (content, map, meta) {
     })
     .then((value) => {
       errorStage = 'export';
-      return Loader.export(value);
+      return Loader.export(value, resource);
     })
     .then((value) => {
       errorStage = 'watch';
@@ -85,8 +84,8 @@ const loader = function (content, map, meta) {
           break;
         default:
           // unrecoverable configuration error, Webpack restart required
-          const method = new RenderMethod({});
-          const browserErrorMessage = method.exportError(error, resource);
+          const mode = new RenderMode({});
+          const browserErrorMessage = mode.exportError(error, resource);
           callback(error, browserErrorMessage);
           return;
       }

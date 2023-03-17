@@ -1,13 +1,14 @@
 const Resolver = require('../Resolver');
 const ScriptCollection = require('../../Plugin/ScriptCollection');
-const { hmrFile } = require('../Utils');
+const { hmrFile, injectBeforeEndHead } = require('../Utils');
 const { errorToHtml } = require('../Messages/Exeptions');
 
 /**
  * Render into HTML and export a JS module.
  */
-class RenderMethod {
-  constructor({ templateFile, templateName, esModule }) {
+class RenderMode {
+  constructor({ templateFile, templateName, esModule, hot }) {
+    this.hot = hot === true;
     this.templateFile = templateFile;
     this.exportCode = esModule ? 'export default ' : 'module.exports=';
   }
@@ -35,6 +36,14 @@ class RenderMethod {
   }
 
   /**
+   * @param {string} file
+   * @return {string}
+   */
+  encodeRequire(file) {
+    return `\\u0027 + require(\\u0027${file}\\u0027) + \\u0027`;
+  }
+
+  /**
    * Resolve resource file after compilation of source code.
    * At this stage the filename is interpolated in VM.
    *
@@ -45,7 +54,7 @@ class RenderMethod {
   loaderRequire(file, issuer) {
     let resolvedFile = Resolver.resolve(file, issuer);
 
-    return `\\u0027 + require(\\u0027${resolvedFile}\\u0027) + \\u0027`;
+    return this.encodeRequire(resolvedFile);
   }
 
   /**
@@ -60,7 +69,7 @@ class RenderMethod {
 
     ScriptCollection.add(resolvedFile, issuer);
 
-    return `\\u0027 + require(\\u0027${resolvedFile}\\u0027) + \\u0027`;
+    return this.encodeRequire(resolvedFile);
   }
 
   /**
@@ -73,18 +82,36 @@ class RenderMethod {
   loaderRequireStyle(file, issuer) {
     const resolvedFile = Resolver.resolve(file, issuer, 'style');
 
-    return `\\u0027 + require(\\u0027${resolvedFile}\\u0027) + \\u0027`;
+    return this.encodeRequire(resolvedFile);
+  }
+
+  /**
+   * Inject hot update file into HTML.
+   *
+   * @param {string} content
+   * @return {string}
+   */
+  injectHmrFile(content) {
+    const hmrScript = `<script src="${this.encodeRequire(hmrFile)}"></script>`;
+    return injectBeforeEndHead(content, hmrScript);
   }
 
   /**
    * Export template code with rendered HTML.
    *
-   * @param {string} source The template source code.
-   * @param {{}} locals The variables passed in template function.
+   * @param {string} content The template content.
+   * @param {{}} data The object with variables passed in template.
+   * @param {string} issuer
    * @return {string}
    */
-  export(source, locals) {
-    return this.exportCode + "'" + this.decodeReservedChars(source) + "';";
+  export(content, data, issuer) {
+    const scriptsAmount = ScriptCollection.files.size;
+    if (this.hot && (scriptsAmount === 0 || (scriptsAmount === 1 && ScriptCollection.files.has(hmrFile)))) {
+      content = this.injectHmrFile(content);
+      ScriptCollection.add(hmrFile, issuer);
+    }
+
+    return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
   }
 
   /**
@@ -95,13 +122,12 @@ class RenderMethod {
    * @return {string}
    */
   exportError(error, issuer) {
-    const hmr = `' + require('${hmrFile}') + '`;
-    const output = errorToHtml(error, hmr);
-
+    let content = errorToHtml(error);
+    content = this.injectHmrFile(content);
     ScriptCollection.add(hmrFile, issuer);
 
-    return this.exportCode + "'" + output + "';";
+    return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
   }
 }
 
-module.exports = RenderMethod;
+module.exports = RenderMode;
