@@ -68,17 +68,12 @@ const watchPathsException = (dir, paths) => {
  * Return error string as HTML to display the error in browser by HMR.
  *
  * @param {string} error
- * @param {string} hmr
  * @returns {string}
  */
-const errorToHtml = (error, hmr) => {
-  let message = ansis.strip(error.toString());
-  message = message.replace(`${pluginName}`, pluginHeaderHtml);
-  message = message.replace(/\n/g, '<br>').replace(/'/g, "\\'");
+const errorToHtml = (error) => {
+  let message = ansis.strip(error.toString()).replace(pluginName, pluginHeaderHtml).replace(/\n/g, '<br>');
 
-  return `<!DOCTYPE html><html>
-<head><script src="${hmr}"></script></head>
-<body><div>${message}</div></body></html>`.replace(/\n/g, '');
+  return `<!DOCTYPE html><html><head></head><body>${message}</body></html>`;
 };
 
 /**

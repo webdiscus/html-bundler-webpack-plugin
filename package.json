@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "1.6.5",
+  "version": "1.7.0",
   "description": "HTML bundler plugin for webpack handels HTML template as entry point, extracts CSS and JS from their sources specified in HTML.",
   "keywords": [
     "webpack",
@@ -83,7 +83,7 @@
     "@test-fixtures/lorem": "0.0.2",
     "@test-fixtures/js": "0.0.2",
     "@test-fixtures/scss": "0.0.7",
-    "@types/jest": "^29.4.2",
+    "@types/jest": "^29.5.0",
     "css-loader": "^6.7.3",
     "ejs": "^3.1.9",
     "handlebars": "^4.7.7",
@@ -96,7 +96,7 @@
     "sass": "^1.58.2",
     "sass-loader": "^13.2.0",
     "sharp": "^0.31.3",
-    "webpack": "^5.76.1",
+    "webpack": "^5.76.2",
     "webpack-cli": "5.0.1",
     "webpack-dev-server": "^4.12.0"
   }

@@ -1,6 +1,6 @@
 const Eta = require('eta');
-const PluginService = require('../Plugin/PluginService');
 const path = require('path');
+const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('../Common/Helpers');
 const { watchPathsException } = require('./Messages/Exeptions');
 

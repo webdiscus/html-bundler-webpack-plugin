@@ -1,28 +1,33 @@
 const { merge } = require('webpack-merge');
 const PluginService = require('../Plugin/PluginService');
 const Resolver = require('./Resolver');
-const RenderMethod = require('./methods/RenderMethod');
+const RenderMode = require('./Modes/RenderMode');
 const Options = require('./Options');
 const { parseQuery } = require('../Common/Helpers');
 
 class Loader {
   static compiler = null;
-  static methods = [
-    {
-      method: 'render',
-      query: 'method-render',
-    },
-  ];
+  static modes = new Set(['render']); // TODO: add 'compile' and 'html' modes;
 
   /**
    * @param {Object} loaderContext
    */
   static init(loaderContext) {
-    const { rootContext, resourcePath: templateFile, resourceQuery } = loaderContext;
-    const { data, esModule, method, name: templateName, self: useSelf } = Options.get();
-
-    // the rule: a query method override a global method defined in the loader options
+    const { rootContext, resourcePath: templateFile, resourceQuery, hot } = loaderContext;
+    const { data, esModule, mode, name: templateName, self: useSelf } = Options.get();
     const queryData = parseQuery(resourceQuery);
+    let loaderMode = mode;
+
+    if (queryData.hasOwnProperty('mode')) {
+      // rule: the mode defined in query has prio over the loader option
+      if (this.modes.has(queryData.mode)) {
+        loaderMode = queryData.mode;
+      }
+      // remove mode from query data to pass in the template only clean data
+      delete queryData['mode'];
+    }
+
+    this.data = merge(data || {}, queryData);
 
     // prevent double initialisation with same options, occurs when many entry files used in one webpack config
     if (!PluginService.isCached(rootContext)) {
@@ -30,52 +35,33 @@ class Loader {
     }
 
     this.compiler = this.compilerFactory({
-      method,
+      loaderMode,
       templateFile,
       templateName,
-      queryData,
       esModule,
       useSelf,
+      hot,
     });
-
-    // remove method from query data to pass in the template only clean data
-    const query = this.compiler.query;
-    if (queryData.hasOwnProperty(query)) {
-      delete queryData[query];
-    }
-
-    this.data = merge(data || {}, queryData);
   }
 
   /**
-   * Create instance by compilation method.
+   * Create instance by compilation mode.
    *
-   * Note: default method is `render`
+   * Note: default mode is `render`
    *
-   * @param {string} method
+   * @param {string} loaderMode The loader mode: compile, render or html.
    * @param {string} templateFile
    * @param {string} templateName
-   * @param {Object} queryData
    * @param {boolean} esModule
    * @param {boolean} useSelf Whether the `self` option is true.
-   * @return {RenderMethod}
+   * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
+   * @return {RenderMode}
    */
-  static compilerFactory({ method, templateFile, templateName, queryData, esModule, useSelf }) {
-    const methodFromQuery = this.methods.find((item) => queryData.hasOwnProperty(item.query));
-    const methodFromOptions = this.methods.find((item) => method === item.method);
-
-    // default method
-    let methodName = 'render';
-    if (methodFromQuery) {
-      methodName = methodFromQuery.method;
-    } else if (methodFromOptions) {
-      methodName = methodFromOptions.method;
-    }
-
-    switch (methodName) {
+  static compilerFactory({ loaderMode, templateFile, templateName, esModule, useSelf, hot }) {
+    switch (loaderMode) {
       case 'render':
       default:
-        return new RenderMethod({ templateFile, templateName, esModule });
+        return new RenderMode({ templateFile, templateName, esModule, hot });
     }
   }
 
@@ -83,10 +69,11 @@ class Loader {
    * Export generated result.
    *
    * @param {string} source
+   * @param {string} issuer
    * @return {string}
    */
-  static export(source) {
-    return this.compiler.export(source, this.data);
+  static export(source, issuer) {
+    return this.compiler.export(source, this.data, issuer);
   }
 
   /**
