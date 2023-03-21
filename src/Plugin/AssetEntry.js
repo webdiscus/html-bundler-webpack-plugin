@@ -24,6 +24,7 @@ const { isFunction } = require('../Common/Helpers');
  * @property {function(): string|null =} extract
  * @property {Array} resources
  * @property {boolean|string} [verbose = false] Show an information by handles of the entry in a postprocess.
+ * @property {boolean} isTemplate Whether the entry is a template entrypoint.
  */
 
 class AssetEntry {
@@ -31,6 +32,7 @@ class AssetEntry {
   static entryMap = new Map();
   static compilationEntryNames = new Set();
   static entryFiles = [];
+  static entryPointExtensions = new Set();
 
   static compilation = null;
   static EntryPlugin = null;
@@ -114,6 +116,7 @@ class AssetEntry {
         postprocess: isFunction(postprocess) ? postprocess : null,
         extract: isFunction(extract) ? extract : null,
         verbose,
+        isTemplate: undefined,
       };
 
       if (entry.data) {
@@ -159,7 +162,14 @@ class AssetEntry {
       if (relativeOutputPath) {
         filename = path.posix.join(relativeOutputPath, filename);
       }
+
       assetEntryOptions.filename = filename;
+      assetEntryOptions.isTemplate = Options.isEntry(assetEntryOptions.importFile);
+
+      if (assetEntryOptions.isTemplate) {
+        const ext = this.#getFileExtension(filename);
+        this.entryPointExtensions.add(ext);
+      }
 
       return filename;
     };
@@ -229,6 +239,18 @@ class AssetEntry {
   }
 
   /**
+   * Set generated output filename.
+   *
+   * Called by renderManifest() stage.
+   *
+   * @param {AssetEntryOptions} entry
+   * @param {Chunk} chunk The Webpack Chunk object.
+   */
+  static setFilename(entry, chunk) {
+    entry.filename = this.compilation.getPath(chunk.filenameTemplate, { contentHashType: 'javascript', chunk });
+  }
+
+  /**
    * Whether the entry is unique.
    *
    * @param {string} name The name of the entry.
@@ -238,6 +260,21 @@ class AssetEntry {
   static isUnique(name, file) {
     const entry = this.entryMap.get(name);
     return !entry || entry.importFile === file;
+  }
+
+  /**
+   * Whether the output filename is a template entrypoint.
+   *
+   * @param {string} filename The output filename.
+   * @return {boolean}
+   */
+  static isEntrypoint(filename) {
+    const ext = this.#getFileExtension(filename);
+    return this.entryPointExtensions.has(ext);
+  }
+
+  static #getFileExtension(file) {
+    return file.slice(file.lastIndexOf('.'));
   }
 
   /**
@@ -259,6 +296,7 @@ class AssetEntry {
    */
   static clear() {
     this.entryMap.clear();
+    this.entryPointExtensions.clear();
     this.entryFiles.length = 0;
   }
 

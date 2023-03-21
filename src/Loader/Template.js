@@ -58,15 +58,41 @@ const indexOfChar = (search, content, startPos = 0, except = '') => {
 };
 
 /**
- * Whether link tag load a style or other assets.
+ * Whether the link tag load a style or other assets.
  *
- * <link href="style.css" type="text/css" />            => true
- * <link href="style.css" rel="alternate stylesheet" /> => true
+ * <link href="style.css" type="text/css" />
+ * <link href="style.css" rel="alternate stylesheet" />
+ * <link href="style.css" rel="preload" as="style" />
+ * <link href="style.css" rel="preload" as="stylesheet" />
  *
  * @param {string} tag The tag with attributes.
  * @return {boolean}
  */
-const isStyle = (tag) => /rel=".*stylesheet.*"/.test(tag) || /type="text\/css"/.test(tag);
+const isLinkStyle = (tag) => /(?:rel|as)=".*style.*"/.test(tag) || /type="text\/css"/.test(tag);
+
+/**
+ * Whether the link tag load a script.
+ *
+ * <link href="script.js" rel="prefetch" as="script" />
+ * <link href="script.js" rel="preload" as="script" />
+ * <link href="script.js" rel="modulepreload" />
+ * <link href="script.js" rel="modulepreload" as="script" />
+ * <link href="script.js" rel="modulepreload" as="worker" />
+ * <link href="script.js" rel="modulepreload" as="serviceworker" />
+ * <link href="script.js" rel="modulepreload" as="sharedworker" />
+ *
+ * @param {string} tag The tag with attributes.
+ * @return {boolean}
+ */
+const isLinkScript = (tag) => {
+  if (tag.indexOf('as="script"') > 0) return true;
+  if (tag.indexOf('rel="modulepreload"') > 0) {
+    if (tag.indexOf('as="') < 0) return true;
+    return /as="(worker|serviceworker|sharedworker)"/.test(tag);
+  }
+
+  return false;
+};
 
 class Template {
   static sources = [];
@@ -269,8 +295,9 @@ class Template {
 
       if (tag === 'script') {
         type = 'script';
-      } else if (tag === 'link' && isStyle(source)) {
-        type = 'style';
+      } else if (tag === 'link') {
+        if (isLinkStyle(source)) type = 'style';
+        else if (isLinkScript(source)) type = 'script';
       }
 
       for (let attribute of attributes) {

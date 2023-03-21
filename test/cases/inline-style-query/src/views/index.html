@@ -1,6 +1,10 @@
 <html>
   <head>
     <title>Test</title>
+    <!-- force inline preloaded styles -->
+    <link href="Styles/preload.css?inline" as="style" rel="preload" />
+    <link href="Styles/preload2.css?inline" as="stylesheet" rel="preload" /><!-- test invalide value as="stylesheet" -->
+
     <!-- load CSS as file -->
     <link href="Styles/main.css" rel="stylesheet" />
     <!-- inline CSS -->
@@ -10,5 +14,7 @@
     <h1>Home</h1>
     <div class="img-file-style"></div>
     <div class="img-inline-style"></div>
+    <div class="img-data-url"></div>
+    <div class="img-data-url2"></div>
   </body>
 </html>

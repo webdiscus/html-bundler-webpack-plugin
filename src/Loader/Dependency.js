@@ -1,4 +1,5 @@
 const path = require('path');
+const { readDirRecursiveSync } = require('../Common/FileUtils');
 const PluginService = require('../Plugin/PluginService');
 const AssetEntry = require('../Plugin/AssetEntry');
 const Options = require('./Options');
@@ -27,9 +28,12 @@ class Dependency {
     this.addFile = this.addFile.bind(this);
     this.files = new Set();
 
+    const fs = this.fileSystem;
+    const { files: includes, ignore: excludes } = this.watchFiles;
+
     for (const watchDir of this.watchFiles.paths) {
       const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
-      const files = this.#readDirRecursiveSync(dir);
+      const files = readDirRecursiveSync(dir, { fs, includes, excludes });
       files.forEach(this.addFile);
     }
   }
@@ -84,41 +88,6 @@ class Dependency {
     if (PluginService.getOptions().isVerbose()) {
       verboseWatchFiles([...this.files]);
     }
-  }
-
-  /**
-   * Returns a list of absolut files.
-   *
-   * @param {string} dir The starting directory.
-   * @return {Array<string>}
-   * @private
-   */
-  static #readDirRecursiveSync(dir) {
-    const fs = this.fileSystem;
-    const { files, ignore } = this.watchFiles;
-    const noFiles = files.length < 1;
-
-    /**
-     * @param {string} dir
-     * @return {Array<string>}
-     */
-    const readDir = (dir) => {
-      const entries = fs.readdirSync(dir, { withFileTypes: true });
-      const result = [];
-
-      for (const file of entries) {
-        const fullPath = path.join(dir, file.name);
-
-        if (!ignore.find((regex) => regex.test(fullPath))) {
-          if (file.isDirectory()) result.push(...readDir(fullPath));
-          else if (noFiles || files.find((regex) => regex.test(fullPath))) result.push(fullPath);
-        }
-      }
-
-      return result;
-    };
-
-    return readDir(dir);
   }
 }
 

@@ -11,9 +11,19 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
+        'style.bundle': 'src/style.css', // test after render process for entry templates only
         index: './src/index.html',
       },
       minify: true,
     }),
   ],
+
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['css-loader'],
+      },
+    ],
+  },
 };

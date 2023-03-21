@@ -1,18 +1,11 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
-const Handlebars = require('handlebars');
 
 const PATHS = {
   pages: path.join(__dirname, 'src/views/pages/'),
   partials: path.join(__dirname, 'src/views/partials/'),
   helpers: path.join(__dirname, 'src/views/helpers/'),
 };
-
-// register the 'include' helper to load partials in a template
-Handlebars.registerHelper(
-  'include',
-  require(path.join(PATHS.helpers, 'include'))({ root: PATHS.partials, ext: '.hbs' })
-);
 
 module.exports = {
   mode: 'production',
@@ -29,7 +22,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|hbs)$/,
       entry: {
         index: {
           import: './src/views/pages/home.hbs',
@@ -41,7 +33,10 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: (content, { data }) => Handlebars.compile(content)(data),
+        preprocessor: 'handlebars',
+        preprocessorOptions: {
+          views: [PATHS.partials],
+        },
       },
     }),
   ],

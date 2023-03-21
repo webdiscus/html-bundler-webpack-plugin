@@ -55,7 +55,6 @@ const loader = function (content, map, meta) {
     resolve(result != null ? result : content);
   })
     .then((value) => {
-      //return value;
       errorStage = 'compile';
       return Template.compile(value, resource);
     })

@@ -7,7 +7,7 @@ const { parseQuery } = require('../Common/Helpers');
 
 class Loader {
   static compiler = null;
-  static modes = new Set(['render']); // TODO: add 'compile' and 'html' modes;
+  static modes = new Set(['render']); // TODO: add compile|compiling, render|rendering and string|html modes;
 
   /**
    * @param {Object} loaderContext

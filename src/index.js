@@ -1,6 +1,7 @@
 const { minify } = require('html-minifier-terser');
 const Options = require('./Plugin/Options');
 const AssetCompiler = require('./Plugin/AssetCompiler');
+const AssetEntry = require('./Plugin/AssetEntry');
 const loader = require.resolve('./Loader');
 const { isWin } = require('./Common/Helpers');
 
@@ -15,7 +16,7 @@ class Plugin extends AssetCompiler {
    */
   constructor(options = {}) {
     const PluginOptions = {
-      test: /\.(html|ejs|eta)$/,
+      test: /\.(html|ejs|eta|hbs|handlebars)$/,
       enabled: true,
       verbose: false,
       minify: false,
@@ -101,7 +102,7 @@ class Plugin extends AssetCompiler {
     }
 
     for (const assetFile in assets) {
-      if (!assetFile.endsWith('.html')) {
+      if (!AssetEntry.isEntrypoint(assetFile)) {
         continue;
       }
 

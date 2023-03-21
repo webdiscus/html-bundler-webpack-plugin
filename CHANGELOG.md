@@ -1,5 +1,97 @@
 # Change log
 
+## 1.9.0 (2023-03-21)
+- feat: add `preprocessorOptions` to the loader option to define a custom config for the default preprocessor.\
+  For all options of the default preprocessor see https://eta.js.org/docs/learn/configuration#big-list-of-configuration-options. \
+  Usage example:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/pages/home.html',
+    },
+    loaderOptions: {
+      preprocessorOptions: {
+        // root path for includes with an absolute path (e.g., /file.html), defaults is process.cwd()
+        root: path.join(process.cwd(), 'src/views/'),
+        // directories that contain partials, defaults is undefined
+        views: [
+          path.join(process.cwd(), 'src/views/layouts'),
+          path.join(process.cwd(), 'src/views/partials'),
+        ],
+      },
+    },
+  }),
+  
+  ```
+- feat: add resolving a template partial relative to template.
+  For example, there are templates:
+  ```
+  src/views/pages/home.html - the main template
+  src/views/pages/includes/gallery.html - the partial used in the main template
+  ```
+  You can include the `src/views/pages/includes/gallery.html` partial in `home.html` using a relative path:
+  ```html
+  <%~ includeFile('includes/gallery.html') %>
+  ```
+- feat: add default template extensions: `.hbs` and `.handlebars`.\
+  The following default template extensions are now supported: `/\.(html|ejs|eta|hbs|handlebars)$/`
+- feat: add `preprocessor` value as string `ejs` to use the preconfigured EJS compiler (`ejs` package needs to be installed)
+- feat: add `preprocessor` value as string `handlebars` to use the preconfigured Handlebars compiler (`handlebars` package needs to be installed).\
+  The `preprocessorOptions` has `Handlebars.compile` option plus additional options for the build-in `include` helper:
+  - `root {string}` - root path for includes with an absolute path (e.g., /file.html), defaults `process.cwd()`
+  - `views {string|Array<strings>}` - directory or directories that contain templates.\
+    For example:\
+    _preprocessorOptions_
+    ```js
+    {
+      root: path.join(__dirname, 'src/views'),
+      views: [
+        path.join(__dirname, 'src/views/includes'),
+      ],
+    }
+    ```
+    _include a partial without an extension_\
+    `{{ include '/partials/footer' }}` - the root path relative to defined in the `root` option\
+    `{{ include 'gallery' }}` - the relative path to defined in the `views` option
+  - The following extensions will be automatically resolved by default: `.html`, `.hbs`, `.handlebars`.\
+  Other options: 
+  - `partials {Object.<[name: string], [file: string]>}` - Use the `partials` as an object to define partials manually.\
+     The key is a `partial name`, the value is an absolute path of the partial.\
+     For example:
+     ```js
+     partials: {
+       gallery: path.join(__dirname, 'src/views/includes/gallery.html'),
+       'menu/nav': path.join(__dirname, 'src/views/partials/menu/nav.html'),
+       'menu/top/desktop': path.join(__dirname, 'src/views/partials/menu/top/desktop.html'),
+     },
+     ```
+  - `partials {Array<string>}` - Use `partials` as an array of absolute paths to automatically find partials in these paths.\
+    Files with the following extensions will be found recursively in the given paths: `*.html`, `*.hbs`, `*.handlebars`.\
+    For example:
+     ```js
+     partials: [
+       path.join(__dirname, 'src/views/includes'),
+       path.join(__dirname, 'src/views/partials'),
+     ],
+     ```
+     **Note:** the `partial name` is a complete relative path to a file without an extension.
+     This is different from plugins, in which Id is a base directory and filename without extension.
+  - `helpers {Object.<[name: string], function()>}` - the key is a helper name, the value is the helper function.
+- fix: inline a style from the `link` tag with the attribute `as="style"`, e.g.:
+  ```html
+  <link href="style.css?inline" rel="preload" as="style" />
+  ```
+- fix: resolve a script in the `link` tag with the `as="script"` or the `rel="modulepreload"` attributes, e.g.:
+  ```html
+  <link href="script.js" rel="prefetch" as="script" />
+  <link href="script.js" rel="preload" as="script" />
+  <link href="script.js" rel="modulepreload" />
+  ```
+- fix: keep output filename extension, different from `.html`, e.g. `[name].php`, #4
+- refactor: optimize code
+- test: add tests for new features
+- docs: add description of new features
+
 ## 1.8.0 (2023-03-18)
 - feat: add `asset/source` support for SVG to inline it in HTML
 - test: add test to inline SVG using the `asset/source` type

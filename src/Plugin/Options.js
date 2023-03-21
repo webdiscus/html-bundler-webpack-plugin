@@ -40,9 +40,12 @@ class Options {
    * Initialize plugin options.
    *
    * @param {Object} options
+   * @param {AssetEntry} AssetEntry The instance of the AssetEntry class.
+   *  Note: this file cannot be imported due to a circular dependency, therefore this dependency is injected.
    */
-  static init(options) {
+  static init(options, { AssetEntry }) {
     this.options = options;
+    this.AssetEntry = AssetEntry;
 
     if (options.modules && !Array.isArray(options.modules)) {
       optionModulesException(options.modules);
@@ -234,12 +237,14 @@ class Options {
   }
 
   /**
-   * Whether the source file is an entry file.
+   * Whether the source file is a template entry file.
    *
-   * @param {string} sourceFile
+   * @param {string} sourceFile The source file.
    * @return {boolean}
    */
   static isEntry(sourceFile) {
+    if (sourceFile == null) return false;
+
     const [file] = sourceFile.split('?', 1);
     return this.options.test.test(file);
   }
@@ -306,7 +311,7 @@ class Options {
    * @return {string}
    */
   static getAssetOutputPath(assetFile = null) {
-    let isAutoRelative = assetFile && this.isRelativePublicPath && !assetFile.endsWith('.html');
+    const isAutoRelative = assetFile && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(assetFile);
 
     if (this.isAutoPublicPath || isAutoRelative) {
       if (!assetFile) return '';
@@ -329,7 +334,7 @@ class Options {
    * @return {string}
    */
   static getAssetOutputFile(assetFile, issuer) {
-    let isAutoRelative = issuer && this.isRelativePublicPath && !issuer.endsWith('.html');
+    const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(issuer);
 
     // if public path is relative, then a resource using not in the template file must be auto resolved
     if (this.isAutoPublicPath || isAutoRelative) {
@@ -358,7 +363,7 @@ class Options {
    * @throws
    */
   static afterProcess(content, { sourceFile, assetFile }) {
-    if (!this.options.afterProcess || !assetFile.endsWith('.html')) return null;
+    if (!this.options.afterProcess || !this.isEntry(sourceFile)) return null;
 
     let result;
 

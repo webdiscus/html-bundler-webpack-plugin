@@ -1,7 +1,7 @@
-const Eta = require('eta');
 const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('../Common/Helpers');
+const { loadModule, resolveFile, readDirRecursiveSync } = require('../Common/FileUtils');
 const { watchPathsException } = require('./Messages/Exeptions');
 
 /**
@@ -74,7 +74,7 @@ class Options {
       { tag: 'script', attributes: ['src'] },
       { tag: 'img', attributes: ['src', 'srcset'] },
       { tag: 'image', attributes: ['href', 'xlink:href'] }, // <svg><image href="image.png"></image></svg>
-      { tag: 'use', attributes: ['href'] }, // <svg><use href="icons.svg#home"></use></svg>
+      { tag: 'use', attributes: ['href', 'xlink:href'] }, // <svg><use href="icons.svg#home"></use></svg>
       { tag: 'input', attributes: ['src'] }, // type="image"
       { tag: 'source', attributes: ['src', 'srcset'] },
       { tag: 'audio', attributes: ['src'] },
@@ -106,29 +106,39 @@ class Options {
   };
 
   /**
-   * Returns preprocessor.
-   * Note: the default preprocessor use the Eta templating engine.
+   * Returns preprocessor to compile a template.
+   * The default preprocessor use the Eta templating engine.
+   * https://eta.js.org
    *
-   * @return {null|(function(string, {data?: {}}): Promise|string|null)}
+   * @return {null|(function(string, {data?: {}}): Promise|string|void)}
    */
   static getPreprocessor() {
+    if (this.#options.preprocessor === false) return null;
+
     if (typeof this.#options.preprocessor === 'function') {
       return this.#options.preprocessor;
     }
 
-    if (this.#options.preprocessor !== false) {
-      const config = {
-        // defaults async is false, because the `includeFile()` function is sync,
-        // wenn async is true then must be used `await includeFile()`
-        async: false,
-        useWith: true, // allow to use variables in template without `it.` scope
-        root: this.#rootContext,
-      };
+    const fs = this.fileSystem;
+    const options = this.#options.preprocessorOptions || {};
 
-      return (template, { data = {} }) => Eta.render(template, data, config);
+    // TODO: add preprocessor as the string for 'liquid' etc, to use a preconfigured compiler
+    // the preprocessor as a string is the experimental feature,
+    // currently works with 'eta' (defaults), 'ejs' and 'handlebars'
+    switch (this.#options.preprocessor) {
+      // experimental
+      case 'handlebars':
+        return require('./Preprocessors/Handlebars/index')({ fs, rootContext: this.#rootContext, options });
+
+      // experimental
+      case 'ejs':
+        return require('./Preprocessors/Ejs/index')({ rootContext: this.#rootContext, options });
+
+      // Eta is the default preprocessor
+      case 'eta':
+      default:
+        return require('./Preprocessors/Eta/index')({ rootContext: this.#rootContext, options });
     }
-
-    return null;
   }
 
   static getWatchFiles() {

@@ -96,7 +96,7 @@ class AssetCompiler {
    * @param {PluginOptions|{}} options
    */
   constructor(options = {}) {
-    Options.init(options);
+    Options.init(options, { AssetEntry });
 
     // let know the loader that the plugin is being used
     PluginService.init(Options);
@@ -280,7 +280,7 @@ class AssetCompiler {
    * Filter alternative requests.
    *
    * Entry files should not have alternative requests.
-   * If the template file contains require and is compiled with `compile` method,
+   * If the template file contains require and is compiled with `compile` mode,
    * then ContextModuleFactory generate additional needless request as relative path without query.
    * Such 'alternative request' must be removed from compilation.
    *
@@ -335,7 +335,7 @@ class AssetCompiler {
       module.type === 'asset/resource' &&
       (AssetScript.isScript(module) || (module.__isDependencyTypeUrl === true && Asset.isStyle(module)))
     ) {
-      // set correct module type for scripts and styles when used the `html` method of a loader
+      // set correct module type for scripts and styles when used the `html` mode of a loader
       module.type = 'javascript/auto';
       module.binary = false;
       module.parser = new JavascriptParser('auto');
@@ -376,11 +376,10 @@ class AssetCompiler {
     const assetModules = new Set();
     const contentHashType = 'javascript';
     const chunkModules = chunkGraph.getChunkModulesIterable(chunk);
-
-    entry.filename = compilation.getPath(chunk.filenameTemplate, { contentHashType, chunk });
-    AssetScript.setIssuerFilename(entry.request, entry.filename);
-
     this.currentEntryPoint = null;
+
+    AssetEntry.setFilename(entry, chunk);
+    AssetScript.setIssuerFilename(entry.request, entry.filename);
 
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
@@ -450,8 +449,8 @@ class AssetCompiler {
             },
           });
 
-          // note: the entry may be not html file, e.g. a style or script defined directly in entry
-          if (assetFile.endsWith('.html')) {
+          // note: the entry may be not a template file, e.g. a style or script defined directly in entry
+          if (entry.isTemplate) {
             this.currentEntryPoint = entry;
           }
 
@@ -756,6 +755,15 @@ class AssetCompiler {
             });
             break;
           }
+          case 'asset/source':
+            if (AssetInline.isSvgFile(sourceFile)) {
+              const entity = AssetInline.data.get(sourceFile);
+              verboseExtractInlineResource({
+                entity,
+                sourceFile,
+              });
+            }
+            break;
           case 'asset/inline':
             const entity = AssetInline.data.get(sourceFile);
             verboseExtractInlineResource({

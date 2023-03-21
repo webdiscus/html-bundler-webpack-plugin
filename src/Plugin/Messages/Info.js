@@ -1,7 +1,9 @@
 const { pluginName } = require('../../config');
-const { pathRelativeByPwd, outToConsole, isFunction } = require('../../Common/Helpers');
+const { outToConsole, isFunction } = require('../../Common/Helpers');
+const { pathRelativeByPwd } = require('../../Common/FileUtils');
 const { green, greenBright, cyan, cyanBright, magenta, yellowBright, black, ansi, yellow } = require('ansis/colors');
 const Asset = require('../Asset');
+const AssetEntry = require('../AssetEntry');
 
 const grayBright = ansi(245);
 const header = black.bgGreen` ${pluginName} `;
@@ -26,11 +28,12 @@ const pathRelativeByPwdArr = (files) => {
  */
 const verboseEntry = ({ name, importFile, outputPath, filename, filenameTemplate }) => {
   let str = `${header} Compile the entry ${green(name)}\n`;
+  const entryFile = AssetEntry.isEntrypoint(importFile) ? `template` : `source`;
 
   importFile = pathRelativeByPwd(importFile);
   outputPath = pathRelativeByPwd(outputPath);
 
-  str += 'template: '.padStart(padWidth) + `${cyan(importFile)}\n`;
+  str += `${entryFile}: `.padStart(padWidth) + `${cyan(importFile)}\n`;
   str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}\n`;
   str +=
     'filename: '.padStart(padWidth) +
@@ -128,7 +131,7 @@ const verboseExtractResource = ({ entity, sourceFile, outputPath }) => {
       issuer = issuerAsset;
     }
 
-    const issuerColor = issuer.endsWith('.html') ? green : yellow;
+    const issuerColor = AssetEntry.isEntrypoint(issuer) ? green : yellow;
 
     str += '-> '.padStart(padWidth) + `${issuerColor(issuer)}\n`;
     str += '- '.padStart(padWidth + 2) + `${grayBright(value)}\n`;

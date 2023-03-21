@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import {
   compareFileListAndContent,
   exceptionContain,
@@ -8,6 +10,7 @@ import {
 } from './utils/helpers';
 import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Common/Helpers';
+import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
@@ -36,6 +39,22 @@ describe('misc unit tests', () => {
       sizes: [10, 20, 30],
     };
     expect(received).toEqual(expected);
+    done();
+  });
+
+  test('FileUtils: load module', (done) => {
+    try {
+      const ansis = loadModule('ansis');
+      expect(ansis).toBeDefined();
+      done();
+    } catch (error) {
+      throw error;
+    }
+  });
+
+  test('FileUtils: resolveFile', (done) => {
+    const received = resolveFile('not-exists-file', { fs, root: __dirname });
+    expect(received).toBeFalsy();
     done();
   });
 });
@@ -398,6 +417,10 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
 
+  test('option afterProcess', (done) => {
+    compareFileListAndContent(PATHS, 'option-afterProcess', done);
+  });
+
   test('option minify HTML', (done) => {
     compareFileListAndContent(PATHS, 'option-minify', done);
   });
@@ -481,27 +504,39 @@ describe('loader options', () => {
 });
 
 describe('loader options for templating', () => {
-  test('preprocessor with Eta', (done) => {
+  test('preprocessor Eta', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
   });
 
-  test('preprocessor with Eta async', (done) => {
+  test('preprocessor Eta async', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta-async', done);
   });
 
-  test('preprocessor with EJS', (done) => {
+  test('preprocessor EJS', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs', done);
   });
 
-  test('preprocessor with EJS async', (done) => {
+  test('preprocessor EJS async', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs-async', done);
   });
 
-  test('preprocessor with handlebars', (done) => {
+  test('preprocessor EJS as string', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs-string', done);
+  });
+
+  test('preprocessor handlebars', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
   });
 
-  test('preprocessor with Mustache', (done) => {
+  test('preprocessor handlebars: register partials', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-partials', done);
+  });
+
+  test('preprocessor handlebars: register partials from paths', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-partials-path', done);
+  });
+
+  test('preprocessor Mustache', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-mustache', done);
   });
 
@@ -517,16 +552,16 @@ describe('loader options for templating', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-nunjucks-async-multipage', done);
   });
 
-  test('preprocessor with liquid', (done) => {
+  test('preprocessor liquid', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid', done);
   });
 
-  test('preprocessor with liquid async', (done) => {
+  test('preprocessor liquid async', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid-async', done);
   });
 
   test('preprocessor with multiple templating engines', (done) => {
-    compareFileListAndContent(PATHS, 'loader-option-preprocessor-ejs-hbs', done);
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-many-ejs-hbs', done);
   });
 });
 
@@ -628,6 +663,10 @@ describe('special cases', () => {
   test('encode / decode reserved HTML chars', (done) => {
     compareFileListAndContent(PATHS, 'decode-chars', done);
   });
+
+  test('preprocessor for output php template', (done) => {
+    compareFileListAndContent(PATHS, 'preprocessor-php', done);
+  });
 });
 
 describe('extras: responsive images', () => {
@@ -695,6 +734,11 @@ describe('loader exceptions', () => {
     exceptionContain(PATHS, 'msg-exception-loader-resolve-file', containString, done);
   });
 
+  test('exception: resolve required file', (done) => {
+    const containString = `Can't resolve the file`;
+    exceptionContain(PATHS, 'msg-exception-resolve-file', containString, done);
+  });
+
   test('exception export', (done) => {
     const containString = 'Export of compiled template failed';
     exceptionContain(PATHS, 'msg-exception-loader-export', containString, done);
@@ -708,6 +752,27 @@ describe('loader exceptions', () => {
   test('exception: loader used without the plugin', (done) => {
     const containString = 'Illegal usage of the loader';
     exceptionContain(PATHS, 'msg-exception-loader-no-plugin', containString, done);
+  });
+
+  test('exception: handlebars include file not found', (done) => {
+    const containString = 'Could not find the include file';
+    exceptionContain(PATHS, 'msg-exception-handlebars-include', containString, done);
+  });
+
+  test('exception: handlebars partial file not found', (done) => {
+    const containString = 'Could not find the partial file';
+    exceptionContain(PATHS, 'msg-exception-handlebars-partial', containString, done);
+  });
+
+  test('exception preprocessor: load module', (done) => {
+    const containString = 'Cannot find module';
+    try {
+      loadModule('not-exists-module');
+      throw new Error('the test should throw an error');
+    } catch (error) {
+      expect(error.toString()).toContain(containString);
+      done();
+    }
   });
 });
 

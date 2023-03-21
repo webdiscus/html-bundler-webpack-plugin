@@ -26,8 +26,8 @@ module.exports = {
       },
       watchFiles: {
         paths: ['src'],
-        files: [/\.(html|js|css)$/], // include files
-        ignore: [/\.(css)$/], // exclude files (has prio over `files` option)
+        files: [/\.(html|css)$/, '.js'], // include files
+        ignore: [/\.(css)$/, '.scss'], // exclude files (has prio over `files` option)
       },
     }),
   ],

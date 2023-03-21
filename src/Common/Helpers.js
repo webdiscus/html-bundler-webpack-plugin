@@ -23,24 +23,6 @@ const isJSON = (str) => typeof str === 'string' && str.length > 1 && str[0] === 
 const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 /**
- * Return the path of file relative to a directory.
- *
- * @param {string} file
- * @param {string} dir
- * @return {string}
- */
-const pathRelativeByPwd = (file, dir = process.cwd()) => {
-  let relPath = file;
-
-  if (file.startsWith(dir)) {
-    relPath = path.relative(dir, file);
-    if (!path.extname(file)) relPath = path.join(relPath, path.sep);
-  }
-
-  return isWin ? pathToPosix(relPath) : relPath;
-};
-
-/**
  * Parse the url query.
  *
  * @param {string} request
@@ -107,5 +89,4 @@ module.exports = {
   parseQuery,
   parseRequest,
   outToConsole,
-  pathRelativeByPwd,
 };

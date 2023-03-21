@@ -1,6 +1,7 @@
 const { black, ansi } = require('ansis/colors');
 const { pluginName } = require('../../config');
-const { pathRelativeByPwd, outToConsole } = require('../../Common/Helpers');
+const { outToConsole } = require('../../Common/Helpers');
+const { pathRelativeByPwd } = require('../../Common/FileUtils');
 
 /**
  * @param {Array<string>} files

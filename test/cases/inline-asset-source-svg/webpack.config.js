@@ -13,6 +13,7 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      verbose: true, // test verbose for 'asset/source'
     }),
   ],
 
