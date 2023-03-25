@@ -36,7 +36,6 @@ class Resolver {
       extensions: options.extensions.length ? options.extensions : ['.js'],
     });
 
-    // resolver for styles from the 'link' tag
     this.resolveStyle = ResolverFactory.create.sync({
       ...options,
       preferRelative: options.preferRelative !== false,
@@ -51,6 +50,34 @@ class Resolver {
       extensions: ['.scss', '.sass', '.css'],
       restrictions: this.getStyleResolveRestrictions(),
     });
+
+    // const resolveFileAsync = loaderContext.getResolve({
+    //   ...options,
+    //   preferRelative: options.preferRelative !== false,
+    //   // resolve 'exports' field in package.json, default value is ['webpack', 'production', 'browser']
+    //   conditionNames: ['require', 'node'],
+    //   // restrict default extensions list '.js', '.json', '.wasm' for faster resolving
+    //   extensions: options.extensions.length ? options.extensions : ['.js'],
+    // });
+
+    //this.resolveFile = async (context, request) => await resolveFileAsync(context, request);
+
+    // resolver for styles from the 'link' tag
+    // const resolveStyleAsync = loaderContext.getResolve({
+    //   ...options,
+    //   preferRelative: options.preferRelative !== false,
+    //   byDependency: {},
+    //   conditionNames: ['style', 'sass'],
+    //   // firstly try to resolve 'browser' or 'style' fields in package.json to get compiled CSS bundle of a module,
+    //   // e.g. bootstrap has the 'style' field, but material-icons has the 'browser' field for resolving the CSS file;
+    //   // if a module has not a client specified field, then must be used path to client file of the module,
+    //   // like `module-name/dist/bundle.css`
+    //   mainFields: ['style', 'browser', 'sass', 'main'],
+    //   mainFiles: ['_index', 'index'],
+    //   extensions: ['.scss', '.sass', '.css'],
+    //   restrictions: this.getStyleResolveRestrictions(),
+    // });
+    //this.resolveStyle = async (context, request) => await resolveStyleAsync(context, request);
   }
 
   /**

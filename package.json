@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "HTML bundler plugin for webpack handels HTML template as entry point, extracts CSS and JS from their sources specified in HTML.",
   "keywords": [
     "webpack",
@@ -64,11 +64,14 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=14.18.0"
+    "node": ">=14.21.0"
   },
   "peerDependencies": {
     "ejs": ">=3.1.9",
     "handlebars": ">=4.7.7",
+    "liquidjs": ">=10.7.0",
+    "mustache": ">=4.2.0",
+    "nunjucks": ">=3.2.3",
     "webpack": ">=5.32.0"
   },
   "peerDependenciesMeta": {
@@ -77,12 +80,21 @@
     },
     "handlebars": {
       "optional": true
+    },
+    "liquidjs": {
+      "optional": true
+    },
+    "mustache": {
+      "optional": true
+    },
+    "nunjucks": {
+      "optional": true
     }
   },
   "dependencies": {
     "ansis": "1.5.5",
+    "enhanced-resolve": ">=5.7.0",
     "eta": "^2.0.1",
-    "enhanced-resolve" : ">=5.7.0",
     "html-minifier-terser": "^7.1.0",
     "json5": "^2.2.3",
     "webpack-merge": "^5.8.0"
@@ -90,24 +102,24 @@
   "devDependencies": {
     "@babel/core": "^7.21.3",
     "@babel/preset-env": "^7.20.2",
-    "@test-fixtures/lorem": "0.0.2",
     "@test-fixtures/js": "0.0.2",
+    "@test-fixtures/lorem": "0.0.2",
     "@test-fixtures/scss": "0.0.7",
     "@types/jest": "^29.5.0",
     "css-loader": "^6.7.3",
     "ejs": "^3.1.9",
     "handlebars": "^4.7.7",
     "jest": "^29.5.0",
-    "liquidjs": "^10.6.1",
+    "liquidjs": "^10.7.0",
     "mustache": "^4.2.0",
     "nunjucks": "^3.2.3",
-    "prettier": "^2.8.4",
+    "prettier": "^2.8.7",
     "responsive-loader": "^3.1.2",
-    "sass": "^1.58.2",
-    "sass-loader": "^13.2.0",
-    "sharp": "^0.31.3",
-    "webpack": "^5.76.2",
+    "sass": "^1.60.0",
+    "sass-loader": "^13.2.1",
+    "sharp": "^0.31.2",
+    "webpack": "^5.76.3",
     "webpack-cli": "5.0.1",
-    "webpack-dev-server": "^4.12.0"
+    "webpack-dev-server": "^4.13.1"
   }
 }

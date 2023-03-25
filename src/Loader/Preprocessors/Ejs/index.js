@@ -1,6 +1,6 @@
 const { loadModule } = require('../../../Common/FileUtils');
 
-const EjsPreprocessor = ({ rootContext, options }) => {
+const preprocessor = ({ rootContext, options }) => {
   const Ejs = loadModule('ejs');
 
   return (template, { resourcePath, data = {} }) =>
@@ -12,4 +12,4 @@ const EjsPreprocessor = ({ rootContext, options }) => {
     });
 };
 
-module.exports = EjsPreprocessor;
+module.exports = preprocessor;

@@ -39,6 +39,18 @@ const LoaderError = function (message, error = '') {
 };
 
 /**
+ * Return error string as HTML to display the error in browser by HMR.
+ *
+ * @param {string} error
+ * @returns {string}
+ */
+const errorToHtml = (error) => {
+  let message = ansis.strip(error.toString()).replace(pluginName, pluginHeaderHtml).replace(/\n/g, '<br>');
+
+  return `<!DOCTYPE html><html><head></head><body>${message}</body></html>`;
+};
+
+/**
  * @param {LoaderException|Error} error The original error.
  * @param {string} file The resource file.
  * @param {string} templateFile The template file.
@@ -52,6 +64,18 @@ const resolveException = (error, file, templateFile) => {
 };
 
 /**
+ * @param {string} preprocessor The given preprocessor.
+ * @throws {Error}
+ */
+const unsupportedPreprocessorException = (preprocessor) => {
+  const message =
+    `${pluginHeader} Unsupported preprocessor '${yellow`${preprocessor}`}'.\n` +
+    `Please see the possible values in the README on the GitHub.`;
+
+  LoaderError(message);
+};
+
+/**
  * @param {string} dir Not founded directory.
  * @param {Array} paths The `watchFiles.paths` option.
  */
@@ -62,18 +86,6 @@ const watchPathsException = (dir, paths) => {
     cyan(JSON.stringify(paths, null, '  '));
 
   LoaderError(message, '');
-};
-
-/**
- * Return error string as HTML to display the error in browser by HMR.
- *
- * @param {string} error
- * @returns {string}
- */
-const errorToHtml = (error) => {
-  let message = ansis.strip(error.toString()).replace(pluginName, pluginHeaderHtml).replace(/\n/g, '<br>');
-
-  return `<!DOCTYPE html><html><head></head><body>${message}</body></html>`;
 };
 
 /**
@@ -126,6 +138,7 @@ module.exports = {
   LoaderError,
   errorToHtml,
   resolveException,
+  unsupportedPreprocessorException,
   watchPathsException,
   notInitializedPluginError,
   preprocessorError,

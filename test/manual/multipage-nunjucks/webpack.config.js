@@ -50,21 +50,15 @@ module.exports = {
         // output filename of extracted CSS from source style loaded in HTML via `<link>` tag
         filename: 'assets/css/[name].[contenthash:8].css',
       },
+
+      loaderOptions: {
+        preprocessor: 'nunjucks',
+      },
     }),
   ],
 
   module: {
     rules: [
-      // enable processing of HTML files from entry
-      {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader, // HTML template loader
-        options: {
-          // render template with page-specific variables defined in entry
-          preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
-        },
-      },
-
       // styles
       {
         test: /\.(css|sass|scss)$/,
@@ -79,6 +73,27 @@ module.exports = {
         generator: {
           // group fonts by name
           filename: (pathData) => `assets/fonts/${path.basename(path.dirname(pathData.filename))}/[name][ext][query]`,
+        },
+      },
+
+      {
+        test: /\.(html|njk)$/,
+        use: [
+          {
+            loader: HtmlBundlerPlugin.loader,
+            options: {
+              preprocessor: 'nunjucks',
+            },
+          },
+        ],
+      },
+
+      // test: define unused loader
+      {
+        test: /\.hbs$/,
+        loader: HtmlBundlerPlugin.loader,
+        options: {
+          preprocessor: 'handlebars',
         },
       },
 

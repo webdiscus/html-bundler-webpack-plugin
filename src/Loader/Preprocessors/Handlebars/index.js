@@ -1,12 +1,24 @@
 const path = require('path');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 
-const HandlebarsPreprocessor = ({ fs, rootContext, options }) => {
+const preprocessor = ({ fs, rootContext, options }) => {
   const Handlebars = loadModule('handlebars');
   const extensions = ['.html', '.hbs', '.handlebars'];
   const helpers = options.helpers || {};
   const root = options?.root || rootContext;
   let views = options?.views || rootContext;
+  let partials = {};
+
+  /**
+   * Update cached partials.
+   */
+  const updatePartials = () => {
+    for (const partial in partials) {
+      const partialFile = partials[partial];
+      const template = fs.readFileSync(partialFile, 'utf8');
+      Handlebars.registerPartial(partial, template);
+    }
+  };
 
   if (!Array.isArray(views)) views = [views];
 
@@ -25,8 +37,6 @@ const HandlebarsPreprocessor = ({ fs, rootContext, options }) => {
   }
 
   if (options.partials) {
-    let partials = {};
-
     if (Array.isArray(options.partials)) {
       // array of absolute paths contained partials
       for (const partialPath of options.partials) {
@@ -47,12 +57,27 @@ const HandlebarsPreprocessor = ({ fs, rootContext, options }) => {
       if (!fs.existsSync(partialFile)) {
         throw new Error(`Could not find the partial file '${partialFile}'`);
       }
+
       const template = fs.readFileSync(partialFile, 'utf8');
       Handlebars.registerPartial(partial, template);
     }
   }
 
-  return (template, { data = {} }) => Handlebars.compile(template, options)(data);
+  return {
+    /**
+     * Called to render each template page
+     * @param {string} template The template content.
+     * @param {string} resourcePath The request of template.
+     * @param {object} data The data passed into template.
+     * @return {string}
+     */
+    render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)(data),
+
+    /**
+     * Called before each compilation in watch/serv mode.
+     */
+    watch: updatePartials,
+  };
 };
 
-module.exports = HandlebarsPreprocessor;
+module.exports = preprocessor;

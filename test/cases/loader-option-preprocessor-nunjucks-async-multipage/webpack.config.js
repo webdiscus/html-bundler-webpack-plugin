@@ -1,6 +1,5 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
-const Nunjucks = require('nunjucks');
 
 const entryData = {
   home: {
@@ -60,14 +59,10 @@ module.exports = {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
       loaderOptions: {
-        // async function must return a promise
-        preprocessor: (content, { data }) =>
-          new Promise((resolve, reject) => {
-            Nunjucks.renderString(content, data, (error, result) => {
-              if (!error) resolve(result);
-              else reject(error);
-            });
-          }),
+        preprocessor: 'nunjucks',
+        preprocessorOptions: {
+          async: true,
+        },
       },
     }),
   ],

@@ -504,6 +504,10 @@ describe('loader options', () => {
 });
 
 describe('loader options for templating', () => {
+  test('loader data', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-data', done);
+  });
+
   test('preprocessor Eta', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-eta', done);
   });
@@ -560,6 +564,7 @@ describe('loader options for templating', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid-async', done);
   });
 
+  // TODO: fix
   test('preprocessor with multiple templating engines', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-many-ejs-hbs', done);
   });
@@ -712,6 +717,11 @@ describe('loader exceptions', () => {
   test('exception sync preprocessor', (done) => {
     const containString = 'Preprocessor failed';
     exceptionContain(PATHS, 'msg-exception-loader-preprocessor', containString, done);
+  });
+
+  test('exception unsupported preprocessor value', (done) => {
+    const containString = 'Unsupported preprocessor';
+    exceptionContain(PATHS, 'msg-exception-loader-preprocessor-unsupported', containString, done);
   });
 
   test('exception async preprocessor', (done) => {

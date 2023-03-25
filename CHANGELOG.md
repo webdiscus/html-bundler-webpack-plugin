@@ -1,5 +1,48 @@
 # Change log
 
+## 1.10.0 (2023-03-26)
+- feat: add the `data` loader option to pass global data into all templates\
+  Note: use the `data` property of the entry option to pass data only in one template
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: {
+        import: './src/home.html',
+        data: {
+          title: 'Home', // overrides the `title` defined in the loader data
+        },
+      },
+      about: './src/about.html',
+    },
+    loaderOptions: {
+      data: { // <= NEW option to pass global variables for all pages
+        title: 'Default Title',
+        globalData: 'Global Data',
+      },
+    },
+  })
+  ```
+- feat: add default template extensions: `.njk`.\
+  The following default template extensions are now supported: `/\.(html|ejs|eta|hbs|handlebars|njk)$/`
+- feat: add `preprocessor` value as string `nunjucks` to use the preconfigured Nunjucks compiler (`nunjucks` package needs to be installed)
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/pages/home.njk',
+    },
+    loaderOptions: {
+      preprocessor: 'nunjucks', // <= NEW 'nunjucks' value
+      preprocessorOptions: {
+        // async: true, // dafaults is false, to compile asynchronous templates set as true
+      },
+    },
+  }),
+  ```
+- fix: handeln unsupported value of the preprocessor option
+- refactor: optimize preprocessor code
+- chore: update dev dependencies
+- docs: add description of new features
+
 ## 1.9.0 (2023-03-21)
 - feat: add `preprocessorOptions` to the loader option to define a custom config for the default preprocessor.\
   For all options of the default preprocessor see https://eta.js.org/docs/learn/configuration#big-list-of-configuration-options. \

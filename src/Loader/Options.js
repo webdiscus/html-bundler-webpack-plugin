@@ -1,7 +1,7 @@
 const path = require('path');
+const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('../Common/Helpers');
-const { loadModule, resolveFile, readDirRecursiveSync } = require('../Common/FileUtils');
 const { watchPathsException } = require('./Messages/Exeptions');
 
 /**
@@ -15,30 +15,52 @@ class Options {
   /** The file system used by Webpack */
   static fileSystem = null;
   static #watchFiles = {};
+  static #watch;
   static #webpackOptions;
   static #options;
   static #rootContext;
   static #resourcePath;
 
   static init(loaderContext) {
-    const { rootContext, resourcePath } = loaderContext;
-    const options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
+    const { loaderIndex, rootContext, resourcePath } = loaderContext;
+    const loaderObject = loaderContext.loaders[loaderIndex];
+    const loaderId = loaderObject.path + loaderObject.query;
+    let options = PluginService.getLoaderCache(loaderId);
 
     this.fileSystem = loaderContext.fs.fileSystem;
     this.#webpackOptions = loaderContext._compiler.options || {};
-    this.#options = options;
+    this.#watch = PluginService.isWatchMode();
     this.#rootContext = rootContext;
     this.#resourcePath = resourcePath;
 
-    // TODO (sourcePath option is experimental, reserved for future):
-    // basedir, allow to configure assets root path used for resolving files specified in attributes (`sources` option)
-    let sourcePath = options.sourcePath != null ? options.sourcePath : rootContext;
-    this.#options.basedir = sourcePath.slice(-1) === path.sep ? sourcePath : sourcePath + path.sep;
+    if (!options) {
+      options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
+      // TODO (sourcePath option is experimental, reserved for future):
+      // basedir, allow to configure assets root path used for resolving files specified in attributes (`sources` option)
+      const sourcePath = options.sourcePath != null ? options.sourcePath : rootContext;
+      options.basedir = sourcePath.slice(-1) === path.sep ? sourcePath : sourcePath + path.sep;
 
-    this.#initWatchFiles();
+      PluginService.setLoaderCache(loaderId, options);
+    }
+
+    // merge plugin and loader data, the plugin data property overrides the same loader data property
+    const data = { ...options.data, ...(loaderContext.entryData || {}) };
+    if (Object.keys(data).length > 0) loaderObject.data = data;
+
+    Preprocessor.init({ fileSystem: this.fileSystem, rootContext, watch: this.#watch });
+    if (!Preprocessor.isReady(options.preprocessor)) {
+      options.preprocessor = Preprocessor.factory(options.preprocessor, options.preprocessorOptions);
+    }
+
+    this.#options = options;
+
+    // clean loaderContext of artifacts
+    if (loaderContext.entryData != null) delete loaderContext.entryData;
 
     // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
-    if (loaderContext.cacheable != null) loaderContext.cacheable(this.#options?.cacheable !== false);
+    if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
+
+    if (this.#watch) this.#initWatchFiles();
   }
 
   /**
@@ -108,37 +130,11 @@ class Options {
   /**
    * Returns preprocessor to compile a template.
    * The default preprocessor use the Eta templating engine.
-   * https://eta.js.org
    *
-   * @return {null|(function(string, {data?: {}}): Promise|string|void)}
+   * @return {null|(function(string, {data?: {}}): Promise|null)}
    */
   static getPreprocessor() {
-    if (this.#options.preprocessor === false) return null;
-
-    if (typeof this.#options.preprocessor === 'function') {
-      return this.#options.preprocessor;
-    }
-
-    const fs = this.fileSystem;
-    const options = this.#options.preprocessorOptions || {};
-
-    // TODO: add preprocessor as the string for 'liquid' etc, to use a preconfigured compiler
-    // the preprocessor as a string is the experimental feature,
-    // currently works with 'eta' (defaults), 'ejs' and 'handlebars'
-    switch (this.#options.preprocessor) {
-      // experimental
-      case 'handlebars':
-        return require('./Preprocessors/Handlebars/index')({ fs, rootContext: this.#rootContext, options });
-
-      // experimental
-      case 'ejs':
-        return require('./Preprocessors/Ejs/index')({ rootContext: this.#rootContext, options });
-
-      // Eta is the default preprocessor
-      case 'eta':
-      default:
-        return require('./Preprocessors/Eta/index')({ rootContext: this.#rootContext, options });
-    }
+    return Preprocessor.getPreprocessor(this.#options);
   }
 
   static getWatchFiles() {
@@ -150,8 +146,6 @@ class Options {
   }
 
   static #initWatchFiles() {
-    if (!PluginService.isWatchMode()) return;
-
     const watchFiles = {
       // watch files only in the directories,
       // defaults is first-level subdirectory of a template, relative to root context

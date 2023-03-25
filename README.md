@@ -127,6 +127,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
    - [preprocessorOptions](#loader-option-preprocessorOptions) (templating options)
+   - [data](#loader-option-data) (pass data into templates)
 1. [Template engines](#recipe-template-engine)
    - [Eta](#using-template-eta)
    - [EJS](#using-template-ejs)
@@ -423,13 +424,15 @@ type entryValue = {
 - `filename` - an output file, relative by the 'outputPath' option
 - `data` - an object passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
 
+To pass global variables in all templates use the [data](#loader-option-data) loader option.
+
 Usage example:
 
 ```js
 {
   entry: {
     // output ./dist/pages/about/index.html
-    'pages/about/index': { // output file as the key
+    'pages/about/index': { // the key is the output file name without '.html'
       import: 'src/views/about.html',
       data: {
         title: 'About',
@@ -439,7 +442,7 @@ Usage example:
     // output ./dist/pages/contact/index.html
     contact: {
       import: 'src/views/contact.html',
-      filename: 'pages/contact/index.html', // output file as the 'filename' property
+      filename: 'pages/contact/index.html',
     },
   },
 }
@@ -1344,6 +1347,71 @@ The `compile` options see [here](https://handlebarsjs.com/api-reference/compilat
 
 
 #### [↑ back to contents](#contents)
+<a id="loader-option-data" name="loader-option-data" href="#loader-option-data"></a>
+### `data`
+Type: `Object` Default: `{}`
+
+The properties defined in the `data` loader option are available as variables in all templates defined in the `entry` option.
+Use this option to pass the global variable into all templates.
+
+To pass page variables to a specific template, use the `data` property of the [entry](#webpack-option-entry) option.
+
+> **Note**
+> 
+> The `entry` data property overrides the same property of loader `data`.
+
+For example, there are variables defined in both the `entry` property and the loader option:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: {
+          import: './src/home.html',
+          data: {
+            // page specifically variables
+            title: 'Home', // overrides the `title` defined in the loader data
+            headline: 'Homepage',
+          },
+        },
+        about: './src/about.html',
+      },
+      loaderOptions: {
+        data: {
+          // global variables for all pages
+          title: 'Default Title',
+          globalData: 'Global Data',
+        },
+      },
+    }),
+  ],
+};
+```
+
+In the `./src/home.html` template are available following variables:
+```js
+{
+  title: 'Home',
+  headline: 'Homepage',
+  globalData: 'Global Data',
+}
+```
+
+In the `./src/about.html` template are available following variables:
+```js
+{
+  title: 'Default Title',
+  globalData: 'Global Data',
+}
+```
+
+---
+
+
+#### [↑ back to contents](#contents)
 <a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
 ## Template engines
 
@@ -1596,11 +1664,10 @@ For example, there is the template _src/views/page/index.njk_
 </html>
 ```
 
-Add the template compiler to `preprocessor`:
+Define the `preprocessor` as `nunjucks`:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Nunjucks = require('nunjucks');
 
 module.exports = {
   plugins: [
@@ -1616,7 +1683,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+        preprocessor: 'nunjucks',
       },
     }),
   ],

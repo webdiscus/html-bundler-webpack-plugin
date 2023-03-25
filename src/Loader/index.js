@@ -15,7 +15,7 @@ const { notInitializedPluginError, preprocessorError, compileError, exportError 
 const loader = function (content, map, meta) {
   const loaderContext = this;
   const loaderCallback = loaderContext.async();
-  const { loaderIndex, rootContext, resource, resourcePath } = loaderContext;
+  const { rootContext, resource, resourcePath } = loaderContext;
   let errorStage = 'init';
 
   const callback = (error, result = null) => {
@@ -43,12 +43,6 @@ const loader = function (content, map, meta) {
     let result;
 
     if (preprocessor != null) {
-      // set data specified in 'entry' option of the plugin
-      if (loaderContext.entryData != null) {
-        const loaderObject = loaderContext.loaders[loaderIndex];
-        loaderObject.data = loaderContext.entryData;
-        delete loaderContext.entryData;
-      }
       errorStage = 'preprocessor';
       result = preprocessor(content, loaderContext);
     }
@@ -82,7 +76,7 @@ const loader = function (content, map, meta) {
           error = exportError(error, issuer);
           break;
         default:
-          // unrecoverable configuration error, Webpack restart required
+          // unrecoverable configuration error, requires to restart Webpack
           const mode = new RenderMode({});
           const browserErrorMessage = mode.exportError(error, resource);
           callback(error, browserErrorMessage);

@@ -1,6 +1,5 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
-const Nunjucks = require('nunjucks');
 
 const entryData = {
   home: {
@@ -60,7 +59,7 @@ module.exports = {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
       loaderOptions: {
-        preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
+        preprocessor: 'nunjucks',
       },
     }),
   ],

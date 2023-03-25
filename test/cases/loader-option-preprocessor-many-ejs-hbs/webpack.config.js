@@ -27,6 +27,8 @@ module.exports = {
             people: ['Gustavo Fring', 'Michael Ehrmantraut'],
           },
         },
+        news: 'src/views/pages/news.ejs',
+        contact: 'src/views/pages/contact.hbs',
       },
     }),
   ],
@@ -42,6 +44,9 @@ module.exports = {
           preprocessorOptions: {
             views: [path.join(process.cwd(), 'src/views/partials')],
           },
+          data: {
+            title: 'Ejs',
+          },
         },
       },
       {
@@ -51,6 +56,9 @@ module.exports = {
           preprocessor: 'handlebars', // require installed handlebars package
           preprocessorOptions: {
             views: [path.join(process.cwd(), 'src/views/partials')],
+          },
+          data: {
+            title: 'Handlebars',
           },
         },
       },

@@ -16,7 +16,7 @@ class Plugin extends AssetCompiler {
    */
   constructor(options = {}) {
     const PluginOptions = {
-      test: /\.(html|ejs|eta|hbs|handlebars)$/,
+      test: /\.(html|ejs|eta|hbs|handlebars|njk)$/,
       enabled: true,
       verbose: false,
       minify: false,
@@ -46,7 +46,6 @@ class Plugin extends AssetCompiler {
     const webpackLoaders = compiler.options.module.rules;
 
     // Note: the default templating engine is Eta.
-    // Eta is a smaller and faster alternative to EJS with the same syntax.
     const defaultLoader = {
       test: Options.get().test,
       loader,

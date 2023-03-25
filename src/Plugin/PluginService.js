@@ -3,6 +3,8 @@
  * The instance available both in the plugin and loader.
  */
 
+const Preprocessor = require('../Loader/Preprocessor');
+
 /** @typedef {import('Options')} PluginOptionInstance */
 
 class PluginService {
@@ -12,10 +14,12 @@ class PluginService {
   // options defined in the plugin but provided to the loader
   static #loaderOptions = {};
 
+  // cached loader options
+  static #loaderCache = new Map();
+
   static #used = false;
-  static contextCache = new Set();
-  static compiler = {};
-  static watchMode;
+  static #watchMode = false;
+  static #contextCache = new Set();
 
   /**
    * Set use state of the plugin.
@@ -28,16 +32,26 @@ class PluginService {
    */
   static init(options) {
     this.#used = true;
+    this.#watchMode = false;
     this.#options = options;
     this.#loaderOptions = options.get().loaderOptions || {};
-    this.watchMode = false;
+    this.#loaderCache.clear();
   }
 
   /**
    * @param {boolean} mode The mode is true when Webpack run as watch/serve.
    */
   static setWatchMode(mode) {
-    this.watchMode = mode;
+    this.#watchMode = mode;
+  }
+
+  /**
+   * Called before each compilation in watch/serv mode.
+   */
+  static watchRun() {
+    for (const [id, options] of this.#loaderCache) {
+      Preprocessor.watchRun(options);
+    }
   }
 
   /**
@@ -59,6 +73,27 @@ class PluginService {
   }
 
   /**
+   * Get cached loader options defined in rules.
+   *
+   * @param {string} id
+   * @return {Object}
+   */
+  static getLoaderCache(id) {
+    return this.#loaderCache.get(id);
+  }
+
+  /**
+   * Save initialized loader options in cache to avoid double initialisation
+   * when many templates loaded with same loader options.
+   *
+   * @param {string} id
+   * @param {Object} cache
+   */
+  static setLoaderCache(id, cache) {
+    this.#loaderCache.set(id, cache);
+  }
+
+  /**
    * Whether the plugin is defined in Webpack configuration.
    * @return {boolean}
    */
@@ -67,12 +102,12 @@ class PluginService {
   }
 
   static isWatchMode() {
-    return this.watchMode;
+    return this.#watchMode;
   }
 
   static isCached(context) {
-    if (this.contextCache.has(context)) return true;
-    this.contextCache.add(context);
+    if (this.#contextCache.has(context)) return true;
+    this.#contextCache.add(context);
 
     return false;
   }
@@ -83,7 +118,7 @@ class PluginService {
    */
   static shutdown() {
     this.#used = false;
-    this.contextCache.clear();
+    this.#contextCache.clear();
   }
 }
 

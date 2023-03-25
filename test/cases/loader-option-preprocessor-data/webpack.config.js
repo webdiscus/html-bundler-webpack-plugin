@@ -3,7 +3,6 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  stats: 'minimal',
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -13,24 +12,21 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          import: './src/views/pages/home.hbs',
+          import: './src/home.html',
+          // page specifically data
           data: {
-            title: 'Home',
+            title: 'Home', // override the `title` defined in loader data
             headline: 'Breaking Bad',
             people: ['Walter White', 'Jesse Pinkman'],
           },
         },
-        about: 'src/views/pages/about.hbs',
+        about: './src/about.html',
       },
-
       loaderOptions: {
-        preprocessor: 'handlebars',
-        preprocessorOptions: {
-          partials: [
-            // paths to partials
-            path.join(__dirname, 'src/views/includes'),
-            path.join(__dirname, 'src/views/partials'),
-          ],
+        // global data for all pages
+        data: {
+          title: 'Default Title for all pages', // must be overridden with page title
+          globalData: 'Data passed into all pages.', // must be passed into all pages
         },
       },
     }),
@@ -46,19 +42,5 @@ module.exports = {
         },
       },
     ],
-  },
-
-  // enable HMR with live reload
-  devServer: {
-    //hot: false,
-    static: {
-      directory: path.join(__dirname, 'dist'),
-    },
-    watchFiles: {
-      paths: ['src/**/*.*'],
-      options: {
-        usePolling: true,
-      },
-    },
   },
 };

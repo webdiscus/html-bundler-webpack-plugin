@@ -1,6 +1,6 @@
 const { loadModule } = require('../../../Common/FileUtils');
 
-const EtaPreprocessor = ({ rootContext, options }) => {
+const preprocessor = ({ rootContext, options }) => {
   const Eta = loadModule('eta');
 
   return (template, { resourcePath, data = {} }) =>
@@ -13,4 +13,4 @@ const EtaPreprocessor = ({ rootContext, options }) => {
     });
 };
 
-module.exports = EtaPreprocessor;
+module.exports = preprocessor;

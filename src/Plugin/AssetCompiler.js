@@ -172,6 +172,7 @@ class AssetCompiler {
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
       Options.initWatchMode();
       PluginService.setWatchMode(true);
+      PluginService.watchRun();
     });
 
     // entry options
