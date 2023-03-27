@@ -1,36 +1,35 @@
 const fs = require('fs');
 const path = require('path');
-const { green, cyan, cyanBright, yellow, white, whiteBright, blueBright, black } = require('ansis/colors');
+const { reset, green, cyan, cyanBright, yellow, white, whiteBright, blueBright } = require('ansis/colors');
 const { pluginName } = require('../../config');
 
-const header = `\n${whiteBright.bgRedBright` ${pluginName} `}`;
-let lastError = null;
-
 class PluginException extends Error {
-  constructor(message) {
+  /**
+   * @param {string} message The plugin error message.
+   * @param {Error?} error The original error.
+   */
+  constructor(message, error) {
+    message = `\n${reset.whiteBright.bgRedBright` ${pluginName} `} ${whiteBright(message)}\n`;
+
     super(message);
-    this.name = 'PluginException';
-    this.message = message;
+    this.name = this.constructor.name;
+
+    if (error && error.stack) {
+      this.stack = error.stack;
+    }
   }
 }
 
 /**
- * @param {string} message The error description.
- * @param {PluginException|Error|string?} error The original error from catch()
- * @constructor
+ * @param {string} dir
+ * @throws {Error}
  */
-const PluginError = function (message, error = '') {
-  if (error && error instanceof PluginException) {
-    if (error.toString() === lastError) {
-      // prevent double output same error
-      throw new PluginException(lastError);
-    }
-    // throw original error to avoid output all nested exceptions
-    lastError = error.toString();
-    throw new Error(lastError);
-  }
-  lastError = message + `\n` + error;
-  throw new PluginException(lastError);
+const optionEntryPathException = (dir) => {
+  const message =
+    `The plugin option ${green`entry`} must be a relative or an absolute path to the entry directory.\nThe directory is invalid or not found:\n` +
+    cyanBright(dir);
+
+  throw new PluginException(message);
 };
 
 /**
@@ -39,10 +38,10 @@ const PluginError = function (message, error = '') {
  */
 const optionModulesException = (modules) => {
   const message =
-    `${header} The plugin option ${green`modules`} must be the array of ${green`ModuleOptions`} but given:\n` +
+    `The plugin option ${green`modules`} must be the array of ${green`ModuleOptions`} but given:\n` +
     cyanBright(JSON.stringify(modules));
 
-  PluginError(message);
+  throw new PluginException(message);
 };
 
 /**
@@ -51,7 +50,7 @@ const optionModulesException = (modules) => {
  * @throws {Error}
  */
 const resolveException = (file, issuer) => {
-  let message = `${header} Can't resolve the file ${cyan(file)} in ${blueBright(issuer)}`;
+  let message = `Can't resolve the file ${cyan(file)} in ${blueBright(issuer)}`;
 
   if (path.isAbsolute(file) && !fs.existsSync(file)) {
     message += `\n${yellow`The reason:`} this file not found!`;
@@ -73,7 +72,7 @@ const resolveException = (file, issuer) => {
 },`;
   }
 
-  PluginError(message);
+  throw new PluginException(message);
 };
 
 /**
@@ -82,9 +81,9 @@ const resolveException = (file, issuer) => {
  * @throws {Error}
  */
 const executeTemplateFunctionException = (error, sourceFile) => {
-  const message = `${header} Failed to execute the template function'.\nSource file: '${cyan(sourceFile)}'`;
+  const message = `Failed to execute the template function'.\nSource file: '${cyan(sourceFile)}'`;
 
-  PluginError(message, error);
+  throw new PluginException(message, error);
 };
 
 /**
@@ -93,14 +92,14 @@ const executeTemplateFunctionException = (error, sourceFile) => {
  * @throws {Error}
  */
 const postprocessException = (error, info) => {
-  const message = `${header} Postprocess is failed'.\nSource file: '${cyan(info.sourceFile)}'.`;
+  const message = `Postprocess is failed'.\nSource file: '${cyan(info.sourceFile)}'.`;
 
-  PluginError(message, error);
+  throw new PluginException(message, error);
 };
 
 module.exports = {
-  PluginError,
   PluginException,
+  optionEntryPathException,
   optionModulesException,
   resolveException,
   executeTemplateFunctionException,

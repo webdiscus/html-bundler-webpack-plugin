@@ -112,7 +112,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [entry](#webpack-option-entry)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (process only templates matching RegExp)
-   - [entry](#option-entry) (define templates)
+   - [entry](#option-entry) (define templates or path to templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
@@ -122,7 +122,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [extractComments](#option-extractComments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watchFiles)
-   - [loaderOptions](#option-loaderOptions)
+   - [loaderOptions](#option-loaderOptions) (simplify access to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
@@ -138,6 +138,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [Pug](https://github.com/webdiscus/pug-plugin)
 1. [Setup HMR (Live Reload)](#setup-hmr)
 1. [Recipes](#recipes)
+   - [How to keep source folder structure in output directory](#recipe-entry-keep-folder-structure)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
    - [How to preload source fonts in HTML](#recipe-preload-fonts)
@@ -452,6 +453,67 @@ Usage example:
 >
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
 > But the `data` property can only be defined in the `entry` option of the plugin.
+
+
+<a id="option-entry-path" name="option-entry-path" href="#option-entry-path"></a>
+#### Entry as a path to templates
+
+Type: `string`
+
+You can define the entry as a path to recursively detect all templates from that directory.
+
+When the value of the `entry` is a string, it must be a relative or absolute path to the templates' directory.
+Templates matching the [test](#option-test) option are read recursively from the path.
+The output files will have the same folder structure as source template directory.
+
+For example, there are files in the template directory `./src/views/pages/`
+  ```
+  ./src/views/pages/index.html
+  ./src/views/pages/about/index.html
+  ./src/views/pages/news/sport/index.html
+  ./src/views/pages/news/sport/script.js
+  ./src/views/pages/news/sport/style.scss
+  ...
+  ```
+Define the entry option as the relative path to pages:
+```js
+new HtmlBundlerPlugin({
+  entry: 'src/views/pages/',
+})
+```
+
+Internally, the entry is created with the templates matching to the `test` option.
+Files that are not templates are ignored.
+The output HTML filenames keep their source structure relative to the entry path:
+
+```js
+{
+  index: 'src/views/pages/index.html', // => dist/index.html
+  'about/index': 'src/views/pages/about/index.html', // => dist/about/index.html
+  'news/sport/index': 'src/views/pages/news/sport/index.html', // => dist/news/sport/index.html
+}
+```
+
+If you need to modify the output HTML filename, use the [filename](#option-filename) option as the function.
+
+For example, we want keep a source structure for all pages, 
+while `./src/views/pages/home/index.html` should not be saved as `./dist/home/index.htm`, but as `./dist/index.htm`:
+
+```js
+new HtmlBundlerPlugin({
+  // path to templates
+  entry: 'src/views/pages/',
+
+  filename: ({ filename, chunk: { name } }) => {
+    // transform 'home/index' filename to output file 'index.html'
+    if (name === 'home/index') {
+      return 'index.html'; // save as index.html in output directory
+    }
+    // bypass the original structure
+    return '[name].html';
+  },
+})
+```
 
 #### [↑ back to contents](#contents)
 <a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>
@@ -1590,7 +1652,7 @@ module.exports = {
 };
 ```
 
-For `handlebars` preprocessor options see [here](#loader-option-preprocessorOptions-handlebars).
+For `handlebars` preprocessor options see [here](#loader-option-preprocessorOptions-hbs).
 
 
 #### [↑ back to contents](#contents)
@@ -1769,6 +1831,14 @@ module.exports = {
 ```
 
 ---
+
+
+#### [↑ back to contents](#contents)
+<a id="recipe-entry-keep-folder-structure" name="recipe-entry-keep-folder-structure" href="#recipe-entry-keep-folder-structure"></a>
+## How to keep source folder structure in output directory
+
+
+Define the `entry` option as a path to templates. For details see the [entry path](#option-entry-path).
 
 
 #### [↑ back to contents](#contents)

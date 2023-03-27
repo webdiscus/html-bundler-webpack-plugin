@@ -184,7 +184,7 @@ class AssetCompiler {
 
       Resolver.init({
         fs: normalModuleFactory.fs.fileSystem,
-        rootContext: Options.rootPath,
+        rootContext: Options.rootContext,
       });
 
       UrlDependency.init({

@@ -1,5 +1,34 @@
 # Change log
 
+## 1.11.0 (2023-03-27)
+- feat: add the entry option value as a relative or absolute path to pages.\
+  Template files matching the `test` option are read recursively from the path.
+  For example, there are files in the `./src/views/pages/`
+  ```
+  ./src/views/pages/index.html
+  ./src/views/pages/about/index.html
+  ./src/views/pages/news/sport/index.html
+  ./src/views/pages/news/sport/script.js
+  ./src/views/pages/news/sport/style.scss
+  ...
+  ```
+  Define the entry option as the relative path to pages:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: 'src/views/pages/',
+  })
+  ```
+  The auto generated entry with matching templates according to the default `test` option `/\.(html|ejs|eta|hbs|handlebars|njk)$/`:
+  ```js
+  {
+    index: 'src/views/pages/index.html', // => dist/index.html
+    'about/index': 'src/views/pages/about/index.html', // => dist/about/index.html
+    'news/sport/index': 'src/views/pages/news/sport/index.html', // => dist/news/sport/index.html
+  }
+  ```
+  The output HTML filenames keep their source structure relative to the entry path.
+- fix: display an original error stack by nested exceptions
+
 ## 1.10.0 (2023-03-26)
 - feat: add the `data` loader option to pass global data into all templates\
   Note: use the `data` property of the entry option to pass data only in one template

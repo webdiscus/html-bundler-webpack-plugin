@@ -1,7 +1,9 @@
+const fs = require('fs');
 const path = require('path');
 const extractCssModule = require('./Modules/extractCss');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
-const { optionModulesException } = require('./Messages/Exception');
+const { readDirRecursiveSync } = require('../Common/FileUtils');
+const { optionEntryPathException, optionModulesException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} PluginOptions
@@ -21,7 +23,8 @@ const { optionModulesException } = require('./Messages/Exception');
  *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
  *  This option enable/disable storing of *.LICENSE.txt file.
  *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
- * @property {Object} entry The entry points. The key is route to output file w/o extension, value is a template source file.
+ * @property {Object|string} entry The entry points. The key is route to output file w/o extension, value is a template source file.
+ *  When the entry is a string, this should be a relative or absolute path to pages.
  * @property {{paths: Array<string>, files: Array<RegExp>, ignore: Array<RegExp>}} watchFiles Paths and files to watch file changes.
  * @property {Array<ModuleOptions>=} [modules = []] For inner usage only.
  * @property {Object=} extractJs For inner usage only.
@@ -71,7 +74,7 @@ class Options {
     const { extractJs, extractCss } = this.options;
 
     this.webpackOptions = options;
-    this.rootPath = options.context;
+    this.rootContext = options.context;
     this.prodMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
     extractJs.verbose = this.toBool(extractJs.verbose, false, false);
@@ -100,7 +103,7 @@ class Options {
       extractJs.outputPath = webpackOutput.path;
     }
 
-    if (!this.options.sourcePath) this.options.sourcePath = this.rootPath;
+    if (!this.options.sourcePath) this.options.sourcePath = this.rootContext;
     if (!this.options.outputPath) this.options.outputPath = webpackOutput.path;
 
     // options.entry
@@ -153,7 +156,7 @@ class Options {
    */
   static #initWebpackEntry() {
     let { entry } = this.webpackOptions;
-    const pluginEntry = this.options.entry;
+    let pluginEntry = this.options.entry;
 
     // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
     if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
@@ -162,6 +165,14 @@ class Options {
     }
 
     if (pluginEntry) {
+      if (typeof pluginEntry === 'string') {
+        let dir = pluginEntry;
+        if (!path.isAbsolute(dir)) {
+          dir = path.join(this.rootContext, dir);
+        }
+        pluginEntry = this.readEntryDir(dir);
+      }
+
       for (const key in pluginEntry) {
         const entry = pluginEntry[key];
 
@@ -180,6 +191,32 @@ class Options {
       // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
       this.webpackOptions.experiments.layers = true;
     }
+  }
+
+  /**
+   * Returns templates read recursively from the entry path.
+   *
+   * @param {string} dir
+   * @return {Object}
+   * @throws
+   */
+  static readEntryDir(dir) {
+    try {
+      if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
+    } catch (error) {
+      optionEntryPathException(dir);
+    }
+
+    const entry = {};
+    const files = readDirRecursiveSync(dir, { fs, includes: [this.options.test] });
+
+    files.forEach((file) => {
+      let outputFile = path.relative(dir, file);
+      let key = outputFile.slice(0, outputFile.lastIndexOf('.'));
+      entry[key] = file;
+    });
+
+    return entry;
   }
 
   static isEnabled() {

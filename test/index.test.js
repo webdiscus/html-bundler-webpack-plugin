@@ -8,7 +8,6 @@ import {
   watchStdoutContain,
   watchStdoutCompare,
 } from './utils/helpers';
-import { PluginError, PluginException } from '../src/Plugin/Messages/Exception';
 import { parseQuery } from '../src/Common/Helpers';
 import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
@@ -432,6 +431,10 @@ describe('plugin options', () => {
   test('option entry', (done) => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
+
+  test('option entry path', (done) => {
+    compareFileListAndContent(PATHS, 'option-entry-path', done);
+  });
 });
 
 describe('option watchFiles', () => {
@@ -564,7 +567,6 @@ describe('loader options for templating', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-liquid-async', done);
   });
 
-  // TODO: fix
   test('preprocessor with multiple templating engines', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-many-ejs-hbs', done);
   });
@@ -787,53 +789,32 @@ describe('loader exceptions', () => {
 });
 
 describe('plugin exceptions', () => {
-  test('exception test: previous error', (done) => {
-    const containString = 'previous error';
-
-    try {
-      PluginError('previous error');
-    } catch (error) {
-      try {
-        PluginError('last error', error);
-      } catch (error) {
-        expect(error.toString()).toContain(containString);
-        done();
-      }
-    }
-  });
-
-  test('exception test: nested exceptions', (done) => {
-    const containString = 'last error';
-
-    const originalError = new PluginException('original error');
-    try {
-      PluginError('previous error', originalError);
-    } catch (error) {
-      try {
-        PluginError('last error', error);
-      } catch (error) {
-        expect(error.toString()).toContain(containString);
-        done();
-      }
-    }
-  });
-
-  test('exception: @import CSS is not supported', (done) => {
+  test('@import CSS is not supported', (done) => {
     const containString = `Disable the 'import' option in 'css-loader'`;
     exceptionContain(PATHS, 'msg-exception-plugin-import-css-rule', containString, done);
   });
 
-  test('exception: option modules', (done) => {
+  test('entry directory not found', (done) => {
+    const containString = 'The directory is invalid or not found';
+    exceptionContain(PATHS, 'msg-exception-option-entry-dir-not-found', containString, done);
+  });
+
+  test('entry is not directory', (done) => {
+    const containString = 'The directory is invalid or not found';
+    exceptionContain(PATHS, 'msg-exception-option-entry-not-dir', containString, done);
+  });
+
+  test('option modules', (done) => {
     const containString = 'must be the array of';
     exceptionContain(PATHS, 'msg-exception-plugin-option-modules', containString, done);
   });
 
-  test('exception: execute postprocess', (done) => {
+  test('execute postprocess', (done) => {
     const containString = 'Postprocess is failed';
     exceptionContain(PATHS, 'msg-exception-plugin-execute-postprocess', containString, done);
   });
 
-  test('exception: multiple chunks with same filename', (done) => {
+  test('multiple chunks with same filename', (done) => {
     const containString = 'Multiple chunks emit assets to the same filename';
     exceptionContain(PATHS, 'msg-exception-plugin-multiple-chunks-same-filename', containString, done);
   });

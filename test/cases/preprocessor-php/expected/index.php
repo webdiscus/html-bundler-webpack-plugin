@@ -7,7 +7,7 @@
 <head>
   <title><?= $title ?></title>
   <link href="assets/css/style.026fd625.css" rel="stylesheet">
-  <script src="assets/js/main.3347618e.js" defer="defer"></script>
+  <script src="assets/js/main.fbe9cadd.js" defer="defer"></script>
 </head>
 <body>
   <h1><?= $headline ?></h1>
