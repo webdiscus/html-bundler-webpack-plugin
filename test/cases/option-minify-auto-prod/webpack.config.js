@@ -13,10 +13,7 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-      minify: {
-        minifyCSS: false,
-        minifyJS: true,
-      },
+      minify: 'auto', // auto && production mode => minify
     }),
   ],
 };

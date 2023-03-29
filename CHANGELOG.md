@@ -1,8 +1,15 @@
 # Change log
 
+## 1.12.0 (2023-03-29)
+- feat: add `minifyOptions` to customize minification when the `minify` options is `auto`, FR #5
+- feat: add `helpers` value as array of a relative or absolute path to helper directories for the `handlebars` preprocessor
+- fix: allow the `partials` values to be relative paths for the `handlebars` preprocessor
+- test: add tests for new features
+- docs: add description of new features
+
 ## 1.11.0 (2023-03-27)
 - feat: add the entry option value as a relative or absolute path to pages.\
-  Template files matching the `test` option are read recursively from the path.
+  Template files matching the `test` option are read recursively from the path.\
   For example, there are files in the `./src/views/pages/`
   ```
   ./src/views/pages/index.html
@@ -18,7 +25,7 @@
     entry: 'src/views/pages/',
   })
   ```
-  The auto generated entry with matching templates according to the default `test` option `/\.(html|ejs|eta|hbs|handlebars|njk)$/`:
+  Internally, the entry is created with the templates matching to the `test` option:
   ```js
   {
     index: 'src/views/pages/index.html', // => dist/index.html

@@ -4,7 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>The plugin make easily to bundle HTML pages from templates, source styles and scripts</div>
+    <div>The plugin makes easily to bundle HTML pages from templates, source styles, scripts and images</div>
 </div>
 
 ---
@@ -119,6 +119,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [css](#option-css) (options to extract CSS)
    - [postprocess](#option-postprocess)
    - [minify](#option-minify) (minification of generated HTML)
+   - [minifyOptions](#option-minifyOptions) (minification options for auto minify)
    - [extractComments](#option-extractComments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watchFiles)
@@ -727,10 +728,20 @@ For minification generated HTML is used the [html-minifier-terser](https://githu
 Possible values:
 - `false` - disable minification
 - `true` - enable minification with default options
-- `auto` - in `development` mode disable minification, in `production` mode enable minification
-- `{}` - an object to set custom options, this object are merged with `default options`, see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
+- `auto` - in `development` mode disable minification, in `production` mode enable minification with default options,
+  use [minifyOptions](#option-minifyOptions) to customize options
+- `{}` - enable minification with custom options, this object are merged with `default options`\
+  see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
 
 
+<a id="option-minifyOptions" name="option-minifyOptions" href="#option-minifyOptions"></a>
+### `minifyOptions`
+Type: `Object` Default: `null`
+
+When the [minify](#option-minify) option is set to `auto`, you can configure minification options using the `minifyOptions`.
+
+
+#### [↑ back to contents](#contents)
 <a id="option-extractComments" name="option-extractComments" href="#option-extractComments"></a>
 ### `extractComments`
 Type: `boolean` Default: `false`
@@ -1360,6 +1371,10 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 The `include` helper automatically resolves `.hthm` and `.hbs` extensions, it can be omitted.
 
+**Handlebars** `partials`
+
+Type: `Array<string>|Object` Default: `[]`
+
 If you use the partials syntax `{{> footer }}` to include a file, then use the `partials` option.
 Partials will be auto-detected in paths recursively and registered under their relative paths, without an extension.
 
@@ -1367,10 +1382,10 @@ Partials will be auto-detected in paths recursively and registered under their r
 loaderOptions: {
   preprocessor: 'handlebars',
   preprocessorOptions: {
-    // an array of paths to partials
+    // an array of relative or absolute paths to partials
     partials: [
-      path.join(__dirname, 'src/views/includes'),
-      path.join(__dirname, 'src/views/partials'),
+      'src/views/includes', // relative path
+      path.join(__dirname, 'src/views/partials'), // absolute path
     ],
   },
 },
@@ -1378,6 +1393,7 @@ loaderOptions: {
 For example, if the partial path is the `src/views/partials` then the file `src/views/partials/menu/top/desktop.html` will have the partial name `menu/top/desktop`.
 
 You can define all partials manually using the option as an object:
+
 ```js
 loaderOptions: {
   preprocessor: 'handlebars',
@@ -1403,7 +1419,68 @@ Include the partials in the `src/views/page/home.html` template:
 {{> footer }}
 ```
 
-The `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
+**Handlebars** `helpers`
+
+Type: `Array<string>|Object` Default: `[]`
+
+When the `helpers` is an array of relative or absolute paths to helpers, 
+then the name of a helper is the relative path to the helper file without an extension.
+
+For example, there are helper files:
+
+```
+src/views/helpers/bold.js
+src/views/helpers2/italic.js
+src/views/helpers2/wrapper/span.js
+```
+
+The preprocessor options:
+
+```js
+loaderOptions: {
+  preprocessor: 'handlebars',
+  preprocessorOptions: {
+    // an array of relative or absolute paths to helpers
+    helpers: [
+      'src/views/helpers',
+      'src/views/helpers2',
+    ],
+  },
+},
+```
+
+Usage of helpers:
+
+```html
+{{#bold}}The bold text.{{/bold}}
+{{#italic}}The italic text.{{/italic}}
+
+<!-- the helper with namespace `wrapper/span` -->
+{{#[wrapper/span]}}The text wrapped with span tag.{{/[wrapper/span]}}
+
+```
+
+> **Note**
+> 
+> - The helper located in a subdirectory, e.g. `wrapper/span.js` will be available in template as `[wrapper/span]`.
+> - When helper name contain the `/` slash, then the helper name must be wrapped with the `[]`.
+
+You can define helpers manually using `name: function` object:
+
+```js
+loaderOptions: {
+  preprocessor: 'handlebars',
+  preprocessorOptions: {
+    // define helpers manually
+    helpers: {
+      bold: (options) => new Handlebars.SafeString(`<strong>${options.fn(this)}</strong>`),
+    },
+  },
+},
+```
+
+
+The Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
 ---
 

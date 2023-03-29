@@ -1,12 +1,13 @@
 const path = require('path');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
+const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
 const preprocessor = ({ fs, rootContext, options }) => {
   const Handlebars = loadModule('handlebars');
   const extensions = ['.html', '.hbs', '.handlebars'];
-  const helpers = options.helpers || {};
   const root = options?.root || rootContext;
   let views = options?.views || rootContext;
+  let helpers = {};
   let partials = {};
 
   /**
@@ -20,8 +21,43 @@ const preprocessor = ({ fs, rootContext, options }) => {
     }
   };
 
+  const getEntries = (dirs) => {
+    const result = {};
+    for (let dir of dirs) {
+      if (!path.isAbsolute(dir)) {
+        dir = path.join(rootContext, dir);
+      }
+      const files = readDirRecursiveSync(dir, { fs });
+      files.forEach((file) => {
+        const relativeFile = path.relative(dir, file);
+        let id = relativeFile.slice(0, relativeFile.lastIndexOf('.'));
+        if (isWin) id = pathToPosix(id);
+        result[id] = file;
+      });
+    }
+
+    return result;
+  };
+
   if (!Array.isArray(views)) views = [views];
 
+  if (options.helpers) {
+    if (Array.isArray(options.helpers)) {
+      const files = getEntries(options.helpers);
+      for (const name in files) {
+        const file = files[name];
+        if (!fs.existsSync(file)) {
+          throw new Error(`Could not find the helper '${file}'`);
+        }
+        helpers[name] = require(file);
+      }
+    } else {
+      // object of helper name => absolute path to helper file
+      helpers = options.helpers;
+    }
+  }
+
+  // build-in helpers
   if (!helpers.include) {
     helpers.include = require('./helpers/include')({
       fs,
@@ -38,15 +74,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
 
   if (options.partials) {
     if (Array.isArray(options.partials)) {
-      // array of absolute paths contained partials
-      for (const partialPath of options.partials) {
-        const files = readDirRecursiveSync(partialPath, { fs });
-        files.forEach((file) => {
-          const relativeFile = path.relative(partialPath, file);
-          const id = relativeFile.slice(0, relativeFile.lastIndexOf('.'));
-          partials[id] = file;
-        });
-      }
+      partials = getEntries(options.partials);
     } else {
       // object of partial name => absolute path to partial file
       partials = options.partials;
@@ -55,7 +83,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
     for (const partial in partials) {
       const partialFile = partials[partial];
       if (!fs.existsSync(partialFile)) {
-        throw new Error(`Could not find the partial file '${partialFile}'`);
+        throw new Error(`Could not find the partial '${partialFile}'`);
       }
 
       const template = fs.readFileSync(partialFile, 'utf8');

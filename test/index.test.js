@@ -8,6 +8,7 @@ import {
   watchStdoutContain,
   watchStdoutCompare,
 } from './utils/helpers';
+import { removeDirsSync } from './utils/file';
 import { parseQuery } from '../src/Common/Helpers';
 import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
@@ -16,7 +17,10 @@ import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
 import { PATHS } from './config';
 
-beforeAll(() => {});
+beforeAll(() => {
+  // remove all 'dist/' directories from tests, use it only for some local tests
+  //removeDirsSync(__dirname, /dist$/);
+});
 
 beforeEach(() => {});
 
@@ -428,6 +432,18 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-minify-options', done);
   });
 
+  test('option minify auto prod', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-prod', done);
+  });
+
+  test('option minify auto dev', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-dev', done);
+  });
+
+  test('option minify auto options', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-options', done);
+  });
+
   test('option entry', (done) => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
@@ -533,6 +549,14 @@ describe('loader options for templating', () => {
 
   test('preprocessor handlebars', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars', done);
+  });
+
+  test('preprocessor handlebars: register helper functions', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-helpers', done);
+  });
+
+  test('preprocessor handlebars: register helpers from path', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-handlebars-helpers-path', done);
   });
 
   test('preprocessor handlebars: register partials', (done) => {
@@ -772,7 +796,7 @@ describe('loader exceptions', () => {
   });
 
   test('exception: handlebars partial file not found', (done) => {
-    const containString = 'Could not find the partial file';
+    const containString = 'Could not find the partial';
     exceptionContain(PATHS, 'msg-exception-handlebars-partial', containString, done);
   });
 

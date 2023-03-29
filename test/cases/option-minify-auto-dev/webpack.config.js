@@ -2,7 +2,7 @@ const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
-  mode: 'production',
+  mode: 'development',
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -13,10 +13,7 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-      minify: {
-        minifyCSS: false,
-        minifyJS: true,
-      },
+      minify: 'auto', // auto && development mode => not minify
     }),
   ],
 };

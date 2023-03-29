@@ -13,7 +13,9 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-      minify: {
+      minify: 'auto', // auto && production mode => minify
+      // use additional 'minifyOptions' only when 'minify' is 'auto'
+      minifyOptions: {
         minifyCSS: false,
         minifyJS: true,
       },

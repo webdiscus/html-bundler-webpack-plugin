@@ -42,11 +42,11 @@ const readDirRecursiveSync = (dir, { fs, includes = [], excludes = [] }) => {
     const result = [];
 
     for (const file of entries) {
-      const fullPath = path.join(dir, file.name);
+      const current = path.join(dir, file.name);
 
-      if (noExcludes || !excludes.find((regex) => regex.test(fullPath))) {
-        if (file.isDirectory()) result.push(...readDir(fullPath));
-        else if (noIncludes || includes.find((regex) => regex.test(fullPath))) result.push(fullPath);
+      if (noExcludes || !excludes.find((regex) => regex.test(current))) {
+        if (file.isDirectory()) result.push(...readDir(current));
+        else if (noIncludes || includes.find((regex) => regex.test(current))) result.push(current);
       }
     }
 

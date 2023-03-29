@@ -20,6 +20,7 @@ class Plugin extends AssetCompiler {
       enabled: true,
       verbose: false,
       minify: false,
+      minifyOptions: null,
       sourcePath: null,
       outputPath: null,
       filename: '[name].html',
@@ -93,8 +94,11 @@ class Plugin extends AssetCompiler {
     };
 
     if (isMinify) {
-      minifyOptions = defaultMinifyOptions;
-    } else if (options.minify !== null && typeof options.minify === 'object') {
+      minifyOptions =
+        options.minifyOptions && typeof options.minifyOptions === 'object'
+          ? { ...defaultMinifyOptions, ...options.minifyOptions }
+          : defaultMinifyOptions;
+    } else if (options.minify && typeof options.minify === 'object') {
       minifyOptions = { ...defaultMinifyOptions, ...options.minify };
     } else {
       return;

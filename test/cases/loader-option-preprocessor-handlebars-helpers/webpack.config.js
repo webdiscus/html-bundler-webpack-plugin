@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
+const Handlebars = require('handlebars');
 
 module.exports = {
   mode: 'production',
@@ -11,25 +12,16 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: {
-          import: './src/views/pages/home.hbs',
-          data: {
-            title: 'Home',
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
+        index: 'src/views/pages/home.hbs',
       },
 
       loaderOptions: {
         preprocessor: 'handlebars',
         preprocessorOptions: {
-          partials: [
-            // absolute path to partials
-            path.join(__dirname, 'src/views/includes'),
-            // relative path to partials
-            'src/views/partials/',
-          ],
+          // define helpers manually
+          helpers: {
+            bold: (options) => new Handlebars.SafeString(`<strong>${options.fn(this)}</strong>`),
+          },
         },
       },
     }),

@@ -11,25 +11,14 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: {
-          import: './src/views/pages/home.hbs',
-          data: {
-            title: 'Home',
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
-        },
+        index: 'src/views/pages/home.hbs',
       },
 
       loaderOptions: {
         preprocessor: 'handlebars',
         preprocessorOptions: {
-          partials: [
-            // absolute path to partials
-            path.join(__dirname, 'src/views/includes'),
-            // relative path to partials
-            'src/views/partials/',
-          ],
+          // helper paths
+          helpers: ['src/views/helpers/', 'src/views/helpers2/'],
         },
       },
     }),
