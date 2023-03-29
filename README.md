@@ -39,6 +39,7 @@ defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
+📋 **Release notes** see in the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
 ### Simple usage example
 
@@ -83,10 +84,12 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
+      // define a relative or absolute path to template pages
+      entry: 'src/views/pages/',
+      // OR define templates manually
       entry: {
-        // define templates here
-        index: 'src/views/home/index.html', // output dist/index.html
-        'pages/about': 'src/views/about/index.html', // output dist/pages/about.html
+        index: 'src/views/pages/home/index.html', // => dist/index.html
+        'news/sport': 'src/views/pages/news/sport/index.html', // => dist/news/sport.html
       },
     }),
   ],
@@ -405,7 +408,7 @@ The value is the `source file`, absolute or relative by the Webpack config file.
 {
   entry: {
     index: 'src/views/home/index.html', // => dist/index.html
-    'pages/about/index': 'src/views/about.html', // => dist/pages/about/index.html
+    'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
   },
 }
 ```
@@ -433,18 +436,18 @@ Usage example:
 ```js
 {
   entry: {
-    // output ./dist/pages/about/index.html
-    'pages/about/index': { // the key is the output file name without '.html'
-      import: 'src/views/about.html',
+    // output ./dist/news/sport.html
+    'news/sport': { // the key is the output file name without '.html'
+      import: 'src/views/news/sport.html',
       data: {
-        title: 'About',
+        title: 'Sport',
       }
     },
 
-    // output ./dist/pages/contact/index.html
-    contact: {
-      import: 'src/views/contact.html',
-      filename: 'pages/contact/index.html',
+    // output ./dist/about/index.html
+    about: {
+      import: 'src/views/about.html',
+      filename: 'about/index.html', // define custom output filename
     },
   },
 }
