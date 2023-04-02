@@ -20,7 +20,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: './src/views/pages/home/index.html',
-        'pages/about': './src/views/pages/about/index.html',
+        'news/sport': './src/views/pages/news/sport/index.html',
       },
 
       js: {

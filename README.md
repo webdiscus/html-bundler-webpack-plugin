@@ -25,11 +25,12 @@ The plugin automatically substitutes the output filenames of the processed resou
 💡 **Highlights**
 
 - An **entry point** is an HTML template.
-- Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>` tags.
+- Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>`.
 - Resolving source **assets** specified in standard attributes `href` `src` `srcset` etc.
 - Inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
 - Using template engines [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others **without template loaders**.
-- Support for both `async` and `sync` preprocessor
+- Support for both `async` and `sync` preprocessor.
+- Auto generation of `<link rel="preload">` to preload used assets.
 
 ✅ **Profit**
 
@@ -39,16 +40,22 @@ defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
+## 🔆 NEW in release `1.13.0`
+
+- Added [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style, etc.
+- Allow resolving all duplicate scripts and styles in the template.
+- Removed warnings for duplicate script and styles in the template.
+
 📋 **Release notes** see in the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
-### Simple usage example
+## Simple usage example
 
 Add source scripts and styles directly to HTML:
 
 ```html
 <html>
 <head>
-  <!-- load source styles here -->
+  <!-- load source styles -->
   <link href="./style.scss" rel="stylesheet">
   <!-- load source scripts here and/or in body -->
   <script src="./main.js" defer="defer"></script>
@@ -66,12 +73,12 @@ while the `script` and `link` tags remain in place:
 ```html
 <html>
 <head>
-  <link href="/assets/css/style.05e4dd86.css" rel="stylesheet">
-  <script src="/assets/js/main.f4b855d8.js" defer="defer"></script>
+  <link href="assets/css/style.05e4dd86.css" rel="stylesheet">
+  <script src="assets/js/main.f4b855d8.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
-  <img src="/assets/img/logo.58b43bd8.png">
+  <img src="assets/img/logo.58b43bd8.png">
 </body>
 </html>
 ```
@@ -114,13 +121,14 @@ See the [complete Webpack configuration](#simple-webpack-config).
      - [filename](#webpack-option-output-filename)
    - [entry](#webpack-option-entry)
 1. [Plugin options](#plugin-options)
-   - [test](#option-test) (process only templates matching RegExp)
+   - [test](#option-test) (RegEx to handle matching templates)
    - [entry](#option-entry) (define templates or path to templates)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
    - [postprocess](#option-postprocess)
+   - [preload](#option-preload) (inject preload link tags)
    - [minify](#option-minify) (minification of generated HTML)
    - [minifyOptions](#option-minifyOptions) (minification options for auto minify)
    - [extractComments](#option-extractComments)
@@ -145,7 +153,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to keep source folder structure in output directory](#recipe-entry-keep-folder-structure)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
-   - [How to preload source fonts in HTML](#recipe-preload-fonts)
+   - [How to preload fonts](#recipe-preload-fonts)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
@@ -175,6 +183,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
 - `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
 - `inline SVG` as SVG tag in HTML
 - `inline SVG` as `utf-8` data-URL in CSS
+- auto generation of `<link rel="preload">` to preload used assets
 - support the `auto` publicPath
 - enable/disable extraction of comments to `*.LICENSE.txt` file
 - supports all JS template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
@@ -190,6 +199,8 @@ Just one HTML bundler plugin replaces the most used functionality of the plugins
 | [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
 | [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
 | [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
+| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)           | inject preload link tags                                            |
+| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                               | inject preload link tags                                            |
 | [html-loader](https://github.com/webpack-contrib/html-loader)                                           | exports HTML                                                        |
 | [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin) | inline JS and CSS into HTML from sources                            |
 | [style-loader](https://github.com/webpack-contrib/style-loader)                                         | injects an inline CSS into HTML                                     |
@@ -239,9 +250,10 @@ module.exports = {
       entry: {
         // define templates here
         index: { // => dist/index.html (key is output filename w/o '.html')
-          import: 'src/views/home/index.html', // template file
+          import: 'src/views/pages/home/index.html', // template file
           data: { title: 'Homepage', name: 'Heisenberg' } // pass variables into template
         },
+        'news/sport': 'src/views/pages/news/sport/index.html', // => dist/news/sport.html
       },
       js: {
         // output filename of extracted JS from source script loaded in HTML via `<script>` tag
@@ -708,6 +720,226 @@ The `ResourceInfo` have the following properties:
 Return new content as a `string`.
 If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
+
+#### [↑ back to contents](#contents)
+<a id="option-preload" name="option-preload" href="#option-preload"></a>
+### `preload`
+Type: `Array<preload>` Default: `null`
+```ts
+type preload = {
+  test: RegExp,
+  as: string,
+  rel?: string,
+  type?: string,
+  attributes?: {},
+};
+```
+
+Generates and injects preload tags `<link rel="preload">` in the head before all `link` or `script` tags for all matching source assets resolved in templates and styles.
+
+The descriptions of the properties:
+
+- `test` - an RegEpx to match source asset files.
+- `as` - a content type, one of `audio` `document` `embed` `font` `image` `object` `script` `style` `track` `video` `worker`
+- `rel` - a value indicates how to load a resource, one of `preload` `prefetch` , defaults `preload`
+- `type` - a media type of the content.\
+  Defaults `content type` + `/` + `output asset file extension`, e.g. for `logo.png` is `image/png`.
+- `attributes` - an object with additional custom attributes like `crossorigin` `media` etc.,\
+  e.g. `attributes: { crossorigin: true }`, `attributes: { media: '(max-width: 900px)' }`.\
+  Note: you can define the `as` `rel` `type` properties in the `attributes`,\
+  e.g. `attributes: { rel: 'prefetch', as: 'font', crossorigin: true }`.\
+  Defaults `{}`.
+
+#### Preload styles
+
+```js
+preload: [
+  {
+    test: /\.(css|scss|less)$/,
+    as: 'style',
+  },
+],
+```
+
+The generated preload tag like following:
+```html
+<link rel="preload" href="css/style.1f4faaff.css" as="style">
+```
+
+#### Preload scripts
+
+```js
+preload: [
+  {
+    test: /\.(js|ts)$/,
+    as: 'script',
+  },
+],
+```
+
+The generated preload tag like following:
+```html
+<link rel="preload" href="js/main.c608b1cd.js" as="script">
+```
+
+#### Preload images
+
+To preload all images use the options:
+
+```js
+preload: [
+  {
+    test: /\.(png|jpe?g|webp|svg)$/,
+    as: 'image',
+  },
+],
+```
+
+The generated preload tags like following:
+```html
+<link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
+<link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
+```
+
+You can preload images with a URL query, e.g. `image.png?size=640`, using the `media` attribute:
+
+```js
+preload: [
+  {
+    test: /\.(png|jpe?g|webp)\?.*size=480/,
+    as: 'image',
+    attributes: { media: '(max-width: 480px)' },
+  },
+  {
+    test: /\.(png|jpe?g|webp)\?.*size=640/,
+    as: 'image',
+    attributes: { media: '(max-width: 640px)' },
+  },
+],
+```
+
+> **Note**
+> 
+> The `media` attribute be useful when used [responsive-loader](https://www.npmjs.com/package/responsive-loader).
+
+
+#### Preload fonts
+
+```js
+preload: [
+  {
+    test: /\.(eot|ttf|woff2?)$/,
+    as: 'font',
+    attributes: { crossorigin: true },
+  },
+],
+```
+
+> **Note**
+> 
+> Font preloading requires the `crossorigin` attribute to be set.
+> See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
+
+
+#### Preload tags order
+
+The generated preload tags are grouped by content type and sorted in the order of the specified `preload` options.
+
+For example, there is an HTML template with specified source assets:
+
+```html
+<html>
+<head>
+  <script src="./main.js" defer></script>
+  <link href="./style.scss" rel="stylesheet" />
+</head>
+<body>
+  <img src="./apple.png" alt="apple">
+  <script src="./app.js"></script>
+  <img src="./lemon.svg" alt="lemon">
+</body>
+</html>
+```
+
+Specify the order of preload tags:
+```js
+preload: [
+  // 1. preload styles
+  {
+    test: /\.(css|scss)$/,
+    as: 'style',
+  },
+  // 2. preload images
+  {
+    test: /\.(png|jpe?g|webp|svg)$/,
+    as: 'image',
+  },
+  // 3. preload scripts
+  {
+    test: /\.(js|ts)$/,
+    as: 'script',
+  },
+],
+```
+
+The generated HTML contains the preload tags exactly in the order of `preload` options:
+
+```html
+<html>
+<head>
+  <!-- 1. preload styles -->
+  <link rel="preload" href="css/style.1f4faaff.css" as="style">
+  <!-- 2. preload images -->
+  <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
+  <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
+  <!-- 3. preload scripts -->
+  <link rel="preload" href="js/main.c608b1cd.js" as="script">
+  <link rel="preload" href="js/app.2c8d13ac.js" as="script">
+  
+  <script src="js/main.c608b1cd.js" defer></script>
+  <link href="css/style.1f4faaff.css" rel="stylesheet" />
+</head>
+<body>
+  <img src="img/apple.697ef306.png" alt="apple">
+  <script src="js/app.2c8d13ac.js"></script>
+  <img src="img/lemon.3666c92d.svg" alt="lemon">
+</body>
+</html>
+```
+
+
+The generated preload tag like following:
+```html
+<link rel="preload" href="js/main.c608b1cd.js" as="script">
+```
+
+
+```js
+preload: [
+  // preload styles
+  {
+    test: /\.(css|scss)$/,
+    as: 'style',
+  },
+  // preload scripts
+  {
+    test: /\.(js|ts)$/,
+    as: 'script',
+  },
+  {
+    test: /\.(png|jpe?g|webp|svg)$/,
+    as: 'image',
+  },
+  {
+    test: /\.(eot|ttf|woff2?)$/,
+    as: 'font',
+    // note: font preloading requires the crossorigin attribute to be set
+    attributes: { crossorigin: true },
+  },
+],
+```
+
+
 #### [↑ back to contents](#contents)
 <a id="option-minify" name="option-minify" href="#option-minify"></a>
 ### `minify`
@@ -719,7 +951,7 @@ For minification generated HTML is used the [html-minifier-terser](https://githu
   collapseWhitespace: true,
   keepClosingSlash: true,
   removeComments: true,
-  removeRedundantAttributes: true,
+  removeRedundantAttributes: false, // prevents styling bug when input "type=text" is removed
   removeScriptTypeAttributes: true,
   removeStyleLinkTypeAttributes: true,
   useShortDoctype: true,
@@ -2049,29 +2281,36 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 <a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
-## How to preload source fonts in HTML
+## How to preload fonts
 
-Add to Webpack config the rule:
-```js
-module: {
-  rules: [
-    {
-      test: /\.(eot|ttf|woff|woff2)$/,
-      type: 'asset/resource',
-      generator: {
-        filename: 'assets/fonts/[name][ext]',
-      },
-    },
-  ],
+To preload resources such as fonts, use the [preload](#option-preload) plugin option.
+
+For example, there is the style used a font that should be preloaded:
+
+_style.scss_
+
+```scss
+@font-face {
+  font-family: "MyFont";
+  // load source fonts using the `@fonts` Webpack alias to the font directory
+  src: local(MyFont Regular),
+  url('@fonts/myfont.woff2') format('woff2'),
+  url('@fonts/myfont.woff') format('woff');
 }
+
+body {
+  font-family: "MyFont", serif;
+}
+
 ```
 
-Add a source file using a relative path or Webpack alias in HTML:
+The template _index.html_ where is loaded the source style:
 ```html
 <html>
 <head>
-  <link href="./font1.woff2" rel="preload" as="font" type="font/woff2" />
-  <link href="./font2.woff2" rel="preload" as="font" type="font/woff2" />
+  <title>Demo</title>
+  <!-- load source style -->
+  <link href="./style.scss" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -2079,12 +2318,71 @@ Add a source file using a relative path or Webpack alias in HTML:
 </html>
 ```
 
-The generated HTML contains output fonts filenames:
+Use the minimal Webpack config:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  resolve: {
+    alias: {
+      '@fonts': path.join(__dirname, 'src/assets/fonts/'), // => add alias to the font directory
+    },
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html', // => template where is loaded the style with fonts
+      },
+      css: {
+        filename: 'css/[name].[contenthash:8].css', // => filename of extracted CSS
+      },
+      // => add the preload option with the config for fonts
+      preload: [
+        {
+          test: /\.(woff2|woff)$/,
+          as: 'font',
+          attributes: { crossorigin: true },
+        },
+      ],
+    }),
+  ],
+  module: {
+    rules: [
+      // => add the style rule
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+      // => add the font rule
+      {
+        test: /\.(woff2|woff)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name][ext]',
+        },
+      },
+    ],
+  },
+};
+```
+
+> **Note**
+>
+> Font preloading requires the `crossorigin` attribute to be set.
+> See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
+
+The generated HTML contains the preload tag with the font:
+
 ```html
 <html>
 <head>
-  <link href="/assets/fonts/font1.woff2" rel="preload" as="font" type="font/woff2" />
-  <link href="/assets/fonts/font2.woff2" rel="preload" as="font" type="font/woff2" />
+  <title>Demo</title>
+  <!-- preload fonts detected in style -->
+  <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true">
+  <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true">
+  <!-- compiled style -->
+  <link href="css/style.1f4faaff.css" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -2095,6 +2393,7 @@ The generated HTML contains output fonts filenames:
 > **Note**
 >
 > You don't need a plugin to copy files from source directory to public.
+> All source fonts will be coped to output directory automatically.
 
 ---
 

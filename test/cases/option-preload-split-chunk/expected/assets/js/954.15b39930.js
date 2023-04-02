@@ -1,0 +1,1 @@
+(self.webpackChunk=self.webpackChunk||[]).push([[954],{954:()=>{console.log(">> about")}}]);

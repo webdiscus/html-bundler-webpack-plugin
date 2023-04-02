@@ -451,6 +451,18 @@ describe('plugin options', () => {
   test('option entry path', (done) => {
     compareFileListAndContent(PATHS, 'option-entry-path', done);
   });
+
+  test('option preload', (done) => {
+    compareFileListAndContent(PATHS, 'option-preload', done);
+  });
+
+  test('option preload with responsive images', (done) => {
+    compareFileListAndContent(PATHS, 'option-preload-responsive-images', done);
+  });
+
+  test('option preload with split chunk', (done) => {
+    compareFileListAndContent(PATHS, 'option-preload-split-chunk', done);
+  });
 });
 
 describe('option watchFiles', () => {
@@ -698,6 +710,10 @@ describe('special cases', () => {
   test('preprocessor for output php template', (done) => {
     compareFileListAndContent(PATHS, 'preprocessor-php', done);
   });
+
+  test('resolve preloaded script and  style', (done) => {
+    compareFileListAndContent(PATHS, 'resolve-preload-script-style', done);
+  });
 });
 
 describe('extras: responsive images', () => {
@@ -721,23 +737,6 @@ describe('verbose', () => {
 });
 
 // Test Messages
-
-describe('warning tests', () => {
-  test('duplicate scripts', (done) => {
-    const containString = 'Duplicate scripts are not allowed';
-    stdoutContain(PATHS, 'msg-warning-duplicate-scripts', containString, done);
-  });
-
-  test('duplicate scripts using alias', (done) => {
-    const containString = 'Duplicate scripts are not allowed';
-    stdoutContain(PATHS, 'msg-warning-duplicate-scripts-alias', containString, done);
-  });
-
-  test('duplicate styles', (done) => {
-    const containString = 'Duplicate styles are not allowed';
-    stdoutContain(PATHS, 'msg-warning-duplicate-styles', containString, done);
-  });
-});
 
 describe('loader exceptions', () => {
   test('exception sync preprocessor', (done) => {
@@ -841,5 +840,10 @@ describe('plugin exceptions', () => {
   test('multiple chunks with same filename', (done) => {
     const containString = 'Multiple chunks emit assets to the same filename';
     exceptionContain(PATHS, 'msg-exception-plugin-multiple-chunks-same-filename', containString, done);
+  });
+
+  test('fail resolving asset without loader', (done) => {
+    const containString = `Module parse failed: Unexpected character`;
+    exceptionContain(PATHS, 'msg-exception-plugin-resolve-asset', containString, done);
   });
 });

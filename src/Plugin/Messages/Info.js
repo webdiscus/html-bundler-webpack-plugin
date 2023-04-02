@@ -53,7 +53,7 @@ const verboseEntry = ({ name, importFile, outputPath, filename, filenameTemplate
 const verboseExtractModule = ({ entity, sourceFile, outputPath, title }) => {
   if (!title) title = 'Extract Module';
 
-  let { issuers } = entity;
+  let { assets } = entity;
   let str = `${header}${black.bgWhite` ${title} `}\n`;
 
   sourceFile = pathRelativeByPwd(sourceFile);
@@ -62,7 +62,7 @@ const verboseExtractModule = ({ entity, sourceFile, outputPath, title }) => {
   str += 'source: '.padStart(padWidth) + `${cyan(sourceFile)}` + '\n';
   str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}` + '\n';
 
-  issuers.forEach((assetFile, htmlFile) => {
+  assets.forEach((assetFile, htmlFile) => {
     str += `-> `.padStart(padWidth) + `${green(htmlFile)}` + '\n';
     str += `- `.padStart(padWidth + 2) + `${yellow(assetFile)}` + '\n';
   });
@@ -113,17 +113,17 @@ const verboseExtractScript = ({ entity, outputPath }) => {
  */
 const verboseExtractResource = ({ entity, sourceFile, outputPath }) => {
   const title = 'Extract Resource';
-  let { issuers } = entity;
+  let { assets } = entity;
   let str = `${header}${black.bgWhite` ${title} `}\n`;
 
   sourceFile = pathRelativeByPwd(sourceFile);
-  issuers = pathRelativeByPwdArr(issuers);
+  assets = pathRelativeByPwdArr(assets);
   outputPath = pathRelativeByPwd(outputPath);
 
   str += 'source: '.padStart(padWidth) + `${cyan(sourceFile)}\n`;
   str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}` + '\n';
 
-  for (let [issuer, asset] of issuers) {
+  for (let [issuer, asset] of assets) {
     let issuerAsset = Asset.findAssetFile(issuer);
     let value = asset && asset.startsWith('data:') ? asset.slice(0, asset.indexOf(',')) + ',...' : asset;
 

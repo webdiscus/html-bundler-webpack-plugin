@@ -1,0 +1,20 @@
+$color: orange;
+
+h1 {
+  color: $color;
+}
+
+.lemon {
+  width: 100px;
+  height: 82px;
+  border: 1px solid yellow;
+  //noinspection CssUnknownTarget
+  background-image: url('@images/lemon.png?size=100');
+}
+
+.apple {
+  width: 160px;
+  height: 130px;
+  border: 1px solid greenyellow;
+  background-image: url('@images/apple.png');
+}

@@ -82,11 +82,28 @@ const parseRequest = (request) => {
   return { resource, query };
 };
 
+/**
+ * Returns an indent detected in the content.
+ *
+ * @param {string} content The template content.
+ * @param {number} startPos The start position of a tag. An indent will be detected before the tag position.
+ * @return {string}
+ */
+const detectIndent = (content, startPos) => {
+  const idents = [' ', '\t'];
+  let pos = startPos;
+
+  while (idents.indexOf(content.charAt(pos)) > -1 && pos > 0) pos--;
+
+  return pos < startPos ? content.slice(pos + 1, startPos + 1) : '';
+};
+
 module.exports = {
   isWin,
   isFunction,
   pathToPosix,
   parseQuery,
   parseRequest,
+  detectIndent,
   outToConsole,
 };

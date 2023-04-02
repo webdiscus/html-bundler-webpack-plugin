@@ -38,9 +38,7 @@ class AssetResource {
     }
 
     if (asset != null) {
-      const key = Resolver.getAssetKey(issuer, entryPoint);
-
-      Resolver.addResolvedAsset(resource, asset, key);
+      Resolver.addResolvedAsset(resource, asset, issuer, entryPoint);
 
       // save a module and handler for asset that may be used in many styles
       Resolver.setModuleHandler(resource, (originalAssetFile, issuer) => ResponsiveLoader.getAsset(module, issuer));
@@ -51,7 +49,7 @@ class AssetResource {
     }
 
     // save the original asset file that may be used in many files
-    Resolver.addAsset(resource, assetFile);
+    Resolver.addAsset(resource, assetFile, entryPoint);
   }
 }
 

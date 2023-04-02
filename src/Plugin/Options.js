@@ -30,6 +30,8 @@ const { optionEntryPathException, optionModulesException } = require('./Messages
  * @property {Object=} extractJs For inner usage only.
  * @property {Object=} extractCss For inner usage only.
  * @property {Object=} loaderOptions Options defined in plugin but provided for the loader. Experimental.
+ * @property {Array<Object>|boolean=} preload Options to generate preload link tags for assets.
+ * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
  */
 
 class Options {
@@ -223,6 +225,10 @@ class Options {
     return this.options.enabled !== false;
   }
 
+  static isMinify() {
+    return this.toBool(this.options.minify, true, false);
+  }
+
   static isDevMode() {
     return this.prodMode === false;
   }
@@ -287,6 +293,15 @@ class Options {
   }
 
   /**
+   * Whether the preload option is defined.
+   *
+   * @return {boolean}
+   */
+  static isPreload() {
+    return this.options.preload != null && this.options.preload !== false;
+  }
+
+  /**
    * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
    *
    * @param {boolean|string|undefined} value The value one of true, false, 'auto'.
@@ -308,6 +323,10 @@ class Options {
     return this.options;
   }
 
+  static getLF() {
+    return this.isMinify() ? '' : '\n';
+  }
+
   /**
    * @return {RegExp}
    */
@@ -325,6 +344,10 @@ class Options {
 
   static getWatchFiles() {
     return this.options.watchFiles;
+  }
+
+  static getPreload() {
+    return this.options.preload == null ? false : this.options.preload;
   }
 
   /**

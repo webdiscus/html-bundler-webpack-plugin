@@ -1,0 +1,12 @@
+$color: green;
+
+h1 {
+  color: $color;
+}
+
+.chery {
+  width: 160px;
+  height: 130px;
+  border: 1px solid darkred;
+  background-image: url('@images/chery.png');
+}

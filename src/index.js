@@ -7,7 +7,6 @@ const { isWin } = require('./Common/Helpers');
 
 /**
  * @typedef {PluginOptions} HtmlBundlerPluginOptions
- * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
  */
 
 class Plugin extends AssetCompiler {
@@ -77,7 +76,7 @@ class Plugin extends AssetCompiler {
     const promises = [];
 
     const options = Options.get();
-    let isMinify = Options.toBool(options.minify, true, false);
+    //let isMinify = Options.toBool(options.minify, true, false);
     let minifyOptions;
 
     // https://github.com/terser/html-minifier-terser#options-quick-reference
@@ -85,7 +84,7 @@ class Plugin extends AssetCompiler {
       collapseWhitespace: true,
       keepClosingSlash: true,
       removeComments: true,
-      removeRedundantAttributes: true,
+      removeRedundantAttributes: false, // prevents styling bug when input "type=text" is removed
       removeScriptTypeAttributes: true,
       removeStyleLinkTypeAttributes: true,
       useShortDoctype: true,
@@ -93,7 +92,7 @@ class Plugin extends AssetCompiler {
       minifyJS: true,
     };
 
-    if (isMinify) {
+    if (Options.isMinify()) {
       minifyOptions =
         options.minifyOptions && typeof options.minifyOptions === 'object'
           ? { ...defaultMinifyOptions, ...options.minifyOptions }

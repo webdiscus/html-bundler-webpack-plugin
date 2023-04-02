@@ -1,6 +1,5 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const Nunjucks = require('nunjucks');
 
 const isDev = true;
 module.exports = {
@@ -50,6 +49,27 @@ module.exports = {
         // output filename of extracted CSS from source style loaded in HTML via `<link>` tag
         filename: 'assets/css/[name].[contenthash:8].css',
       },
+
+      preload: [
+        {
+          test: /\.(s?css|less)$/,
+          as: 'style',
+        },
+        {
+          test: /\.(js|ts)$/,
+          as: 'script',
+        },
+        {
+          test: /\.(png|jpe?g|webp|svg)$/,
+          as: 'image',
+        },
+        {
+          //test: /\.(eot|ttf|woff2?)$/, // preload all variants of fonts
+          test: /\.woff2$/, // preload only modern fonts
+          as: 'font',
+          attributes: { crossorigin: true }, // note: font preloading requires the crossorigin attribute to be set
+        },
+      ],
 
       loaderOptions: {
         preprocessor: 'nunjucks',
@@ -133,6 +153,13 @@ module.exports = {
 
     //open: true,
     compress: true,
+
+    // enable CORS for fonts
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    },
 
     // enable HMR
     watchFiles: {

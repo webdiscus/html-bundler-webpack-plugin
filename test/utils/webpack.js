@@ -50,7 +50,7 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
 
     compiler.run((error, stats) => {
       if (error) {
-        reject('[webpack compiler] ' + error);
+        reject('[webpack compiler] ' + error.stack);
         return;
       }
 

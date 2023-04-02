@@ -1,5 +1,14 @@
 # Change log
 
+## 1.13.0 (2023-04-03)
+- feat: add `preload` option to auto generate preload tags for resources such as font, image, video, audio, script, style, etc.
+- feat: allow resolving all duplicate scripts and styles in the template so that they can be preloaded with a link tag
+- feat: remove warnings for duplicate script and styles in the template
+- fix: set the default `removeRedundantAttributes: false` minify option to prevent styling bug when input "type=text" is removed
+- chore: update dev dependencies
+- test: add tests for new features
+- docs: add description of new features
+
 ## 1.12.0 (2023-03-29)
 - feat: add `minifyOptions` to customize minification when the `minify` options is `auto`, FR #5
 - feat: add `helpers` value as array of a relative or absolute path to helper directories for the `handlebars` preprocessor

@@ -12,6 +12,7 @@ const { toCommonJS } = require('./Utils');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
 const ScriptCollection = require('./ScriptCollection');
+const Preload = require('./Preload');
 
 const Resolver = require('./Resolver');
 const UrlDependency = require('./UrlDependency');
@@ -389,8 +390,15 @@ class AssetCompiler {
 
       const [sourceFile] = sourceRequest.split('?', 1);
       const contextIssuer = resourceResolveData.context.issuer;
-      const issuer = contextIssuer === entry.importFile ? entry.request : contextIssuer;
-      const issuerFile = !issuer || Options.isEntry(issuer) ? entry.importFile : contextIssuer;
+
+      // note: the contextIssuer may be wrong, as previous entry, because Webpack distinct same modules by first access
+      let issuer = contextIssuer === entry.importFile ? entry.request : contextIssuer;
+      let issuerFile = contextIssuer;
+
+      if (!issuer || Options.isEntry(issuer)) {
+        issuer = entry.request;
+        issuerFile = entry.importFile;
+      }
 
       if (module.type === 'javascript/auto') {
         // extract JS: do nothing for scripts because webpack itself compiles and extracts JS files from scripts
@@ -495,7 +503,7 @@ class AssetCompiler {
           assetFile = Options.resolveOutputFilename(assetFile, pluginModule.outputPath);
         }
 
-        Resolver.addAsset(sourceRequest, assetFile);
+        Resolver.addAsset(sourceRequest, assetFile, entry);
 
         // extract CSS
         const inline = Asset.isStyle(module) ? Options.isInlineCss(resourceResolveData.query) : false;
@@ -599,9 +607,13 @@ class AssetCompiler {
       AssetTrash.removeComments(compilation);
     }
 
+    // TODO: optimize postprocess
+    //  call followings for each entry point and previous result pass into next
+    //  to avoid needles compilation update at each post process
     AssetScript.substituteOutputFilenames(compilation);
     AssetInline.insertInlineSvg(compilation);
     AssetSource.inlineSource(compilation);
+    Options.isPreload() && Preload.insertPreloadAssets(compilation);
 
     for (const assetFile in assets) {
       const sourceFile = Asset.findSourceFile(assetFile) || AssetScript.findSourceFile(assetFile);
@@ -650,11 +662,11 @@ class AssetCompiler {
     let code = source.source();
     let result;
 
-    if (!code) {
-      // TODO: reproduce this case in test
-      // the source is empty when webpack config contains an error
-      return null;
-    }
+    // if (!code) {
+    //   // TODO: reproduce this case in test
+    //   // the source is empty when webpack config contains an error
+    //   return null;
+    // }
 
     if (Buffer.isBuffer(code)) {
       code = code.toString();
@@ -782,6 +794,7 @@ class AssetCompiler {
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
+    Preload.reset();
     verboseList.clear();
   }
 
