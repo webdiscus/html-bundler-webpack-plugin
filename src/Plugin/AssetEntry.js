@@ -1,7 +1,7 @@
 const path = require('path');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
-const { isFunction } = require('../Common/Helpers');
+const { isFunction, getFileExtension } = require('../Common/Helpers');
 
 /**
  * @typedef {Object} AssetEntryOptions
@@ -167,7 +167,7 @@ class AssetEntry {
       assetEntryOptions.isTemplate = Options.isEntry(assetEntryOptions.importFile);
 
       if (assetEntryOptions.isTemplate) {
-        const ext = this.#getFileExtension(filename);
+        const ext = getFileExtension(filename);
         this.entryPointExtensions.add(ext);
       }
 
@@ -192,7 +192,8 @@ class AssetEntry {
     if (this.#exists(name, importFile)) return false;
 
     const compilation = this.compilation;
-    const EntryPlugin = compilation.compiler.webpack.EntryPlugin;
+    const compiler = compilation.compiler;
+    const EntryPlugin = compiler.webpack.EntryPlugin;
     const entryDependency = EntryPlugin.createDependency(importFile, { name });
 
     const entry = {
@@ -232,7 +233,7 @@ class AssetEntry {
 
     // add missing dependencies after rebuild
     if (PluginService.isWatchMode()) {
-      new EntryPlugin(context, importFile, { name }).apply(compilation.compiler);
+      new EntryPlugin(context, importFile, { name }).apply(compiler);
     }
 
     return true;
@@ -269,12 +270,8 @@ class AssetEntry {
    * @return {boolean}
    */
   static isEntrypoint(filename) {
-    const ext = this.#getFileExtension(filename);
+    const ext = getFileExtension(filename);
     return this.entryPointExtensions.has(ext);
-  }
-
-  static #getFileExtension(file) {
-    return file.slice(file.lastIndexOf('.'));
   }
 
   /**

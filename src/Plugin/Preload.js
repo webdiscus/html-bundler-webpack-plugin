@@ -1,5 +1,5 @@
 const Options = require('./Options');
-const { detectIndent } = require('../Common/Helpers');
+const { detectIndent, getFileExtension } = require('../Common/Helpers');
 
 /**
  * Media types that differ from file extension.
@@ -121,10 +121,6 @@ class Preload {
 
         // determine the order of the main attributes in the link tag
         const props = { rel: 'preload', href: undefined, as: undefined, type: undefined };
-        // get the asset extension
-        const [file] = assetFile.split('?', 1);
-        const extPos = file.lastIndexOf('.');
-        const ext = extPos > 0 ? assetFile.slice(extPos + 1) : '';
 
         if (!conf.attributes) conf.attributes = {};
         if (conf.rel) props.rel = conf.rel;
@@ -141,6 +137,7 @@ class Preload {
         }
 
         if (ignoreTypeBy.indexOf(attrs.as) < 0 && !hasType) {
+          const ext = getFileExtension(assetFile);
           attrs.type = mimeType[attrs.as]?.[ext] || attrs.as + '/' + ext;
         }
 

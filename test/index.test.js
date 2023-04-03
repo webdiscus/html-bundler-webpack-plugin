@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import {
   compareFileListAndContent,
@@ -9,7 +10,7 @@ import {
   watchStdoutCompare,
 } from './utils/helpers';
 import { removeDirsSync } from './utils/file';
-import { parseQuery } from '../src/Common/Helpers';
+import { parseQuery, getFileExtension } from '../src/Common/Helpers';
 import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Template from '../src/Loader/Template';
@@ -58,6 +59,64 @@ describe('misc unit tests', () => {
   test('FileUtils: resolveFile', (done) => {
     const received = resolveFile('not-exists-file', { fs, root: __dirname });
     expect(received).toBeFalsy();
+    done();
+  });
+});
+
+describe('file extension', () => {
+  test('file.ext', (done) => {
+    const received = getFileExtension('file.ext');
+    const expected = 'ext';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('file.ext?query', (done) => {
+    const received = getFileExtension('file.ext?query');
+    const expected = 'ext';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('file', (done) => {
+    const received = getFileExtension('file');
+    const expected = '';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('file?query', (done) => {
+    const received = getFileExtension('file?query');
+    const expected = '';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('path.sample/file', (done) => {
+    const received = getFileExtension('path.sample/file');
+    const expected = '';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('path.sample/file?query', (done) => {
+    const received = getFileExtension('path.sample/file?query');
+    const expected = '';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('path.sample\\file', (done) => {
+    const received = getFileExtension('path.sample\\file', true);
+    const expected = '';
+    expect(received).toEqual(expected);
+    done();
+  });
+
+  test('path.sample\\file.ext?query', (done) => {
+    const received = getFileExtension('path.sample\\file.ext?query', true);
+    const expected = 'ext';
+    expect(received).toEqual(expected);
     done();
   });
 });

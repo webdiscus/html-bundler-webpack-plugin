@@ -1,5 +1,9 @@
 # Change log
 
+## 1.13.1 (2023-04-03)
+- refactor: optimize code
+- test: add test for issue #6
+
 ## 1.13.0 (2023-04-03)
 - feat: add `preload` option to auto generate preload tags for resources such as font, image, video, audio, script, style, etc.
 - feat: allow resolving all duplicate scripts and styles in the template so that they can be preloaded with a link tag

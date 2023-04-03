@@ -682,6 +682,8 @@ class AssetCompiler {
       require: Resolver.require,
       // the `module.id` is required for `css-loader`, in module extract CSS expected as the source path
       module: { id: sourceFile },
+      // required for ssr
+      __filename: sourceFile,
     };
 
     try {

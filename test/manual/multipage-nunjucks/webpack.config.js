@@ -149,9 +149,6 @@ module.exports = {
       directory: path.join(__dirname, './dist'),
     },
 
-    //open: true,
-
-    //open: true,
     compress: true,
 
     // enable CORS for fonts

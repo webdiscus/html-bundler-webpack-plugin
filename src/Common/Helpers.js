@@ -23,6 +23,24 @@ const isJSON = (str) => typeof str === 'string' && str.length > 1 && str[0] === 
 const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 /**
+ * Returns a file extension without leading '.'.
+ *
+ * Note: this implementation fix many issues of node path.parse().
+ *
+ * @param {string} resource The resource file, can contain a URL query.
+ * @param {boolean} win Whether the path is in windows format. This parameter is autodetect.
+ *  It is used for unit testing only.
+ * @return {string}
+ */
+const getFileExtension = (resource, win = isWin) => {
+  let [file] = resource.split('?', 1);
+  if (win) file = pathToPosix(file);
+  const { ext } = path.parse(file);
+
+  return ext === '' ? '' : ext.slice(1);
+};
+
+/**
  * Parse the url query.
  *
  * @param {string} request
@@ -102,6 +120,7 @@ module.exports = {
   isWin,
   isFunction,
   pathToPosix,
+  getFileExtension,
   parseQuery,
   parseRequest,
   detectIndent,
