@@ -35,10 +35,11 @@ class Options {
 
     if (!options) {
       options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
-      // TODO (sourcePath option is experimental, reserved for future):
-      // basedir, allow to configure assets root path used for resolving files specified in attributes (`sources` option)
-      const sourcePath = options.sourcePath != null ? options.sourcePath : rootContext;
-      options.basedir = sourcePath.slice(-1) === path.sep ? sourcePath : sourcePath + path.sep;
+
+      // allow to configure assets root path used for resolving files specified in attributes (`sources` option)
+      // allow both 'root' and 'basedir' option name for compatibility
+      const basedir = options.root || options.basedir || false;
+      options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
 
       PluginService.setLoaderCache(loaderId, options);
     }
@@ -74,7 +75,7 @@ class Options {
 
   /**
    * Returns the root directory for the paths in template starting with `/`.
-   * @return {string}
+   * @return {string|false}
    */
   static getBasedir() {
     return this.#options.basedir;

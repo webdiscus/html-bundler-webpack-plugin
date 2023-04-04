@@ -1,8 +1,21 @@
 # Change log
 
-## 1.13.1 (2023-04-03)
+## 1.14.0 (2023-04-04)
+- feat: add `root` loader option to allow use the `/` as root path to source directory for asset files:
+  ```js
+  new HtmlBundlerPlugin({
+    loaderOptions: {
+      root: path.join(__dirname, 'src'),
+    },
+  }),
+  ```
+  to resolve the `/src/images/apple.png` source file, use the root path `/`:
+  ```html
+  <img src="/images/apple.png">
+  ```
 - refactor: optimize code
-- test: add test for issue #6
+- test: add tests for new features
+- docs: add description of new features
 
 ## 1.13.0 (2023-04-03)
 - feat: add `preload` option to auto generate preload tags for resources such as font, image, video, audio, script, style, etc.

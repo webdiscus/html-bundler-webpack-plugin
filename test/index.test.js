@@ -439,87 +439,103 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-output-public-path-url', done);
   });
 
-  test('option sourcePath and outputPath (default)', (done) => {
+  test('sourcePath and outputPath (default)', (done) => {
     compareFileListAndContent(PATHS, 'option-default-path', done);
   });
 
-  test('option sourcePath and outputPath', (done) => {
+  test('sourcePath and outputPath', (done) => {
     compareFileListAndContent(PATHS, 'option-custom-path', done);
   });
 
-  test('option filename as function', (done) => {
+  test('filename as function', (done) => {
     compareFileListAndContent(PATHS, 'option-filename-function', done);
   });
 
-  test('option js.filename', (done) => {
+  test('js.filename', (done) => {
     compareFileListAndContent(PATHS, 'option-js-filename', done);
   });
 
-  test('option js and css outputPath absolute', (done) => {
+  test('js and css outputPath absolute', (done) => {
     compareFileListAndContent(PATHS, 'option-js-css-outputPath-absolute', done);
   });
 
-  test('option js and css outputPath relative', (done) => {
+  test('js and css outputPath relative', (done) => {
     compareFileListAndContent(PATHS, 'option-js-css-outputPath-relative', done);
   });
 
-  test('option verbose', (done) => {
+  test('css.inline auto, dev', (done) => {
+    compareFileListAndContent(PATHS, 'option-css-inline-auto-dev', done);
+  });
+
+  test('css.inline auto, prod', (done) => {
+    compareFileListAndContent(PATHS, 'option-css-inline-auto-prod', done);
+  });
+
+  test('js.inline auto, dev', (done) => {
+    compareFileListAndContent(PATHS, 'option-js-inline-auto-dev', done);
+  });
+
+  test('js.inline auto, prod', (done) => {
+    compareFileListAndContent(PATHS, 'option-js-inline-auto-prod', done);
+  });
+
+  test('verbose', (done) => {
     compareFileListAndContent(PATHS, 'option-verbose', done);
   });
 
-  test('option extractComments = false', (done) => {
+  test('extractComments = false', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-false', done);
   });
 
-  test('option extractComments = true', (done) => {
+  test('extractComments = true', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-true', done);
   });
 
-  test('option postprocess', (done) => {
+  test('postprocess', (done) => {
     compareFileListAndContent(PATHS, 'option-postprocess', done);
   });
 
-  test('option afterProcess', (done) => {
+  test('afterProcess', (done) => {
     compareFileListAndContent(PATHS, 'option-afterProcess', done);
   });
 
-  test('option minify HTML', (done) => {
+  test('minify HTML', (done) => {
     compareFileListAndContent(PATHS, 'option-minify', done);
   });
 
-  test('option minify HTML with custom options', (done) => {
+  test('minify HTML with custom options', (done) => {
     compareFileListAndContent(PATHS, 'option-minify-options', done);
   });
 
-  test('option minify auto prod', (done) => {
+  test('minify auto prod', (done) => {
     compareFileListAndContent(PATHS, 'option-minify-auto-prod', done);
   });
 
-  test('option minify auto dev', (done) => {
+  test('minify auto dev', (done) => {
     compareFileListAndContent(PATHS, 'option-minify-auto-dev', done);
   });
 
-  test('option minify auto options', (done) => {
+  test('minify auto options', (done) => {
     compareFileListAndContent(PATHS, 'option-minify-auto-options', done);
   });
 
-  test('option entry', (done) => {
+  test('entry', (done) => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
 
-  test('option entry path', (done) => {
+  test('entry path', (done) => {
     compareFileListAndContent(PATHS, 'option-entry-path', done);
   });
 
-  test('option preload', (done) => {
+  test('preload', (done) => {
     compareFileListAndContent(PATHS, 'option-preload', done);
   });
 
-  test('option preload with responsive images', (done) => {
+  test('preload with responsive images', (done) => {
     compareFileListAndContent(PATHS, 'option-preload-responsive-images', done);
   });
 
-  test('option preload with split chunk', (done) => {
+  test('preload with split chunk', (done) => {
     compareFileListAndContent(PATHS, 'option-preload-split-chunk', done);
   });
 });
@@ -564,6 +580,10 @@ describe('loader options', () => {
     compareFileListAndContent(PATHS, 'loader-option-sources-attrs-filter', done);
   });
 
+  test('filter property attribute', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-sources-attrs-filter-property', done);
+  });
+
   test('preprocessor by defaults', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-default', done);
   });
@@ -576,20 +596,8 @@ describe('loader options', () => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-return-null', done);
   });
 
-  test('css.inline auto, dev', (done) => {
-    compareFileListAndContent(PATHS, 'loader-options-css-inline-auto-dev', done);
-  });
-
-  test('css.inline auto, prod', (done) => {
-    compareFileListAndContent(PATHS, 'loader-options-css-inline-auto-prod', done);
-  });
-
-  test('js.inline auto, dev', (done) => {
-    compareFileListAndContent(PATHS, 'loader-options-js-inline-auto-dev', done);
-  });
-
-  test('js.inline auto, prod', (done) => {
-    compareFileListAndContent(PATHS, 'loader-options-js-inline-auto-prod', done);
+  test('root', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-root', done);
   });
 });
 

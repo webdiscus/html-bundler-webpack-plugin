@@ -18,8 +18,4 @@ describe('issue tests', () => {
   });
 
   // add your issue test here
-
-  test('issue-6', (done) => {
-    compareFileListAndContent(PATHS, 'issue-6', done);
-  });
 });

@@ -15,8 +15,6 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-🚀 The best modern alternative to _html-webpack-plugin_.
-
 This plugin allows to use an HTML template as a starting point for all dependencies used in your web application.
 All source files of scripts, styles, images specified in HTML are processed automatically.
 All processed files are extracted and saved to the output directory.
@@ -40,13 +38,12 @@ defining JS files in Webpack Entry, importing SCSS into a JS file.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
-## 🔆 NEW in release `1.13.0`
+## 🔆 NEW in releases `1.13.0 - 1.14.0`
 
-- Added [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style, etc.
-- Allow resolving all duplicate scripts and styles in the template.
-- Removed warnings for duplicate script and styles in the template.
+- Add the [root](#loader-option-root) loader option to enable processing of asset files with the leading `/` root path.
+- Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style, etc.
 
-📋 **Release notes** see in the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
+📋 See the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md) for full **release notes**.
 
 ## Simple usage example
 
@@ -137,6 +134,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [loaderOptions](#option-loaderOptions) (simplify access to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
+   - [root](#loader-option-root) (allow to resolve root path in attributes)
    - [preprocessor](#loader-option-preprocessor) (templating)
    - [preprocessorOptions](#loader-option-preprocessorOptions) (templating options)
    - [data](#loader-option-data) (pass data into templates)
@@ -1199,6 +1197,11 @@ type sources =
 
 Default: `true`
 
+The `sources` option allow to specify a tag attribute that should be resolved.
+
+<a id="loader-option-sources-default" name="loader-option-sources-default" href="#loader-option-sources-default"></a>
+#### Default attributes
+
 By default, resolves source files in the following tags and attributes:
 
 | Tag      | Attributes                                                                                                   |
@@ -1219,18 +1222,6 @@ By default, resolves source files in the following tags and attributes:
 >
 > It is not recommended to use the [deprecated](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/xlink:href) `xlink:href` attribute by the `image` and `use` tags.
 
-The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
-The argument is an object containing the properties:
-- `tag: string` - a name of the HTML tag
-- `attribute: string` - a name of the HTML attribute
-- `value: string` - a value of the HTML attribute
-- `attributes: string` - all attributes of the tag
-- `resourcePath: string` - a path of the HTML template
-
-The processing of an attribute can be ignored by returning `false`.
-
-To disable the processing of all attributes, set the `sources` option as `false`.
-
 > **Note**
 >
 > Automatically are processed only attributes containing a relative path or Webpack alias:
@@ -1247,6 +1238,23 @@ To disable the processing of all attributes, set the `sources` option as `false`
 > - `src="data:image/png; ..."`
 > - `src="javascript: ..."`
 
+
+<a id="loader-option-sources-filter" name="loader-option-sources-filter" href="#loader-option-sources-filter"></a>
+#### Filter function
+
+The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
+The argument is an object containing the properties:
+- `tag: string` - a name of the HTML tag
+- `attribute: string` - a name of the HTML attribute
+- `value: string` - a value of the HTML attribute
+- `attributes: string` - all attributes of the tag
+- `resourcePath: string` - a path of the HTML template
+
+The processing of an attribute can be ignored by returning `false`.
+
+To disable the processing of all attributes, set the `sources` option as `false`.
+
+
 Examples of using argument properties:
 ```js
 {
@@ -1257,7 +1265,7 @@ Examples of using argument properties:
     if (value.endsWith('.webp')) return false;
     if ('srcset' in attributes && attributes['srcset'] === '') return false;
     if (resourcePath.indexOf('example')) return false;
-    // otherwise return 'true' or nothing to allow processing
+    // otherwise return 'true' or nothing (undefined) to allow the processing
   },
 }
 ```
@@ -1267,76 +1275,74 @@ The default sources can be extended with new tags and attributes.
 For example, add the processing of the `data-src` and `data-srcset` attributes to the `img` tag:
 
 ```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  module: {
-    rules: [
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/index.html',
+  },
+  loaderOptions: {
+    sources: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: [
-            {
-              tag: 'img',
-              attributes: ['data-src', 'data-srcset'],
-            }
-          ],
-        },
+        tag: 'img',
+        attributes: ['data-src', 'data-srcset'],
       },
     ],
   },
-};
+})
 ```
 
 You can use the `filter` function to allow the processing only specific attributes.
+
+The `filter` function must return `true` or `undefined` to enable the processing of specified tag attributes.
+Return `false` to disable the processing.
 
 For example, allow processing only for images in `content` attribute of the `meta` tag:
 
 ```html
 <html>
 <head>
-  <!-- ignore the attribute via filter -->
+  <!-- ignore the 'content' attribute via filter -->
   <meta name="theme-color" content="#ffffff">
-  <!-- resolve the 'content' attribute if 'name' containing special values  -->
-  <meta name="twitter:image" content="./image.png">
-  <meta name="logo" content="./logo.png">
+  <meta property="og:title" content="Frutis" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:video:type" content="video/mp4" />
+  
+  <!-- resolve the 'content' attribute via filter  -->
+  <meta property="og:image" content="./frutis.png" />
+  <meta property="og:video" content="./video.mp4" />
 </head>
 <body>
-  <!-- resolve 'src' attribute containing relative path -->
+  <!-- resolve standard 'src' attribute -->
   <img src="./image.png">
 </body>
 </html>
 ```
 
-_webpack.config.js_
+Use the `filter` function:
+
 ```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  module: {
-    rules: [
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/index.html',
+  },
+  loaderOptions: {
+    sources: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: [
-            {
-              tag: 'meta',
-              attributes: ['content'],
-              // handles an image in the 'content' attrubute of the 'meta' tag 
-              // when the 'name' attribute is one of: twitter:image, logo
-              filter: ({ attributes }) => {
-                const allowedNames = ['twitter:image', 'logo'];
-                if ('name' in attributes && allowedNames.indexOf(attributes.name) < 0) {
-                  return false;
-                }
-              },
-            }
-          ],
+        tag: 'meta',
+        attributes: ['content'],
+        // allow to handlen an image in the 'content' attribute of the 'meta' tag
+        // when the 'property' attribute contains one of: 'og:image', 'og:video'
+        filter: ({ attributes }) => {
+          const attrName = 'property';
+          const attrValues = ['og:image', 'og:video'];
+          if (attributes[attrName] && attrValues.indexOf(attributes[attrName]) < 0) {
+            return false; // return false to disable processing
+          }
+          // return true or undefined to enable processing
         },
       },
     ],
   },
-};
+})
 ```
 
 The filter can disable an attribute of a tag.
@@ -1344,25 +1350,67 @@ The filter can disable an attribute of a tag.
 For example, disable the processing of default attribute `srcset` of the `img` tag:
 
 ```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  module: {
-    rules: [
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/index.html',
+  },
+  loaderOptions: {
+    sources: [
       {
-        test: /\.html$/,
-        loader: HtmlBundlerPlugin.loader,
-        options: {
-          sources: [
-            {
-              tag: 'img',
-              filter: ({ attribute }) => attribute !== 'srcset',
-            }
-          ],
-        },
-      },
+        tag: 'img',
+        filter: ({ attribute }) => attribute !== 'srcset',
+      }
     ],
   },
-};
+})
+```
+
+
+#### [↑ back to contents](#contents)
+<a id="loader-option-root" name="loader-option-root" href="#loader-option-root"></a>
+### `root`
+Type: `string|boolean` Default: `false`
+
+The `root` option allow to resolve an asset file with leading `/` root path.
+
+Defaults is disabled because the file with leading `/` is a valide URL in the public path, e.g. `dist/`.
+The files with leading `/` are not processed.
+
+Define the `root` option as the absolute path to the source directory to enable the processing.
+
+For example, there are project files:
+```
+./src/views/index.html
+./src/styles/style.scss
+./src/scripts/main.js
+./src/images/apple.png
+```
+
+Define the `root` loader option:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/index.html',
+  },
+  loaderOptions: {
+    root: path.join(__dirname, 'src'),
+  },
+})
+```
+
+Now you can use the `/` root path for the source assets:
+```html
+<html>
+<head>
+  <link href="/styles/style.scss" rel="stylesheet">
+  <script src="/scripts/main.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <img src="/images/apple.png">
+</body>
+</html>
 ```
 
 
@@ -1371,7 +1419,7 @@ module.exports = {
 ### `preprocessor`
 Type:
 ```ts
-type preprocessor = 'eta' | 'ejs' | 'handlebars';
+type preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks';
 ```
 
 The default value is `'eta'`, see [Eta](https://eta.js.org) templating engine. 
@@ -2110,7 +2158,7 @@ module.exports = {
       },
       loaderOptions: {
         // async parseAndRender method return a promise
-        preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
+        preprocessor: (template, { data }) => LiquidEngine.parseAndRender(template, data),
       },
     }),
   ],
@@ -2901,8 +2949,11 @@ module.exports = {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
       loaderOptions: {
-        // render template with page-specific variables defined in entry
-        preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+        // preconfigured compiler for Nunjucks template engine
+        preprocessor: 'nunjucks',
+        // -OR- use as the function for full controll
+        // preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+        
       },
     }),
   ],
@@ -3008,7 +3059,12 @@ module.exports = {
         test: /\.ejs$/,
         loader: HtmlBundlerPlugin.loader, // universal template loader
         options: {
-          preprocessor: (content, { data }) => ejs.render(content, data),
+          preprocessor: 'ejs',
+          preprocessorOptions: {
+            views: [
+              path.join(__dirname, 'src/views/ejs/partials'),
+            ],
+          },
         },
       },
       // the rule for Handlebars
@@ -3016,7 +3072,12 @@ module.exports = {
         test: /\.hbs$/,
         loader: HtmlBundlerPlugin.loader, // universal template loader
         options: {
-          preprocessor: (content, { data }) => Handlebars.compile(content)(data),
+          preprocessor: 'handlebars',
+          preprocessorOptions: {
+            views: [
+              path.join(__dirname, 'src/views/hbs/partials')
+            ],
+          },
         },
       },
     ],

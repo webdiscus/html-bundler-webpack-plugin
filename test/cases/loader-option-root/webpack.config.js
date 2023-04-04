@@ -6,25 +6,21 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
-  },
-
-  resolve: {
-    alias: {
-      '@images': path.join(__dirname, './images'),
-      '@scripts': path.join(__dirname, './scripts'),
-      '@styles': path.join(__dirname, './styles'),
-    },
   },
 
   plugins: [
     new HtmlBundlerPlugin({
-      entry: './html_output/',
+      entry: {
+        index: 'src/views/index.html',
+      },
       js: {
-        filename: '[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
       css: {
         filename: 'css/[name].[contenthash:8].css',
+      },
+      loaderOptions: {
+        root: __dirname, // enable to use the '/' as root path to source directory
       },
     }),
   ],

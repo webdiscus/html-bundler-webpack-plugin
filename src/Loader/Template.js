@@ -96,6 +96,7 @@ const isLinkScript = (tag) => {
 
 class Template {
   static sources = [];
+  static root = false;
   static issuer;
 
   /**
@@ -114,6 +115,7 @@ class Template {
 
     this.sources = sources;
     this.issuer = issuer;
+    this.root = Options.getBasedir();
 
     const tags = this.parseTags(html);
     const result = this.normalizeTagsList(tags);
@@ -153,11 +155,13 @@ class Template {
    * Resolve alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
    * Resolve file with query: srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"
    *
+   * If `loader.root` option is not false then resolve a file with leading `/`: `/img/logo.png`
+   *
    * Ignore:
    *  - https://example.com/style.css
    *  - http://example.com/style.css
    *  - //style.css
-   *  - /style.css
+   *  - /style.css (ignore only if `loader.root` is false)
    *  - javascript:alert('hello')
    *  - data:image/png
    *  - mailto:admin@test.com
@@ -170,7 +174,12 @@ class Template {
   static resolve({ type, file, issuer }) {
     file = file.trim();
 
-    if (/^(?:\/{1,2})/.test(file) || file.startsWith('#') || (file.indexOf(':') > 0 && file.indexOf('?{') < 0)) {
+    if (
+      (this.root === false && file.startsWith('/')) ||
+      file.startsWith('//') ||
+      file.startsWith('#') ||
+      (file.indexOf(':') > 0 && file.indexOf('?{') < 0)
+    ) {
       return false;
     }
 
