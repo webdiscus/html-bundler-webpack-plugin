@@ -32,16 +32,16 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 ✅ **Profit**
 
-You specify all the source scripts and styles in **one right place** (in HTML),
-instead of defining them in **many non-logic places**:
-defining JS files in Webpack Entry, importing SCSS into a JS file.
+You specify all the source scripts and styles in **one right place**, in HTML, 
+and you no longer need to define them in Webpack entry or import styles in JS.
 
 ❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
-## 🔆 NEW in releases `1.13.0 - 1.14.0`
+## 🔆 Last changes
 
 - Add the [root](#loader-option-root) loader option to enable processing of asset files with the leading `/` root path.
-- Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style, etc.
+- Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style.
+- Add the `views` option for the `nunjucks` preprocessor.
 
 📋 See the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md) for full **release notes**.
 
@@ -1534,13 +1534,14 @@ loaderOptions: {
     root: path.join(__dirname, 'src/views/'), // defaults process.cwd()
     // defaults [], an array of paths to use when resolving includes with relative paths
     views: [
-      path.join(__dirname, 'src/views/includes'),
-      path.join(__dirname, 'src/views/partials'),
+      'src/views/includes', // relative path
+      path.join(__dirname, 'src/views/partials'), // absolute path
     ],
   },
 },
 ```
-The complete list of options see [here](https://eta.js.org/docs/api/configuration).
+
+For the complete list of options see [here](https://eta.js.org/docs/api/configuration).
 
 For example, there are template page and partials:
 ```
@@ -1577,13 +1578,14 @@ loaderOptions: {
     root: path.join(__dirname, 'src/views/'), // defaults process.cwd()
     // defaults [], an array of paths to use when resolving includes with relative paths
     views: [
-      path.join(__dirname, 'src/views/includes'),
-      path.join(__dirname, 'src/views/partials'),
+      'src/views/includes', // relative path
+      path.join(__dirname, 'src/views/partials'), // absolute path
     ],
   },
 },
 ```
-The complete list of options see [here](https://ejs.co/#docs).
+
+For the complete list of options see [here](https://ejs.co/#docs).
 
 For example, there are template page and partials:
 ```
@@ -1623,8 +1625,8 @@ loaderOptions: {
     root: path.join(__dirname, 'src/views/'), // defaults process.cwd()
     // defaults [], an array of paths to use when resolving includes with relative paths
     views: [
-      path.join(__dirname, 'src/views/includes'),
-      path.join(__dirname, 'src/views/partials'),
+      'src/views/includes', // relative path
+      path.join(__dirname, 'src/views/partials'), // absolute path
     ],
   },
 },
@@ -1762,8 +1764,33 @@ loaderOptions: {
 },
 ```
 
+For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
-The Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
+
+<a id="loader-option-preprocessorOptions-nunjucks" name="loader-option-preprocessorOptions-nunjucks" href="#loader-option-preprocessorOptions-nunjucks"></a>
+**Options for `preprocessor: 'nunjucks'`**
+
+```js
+loaderOptions: {
+  preprocessor: 'nunjucks',
+  preprocessorOptions: {
+    // here are preprocessor options
+    // an array of relative or absolute templates paths, defaults the current working directory
+    views: [
+      'src/views/includes',
+      'src/views/partials',
+    ],
+    async: false, // defaults 'false'
+    jinjaCompatibility: false, // installs support for Jinja compatibility, defaults 'false'
+    
+    // here are original Nunjucks options
+    autoescape: true, // escape dangerous characters, defaults 'true'
+    // ...
+  },
+},
+```
+
+For the complete list of Nunjucks options see [here](https://mozilla.github.io/nunjucks/api.html#configure).
 
 ---
 
@@ -1900,11 +1927,12 @@ The default preprocessor is `eta`, you can omit it:
 new HtmlBundlerPlugin({
   loaderOptions: {
     preprocessor: 'eta',
+    // preprocessorOptions: {},
   },
 })
 ```
 
-For `eta` preprocessor options see [here](#loader-option-preprocessorOptions-eta).
+For the `eta` preprocessor options see [here](#loader-option-preprocessorOptions-eta).
 
 <a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
 > **Warning**
@@ -1955,13 +1983,14 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'ejs', // enable EJS compiler
+        // preprocessorOptions: {},
       },
     }),
   ],
 };
 ```
 
-For `ejs` preprocessor options see [here](#loader-option-preprocessorOptions-ejs).
+For the `ejs` preprocessor options see [here](#loader-option-preprocessorOptions-ejs).
 
 #### [↑ back to contents](#contents)
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
@@ -2006,13 +2035,14 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'handlebars', // enable Handlebars compiler
+        // preprocessorOptions: {},
       },
     }),
   ],
 };
 ```
 
-For `handlebars` preprocessor options see [here](#loader-option-preprocessorOptions-hbs).
+For the `handlebars` preprocessor options see [here](#loader-option-preprocessorOptions-hbs).
 
 
 #### [↑ back to contents](#contents)
@@ -2056,12 +2086,14 @@ module.exports = {
         },
       },
       loaderOptions: {
+        // define preprocessor as the function that shoud return a string or promise
         preprocessor: (template, { data }) => Mustache.render(template, data),
       },
     }),
   ],
 };
 ```
+
 
 #### [↑ back to contents](#contents)
 <a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
@@ -2105,12 +2137,15 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: 'nunjucks',
+        preprocessor: 'nunjucks', // enable Nunjucks compiler
+        // preprocessorOptions: {},
       },
     }),
   ],
 };
 ```
+
+For the `nunjucks` preprocessor options see [here](#loader-option-preprocessorOptions-nunjucks).
 
 #### [↑ back to contents](#contents)
 <a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>

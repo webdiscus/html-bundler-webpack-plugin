@@ -60,6 +60,12 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'nunjucks',
+        preprocessorOptions: {
+          views: ['src/views/layouts/', 'src/views/includes/'],
+          jinjaCompatibility: true, // test the installation of jinja compatibility mode
+          // config options https://mozilla.github.io/nunjucks/api.html#configure
+          autoescape: true,
+        },
       },
     }),
   ],

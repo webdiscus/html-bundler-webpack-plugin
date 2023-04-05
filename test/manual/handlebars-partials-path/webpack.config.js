@@ -27,9 +27,9 @@ module.exports = {
         preprocessor: 'handlebars',
         preprocessorOptions: {
           partials: [
-            // paths to partials
-            path.join(__dirname, 'src/views/includes'),
-            path.join(__dirname, 'src/views/partials'),
+            // relative or absolute paths to partials
+            'src/views/includes',
+            'src/views/partials',
           ],
         },
       },

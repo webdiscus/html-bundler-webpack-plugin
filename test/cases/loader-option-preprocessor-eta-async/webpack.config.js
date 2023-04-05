@@ -25,7 +25,7 @@ module.exports = {
         preprocessorOptions: {
           async: true, // defaults is false, wenn async is true then must be used `await includeFile()`
           views: [
-            path.join(process.cwd(), 'src/views/partials'), // include a partial relative to this directory
+            path.join(process.cwd(), 'src/views/partials'), // include a partial relative to this directory, a relative or absolute path
           ],
         },
       },

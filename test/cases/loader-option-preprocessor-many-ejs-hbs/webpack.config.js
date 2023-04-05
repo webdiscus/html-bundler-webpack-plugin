@@ -42,7 +42,7 @@ module.exports = {
         options: {
           preprocessor: 'ejs', // require installed ejs package
           preprocessorOptions: {
-            views: [path.join(process.cwd(), 'src/views/partials')],
+            views: ['src/views/partials'], // a relative or absolute path
           },
           data: {
             title: 'Ejs',
@@ -55,7 +55,7 @@ module.exports = {
         options: {
           preprocessor: 'handlebars', // require installed handlebars package
           preprocessorOptions: {
-            views: [path.join(process.cwd(), 'src/views/partials')],
+            views: ['src/views/partials'], // relative or absolute path
           },
           data: {
             title: 'Handlebars',

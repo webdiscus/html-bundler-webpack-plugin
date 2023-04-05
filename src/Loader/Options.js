@@ -36,7 +36,7 @@ class Options {
     if (!options) {
       options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
 
-      // allow to configure assets root path used for resolving files specified in attributes (`sources` option)
+      // assets root path used for resolving files specified in attributes (`sources` option)
       // allow both 'root' and 'basedir' option name for compatibility
       const basedir = options.root || options.basedir || false;
       options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
@@ -171,16 +171,34 @@ class Options {
     const watchDirs = new Set([this.#autodetectWatchPath()]);
     const rootContext = this.#rootContext;
 
-    if (paths) {
-      const entries = Array.isArray(paths) ? paths : [paths];
-      for (let watchDir of entries) {
-        const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
-        if (!fs.existsSync(dir)) {
-          watchPathsException(dir, paths);
-        }
-        watchDirs.add(dir);
+    // add to watch paths defined in options of a template engine
+    let { root, views, partials } = this.#options?.preprocessorOptions || {};
+    let dirs = [];
+
+    [paths, root, views, partials].forEach((item) => {
+      if (item) {
+        if (typeof item === 'string') dirs.push(item);
+        else if (Array.isArray(item)) dirs.push(...item);
       }
+    });
+
+    for (let dir of dirs) {
+      const watchDir = path.isAbsolute(dir) ? dir : path.join(rootContext, dir);
+      if (!fs.existsSync(watchDir)) {
+        watchPathsException(watchDir, paths);
+      }
+      watchDirs.add(watchDir);
     }
+
+    // TODO: optimize watchDirs, add only unique directory and ignore subdirectories:
+    //  /project/src/views/           -- ignore subdir
+    //  /project/src/views/partials/  -- ignore subdir
+    //  /project/src/                 ++ OK (lowest unique root)
+    //  /project/src/views/includes/  -- ignore subdir
+    //  /project/templates/partials/  -- ignore subdir
+    //  /project/templates/           ++ OK (lowest unique root)
+    //  /project/templates/includes/  -- ignore subdir
+
     // set the list of unique watch directories
     watchFiles.paths = Array.from(watchDirs);
 

@@ -73,6 +73,11 @@ module.exports = {
 
       loaderOptions: {
         preprocessor: 'nunjucks',
+        preprocessorOptions: {
+          // extra test watching when several template directories are not subdirectories, but are on the same level
+          // define this directories in `devServer.watchFiles.paths` too
+          views: ['src/views/layouts/', 'templates/includes/'],
+        },
       },
     }),
   ],
@@ -160,7 +165,7 @@ module.exports = {
 
     // enable HMR
     watchFiles: {
-      paths: ['src/**/*.*'],
+      paths: ['src/**/*.*', 'templates/**/*.*'],
       options: {
         usePolling: true,
       },

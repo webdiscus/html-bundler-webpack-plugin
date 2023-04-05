@@ -12,7 +12,7 @@ module.exports = {
       loaderOptions: {
         preprocessor: 'handlebars',
         preprocessorOptions: {
-          //views: [path.join(__dirname, './src/partials/')], // test without views option
+          //views: [path.join(__dirname, 'src/partials/')], // test without views option
         },
       },
     }),

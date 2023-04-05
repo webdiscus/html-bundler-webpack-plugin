@@ -1,5 +1,18 @@
 # Change log
 
+## 1.15.0 (2023-04-05)
+- feat: add the `views` option for the `nunjucks` preprocessor
+- feat: allow to pass the configuration options for the `nunjucks` preprocessor
+- feat: automatically add to watching directories defined in the preprocessor options `root` `views` `partials`\
+  for example, several template directories are not subdirectories, but are on the same level:
+  ```js
+  preprocessorOptions: {
+    root: 'pages/',
+    views: ['templates/layouts/', 'templates/includes/'],
+    partials: ['templates/partials/'],
+  }
+  ```
+
 ## 1.14.0 (2023-04-04)
 - feat: add `root` loader option to allow use the `/` as root path to source directory for asset files:
   ```js
@@ -100,7 +113,7 @@
     },
   }),
   ```
-- fix: handeln unsupported value of the preprocessor option
+- fix: handle unsupported value of the preprocessor option
 - refactor: optimize preprocessor code
 - chore: update dev dependencies
 - docs: add description of new features

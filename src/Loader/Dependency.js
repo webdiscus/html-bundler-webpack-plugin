@@ -1,4 +1,3 @@
-const path = require('path');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const PluginService = require('../Plugin/PluginService');
 const AssetEntry = require('../Plugin/AssetEntry');
@@ -19,8 +18,6 @@ class Dependency {
   static init(loaderContext) {
     if (!PluginService.isWatchMode()) return;
 
-    const { rootContext } = loaderContext;
-
     this.loaderContext = loaderContext;
     this.fileSystem = loaderContext.fs.fileSystem;
     this.watchFiles = Options.getWatchFiles();
@@ -32,8 +29,7 @@ class Dependency {
     const { files: includes, ignore: excludes } = this.watchFiles;
 
     for (const watchDir of this.watchFiles.paths) {
-      const dir = path.isAbsolute(watchDir) ? watchDir : path.join(rootContext, watchDir);
-      const files = readDirRecursiveSync(dir, { fs, includes, excludes });
+      const files = readDirRecursiveSync(watchDir, { fs, includes, excludes });
       files.forEach(this.addFile);
     }
   }

@@ -17,8 +17,9 @@ class LoaderException extends Error {
       message += error.stack;
     }
 
-    super(message);
+    super();
     this.name = this.constructor.name;
+    this.message = message;
   }
 }
 
