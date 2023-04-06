@@ -22,13 +22,13 @@ The plugin automatically substitutes the output filenames of the processed resou
 
 💡 **Highlights**
 
-- An **entry point** is an HTML template.
+- An [entry point](#option-entry) is an HTML template.
 - Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>`.
-- Resolving source **assets** specified in standard attributes `href` `src` `srcset` etc.
-- Inline JS, CSS, SVG, PNG **without additional plugins and loaders**.
-- Using template engines [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others **without template loaders**.
+- Resolving [source](#loader-option-sources) assets specified in standard attributes `href` `src` `srcset` etc.
+- Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
+- Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - Support for both `async` and `sync` preprocessor.
-- Auto generation of `<link rel="preload">` to preload used assets.
+- Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
 
 ✅ **Profit**
 
@@ -89,11 +89,11 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       // define a relative or absolute path to template pages
-      entry: 'src/views/pages/',
+      entry: 'src/views/',
       // OR define templates manually
       entry: {
-        index: 'src/views/pages/home/index.html', // => dist/index.html
-        'news/sport': 'src/views/pages/news/sport/index.html', // => dist/news/sport.html
+        index: 'src/views/home.html', // => dist/index.html
+        'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
       },
     }),
   ],
@@ -248,29 +248,27 @@ module.exports = {
       entry: {
         // define templates here
         index: { // => dist/index.html (key is output filename w/o '.html')
-          import: 'src/views/pages/home/index.html', // template file
+          import: 'src/views/home.html', // template file
           data: { title: 'Homepage', name: 'Heisenberg' } // pass variables into template
         },
-        'news/sport': 'src/views/pages/news/sport/index.html', // => dist/news/sport.html
+        'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
       },
       js: {
-        // output filename of extracted JS from source script loaded in HTML via `<script>` tag
+        // output filename of JS extracted from source script specified in `<script>`
         filename: 'assets/js/[name].[contenthash:8].js',
       },
       css: {
-        // output filename of extracted CSS from source style loaded in HTML via `<link>` tag
+        // output filename of CSS extracted from source file specified in `<link>`
         filename: 'assets/css/[name].[contenthash:8].css',
       },
     }),
   ],
   module: {
     rules: [
-      // styles
       {
         test: /\.(css|sass|scss)$/,
         use: ['css-loader', 'sass-loader'],
       },
-      // images
       {
         test: /\.(ico|png|jp?g|svg)$/,
         type: 'asset/resource',
