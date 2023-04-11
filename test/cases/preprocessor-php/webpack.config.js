@@ -10,7 +10,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      verbose: true, // test coloring of a template file by extract resource, expected green
       test: /\.php$/i,
       filename: () => '[name].php',
       entry: {

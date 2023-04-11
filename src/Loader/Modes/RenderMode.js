@@ -1,5 +1,5 @@
 const Resolver = require('../Resolver');
-const ScriptCollection = require('../../Plugin/ScriptCollection');
+const Collection = require('../../Plugin/Collection');
 const { hmrFile, injectBeforeEndHead } = require('../Utils');
 const { errorToHtml } = require('../Messages/Exeptions');
 
@@ -67,7 +67,7 @@ class RenderMode {
   loaderRequireScript(file, issuer) {
     const resolvedFile = Resolver.resolve(file, issuer, 'script');
 
-    ScriptCollection.add(resolvedFile, issuer);
+    Collection.add(resolvedFile, issuer, 'script');
 
     return this.encodeRequire(resolvedFile);
   }
@@ -82,6 +82,8 @@ class RenderMode {
   loaderRequireStyle(file, issuer) {
     const resolvedFile = Resolver.resolve(file, issuer, 'style');
 
+    Collection.add(resolvedFile, issuer, 'style');
+
     return this.encodeRequire(resolvedFile);
   }
 
@@ -93,6 +95,7 @@ class RenderMode {
    */
   injectHmrFile(content) {
     const hmrScript = `<script src="${this.encodeRequire(hmrFile)}"></script>`;
+
     return injectBeforeEndHead(content, hmrScript);
   }
 
@@ -105,10 +108,11 @@ class RenderMode {
    * @return {string}
    */
   export(content, data, issuer) {
-    const scriptsAmount = ScriptCollection.files.size;
-    if (this.hot && (scriptsAmount === 0 || (scriptsAmount === 1 && ScriptCollection.files.has(hmrFile)))) {
+    const scriptsAmount = Collection.getScriptAmount();
+    if (this.hot && (scriptsAmount === 0 || (scriptsAmount === 1 && Collection.has(hmrFile)))) {
+      // note: it can be tested only manually, because Webpack API no provide `loaderContext.hot` for testing
       content = this.injectHmrFile(content);
-      ScriptCollection.add(hmrFile, issuer);
+      Collection.add(hmrFile, issuer, 'script');
     }
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
@@ -124,7 +128,7 @@ class RenderMode {
   exportError(error, issuer) {
     let content = errorToHtml(error);
     content = this.injectHmrFile(content);
-    ScriptCollection.add(hmrFile, issuer);
+    Collection.add(hmrFile, issuer, 'script');
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
   }

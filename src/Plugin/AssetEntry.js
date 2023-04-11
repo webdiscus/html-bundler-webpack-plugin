@@ -6,7 +6,7 @@ const { isFunction, getFileExtension } = require('../Common/Helpers');
 /**
  * @typedef {Object} AssetEntryOptions
  * @property {string} name The key of webpack entry.
- * @property {string} file The output asset file with absolute path.
+ * @property {string} file The output asset file with absolute path. TODO: check it and remove
  * @property {string} assetFile The output asset file with relative path by webpack output path.
  *   Note: the method compilation.emitAsset() use this file as key of assets object
  *   and save the file relative by output path, defined in webpack.options.output.path.
@@ -299,7 +299,7 @@ class AssetEntry {
 
   /**
    * Remove entries added not via webpack entry.
-   * Called before each compilation after changes by `webpack serv/watch`.
+   * Called before each new compilation after changes, in the serv/watch mode.
    */
   static reset() {
     for (const entryName of this.compilationEntryNames) {

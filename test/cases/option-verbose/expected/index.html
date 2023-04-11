@@ -1,20 +1,34 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <link href="css/style.fdf193c9.css" rel="stylesheet">
-    <link href="css/style.44a80a4e.css" rel="stylesheet">
-    <script src="js/main.00792cb2.js"></script>
+    <link href="css/style.507a33ff.css" rel="stylesheet">
+    <style>.header-bg{width:160px;height:130px;border:3px solid plum;background-image:url(assets/img/pear.6b9b072a.png)}.iphone{width:24px;height:24px;border:5px solid #32cd32;background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==)}.imac{width:24px;height:24px;border:5px solid #4169e1;background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24'><path d='M0 0h24v24H0z' fill='none'/><path d='M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z'/></svg>")}.plum{width:160px;height:130px;border:5px solid #4e32cd;background-image:url(assets/img/plum.d39e7174.png)}</style>
+    <link href="css/style.1a552ac3.css" rel="stylesheet">
+    <script src="js/home.4d440414.js" defer="defer"></script>
   </head>
   <body>
-    <h1>Home</h1>
-
-    <!-- test asset inline -->
-    <svg height="24" viewBox="0 0 24 24" width="24" class="inline"><path d="M0 0h24v24H0z" fill="none"/><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z"/></svg>
-    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" class="inline">
+    <h1>Hone EN</h1>
+    <h2>Teaser</h2>
+    <!-- test inlined style with background image file -->
+    <div class="header-bg"></div>
+    <!-- test inlined style with inlined background images: svg, png -->
+    <div class="imac"></div>
+    <div class="iphone"></div>
+    <div class="plum"></div>
 
     <!-- test asset resource -->
-    <img src="assets/img/image.697ef306.png" class="file">
+    <img src="assets/img/apple.02a7c382.png" alt="apple PNG file">
 
     <!-- test responsive loader -->
-    <img src="assets/img/image-160w.webp" class="file">
+    <img src="assets/img/image-160w.webp" alt="WEBP file">
+
+    <!-- test asset inline -->
+    <svg height="24" viewBox="0 0 24 24" width="24"><title>imac inline SVG</title><path d="M0 0h24v24H0z" fill="none"/><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z"/></svg>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAQAAABKfvVzAAAAUklEQVQ4y2NgoADIMexh+MnwHwX+BIrJ4dKwG00xDO7GpeEHDg0/cGkASRIrOqphVMPAa8AOCWqoZOABYoIaEBmIF8jjJZyBduOwYTfVCgGiAABs3JKsxAraGAAAAABJRU5ErkJggg==" alt="iphone inline PNG">
+    <svg height="48" viewBox="0 96 960 960" width="48"><title>home inline SVG</title><path d="M220 876h150V626h220v250h150V486L480 291 220 486v390Zm-60 60V456l320-240 320 240v480H530V686H430v250H160Zm320-353Z"/></svg>
+    <img src="assets/img/favorite.876f98e8.svg" alt="favorite file SVG">
+
+    <div class="home-bg"></div>
+    <div class="home-bg-inlined"></div>
   </body>
 </html>

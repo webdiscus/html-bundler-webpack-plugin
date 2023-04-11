@@ -1,0 +1,14 @@
+watch files:
+  - src/index.html
+  - templates/footer.html
+
+ ENTRY  index.html 
+source: src/index.html
+output: dist/
+assets:
+     style: src/style.css
+         -> assets/css/style.7036e3af.css
+  resource: src/image.png
+         -> assets/img/image.697ef306.png
+    script: src/main.js
+         -> assets/js/main.9a4bbb82.js

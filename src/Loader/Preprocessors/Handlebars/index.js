@@ -102,7 +102,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
     render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)(data),
 
     /**
-     * Called before each compilation in watch/serv mode.
+     * Called before each new compilation after changes, in the serv/watch mode.
      */
     watch: updatePartials,
   };

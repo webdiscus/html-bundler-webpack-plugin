@@ -19,6 +19,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      verbose: true,
       entry: {
         index: './src/views/pages/home/index.html',
         about: './src/views/pages/about/index.html',

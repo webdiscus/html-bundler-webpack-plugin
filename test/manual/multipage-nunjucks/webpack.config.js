@@ -25,7 +25,8 @@ module.exports = {
   plugins: [
     // enable processing of Pug files from entry
     new HtmlBundlerPlugin({
-      //verbose: isDev, // output information about the process to console
+      verbose: 'auto',
+      //minify: 'auto',
 
       entry: {
         // define HTML templates here

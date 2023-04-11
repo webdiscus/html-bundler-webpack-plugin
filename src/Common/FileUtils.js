@@ -1,6 +1,9 @@
 const path = require('path');
 const { isWin, pathToPosix } = require('./Helpers');
 
+// string containing the '/node_modules/'
+const nodeModuleDirname = path.sep + 'node_modules' + path.sep;
+
 /**
  * Load node module.
  *
@@ -120,6 +123,12 @@ const pathRelativeByPwd = (file, dir = process.cwd()) => {
   if (file.startsWith(dir)) {
     relPath = path.relative(dir, file);
     if (!path.extname(file)) relPath = path.join(relPath, path.sep);
+  }
+
+  // extract the node module path
+  const nodeModulePos = relPath.indexOf(nodeModuleDirname);
+  if (nodeModulePos > 0) {
+    relPath = relPath.slice(nodeModulePos + nodeModuleDirname.length);
   }
 
   return isWin ? pathToPosix(relPath) : relPath;

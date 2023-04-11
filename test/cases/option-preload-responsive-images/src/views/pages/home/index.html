@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Home</title>
+  <title><%= title %></title>
   <link href="@images/favicon.ico" rel="icon">
 
-  <!-- load page style -->
+  <link href="@styles/inlined.css" rel="stylesheet">
   <link href="./home.scss" rel="stylesheet">
 </head>
 <body>
-  <h1>Home</h1>
+  <h1><%= title %></h1>
   <img src="@images/apple.png" alt="apple original size">
+  <img src="@images/apple.png?q=home-html" alt="apple original size with query">
   <img src="@images/apple.png?size=100" alt="apple resize 100">
   <img src="@images/hardware.webp?format=jpg&size=300" alt="hardware resize 300">
 
   <div class="chery"></div>
+  <div class="plum"></div>
+  <div class="iphone"></div>
+  <div class="imac"></div>
 </body>
 </html>

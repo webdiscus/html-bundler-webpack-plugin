@@ -6,7 +6,7 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '', // test publicPath
+    publicPath: '', // test empty publicPath
   },
 
   resolve: {
@@ -19,7 +19,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      //verbose: true,
       entry: {
         index: './src/views/index.html',
         'about/index': './src/views/about/index.html',

@@ -5,8 +5,9 @@ h1 {
 }
 
 .chery {
-  width: 160px;
-  height: 130px;
-  border: 1px solid darkred;
-  background-image: url('@images/chery.png');
+  width: 120px;
+  height: 98px;
+  border: 2px solid darkred;
+  // test preload image with query
+  background-image: url('@images/chery.png?size=120');
 }

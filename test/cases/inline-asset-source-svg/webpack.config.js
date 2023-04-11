@@ -10,10 +10,10 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      verbose: true, // test verbose for 'asset/source'
       entry: {
         index: './src/index.html',
       },
-      verbose: true, // test verbose for 'asset/source'
     }),
   ],
 

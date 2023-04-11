@@ -126,13 +126,15 @@ class Plugin extends AssetCompiler {
    * Called after the processAssets hook had finished without error.
    * Override abstract method.
    *
+   * Reserved for future.
+   *
    * @param {Compilation} compilation The instance of the webpack compilation.
-   * @param {string} sourceFile
-   * @param {string} assetFile
-   * @param {string} source
+   * @param {string} sourceFile The resource file of the template.
+   * @param {string} assetFile The template output filename.
+   * @param {string} content The template content.
    * @return {string|undefined}
    */
-  afterProcess(compilation, { sourceFile, assetFile, source }) {
+  afterProcess(compilation, { sourceFile, assetFile, content }) {
     // at this stage all assets are completely processed with all plugins
   }
 }

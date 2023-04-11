@@ -2,8 +2,8 @@ const vm = require('vm');
 const path = require('path');
 
 const NormalModule = require('webpack/lib/NormalModule');
-const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
-const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
+// const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
+// const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
 const { pluginName } = require('../config');
 const { isFunction } = require('../Common/Helpers');
@@ -11,9 +11,7 @@ const { toCommonJS } = require('./Utils');
 
 const Options = require('./Options');
 const PluginService = require('./PluginService');
-const ScriptCollection = require('./ScriptCollection');
-const Preload = require('./Preload');
-
+const Collection = require('./Collection');
 const Resolver = require('./Resolver');
 const UrlDependency = require('./UrlDependency');
 
@@ -22,17 +20,9 @@ const AssetEntry = require('./AssetEntry');
 const AssetResource = require('./AssetResource');
 const AssetInline = require('./AssetInline');
 const AssetScript = require('./AssetScript');
-const AssetSource = require('./AssetSource');
 const AssetTrash = require('./AssetTrash');
 
-const {
-  verboseEntry,
-  verboseExtractModule,
-  verboseExtractResource,
-  verboseExtractInlineResource,
-  verboseExtractScript,
-} = require('./Messages/Info');
-
+const { verbose } = require('./Messages/Info');
 const { executeTemplateFunctionException, postprocessException } = require('./Messages/Exception');
 
 /** @typedef {import('webpack').Compiler} Compiler */
@@ -65,7 +55,7 @@ const { executeTemplateFunctionException, postprocessException } = require('./Me
 
 /**
  * @typedef {Object} ExtractJsOptions
- * @property {boolean|string} [verbose = false] Show the information at processing entry files.
+ * @property {string} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
  */
 
@@ -79,7 +69,12 @@ const { executeTemplateFunctionException, postprocessException } = require('./Me
  * @property {string} assetFile The output asset file relative by outputPath.
  */
 
-const verboseList = new Set();
+/**
+ * @typedef {Object} FileInfo
+ *
+ * @property {string} resource The resource file, including query.
+ * @property {string|undefined} filename The output filename.
+ */
 
 /** @type RawSource This objects will be assigned by plugin initialisation. */
 let RawSource, HotUpdateChunk;
@@ -106,7 +101,6 @@ class AssetCompiler {
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
     this.afterCreateModule = this.afterCreateModule.bind(this);
-    this.beforeBuildModule = this.beforeBuildModule.bind(this);
     this.renderManifest = this.renderManifest.bind(this);
     this.afterProcessAssets = this.afterProcessAssets.bind(this);
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
@@ -138,13 +132,13 @@ class AssetCompiler {
    * Abstract method should be overridden in child class.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
-   * @param {string} sourceFile The source filename of asset.
-   * @param {string} assetFile The output filename of asset.
-   * @param {string} source The source of compiled asset.
+   * @param {string} sourceFile The resource file of the template.
+   * @param {string} assetFile The template output filename.
+   * @param {string} content The template content.
    * @return {string|undefined}
    * @abstract
    */
-  afterProcess(compilation, { sourceFile, assetFile, source }) {}
+  afterProcess(compilation, { sourceFile, assetFile, content }) {}
 
   /**
    * Apply plugin.
@@ -218,14 +212,12 @@ class AssetCompiler {
 
       // after render module's sources
       // note: only here is possible to modify an asset content via async function
-      compilation.hooks.processAssets.tapAsync(
+      compilation.hooks.processAssets.tapPromise(
         { name: pluginName, stage: compilation.PROCESS_ASSETS_STAGE_REPORT },
-        (assets, callback) => {
+        (assets) => {
           const result = this.afterRenderModules(compilation);
 
-          Promise.resolve(result).then(() => {
-            callback();
-          });
+          return Promise.resolve(result);
         }
       );
 
@@ -266,10 +258,8 @@ class AssetCompiler {
       // ignore and exclude from compilation the runtime script of a css loader
       if (Options.isStyle(issuer) && resourceFile.endsWith('.js')) return false;
 
-      const scriptFile = AssetScript.resolveFile(request);
-
-      if (scriptFile) {
-        return AssetScript.addDependency({ scriptFile, context, issuer });
+      if (Collection.isScript(request)) {
+        return AssetScript.add({ resource: request, issuer, context });
       }
     }
 
@@ -313,7 +303,7 @@ class AssetCompiler {
     }
 
     if (resolveData.dependencyType === 'url') {
-      if (AssetScript.isScript(module)) return;
+      if (Collection.isModuleScript(module)) return;
 
       module.__isDependencyTypeUrl = true;
     }
@@ -333,16 +323,17 @@ class AssetCompiler {
    * @param {Object} module
    */
   beforeBuildModule(module) {
-    if (
-      module.type === 'asset/resource' &&
-      (AssetScript.isScript(module) || (module.__isDependencyTypeUrl === true && Asset.isStyle(module)))
-    ) {
-      // set correct module type for scripts and styles when used the `html` mode of a loader
-      module.type = 'javascript/auto';
-      module.binary = false;
-      module.parser = new JavascriptParser('auto');
-      module.generator = new JavascriptGenerator();
-    }
+    // reserved code for future
+    // if (
+    //   module.type === 'asset/resource' &&
+    //   (Collection.isModuleScript(module) || (module.__isDependencyTypeUrl === true && Collection.isModuleStyle(module)))
+    // ) {
+    //   // set correct module type for scripts and styles when used the `html` mode of a loader
+    //   module.type = 'javascript/auto';
+    //   module.binary = false;
+    //   module.parser = new JavascriptParser('auto');
+    //   module.generator = new JavascriptGenerator();
+    // }
   }
 
   /**
@@ -366,7 +357,6 @@ class AssetCompiler {
    */
   renderManifest(result, { chunk, chunkGraph, outputOptions, codeGenerationResults }) {
     const { compilation } = this;
-    const verbose = Options.isVerbose();
 
     if (chunk instanceof HotUpdateChunk) return;
 
@@ -381,7 +371,7 @@ class AssetCompiler {
     this.currentEntryPoint = null;
 
     AssetEntry.setFilename(entry, chunk);
-    AssetScript.setIssuerFilename(entry.request, entry.filename);
+    Collection.initEntry(entry);
 
     for (const module of chunkModules) {
       const { buildInfo, resource: sourceRequest, resourceResolveData } = module;
@@ -400,20 +390,14 @@ class AssetCompiler {
         issuerFile = entry.importFile;
       }
 
+      const issuerInfo = {
+        resource: issuer,
+        filename: '',
+      };
+
       if (module.type === 'javascript/auto') {
         // extract JS: do nothing for scripts because webpack itself compiles and extracts JS files from scripts
-        if (AssetScript.isScript(module)) {
-          if (entry.importFile === issuer) {
-            const { verbose, outputPath } = Options.getJs();
-
-            if ((verbose || entry.verbose) && issuerFile !== sourceFile) {
-              verboseList.add({
-                type: 'script',
-                sourceFile,
-                outputPath,
-              });
-            }
-          }
+        if (Collection.isModuleScript(module)) {
           continue;
         }
 
@@ -431,18 +415,11 @@ class AssetCompiler {
           // - 'index/de': './index.ext?lang=de' => dist/de/index.html
           Asset.add(sourceRequest, assetFile);
 
-          if (verbose) {
-            verboseList.add({
-              type: 'entry',
-              name: chunk.name,
-            });
-          }
-
           assetModules.add({
+            type: 'entry',
             inline: false,
             // resourceInfo
             isEntry: true,
-            verbose: entry.verbose,
             outputPath: entry.outputPath,
             filenameTemplate: entry.filenameTemplate,
             // renderContent arguments
@@ -466,6 +443,7 @@ class AssetCompiler {
           continue;
         }
 
+        // TODO: optimize, get directly extractCSS module
         // asset supported via the plugin module
         const pluginModule = Options.getModule(sourceFile);
         if (pluginModule == null) continue;
@@ -503,37 +481,30 @@ class AssetCompiler {
           assetFile = Options.resolveOutputFilename(assetFile, pluginModule.outputPath);
         }
 
-        Resolver.addAsset(sourceRequest, assetFile, entry);
+        Resolver.addAsset({ resource: sourceRequest, filename: assetFile });
 
         // extract CSS
-        const inline = Asset.isStyle(module) ? Options.isInlineCss(resourceResolveData.query) : false;
+        const inline = Collection.isInlineStyle(sourceRequest);
 
-        if (inline) {
-          AssetSource.add(sourceRequest);
-        }
+        Collection.setData(this.currentEntryPoint, null, {
+          type: Collection.type.style,
+          inline,
+          resource: sourceRequest,
+          assetFile,
+        });
 
         // skip already processed asset except inlined asset
         if (isCached && !inline) {
           continue;
         }
 
-        const moduleVerbose = pluginModule.verbose || entry.verbose;
         const moduleOutputPath = pluginModule.outputPath || entry.outputPath;
 
-        if (moduleVerbose) {
-          verboseList.add({
-            type: 'module',
-            header: pluginModule.verboseHeader,
-            sourceFile: sourceRequest,
-            outputPath: moduleOutputPath,
-          });
-        }
-
         assetModules.add({
+          type: 'style',
           inline,
           // resourceInfo
           isEntry: false,
-          verbose: moduleVerbose,
           outputPath: moduleOutputPath,
           filenameTemplate,
           // renderContent arguments
@@ -550,34 +521,13 @@ class AssetCompiler {
         });
       } else if (module.type === 'asset/resource') {
         // resource required in the template or in the CSS via url()
-        AssetResource.render(module, issuer, this.currentEntryPoint);
-
-        if (verbose) {
-          verboseList.add({
-            type: module.type,
-            sourceFile: sourceRequest,
-          });
-        }
+        AssetResource.saveData(module);
       } else if (module.type === 'asset/inline') {
-        AssetInline.render({ module, chunk, codeGenerationResults, issuerAssetFile: entry.filename });
-
-        if (verbose) {
-          verboseList.add({
-            type: module.type,
-            sourceFile: sourceRequest,
-          });
-        }
+        AssetInline.saveData(entry, module, chunk, codeGenerationResults);
       } else if (module.type === 'asset/source') {
         // support the source type for SVG only
         if (AssetInline.isSvgFile(sourceFile)) {
-          AssetInline.render({ module, chunk, codeGenerationResults, issuerAssetFile: entry.filename });
-
-          if (verbose) {
-            verboseList.add({
-              type: module.type,
-              sourceFile: sourceRequest,
-            });
-          }
+          AssetInline.saveData(entry, module, chunk, codeGenerationResults);
         }
       }
     }
@@ -597,36 +547,38 @@ class AssetCompiler {
   /**
    * Called after the processAssets hook had finished without error.
    * @note: Only at this stage the js file has the final hashed name.
+   *
+   * @param {Object} assets
    */
-  afterProcessAssets() {
+  afterProcessAssets(assets) {
     const compilation = this.compilation;
-    const { compiler, assets } = compilation;
-    const { RawSource } = compiler.webpack.sources;
+
+    if (Object.keys(assets).length < 1) {
+      // display original error when occur the resolveException
+      return;
+    }
 
     if (!Options.isExtractComments()) {
       AssetTrash.removeComments(compilation);
     }
 
-    // TODO: optimize postprocess
-    //  call followings for each entry point and previous result pass into next
-    //  to avoid needles compilation update at each post process
-    AssetScript.substituteOutputFilenames(compilation);
-    AssetInline.insertInlineSvg(compilation);
-    AssetSource.inlineSource(compilation);
-    Options.isPreload() && Preload.insertPreloadAssets(compilation);
+    /**
+     * @param {string} content
+     * @param {AssetEntryOptions} entry
+     * @return {string|null}
+     */
+    const callback = (content, entry) => {
+      content =
+        this.afterProcess(compilation, {
+          sourceFile: entry.request,
+          assetFile: entry.filename,
+          content,
+        }) || content;
 
-    for (const assetFile in assets) {
-      const sourceFile = Asset.findSourceFile(assetFile) || AssetScript.findSourceFile(assetFile);
-      const source = assets[assetFile].source();
-      let newContent = this.afterProcess(compilation, { sourceFile, assetFile, source });
-      let res = Options.afterProcess(newContent || source, { sourceFile, assetFile });
+      return Options.afterProcess(content, { sourceFile: entry.request, assetFile: entry.filename }) || content;
+    };
 
-      if (res != null) newContent = res;
-
-      if (newContent != null) {
-        compilation.updateAsset(assetFile, new RawSource(newContent));
-      }
-    }
+    Collection.render(compilation, callback);
 
     // remove all unused assets from compilation
     AssetTrash.clearCompilation(compilation);
@@ -635,38 +587,32 @@ class AssetCompiler {
   /**
    * Render the module source code generated by a loader.
    *
+   * @param {string} type The type of module, one of 'entry', 'style'.
    * @param {boolean} inline Whether the resource should be inlined.
    * @param {Object} source The Webpack source.
    * @param {string} sourceFile The full path of source file w/o URL query.
    * @param {string} sourceRequest The full path of source file with URL query.
    * @param {string} assetFile
    * @param {boolean} isEntry
-   * @param {boolean} verbose
    * @param {string} outputPath
    * @param {string|function} filenameTemplate
    * @param {ModuleProps} pluginModule
    * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
   renderModule({
+    type,
     inline,
     source,
     sourceFile,
     sourceRequest,
     assetFile,
     isEntry,
-    verbose,
     outputPath,
     filenameTemplate,
     pluginModule,
   }) {
     let code = source.source();
     let result;
-
-    // if (!code) {
-    //   // TODO: reproduce this case in test
-    //   // the source is empty when webpack config contains an error
-    //   return null;
-    // }
 
     if (Buffer.isBuffer(code)) {
       code = code.toString();
@@ -676,7 +622,12 @@ class AssetCompiler {
       code = toCommonJS(code);
     }
 
-    Resolver.setContext(sourceRequest, this.currentEntryPoint);
+    /** @type  FileInfo */
+    const issuer = {
+      resource: sourceRequest,
+      filename: assetFile,
+    };
+    Resolver.setContext(this.currentEntryPoint, issuer);
 
     const contextOptions = {
       require: Resolver.require,
@@ -703,7 +654,7 @@ class AssetCompiler {
         const resourceInfo = {
           isEntry,
           inline,
-          verbose,
+          verbose: Options.isVerbose(),
           outputPath,
           sourceFile,
           assetFile,
@@ -715,11 +666,11 @@ class AssetCompiler {
           postprocessException(error, resourceInfo);
         }
       }
-    }
 
-    if (inline) {
-      AssetSource.setSource(sourceRequest, this.currentEntryPoint.filename, result);
-      return null;
+      if (inline && type === 'style') {
+        Collection.setDataSource(this.currentEntryPoint, sourceRequest, result);
+        return null;
+      }
     }
 
     return result;
@@ -732,72 +683,14 @@ class AssetCompiler {
    * @param {Object} stats
    */
   done(stats) {
-    // display verbose after rendering of all modules
-    if (verboseList.size > 0) {
-      for (let item of verboseList) {
-        const { type, sourceFile, outputPath } = item;
-
-        switch (type) {
-          case 'entry': {
-            const entry = AssetEntry.get(item.name);
-            verboseEntry(entry);
-            break;
-          }
-          case 'module': {
-            const entity = Resolver.data.get(sourceFile);
-            verboseExtractModule({
-              entity,
-              sourceFile,
-              outputPath,
-              title: item.header,
-            });
-            break;
-          }
-          case 'script': {
-            const entity = ScriptCollection.getEntity(sourceFile);
-            verboseExtractScript({
-              entity,
-              outputPath,
-            });
-            break;
-          }
-          case 'asset/resource': {
-            const entity = Resolver.data.get(sourceFile);
-            verboseExtractResource({
-              entity,
-              sourceFile,
-              outputPath: Options.webpackOptions.output.path,
-            });
-            break;
-          }
-          case 'asset/source':
-            if (AssetInline.isSvgFile(sourceFile)) {
-              const entity = AssetInline.data.get(sourceFile);
-              verboseExtractInlineResource({
-                entity,
-                sourceFile,
-              });
-            }
-            break;
-          case 'asset/inline':
-            const entity = AssetInline.data.get(sourceFile);
-            verboseExtractInlineResource({
-              entity,
-              sourceFile,
-            });
-            break;
-          // no default
-        }
-      }
-    }
+    if (Options.isVerbose()) verbose();
+    //verbose();
 
     Asset.reset();
     AssetEntry.reset();
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
-    Preload.reset();
-    verboseList.clear();
   }
 
   /**

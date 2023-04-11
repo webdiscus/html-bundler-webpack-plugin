@@ -1,5 +1,4 @@
 const vm = require('vm');
-const Asset = require('../Asset');
 const Options = require('../Options');
 const { isWin, parseQuery } = require('../../Common/Helpers');
 
@@ -63,7 +62,7 @@ class ResponsiveLoader {
    * because a processing happen in a later stage then used result in template.
    *
    * @param {Object} module The Webpack module of asset.
-   * @param {string} issuer The issuer of the module.
+   * @param {FileInfo} issuer The issuer of the module.
    * @returns {null|string} The compiled result as string to replace required resource with this result.
    */
   getAsset(module, issuer) {
@@ -73,11 +72,10 @@ class ResponsiveLoader {
     if (loaderOptions == null) return null;
 
     const { resource: sourceFile, rawRequest, buildInfo } = module;
-    const issuerAssetFile = Asset.findAssetFile(issuer);
     const query = parseQuery(rawRequest);
-    let asset = null;
     // the query `sizes` parameter has prio over options
     let sizes = query.sizes && query.sizes.length > 0 ? query.sizes : loaderOptions.sizes || [];
+    let asset = null;
 
     // return one of image object properties: src, srcSet, width, height
     // but in reality is the `srcSet` property useful
@@ -90,7 +88,7 @@ class ResponsiveLoader {
 
       if (source) {
         const contextObject = vm.createContext({
-          __webpack_public_path__: Options.getAssetOutputPath(issuerAssetFile),
+          __webpack_public_path__: Options.getAssetOutputPath(issuer.filename),
           module: { exports: {} },
         });
         const script = new vm.Script(source, { filename: sourceFile });
@@ -108,11 +106,12 @@ class ResponsiveLoader {
     // get the real filename of the asset by usage a loader for the resource, e.g. `responsive-loader`
     // and add the original asset file to trash to remove it from compilation
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];
+
     if (assets.length === 1) {
-      asset = Options.getAssetOutputFile(assets[0], issuerAssetFile);
+      asset = Options.getAssetOutputFile(assets[0], issuer.filename);
     } else if (assets.length > 1 && sizes.length > 1) {
       asset = assets
-        .map((assetFile, index) => Options.getAssetOutputFile(assetFile, issuerAssetFile) + ` ${sizes[index]}w`)
+        .map((assetFile, index) => Options.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`)
         .join(',');
     }
 

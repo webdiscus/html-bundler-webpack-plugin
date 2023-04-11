@@ -1,10 +1,10 @@
 import fs from 'fs';
-import path from 'path';
 
 import {
   compareFileListAndContent,
   exceptionContain,
   stdoutContain,
+  watchCompareFileListAndContent,
   watchExceptionContain,
   watchStdoutContain,
   watchStdoutCompare,
@@ -17,6 +17,7 @@ import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
 import { PATHS } from './config';
+import { compile } from './utils/webpack';
 
 beforeAll(() => {
   // remove all 'dist/' directories from tests, use it only for some local tests
@@ -483,6 +484,10 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-verbose', done);
   });
 
+  test('verbose output', (done) => {
+    stdoutContain(PATHS, 'option-verbose-output', done);
+  });
+
   test('extractComments = false', (done) => {
     compareFileListAndContent(PATHS, 'option-extract-comments-false', done);
   });
@@ -497,26 +502,6 @@ describe('plugin options', () => {
 
   test('afterProcess', (done) => {
     compareFileListAndContent(PATHS, 'option-afterProcess', done);
-  });
-
-  test('minify HTML', (done) => {
-    compareFileListAndContent(PATHS, 'option-minify', done);
-  });
-
-  test('minify HTML with custom options', (done) => {
-    compareFileListAndContent(PATHS, 'option-minify-options', done);
-  });
-
-  test('minify auto prod', (done) => {
-    compareFileListAndContent(PATHS, 'option-minify-auto-prod', done);
-  });
-
-  test('minify auto dev', (done) => {
-    compareFileListAndContent(PATHS, 'option-minify-auto-dev', done);
-  });
-
-  test('minify auto options', (done) => {
-    compareFileListAndContent(PATHS, 'option-minify-auto-options', done);
   });
 
   test('entry', (done) => {
@@ -540,26 +525,45 @@ describe('plugin options', () => {
   });
 });
 
+describe('plugin minify option', () => {
+  test('minify HTML', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify', done);
+  });
+
+  test('minify HTML with custom options', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-options', done);
+  });
+
+  test('minify auto prod', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-prod', done);
+  });
+
+  test('minify auto dev', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-dev', done);
+  });
+
+  test('minify auto options', (done) => {
+    compareFileListAndContent(PATHS, 'option-minify-auto-options', done);
+  });
+
+  // minify parse error when used the "<" char in text
+  // https://github.com/terser/html-minifier-terser/issues/28
+  // test('minify HTML with "<" char', (done) => {
+  //   compareFileListAndContent(PATHS, 'option-minify-html-chars', done);
+  // });
+});
+
 describe('option watchFiles', () => {
   test('watchFiles.paths', (done) => {
-    const containString = `
-- src/index.html
-- templates/footer.html`;
-    watchStdoutContain(PATHS, 'option-watchFiles-paths', containString, done);
+    watchStdoutContain(PATHS, 'option-watchFiles-paths', done);
   });
 
   test('watchFiles.files', (done) => {
-    const containString = `
-- src/index.html
-- src/style.css`;
-    watchStdoutContain(PATHS, 'option-watchFiles-files', containString, done);
+    watchStdoutContain(PATHS, 'option-watchFiles-files', done);
   });
 
   test('watchFiles.ignore', (done) => {
-    const containString = ` html-bundler-webpack-plugin  Watch files
-- src/index.html
-- src/main.js`;
-    watchStdoutCompare('toBeStringIgnoringWhitespace', PATHS, 'option-watchFiles-ignore', containString, done);
+    watchStdoutContain(PATHS, 'option-watchFiles-ignore', done);
   });
 });
 
@@ -721,6 +725,10 @@ describe('inline styles & scripts', () => {
   test('inline script using when used runtimeChunk:single', (done) => {
     compareFileListAndContent(PATHS, 'inline-script-runtimeChunk-single', done);
   });
+
+  test('inline js and css with minify', (done) => {
+    compareFileListAndContent(PATHS, 'inline-js-css-with-minify', done);
+  });
 });
 
 describe('split chunks', () => {
@@ -778,9 +786,22 @@ describe('special cases', () => {
     compareFileListAndContent(PATHS, 'preprocessor-php', done);
   });
 
-  test('resolve preloaded script and  style', (done) => {
+  test('resolve preloaded script and style', (done) => {
     compareFileListAndContent(PATHS, 'resolve-preload-script-style', done);
   });
+
+  test('preload, no head', (done) => {
+    compareFileListAndContent(PATHS, 'preload-no-head', done);
+  });
+
+  test('preload, no head closing tag', (done) => {
+    compareFileListAndContent(PATHS, 'preload-no-head-close', done);
+  });
+
+  // for debugging
+  // test('resolve hmr file', (done) => {
+  //   watchCompareFileListAndContent(PATHS, 'resolve-hmr-file', done);
+  // });
 });
 
 describe('extras: responsive images', () => {
@@ -797,73 +818,62 @@ describe('extras: responsive images', () => {
   });
 });
 
-describe('verbose', () => {
-  test('verbose-module-inline', (done) => {
-    compareFileListAndContent(PATHS, 'verbose-module-inline', done);
-  });
-});
-
 // Test Messages
 
 describe('loader exceptions', () => {
-  test('exception sync preprocessor', (done) => {
+  test('exception sync preprocessor', () => {
     const containString = 'Preprocessor failed';
-    exceptionContain(PATHS, 'msg-exception-loader-preprocessor', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-preprocessor', containString);
   });
 
-  test('exception unsupported preprocessor value', (done) => {
+  test('exception unsupported preprocessor value', () => {
     const containString = 'Unsupported preprocessor';
-    exceptionContain(PATHS, 'msg-exception-loader-preprocessor-unsupported', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-preprocessor-unsupported', containString);
   });
 
-  test('exception async preprocessor', (done) => {
+  test('exception async preprocessor', () => {
     const containString = 'Preprocessor failed';
-    exceptionContain(PATHS, 'msg-exception-loader-preprocessor-async', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-preprocessor-async', containString);
   });
 
-  test('exception compile: missing the closing', (done) => {
+  test('exception compile: missing the closing', () => {
     const containString = `missing the closing '>' char`;
-    exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag', containString);
   });
 
-  test('exception compile: missing the closing at eof', (done) => {
+  test('exception compile: missing the closing at eof', () => {
     const containString = `missing the closing '>' char`;
-    exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag-eof', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-compile-close-tag-eof', containString);
   });
 
-  test('exception compile: resolve file', (done) => {
+  test('exception compile: resolve file', () => {
     const containString = `can't be resolved in the template`;
-    exceptionContain(PATHS, 'msg-exception-loader-resolve-file', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-resolve-file', containString);
   });
 
-  test('exception: resolve required file', (done) => {
+  test('exception: resolve required file', () => {
     const containString = `Can't resolve the file`;
-    exceptionContain(PATHS, 'msg-exception-resolve-file', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-resolve-file', containString);
   });
 
-  test('exception export', (done) => {
+  test('exception export', () => {
     const containString = 'Export of compiled template failed';
-    exceptionContain(PATHS, 'msg-exception-loader-export', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-export', containString);
   });
 
-  test('watchFiles.paths: dir not found', (done) => {
-    const containString = `The watch directory not found`;
-    watchExceptionContain(PATHS, 'msg-exception-plugin-option-watchFiles-paths', containString, done);
-  });
-
-  test('exception: loader used without the plugin', (done) => {
+  test('exception: loader used without the plugin', () => {
     const containString = 'Illegal usage of the loader';
-    exceptionContain(PATHS, 'msg-exception-loader-no-plugin', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-loader-no-plugin', containString);
   });
 
-  test('exception: handlebars include file not found', (done) => {
+  test('exception: handlebars include file not found', () => {
     const containString = 'Could not find the include file';
-    exceptionContain(PATHS, 'msg-exception-handlebars-include', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-handlebars-include', containString);
   });
 
-  test('exception: handlebars partial file not found', (done) => {
+  test('exception: handlebars partial file not found', () => {
     const containString = 'Could not find the partial';
-    exceptionContain(PATHS, 'msg-exception-handlebars-partial', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-handlebars-partial', containString);
   });
 
   test('exception preprocessor: load module', (done) => {
@@ -878,39 +888,53 @@ describe('loader exceptions', () => {
   });
 });
 
+describe('watch exceptions', () => {
+  test('watchFiles.paths: dir not found', (done) => {
+    const containString = `The watch directory not found`;
+    watchExceptionContain(PATHS, 'msg-exception-plugin-option-watchFiles-paths', containString, done);
+  });
+});
+
 describe('plugin exceptions', () => {
-  test('@import CSS is not supported', (done) => {
+  test('@import CSS is not supported', () => {
     const containString = `Disable the 'import' option in 'css-loader'`;
-    exceptionContain(PATHS, 'msg-exception-plugin-import-css-rule', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-plugin-import-css-rule', containString);
   });
 
-  test('entry directory not found', (done) => {
+  test('entry directory not found', () => {
     const containString = 'The directory is invalid or not found';
-    exceptionContain(PATHS, 'msg-exception-option-entry-dir-not-found', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-option-entry-dir-not-found', containString);
   });
 
-  test('entry is not directory', (done) => {
+  test('entry is not directory', () => {
     const containString = 'The directory is invalid or not found';
-    exceptionContain(PATHS, 'msg-exception-option-entry-not-dir', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-option-entry-not-dir', containString);
   });
 
-  test('option modules', (done) => {
+  test('option modules', () => {
     const containString = 'must be the array of';
-    exceptionContain(PATHS, 'msg-exception-plugin-option-modules', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-plugin-option-modules', containString);
   });
 
-  test('execute postprocess', (done) => {
-    const containString = 'Postprocess is failed';
-    exceptionContain(PATHS, 'msg-exception-plugin-execute-postprocess', containString, done);
+  test('execute postprocess', () => {
+    const containString = 'Postprocess failed';
+    return exceptionContain(PATHS, 'msg-exception-plugin-execute-postprocess', containString);
   });
 
-  test('multiple chunks with same filename', (done) => {
+  test('multiple chunks with same filename', () => {
     const containString = 'Multiple chunks emit assets to the same filename';
-    exceptionContain(PATHS, 'msg-exception-plugin-multiple-chunks-same-filename', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-plugin-multiple-chunks-same-filename', containString);
   });
 
-  test('fail resolving asset without loader', (done) => {
+  test('fail resolving asset without loader', () => {
     const containString = `Module parse failed: Unexpected character`;
-    exceptionContain(PATHS, 'msg-exception-plugin-resolve-asset', containString, done);
+    return exceptionContain(PATHS, 'msg-exception-plugin-resolve-asset', containString);
   });
+
+  // TODO: catch the fatal error: processTicksAndRejections (node:internal/process/task_queues:95:5)
+  // test it manual only, because Jest fail
+  // test('preload invalid option', () => {
+  //   const containString = `Missing the 'as' property in a configuration object of the plugin option preload`;
+  //   return exceptionContain(PATHS, 'msg-exception-plugin-option-preload-as', containString);
+  // });
 });

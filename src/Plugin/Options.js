@@ -79,9 +79,7 @@ class Options {
     this.rootContext = options.context;
     this.prodMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
-    extractJs.verbose = this.toBool(extractJs.verbose, false, false);
     extractJs.inline = this.toBool(extractJs.inline, false, false);
-    extractCss.verbose = this.toBool(extractCss.verbose, false, false);
     extractCss.inline = this.toBool(extractCss.inline, false, false);
 
     this.#initWebpackOutput(webpackOutput);
@@ -229,10 +227,6 @@ class Options {
     return this.toBool(this.options.minify, true, false);
   }
 
-  static isDevMode() {
-    return this.prodMode === false;
-  }
-
   static isVerbose() {
     return this.verbose;
   }
@@ -248,7 +242,7 @@ class Options {
   /**
    * Whether the resource should be inlined.
    *
-   * @param {string} resource The resource request with a query.
+   * @param {string} resource The resource file, including query.
    * @param {boolean} defaultValue When resource query doesn't have the `inline` parameter then return default value.
    * @return {boolean}
    */
@@ -262,7 +256,7 @@ class Options {
   /**
    * Whether the JS resource should be inlined.
    *
-   * @param {string} resource
+   * @param {string} resource The resource file, including query.
    * @return {boolean}
    */
   static isInlineJs(resource) {
@@ -282,13 +276,13 @@ class Options {
   /**
    * Whether the source file is a template entry file.
    *
-   * @param {string} sourceFile The source file.
+   * @param {string} resource The resource file, including query.
    * @return {boolean}
    */
-  static isEntry(sourceFile) {
-    if (sourceFile == null) return false;
+  static isEntry(resource) {
+    if (resource == null) return false;
 
-    const [file] = sourceFile.split('?', 1);
+    const [file] = resource.split('?', 1);
     return this.options.test.test(file);
   }
 

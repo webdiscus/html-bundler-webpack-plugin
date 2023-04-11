@@ -39,7 +39,29 @@ const optionEntryPathException = (dir) => {
 const optionModulesException = (modules) => {
   const message =
     `The plugin option ${green`modules`} must be the array of ${green`ModuleOptions`} but given:\n` +
-    cyanBright(JSON.stringify(modules));
+    cyanBright(JSON.stringify(modules, null, '  '));
+
+  throw new PluginException(message);
+};
+
+/**
+ * @param {Object} config
+ * @throws {Error}
+ */
+const optionPreloadAsException = (config) => {
+  const replacer = (key, value) => {
+    if (value instanceof RegExp) {
+      return value.toString();
+    }
+    return value;
+  };
+
+  const configString = JSON.stringify(config, replacer, '  ');
+
+  const message =
+    `Missing the ${green`'as'`} property in a configuration object of the plugin option ${green`preload`}:\n` +
+    configString +
+    '\n';
 
   throw new PluginException(message);
 };
@@ -81,7 +103,7 @@ const resolveException = (file, issuer) => {
  * @throws {Error}
  */
 const executeTemplateFunctionException = (error, sourceFile) => {
-  const message = `Failed to execute the template function'.\nSource file: '${cyan(sourceFile)}'`;
+  const message = `Failed to execute the template function.\nSource file: '${cyan(sourceFile)}'`;
 
   throw new PluginException(message, error);
 };
@@ -92,7 +114,7 @@ const executeTemplateFunctionException = (error, sourceFile) => {
  * @throws {Error}
  */
 const postprocessException = (error, info) => {
-  const message = `Postprocess is failed'.\nSource file: '${cyan(info.sourceFile)}'.`;
+  const message = `Postprocess failed.\nSource file: ${cyan(info.sourceFile)}.`;
 
   throw new PluginException(message, error);
 };
@@ -101,6 +123,7 @@ module.exports = {
   PluginException,
   optionEntryPathException,
   optionModulesException,
+  optionPreloadAsException,
   resolveException,
   executeTemplateFunctionException,
   postprocessException,

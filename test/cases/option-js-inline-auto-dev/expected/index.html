@@ -2,7 +2,7 @@
 <head>
   <title>Home</title>
   <!-- file JS -->
-  <script src="/html-bundler-webpack-plugin/test/cases/loader-options-js-inline-auto-dev/dist/assets/js/script-inline-false.a7f363c6.js" defer="defer"></script>
+  <script src="/html-bundler-webpack-plugin/test/cases/option-js-inline-auto-dev/dist/assets/js/script-inline-false.7f78ea00.js" defer="defer"></script>
 
   <!-- inline JS: ?inline=true -->
   <script>/******/ (() => { // webpackBootstrap
@@ -48,16 +48,16 @@ module.exports = __webpack_require__.p + "assets/img/apple.697ef306.png";
 /************************************************************************/
 /******/ 	/* webpack/runtime/publicPath */
 /******/ 	(() => {
-/******/ 		__webpack_require__.p = "/html-bundler-webpack-plugin/test/cases/loader-options-js-inline-auto-dev/dist/";
+/******/ 		__webpack_require__.p = "/html-bundler-webpack-plugin/test/cases/option-js-inline-auto-dev/dist/";
 /******/ 	})();
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
-/*!**************************************************!*\
-  !*** ./src/assets/scripts/script-inline-true.js ***!
-  \**************************************************/
+/*!**************************************************************!*\
+  !*** ./src/assets/scripts/script-inline-true.js?inline=true ***!
+  \**************************************************************/
 const image = __webpack_require__(/*! @images/apple.png */ "./src/assets/images/apple.png");
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -78,9 +78,9 @@ console.log('>> script-inline-true.js?inline=true', { image });
   <!-- inline JS: ?inline -->
   <script>/******/ (() => { // webpackBootstrap
 var __webpack_exports__ = {};
-/*!*********************************************!*\
-  !*** ./src/assets/scripts/script-inline.js ***!
-  \*********************************************/
+/*!****************************************************!*\
+  !*** ./src/assets/scripts/script-inline.js?inline ***!
+  \****************************************************/
 console.log('>> script-inline.js?inline');
 
 /******/ })()
@@ -89,9 +89,9 @@ console.log('>> script-inline.js?inline');
   <!-- inline/file JS: ?inline=auto -->
   <script>/******/ (() => { // webpackBootstrap
 var __webpack_exports__ = {};
-/*!*******************************************!*\
-  !*** ./src/assets/scripts/script-auto.js ***!
-  \*******************************************/
+/*!*******************************************************!*\
+  !*** ./src/assets/scripts/script-auto.js?inline=auto ***!
+  \*******************************************************/
 console.log('>> script-auto.js?inline=auto');
 
 /******/ })()

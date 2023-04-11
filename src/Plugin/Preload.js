@@ -1,5 +1,7 @@
+const path = require('path');
 const Options = require('./Options');
 const { detectIndent, getFileExtension } = require('../Common/Helpers');
+const { optionPreloadAsException } = require('./Messages/Exception');
 
 /**
  * Media types that differ from file extension.
@@ -48,120 +50,139 @@ const contentType = [
 /**
  * Content types whose 'type' attribute can be omitted.
  *
- * @type {Array<string>}
+ * @type {Set<string>}
  */
-const ignoreTypeBy = ['script', 'style'];
+const optionalTypeBy = new Set(['script', 'style']);
 
 class Preload {
-  static assets = new Map();
-
   /**
-   * @param {string} filename The entry output filename.
-   * @param {{sourceFile: string, assetFile: string}} asset The object with asset properties.
+   *
+   * @param {AssetEntryOptions} entry The entry where is specified the resource.
+   * @param {FileInfo|null} issuer The issuer file info.
+   * @param {string} assetFile The asset output filename.
+   * @return {string}
    */
-  static add(filename, asset) {
-    const assets = this.assets.get(filename);
-
-    if (!assets) {
-      this.assets.set(filename, [asset]);
-      return;
+  static getPreloadFile(entry, issuer, assetFile) {
+    if (issuer && issuer.resource !== entry.request) {
+      // recovery preload output file of an asset relative by entry point
+      const issuerDir = path.dirname(issuer.filename);
+      const webRootPath = path.posix.join(issuerDir, assetFile);
+      assetFile = Options.getAssetOutputFile(webRootPath, entry.filename);
     }
 
-    const exists = !!assets.find(({ assetFile }) => asset.assetFile === assetFile);
-
-    if (!exists) {
-      // add only unique asset
-      assets.push(asset);
-    }
+    return assetFile;
   }
 
   /**
    * Generates and injects preload tags in the head for all matching source files resolved in templates and styles.
    *
-   * @param {Compilation} compilation The instance of the webpack compilation.
+   * @param {string} content The template content.
+   * @param {string} entryAsset The output filename of template.
+   * @param {Map} collection The reference to `Collection.data`.
    */
-  static insertPreloadAssets(compilation) {
+  static insertPreloadAssets(content, entryAsset, collection) {
+    const data = collection.get(entryAsset);
+    if (!data) return;
+
     const options = Options.getPreload();
+    if (!options || !content) return;
 
-    if (!options) return;
+    const insertPos = this.#findInsertPos(content);
+    if (insertPos < 0) {
+      // TODO: show warning - the template must contain the <head></head> tag to inject preloading assets.
+      return;
+    }
 
-    const {
-      assets,
-      compiler: {
-        webpack: {
-          sources: { RawSource },
-        },
-      },
-    } = compilation;
+    const preloadAssets = new Map();
     const LF = Options.getLF();
+    const indent = LF + detectIndent(content, insertPos - 1);
+    const groupBy = {};
 
-    for (const [entry, asset] of this.assets) {
-      const content = assets[entry]?.source();
+    // create sorted groups in the order of the specified 'preload' options
+    options.forEach(({ as }) => (groupBy[as] = []));
 
-      // show original error
-      if (!content) return;
+    // prepare flat array with preload assets
+    for (let item of data.resources) {
+      if (item.inline) continue;
+      const assets = item?.ref?.assets ? item.ref.assets : item.assets;
+      const conf = options.find(({ test }) => test.test(item.resource));
 
-      const insertPos = this.#findInsertPos(content);
-
-      if (insertPos < 0) {
-        // TODO: show warning - the template must contain the <head></head> tag to inject preloading assets.
-        continue;
+      if (conf) {
+        if (Array.isArray(item.chunks)) {
+          // js
+          for (let { chunkFile, assetFile } of item.chunks) {
+            preloadAssets.set(assetFile, conf);
+          }
+        } else {
+          // css
+          preloadAssets.set(item.assetFile, conf);
+        }
       }
 
-      const indent = detectIndent(content, insertPos - 1);
+      // assets in css
+      if (Array.isArray(assets)) {
+        for (const assetItem of assets) {
+          if (assetItem.inline) continue;
 
-      // create sorted groups in the order of the specified 'preload' options
-      const groupBy = {};
-      options.forEach(({ as }) => (groupBy[as] = []));
+          const conf = options.find(({ test }) => test.test(assetItem.resource));
+          if (!conf) continue;
 
-      for (const { sourceFile, assetFile } of asset) {
-        const conf = options.find(({ test }) => test.test(sourceFile));
+          let preloadFile = assetItem.issuer
+            ? this.getPreloadFile(data.entry, assetItem.issuer, assetItem.assetFile)
+            : assetItem.assetFile;
 
-        if (!conf) continue;
-
-        // determine the order of the main attributes in the link tag
-        const props = { rel: 'preload', href: undefined, as: undefined, type: undefined };
-
-        if (!conf.attributes) conf.attributes = {};
-        if (conf.rel) props.rel = conf.rel;
-        if (conf.as) props.as = conf.as;
-        if (conf.type) props.type = conf.type;
-
-        const attrs = { ...props, ...conf.attributes };
-        const hasType = 'type' in conf || 'type' in conf.attributes;
-
-        // note: `as` property is a required valid value
-        if (!attrs.as || contentType.indexOf(attrs.as) < 0) {
-          // TODO: throw exception
-          continue;
+          preloadAssets.set(preloadFile, conf);
         }
+      }
+    }
 
-        if (ignoreTypeBy.indexOf(attrs.as) < 0 && !hasType) {
-          const ext = getFileExtension(assetFile);
-          attrs.type = mimeType[attrs.as]?.[ext] || attrs.as + '/' + ext;
-        }
+    // save generated preload tags for verbose
+    data.preloads = [];
 
-        attrs.href = assetFile;
+    for (const [filename, conf] of preloadAssets.entries()) {
+      // determine the order of the main attributes in the link tag
+      const props = { rel: 'preload', href: undefined, as: undefined, type: undefined };
 
-        let tag = `<link`;
-        for (const key in attrs) {
-          let val = attrs[key];
-          if (val == null) continue;
-          tag += ` ${key}="${val}"`;
-        }
-        tag += '>' + LF + indent;
+      if (!conf.attributes) conf.attributes = {};
+      if (conf.rel) props.rel = conf.rel;
+      if (conf.as) props.as = conf.as;
+      if (conf.type) props.type = conf.type;
 
-        groupBy[attrs.as].push(tag);
+      const attrs = { ...props, ...conf.attributes };
+      const hasType = 'type' in conf || 'type' in conf.attributes;
+
+      // note: `as` property is a required valid value
+      if (!attrs.as || contentType.indexOf(attrs.as) < 0) {
+        optionPreloadAsException(conf);
       }
 
-      let preloadTags = Object.values(groupBy).flat().join('');
+      attrs.href = filename;
 
-      if (preloadTags) {
-        const newContent = content.slice(0, insertPos) + preloadTags + content.slice(insertPos);
-
-        // update compilation asset content
-        assets[entry] = new RawSource(newContent);
+      if (!optionalTypeBy.has(attrs.as) && !hasType) {
+        const ext = getFileExtension(filename);
+        attrs.type = mimeType[attrs.as]?.[ext] || attrs.as + '/' + ext;
       }
+
+      let tag = `<link`;
+      for (const [key, value] of Object.entries(attrs)) {
+        if (value != null) tag += ` ${key}="${value}"`;
+      }
+      tag += '>';
+
+      data.preloads.push({
+        filename,
+        type: attrs.as || attrs.type,
+        tag,
+      });
+
+      groupBy[attrs.as].push(tag);
+    }
+
+    const tags = Object.values(groupBy).flat();
+
+    if (tags.length) {
+      const str = tags.join(indent) + indent;
+      return content.slice(0, insertPos) + str + content.slice(insertPos);
     }
   }
 
@@ -169,17 +190,17 @@ class Preload {
    * Find start position in the content to insert generated tags.
    *
    * @param {string} content
-   * @return {number|boolean} Returns the position to insert place or false if the head tag not found.
+   * @return {number} Returns the position to insert place or -1 if the head tag not found.
    */
   static #findInsertPos(content) {
     let headStartPos = content.indexOf('<head');
     if (headStartPos < 0) {
-      return false;
+      return -1;
     }
 
     let headEndPos = content.indexOf('</head>', headStartPos);
     if (headEndPos < 0) {
-      return false;
+      return -1;
     }
 
     let startPos = content.indexOf('<link', headStartPos);
@@ -191,14 +212,6 @@ class Preload {
     }
 
     return startPos;
-  }
-
-  /**
-   * Reset settings.
-   * Called before each compilation after changes by `webpack serv/watch`.
-   */
-  static reset() {
-    this.assets.clear();
   }
 }
 

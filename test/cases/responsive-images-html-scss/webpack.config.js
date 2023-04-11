@@ -19,7 +19,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      //verbose: true,
       entry: {
         'pages/home': './src/views/index.html',
       },

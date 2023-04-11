@@ -39,6 +39,7 @@ and you no longer need to define them in Webpack entry or import styles in JS.
 
 ## 🔆 Last changes
 
+- NEW compact [verbose](#option-verbose) output, all resources are grouped by their issuers.
 - Add the [root](#loader-option-root) loader option to enable processing of asset files with the leading `/` root path.
 - Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style.
 - Add the `views` option for the `nunjucks` preprocessor.
@@ -52,13 +53,14 @@ Add source scripts and styles directly to HTML:
 ```html
 <html>
 <head>
-  <!-- load source styles -->
+  <!-- specify source styles -->
   <link href="./style.scss" rel="stylesheet">
-  <!-- load source scripts here and/or in body -->
+  <!-- specify source scripts here and/or in body -->
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
+  <!-- specify source images -->
   <img src="./logo.png">
 </body>
 </html>
@@ -287,7 +289,7 @@ module.exports = {
 > Don't use Webpack's `output.filename`, hold all relevant settings in one place - in plugin options.\
 > Both places have the same effect, but `js.filename` has priority over `output.filename`.
 
-No additional template loader required. The plugin handels templates with base `EJS`-like syntax automatically.
+No additional template loader is required. The plugin handels templates with base `EJS`-like syntax automatically.
 The default templating engine is [Eta](https://eta.js.org).
 
 For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs).\
@@ -565,17 +567,15 @@ Default properties:
   filename: '[name].js', 
   outputPath: null,
   inline: false,
-  verbose: false,
 }
 ```
 
 - `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).
-- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `outputPath` - an output path of extracted JS. Details see by [outputPath option](#option-outputPath).
 - `inline` - globally inline all extracted JS into HTML, available values:
   - `false` - extract processed JS in an output file, defaults
   - `true` - inline processed JS into HTML
   - `'auto'` - in `development` mode - inline JS, in `production` mode - extract in a file
-- `verbose` - enable/disable display process information for scripts
 
 The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
 
@@ -604,10 +604,6 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
-> **Note**
->
-> To display all extracted JS files, enable the [`verbose`](#option-verbose) option.
-
 
 #### [↑ back to contents](#contents)
 <a id="option-css" name="option-css" href="#option-css"></a>
@@ -619,7 +615,7 @@ Default properties:
   test: /\.(css|scss|sass|less|styl)$/,
   filename: '[name].css',
   outputPath: null,
-  verbose: false,
+  inline: false,
 }
 ```
 
@@ -630,7 +626,6 @@ Default properties:
   - `false` - extract processed CSS in an output file, defaults
   - `true` - inline processed CSS into HTML via `style` tag
   - `'auto'` - in `development` mode - inline CSS, in `production` mode - extract in a file
-- `verbose` - enable/disable display process information for styles
 
 This is the option to extract CSS from a style source file specified in the HTML tag:
 ```html
@@ -667,9 +662,6 @@ If you want to have a different output filename, you can use the `filename` opti
 > Don't use `mini-css-extract-plugin` or `style-loader`, they are not required more.\
 > The `html-bundler-webpack-plugin` extracts CSS much faster than other plugins and resolves all asset URLs in CSS, therefore the `resolve-url-loader` is redundant too.
 
-> **Note**
->
-> To display all extracted CSS files, enable the [`verbose`](#option-verbose) option.
 
 #### [↑ back to contents](#contents)
 <a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
@@ -706,7 +698,7 @@ The `postprocess` have the following arguments:
 
 The `ResourceInfo` have the following properties:
 
-- `verbose: boolean` - whether information should be displayed
+- `verbose: boolean` - the value defined in the [`verbose`](#option-verbose) option
 - `isEntry: boolean` - if is `true`, the resource is the entry point, otherwise is a resource loaded in the entry point
 - `filename: string|function` - a filename of the resource, see [filename](https://webpack.js.org/configuration/output/#outputfilename)
 - `sourceFile: string` - a full path of the source file
@@ -989,7 +981,8 @@ But if you want to extract files like `*.LICENSE.txt`, set this option to `true`
 ### `verbose`
 Type: `string|boolean` Default: `false`
 
-The verbose option allow to display detailed processing information in console.
+The verbose option allows to display in console the processing information about extracted resources.
+All resources are grouped by their issuers.
 
 Possible values:
 - `false` - do not display information

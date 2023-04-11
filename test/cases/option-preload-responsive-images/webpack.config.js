@@ -18,9 +18,19 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      //verbose: true,
+
       entry: {
-        index: './src/views/pages/home/index.html?qq=1',
-        'news/sport': './src/views/pages/news/sport/index.html?qq=2',
+        // test same template with diff output filenames
+        index: {
+          import: './src/views/pages/home/index.html',
+          data: { title: 'EN Home' },
+        },
+        'lang/de/index': {
+          import: './src/views/pages/home/index.html',
+          data: { title: 'DE Home' },
+        },
+        'news/sport': './src/views/pages/news/sport/index.html?q=3',
       },
 
       js: {
@@ -32,10 +42,6 @@ module.exports = {
       },
 
       preload: [
-        {
-          test: /\.(png|jpe?g|webp)$/,
-          as: 'image',
-        },
         // preload responsive images
         {
           test: /\.(png|jpe?g|webp)\?.*size=100/,
@@ -46,6 +52,11 @@ module.exports = {
           test: /\.(png|jpe?g|webp)\?.*size=300/,
           as: 'image',
           attributes: { media: '(max-width: 300px)' },
+        },
+        {
+          // note: allow match images with a query, like image.png?size=50, but not image.png?sizes[]=50,sizes[]=100
+          test: /\.(png|jpe?g|webp)(?!\?sizes)/,
+          as: 'image',
         },
       ],
     }),
@@ -69,7 +80,8 @@ module.exports = {
 
       // responsive images
       {
-        test: /\.(png|jpe?g|webp)/i,
+        test: /\.(png|jpe?g|webp)/i, // note: allow match images with a query, like image.png?size=50
+        //exclude: /.+(type=asset)/,
         type: 'asset/resource',
         use: {
           loader: 'responsive-loader',

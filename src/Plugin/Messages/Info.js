@@ -1,196 +1,128 @@
-const { pluginName } = require('../../config');
+const path = require('path');
+const { green, cyan, cyanBright, magenta, black, ansi256, bgAnsi256, yellowBright, ansi } = require('ansis/colors');
+const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { pathRelativeByPwd } = require('../../Common/FileUtils');
-const { green, greenBright, cyan, cyanBright, magenta, yellowBright, black, ansi, yellow } = require('ansis/colors');
-const Asset = require('../Asset');
-const AssetEntry = require('../AssetEntry');
+const { pluginName } = require('../../config');
 
-const grayBright = ansi(245);
-const header = black.bgGreen` ${pluginName} `;
+const Dependency = require('../../Loader/Dependency');
+const PluginService = require('../PluginService');
 
-// max width of labels in first column
-const padWidth = 12;
-
-const pathRelativeByPwdArr = (files) => {
-  for (let key in files) {
-    files[key] = pathRelativeByPwd(files[key]);
-  }
-
-  return files;
-};
+const gray = ansi256(244);
 
 /**
- * @param {string} name
- * @param {string} importFile
- * @param {string} outputPath
- * @param {string} filename
- * @param {string|function} filenameTemplate
+ * Display all processed resources in entry points.
  */
-const verboseEntry = ({ name, importFile, outputPath, filename, filenameTemplate }) => {
-  let str = `${header} Compile the entry ${green(name)}\n`;
-  const entryFile = AssetEntry.isEntrypoint(importFile) ? `template` : `source`;
+const verbose = () => {
+  let str = '\n' + black.bgGreen` ${pluginName} ` + bgAnsi256(193).black` Extract resources in entries ` + '\n';
+  const padLevel1 = 11;
+  const padLevel2 = padLevel1 + 10;
+  const padChunks = padLevel1 + 4;
 
-  importFile = pathRelativeByPwd(importFile);
-  outputPath = pathRelativeByPwd(outputPath);
+  const colorType = (item, pad) => {
+    let { type, inline } = item;
 
-  str += `${entryFile}: `.padStart(padWidth) + `${cyan(importFile)}\n`;
-  str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}\n`;
-  str +=
-    'filename: '.padStart(padWidth) +
-    `${isFunction(filenameTemplate) ? greenBright`[Function: filename]` : magenta(filenameTemplate.toString())}\n`;
-
-  str += 'asset: '.padStart(padWidth) + `${cyanBright(filename)}\n`;
-
-  outToConsole(str);
-};
-
-/**
- * @param {Object} entity
- * @param {string} sourceFile
- * @param {string} outputPath
- * @param {string} title
- */
-const verboseExtractModule = ({ entity, sourceFile, outputPath, title }) => {
-  if (!title) title = 'Extract Module';
-
-  let { assets } = entity;
-  let str = `${header}${black.bgWhite` ${title} `}\n`;
-
-  sourceFile = pathRelativeByPwd(sourceFile);
-  outputPath = pathRelativeByPwd(outputPath);
-
-  str += 'source: '.padStart(padWidth) + `${cyan(sourceFile)}` + '\n';
-  str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}` + '\n';
-
-  assets.forEach((assetFile, htmlFile) => {
-    str += `-> `.padStart(padWidth) + `${green(htmlFile)}` + '\n';
-    str += `- `.padStart(padWidth + 2) + `${yellow(assetFile)}` + '\n';
-  });
-
-  outToConsole(str);
-};
-
-/**
- * @param {Object} entity
- * @param {string} outputPath
- */
-const verboseExtractScript = ({ entity, outputPath }) => {
-  const title = 'Extract JS';
-  let { file, inline, issuers } = entity;
-  let str = `${header}${black.bgWhite` ${title} `}\n`;
-
-  file = pathRelativeByPwd(file);
-  outputPath = pathRelativeByPwd(outputPath);
-
-  if (inline) {
-    str += `inline: `.padStart(padWidth) + `${greenBright`yes`}` + '\n';
-  }
-
-  str += 'source: '.padStart(padWidth) + `${cyan(file)}` + '\n';
-  if (!inline) {
-    str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}` + '\n';
-  }
-
-  for (let { request, assets } of issuers) {
-    request = pathRelativeByPwd(request);
-    str += `template: `.padStart(padWidth) + `${magenta(request)}` + '\n';
-
-    assets.forEach((assetFiles, htmlFile) => {
-      str += `-> `.padStart(padWidth) + `${green(htmlFile)}` + '\n';
-      assetFiles.forEach((jsFile) => {
-        str += `- `.padStart(padWidth + 2) + `${yellow(jsFile)}` + '\n';
-      });
-    });
-  }
-
-  outToConsole(str);
-};
-
-/**
- * @param {Object} entity
- * @param {string} sourceFile
- * @param {string} outputPath
- */
-const verboseExtractResource = ({ entity, sourceFile, outputPath }) => {
-  const title = 'Extract Resource';
-  let { assets } = entity;
-  let str = `${header}${black.bgWhite` ${title} `}\n`;
-
-  sourceFile = pathRelativeByPwd(sourceFile);
-  assets = pathRelativeByPwdArr(assets);
-  outputPath = pathRelativeByPwd(outputPath);
-
-  str += 'source: '.padStart(padWidth) + `${cyan(sourceFile)}\n`;
-  str += 'output dir: '.padStart(padWidth) + `${cyanBright(outputPath)}` + '\n';
-
-  for (let [issuer, asset] of assets) {
-    let issuerAsset = Asset.findAssetFile(issuer);
-    let value = asset && asset.startsWith('data:') ? asset.slice(0, asset.indexOf(',')) + ',...' : asset;
-
-    if (issuerAsset) {
-      issuer = issuerAsset;
+    if (inline) {
+      type = `inline`;
     }
 
-    const issuerColor = AssetEntry.isEntrypoint(issuer) ? green : yellow;
+    const color = inline ? yellowBright : ansi256(112);
 
-    str += '-> '.padStart(padWidth) + `${issuerColor(issuer)}\n`;
-    str += '- '.padStart(padWidth + 2) + `${grayBright(value)}\n`;
+    return color(`${type}:`.padStart(pad));
+  };
+
+  // display loader watch dependencies
+  if (PluginService.isWatchMode()) {
+    const watchFiles = Dependency.files;
+
+    if (watchFiles && watchFiles.size > 0) {
+      str += '\n';
+      str += ansi256(134)`watch files:` + `\n`;
+
+      for (let file of watchFiles) {
+        file = pathRelativeByPwd(file);
+        str += `${'-'.padStart(3)} ${ansi256(147)(file)}` + '\n';
+      }
+    }
   }
 
-  outToConsole(str);
-};
+  // display resources
+  for (let [entryAsset, { entry, resources, preloads }] of Collection.data) {
+    const entrySource = pathRelativeByPwd(entry.request);
+    const outputPath = pathRelativeByPwd(entry.outputPath);
 
-/**
- * @param {Object} entity
- * @param {string} sourceFile
- */
-const verboseExtractInlineResource = ({ entity, sourceFile }) => {
-  const title = 'Extract Inline Resource';
-  let str = `${header}${black.bgWhite` ${title} `}\n`;
+    str += '\n';
+    str += bgAnsi256(27).whiteBright` ENTRY ` + ansi256(195).inverse` ${entryAsset} ` + '\n';
+    //str += `${magenta`output:`} ${cyanBright(entry.outputPath)}\n`; // for debugging only
+    str += `${magenta`source:`} ${cyanBright(entrySource)}\n`;
+    str += `${magenta`output:`} ${cyanBright(outputPath)}\n`;
 
-  sourceFile = pathRelativeByPwd(sourceFile);
-
-  str += 'source: '.padStart(padWidth) + `${cyan(sourceFile)}\n`;
-
-  if (entity.dataUrl) {
-    const issuers = pathRelativeByPwdArr(Array.from(entity.dataUrl.issuers));
-
-    str +=
-      'data URL: '.padStart(padWidth) +
-      grayBright(entity.cache.dataUrl.slice(0, entity.cache.dataUrl.indexOf(',')) + ',...') +
-      '\n';
-
-    str +=
-      'in: '.padStart(padWidth) +
-      '\n' +
-      magenta('- '.padStart(padWidth) + issuers.join('\n' + '- '.padStart(padWidth))) +
-      '\n';
-  }
-
-  if (entity.inlineSvg) {
-    const issuers = pathRelativeByPwdArr(Array.from(entity.inlineSvg.issuers));
-    const attrs = entity.cache.svgAttrs;
-    let attrsString = '';
-
-    for (let key in attrs) {
-      attrsString += ' ' + key + '="' + attrs[key] + '"';
+    // preload
+    if (preloads?.length > 0) {
+      str += ansi256(202)(`preloads:`) + `\n`;
+      for (const item of preloads) {
+        str += ansi256(209)(`${item.type}:`.padStart(padLevel1)) + ` ${yellowBright(item.tag)}\n`;
+      }
     }
 
-    str += 'inline SVG: '.padStart(padWidth) + yellowBright('<svg' + attrsString + '>...</svg>') + '\n';
-    str +=
-      'in: '.padStart(padWidth) +
-      '\n' +
-      magenta('- '.padStart(padWidth) + issuers.join('\n' + '- '.padStart(padWidth))) +
-      '\n';
+    // assets
+    if (resources.length > 0) {
+      str += green(`assets:`) + `\n`;
+    }
+    for (const item of resources) {
+      let sourceFile = pathRelativeByPwd(item.resource);
+
+      str += colorType(item, padLevel1) + ` ${cyan(sourceFile)}\n`;
+
+      if (!item.inline && item.assetFile) {
+        str += `${'->'.padStart(padLevel1)} ${item.assetFile}\n`;
+      }
+
+      // style can contain resource such as images, fonts
+      const assets = item?.ref?.assets ? item.ref.assets : item.assets;
+      if (Array.isArray(assets)) {
+        assets.forEach((assetResource) => {
+          let sourceFile = pathRelativeByPwd(assetResource.resource);
+
+          str += colorType(assetResource, padLevel2) + ` ${cyan(sourceFile)}\n`;
+
+          if (assetResource.inline) {
+            return;
+          }
+
+          if (assetResource.assetFile) {
+            str += `${'->'.padStart(padLevel2)} ${assetResource.assetFile}\n`;
+          }
+        });
+      }
+
+      // js
+      if (Array.isArray(item.chunks)) {
+        if (item.chunks.length === 1) {
+          if (!item.inline) {
+            str += `${'->'.padStart(padLevel1)} ${item.chunks[0].assetFile}\n`;
+          }
+        } else {
+          if (item.inline) {
+            str += `${''.padStart(padLevel1)} ${ansi256(226)`inline chunks:`}` + '\n';
+          } else {
+            str += `${'->'.padStart(padLevel1)} ${ansi256(120)`chunks:`}` + '\n';
+          }
+          for (let { chunkFile, assetFile } of item.chunks) {
+            if (item.inline) {
+              str += `${'-'.padStart(padChunks)} ${gray(path.basename(chunkFile))}\n`;
+            } else {
+              str += `${'-'.padStart(padChunks)} ${assetFile}\n`;
+            }
+          }
+        }
+      }
+    }
   }
 
   outToConsole(str);
 };
 
 module.exports = {
-  verboseEntry,
-  verboseExtractModule,
-  verboseExtractScript,
-  verboseExtractResource,
-  verboseExtractInlineResource,
+  verbose,
 };

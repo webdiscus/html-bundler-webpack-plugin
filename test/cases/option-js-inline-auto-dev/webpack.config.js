@@ -10,7 +10,7 @@ module.exports = {
     // when an image is required/imported in JS then the publicPath must be defined,
     // otherwise in JS is generated the error: Automatic publicPath is not supported in this browser
     //publicPath: '/',
-    publicPath: '/html-bundler-webpack-plugin/test/cases/loader-options-js-inline-auto-dev/dist/',
+    publicPath: '/html-bundler-webpack-plugin/test/cases/option-js-inline-auto-dev/dist/',
   },
 
   resolve: {

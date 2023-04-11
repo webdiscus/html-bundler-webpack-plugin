@@ -49,15 +49,17 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
     const compiler = webpack(config);
 
     compiler.run((error, stats) => {
-      if (error) {
-        reject('[webpack compiler] ' + error.stack);
-        return;
-      }
+      compiler.close((closeErr) => {
+        if (error) {
+          reject('[webpack compiler]\n' + error.stack);
+          return;
+        }
 
-      if (stats.hasErrors()) {
-        reject('[webpack compiler stats] ' + stats.toString());
-        return;
-      }
+        if (stats.hasErrors()) {
+          reject('[webpack compiler stats]\n' + stats.toString());
+          return;
+        }
+      });
 
       resolve(stats);
     });
@@ -69,7 +71,7 @@ export const watch = (
   webpackOpts,
   onWatch = (watching) => {
     watching.close((err) => {
-      console.log('Watching Ended.', err);
+      //console.log('Watching Ended.', { Error: err });
     });
   }
 ) =>
@@ -84,7 +86,6 @@ export const watch = (
     }
 
     const compiler = webpack(config);
-
     const watching = compiler.watch({ aggregateTimeout: 100, poll: undefined }, (error, stats) => {
       if (error) {
         reject('[webpack watch] ' + error);

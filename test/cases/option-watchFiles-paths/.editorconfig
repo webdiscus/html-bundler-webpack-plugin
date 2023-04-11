@@ -1,0 +1,6 @@
+# disable reformat files in expected directory
+[expected/**/*.*]
+end_of_line = unset
+trim_trailing_whitespace = false
+indent_style = unset
+indent_size = unset

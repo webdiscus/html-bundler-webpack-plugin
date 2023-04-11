@@ -16,7 +16,6 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      verbose: true, // test verbose
       entry: {
         index: './src/views/index.html',
       },

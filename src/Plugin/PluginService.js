@@ -46,7 +46,7 @@ class PluginService {
   }
 
   /**
-   * Called before each compilation in watch/serv mode.
+   * Called before each new compilation, in the serv/watch mode.
    */
   static watchRun() {
     for (const [id, options] of this.#loaderCache) {

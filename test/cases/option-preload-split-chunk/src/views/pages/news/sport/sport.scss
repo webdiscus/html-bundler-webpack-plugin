@@ -3,15 +3,7 @@ $color: orange;
 @font-face {
   font-family: 'OpenSans';
   src:
-    url('@fonts/open-sans-regular.woff2') format('woff2');
-  font-style: normal;
-}
-
-
-@font-face {
-  font-family: 'MaterialIcons';
-  src:
-    url('@fonts/MaterialIcons/MaterialIcons-Regular.woff2') format('woff2');
+    url('@fonts/font-01.woff2') format('woff2');
   font-style: normal;
 }
 
@@ -20,14 +12,10 @@ h1 {
   font-family: 'OpenSans', sans-serif;
 }
 
-.mi {
-  font-family: 'MaterialIcons';
-  font-size: 64px;
-}
-
 .lemon {
   width: 160px;
   height: 130px;
-  border: 1px solid $color;
+  border: 5px solid $color;
   background-image: url('@images/lemon.png');
+  color: $color;
 }

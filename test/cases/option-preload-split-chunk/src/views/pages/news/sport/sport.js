@@ -1,1 +1,1 @@
-console.log('>> about');
+console.log('>> news/sport');

@@ -22,7 +22,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      verbose: true,
+      //verbose: true,
       // test: same script and style file used in many pages generated from same template file
       entry: {
         home: {

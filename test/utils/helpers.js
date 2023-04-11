@@ -44,15 +44,36 @@ export const compareFileListAndContent = (PATHS, relTestCasePath, done) => {
   });
 };
 
-export const exceptionContain = function (PATHS, relTestCasePath, containString, done) {
-  compile(PATHS, relTestCasePath, {})
-    .then(() => {
-      throw new Error('the test should throw an error');
-    })
-    .catch((error) => {
-      expect(error.toString()).toContain(containString);
-      done();
+export const watchCompareFileListAndContent = (PATHS, relTestCasePath, done) => {
+  const absTestPath = path.join(PATHS.testSource, relTestCasePath),
+    webRootPath = path.join(absTestPath, PATHS.webRoot),
+    expectedPath = path.join(absTestPath, PATHS.expected);
+
+  watch(PATHS, relTestCasePath, { devServer: { hot: true } }).then(() => {
+    const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
+    expect(receivedFiles).toEqual(expectedFiles);
+
+    expectedFiles.forEach((file) => {
+      const { received, expected } = getCompareFileContents(
+        path.join(webRootPath, file),
+        path.join(expectedPath, file)
+      );
+      expect(received).toEqual(expected);
     });
+    done();
+  });
+};
+
+export const exceptionContain = (PATHS, relTestCasePath, containString, done) => {
+  return expect(
+    compile(PATHS, relTestCasePath, {})
+      .then(() => {
+        return Promise.reject('the test should throw an error');
+      })
+      .catch((error) => {
+        return Promise.reject(error.toString());
+      })
+  ).rejects.toContain(containString);
 };
 
 export const watchExceptionContain = function (PATHS, relTestCasePath, containString, done) {
@@ -68,12 +89,14 @@ export const watchExceptionContain = function (PATHS, relTestCasePath, containSt
     });
 };
 
-export const stdoutContain = function (PATHS, relTestCasePath, containString, done) {
+export const stdoutContain = function (PATHS, relTestCasePath, done) {
+  const containString = readTextFileSync(path.join(PATHS.testSource, relTestCasePath, 'expected/output.txt'));
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   compile(PATHS, relTestCasePath, {}).then(() => {
     const { calls } = stdout.mock;
-    const output = calls.length > 0 ? calls[0][0] : '';
+    let output = calls.length > 0 ? calls[0][0] : '';
+    output = ansis.strip(output);
 
     stdout.mockClear();
     stdout.mockRestore();
@@ -107,6 +130,7 @@ export const watchStdoutCompare = function (methodName, PATHS, relTestCasePath, 
   });
 };
 
-export const watchStdoutContain = function (PATHS, relTestCasePath, containString, done) {
+export const watchStdoutContain = function (PATHS, relTestCasePath, done) {
+  const containString = readTextFileSync(path.join(PATHS.testSource, relTestCasePath, 'expected/output.txt'));
   watchStdoutCompare('toContain', PATHS, relTestCasePath, containString, done);
 };

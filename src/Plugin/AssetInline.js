@@ -65,11 +65,70 @@ const parseValues = (content, value) => {
   return result;
 };
 
+/**
+ * @param {string} svg The SVG content.
+ * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, innerSVG: string}}
+ */
+const parseSvg = (svg) => {
+  const svgOpenTag = '<svg';
+  const svgCloseTag = '</svg>';
+  const svgOpenTagStartPos = svg.indexOf(svgOpenTag);
+  const svgCloseTagPos = svg.indexOf(svgCloseTag, svgOpenTagStartPos);
+
+  if (svgOpenTagStartPos > 0) {
+    // extract SVG content only, ignore xml tag and comments before SVG tag
+    svg = svg.slice(svgOpenTagStartPos, svgCloseTagPos + svgCloseTag.length);
+  }
+
+  // parse SVG attributes and extract inner content of SVG
+  const svgAttrsStartPos = svgOpenTag.length;
+  const svgAttrsEndPos = svg.indexOf('>', svgAttrsStartPos);
+  const svgAttrsString = svg.slice(svgAttrsStartPos, svgAttrsEndPos);
+  const svgAttrs = parseAttributes(svgAttrsString, ['id', 'version', 'xml', 'xmlns']);
+  const innerSVG = svg.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
+
+  // encode reserved chars in data URL for IE 9-11 (enable if needed)
+  // const reservedChars = /["#%{}<>]/g;
+  // const charReplacements = {
+  //   '"': "'",
+  //   '#': '%23',
+  //   '%': '%25',
+  //   '{': '%7B',
+  //   '}': '%7D',
+  //   '<': '%3C',
+  //   '>': '%3E',
+  // };
+
+  // encode reserved chars in data URL for modern browsers
+  const reservedChars = /["#]/g;
+  const charReplacements = {
+    '"': "'",
+    '#': '%23',
+  };
+  const replacer = (char) => charReplacements[char];
+  // note: don't have to encode as base64, pure svg is smaller
+  const dataUrl = 'data:image/svg+xml,' + svg.replace(/\s+/g, ' ').replace(reservedChars, replacer);
+
+  return {
+    svgAttrs,
+    innerSVG,
+    dataUrl,
+  };
+};
+
 const comparePos = (a, b) => a.valueStartPos - b.valueStartPos;
 
 class AssetInline {
   static data = new Map();
-  static inlineSvgIssueAssets = new Set();
+
+  /**
+   * @param {string} request
+   * @return {boolean}
+   */
+  static isSvgFile(request) {
+    const [file] = request.split('?', 1);
+    return file.endsWith('.svg');
+  }
 
   /**
    * Whether the request is data-URL.
@@ -88,16 +147,7 @@ class AssetInline {
    */
   static isInlineSvg(sourceFile, issuer) {
     const item = this.data.get(sourceFile);
-    return item != null && item.cache != null && item.inlineSvg && item.inlineSvg.issuers.has(issuer);
-  }
-
-  /**
-   * @param {string} request
-   * @return {boolean}
-   */
-  static isSvgFile(request) {
-    const [file] = request.split('?', 1);
-    return file.endsWith('.svg');
+    return item != null && item.source != null && item.inlineSvg?.issuerResources.has(issuer);
   }
 
   /**
@@ -108,31 +158,35 @@ class AssetInline {
   static getDataUrl(sourceFile, issuer) {
     const item = this.data.get(sourceFile);
 
-    return item != null && item.cache != null && item.dataUrl.issuers.has(issuer) ? item.cache.dataUrl : null;
+    return item != null && item.source != null && item.dataUrl.issuers.has(issuer) ? item.source.dataUrl : null;
   }
 
   /**
-   * @param {string} sourceFile The source filename of asset.
-   * @param {string} issuer The output filename of the issuer.
+   * @param {string} resource The resource files of an asset.
+   * @param {string} issuer The source file of the issuer.
    * @param {boolean} isEntry Whether the issuer is an entry file.
    */
-  static add(sourceFile, issuer, isEntry) {
-    if (!this.data.has(sourceFile)) {
-      this.data.set(sourceFile, {
-        cache: null,
-      });
-    }
-    const item = this.data.get(sourceFile);
+  static add(resource, issuer, isEntry) {
+    let item = this.data.get(resource);
 
-    if (isEntry && this.isSvgFile(sourceFile)) {
-      // SVG can only be inlined in HTML, in CSS it's a data URL
+    if (!item) {
+      item = {
+        source: null,
+      };
+      this.data.set(resource, item);
+    }
+
+    item.isSvg = this.isSvgFile(resource);
+
+    if (isEntry && item.isSvg) {
+      // SVG can only be inlined in HTML, but in CSS it's a data URL
       if (!item.inlineSvg) {
         item.inlineSvg = {
-          issuers: new Set(),
-          assets: new Set(),
+          issuerResources: new Set(),
+          issuerFilenames: new Set(),
         };
       }
-      item.inlineSvg.issuers.add(issuer);
+      item.inlineSvg.issuerResources.add(issuer);
     } else {
       if (!item.dataUrl) {
         item.dataUrl = {
@@ -144,144 +198,82 @@ class AssetInline {
   }
 
   /**
-   * @param {Chunk} chunk The Webpack chunk.
+   * @param {AssetEntryOptions} entry The entry where is specified the resource.
    * @param {Module} module The Webpack module.
+   * @param {Chunk} chunk The Webpack chunk.
    * @param {CodeGenerationResults|Object} codeGenerationResults Code generation results of resource modules.
-   * @param {string} issuerAssetFile The output filename of issuer.
    */
-  static render({ module, chunk, codeGenerationResults, issuerAssetFile }) {
+  static saveData(entry, module, chunk, codeGenerationResults) {
     const sourceFile = module.resource;
     const item = this.data.get(sourceFile);
 
     if (!item) return;
 
-    if (this.isSvgFile(sourceFile)) {
+    if (item.isSvg) {
       // extract SVG content from processed source via a loader like svgo-loader
       const svg = module.originalSource().source().toString();
 
-      // svg is inline in html only, in css is as data URL
       if (item.inlineSvg) {
-        item.inlineSvg.assets.add(issuerAssetFile);
-        this.inlineSvgIssueAssets.add(issuerAssetFile);
+        item.inlineSvg.issuerFilenames.add(entry.filename);
       }
 
-      if (item.cache == null) {
-        item.cache = this.parseSvg(svg);
+      if (item.source == null) {
+        item.source = parseSvg(svg);
       }
-    } else if (item.cache == null) {
+    } else if (item.source == null) {
       // data URL for binary resource
       const dataUrl = codeGenerationResults.getData(module, chunk.runtime, 'url').toString();
-      item.cache = { dataUrl };
+      item.source = { dataUrl };
     }
-  }
-
-  /**
-   * @param {string} svg The SVG content.
-   * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, innerSVG: string}}
-   */
-  static parseSvg(svg) {
-    const svgOpenTag = '<svg';
-    const svgCloseTag = '</svg>';
-    const svgOpenTagStartPos = svg.indexOf(svgOpenTag);
-    const svgCloseTagPos = svg.indexOf(svgCloseTag, svgOpenTagStartPos);
-
-    if (svgOpenTagStartPos > 0) {
-      // extract SVG content only, ignore xml tag and comments before SVG tag
-      svg = svg.slice(svgOpenTagStartPos, svgCloseTagPos + svgCloseTag.length);
-    }
-
-    // parse SVG attributes and extract inner content of SVG
-    const svgAttrsStartPos = svgOpenTag.length;
-    const svgAttrsEndPos = svg.indexOf('>', svgAttrsStartPos);
-    const svgAttrsString = svg.slice(svgAttrsStartPos, svgAttrsEndPos);
-    const svgAttrs = parseAttributes(svgAttrsString, ['id', 'version', 'xml', 'xmlns']);
-    const innerSVG = svg.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
-
-    // encode reserved chars in data URL for IE 9-11 (enable if needed)
-    // const reservedChars = /["#%{}<>]/g;
-    // const charReplacements = {
-    //   '"': "'",
-    //   '#': '%23',
-    //   '%': '%25',
-    //   '{': '%7B',
-    //   '}': '%7D',
-    //   '<': '%3C',
-    //   '>': '%3E',
-    // };
-
-    // encode reserved chars in data URL for modern browsers
-    const reservedChars = /["#]/g;
-    const charReplacements = {
-      '"': "'",
-      '#': '%23',
-    };
-    const replacer = (char) => charReplacements[char];
-    // note: don't have to encode as base64, pure svg is smaller
-    const dataUrl = 'data:image/svg+xml,' + svg.replace(/\s+/g, ' ').replace(reservedChars, replacer);
-
-    return {
-      svgAttrs,
-      innerSVG,
-      dataUrl,
-    };
   }
 
   /**
    * Insert inline SVG in HTML.
    * Replacing a tag containing the svg source file with the svg element.
    *
-   * @param {Compilation} compilation The instance of the webpack compilation.
+   * @param {string} content The template content.
+   * @param {string} entryFilename The output filename of template.
+   * @return {string}
    */
-  static insertInlineSvg(compilation) {
-    if (this.inlineSvgIssueAssets.size === 0) return;
+  static inlineSvg(content, entryFilename) {
+    const headStartPos = content.indexOf('<head');
+    const headEndPos = content.indexOf('</head>', headStartPos);
+    const hasHead = headStartPos >= 0 && headEndPos > headStartPos;
+    let results = [];
 
-    const RawSource = compilation.compiler.webpack.sources.RawSource;
-
-    for (const assetFile of this.inlineSvgIssueAssets) {
-      const asset = compilation.assets[assetFile];
-      if (!asset) continue;
-
-      const html = asset.source();
-      const headStartPos = html.indexOf('<head');
-      const headEndPos = html.indexOf('</head>', headStartPos);
-      const hasHead = headStartPos >= 0 && headEndPos > headStartPos;
-      let results = [];
-
-      // parse all inline SVG images in HTML
-      for (let [sourceFile, item] of this.data) {
-        if (!item.inlineSvg || !item.inlineSvg.assets.has(assetFile)) continue;
-        results = [...results, ...parseValues(html, sourceFile)];
-      }
-      results.sort(comparePos);
-
-      // compile parsed data to HTML with inlined SVG
-      const excludeAttrs = ['src', 'href', 'xmlns', 'alt'];
-      let output = '';
-      let pos = 0;
-
-      for (let { value, attrs, tagStartPos, tagEndPos, valueStartPos, valueEndPos } of results) {
-        const { cache } = this.data.get(value);
-
-        if (hasHead && tagStartPos < headEndPos) {
-          // in head inline as data URL
-          output += html.slice(pos, valueStartPos) + cache.dataUrl;
-          pos = valueEndPos;
-        } else {
-          // in body inline as SVG tag
-          attrs = { ...cache.svgAttrs, ...attrs };
-          const attrsString = attrsToString(attrs, [...excludeAttrs, 'title']);
-          const titleStr = 'title' in attrs ? attrs['title'] : 'alt' in attrs ? attrs['alt'] : null;
-          const title = titleStr ? `<title>${titleStr}</title>` : '';
-          const inlineSvg = `<svg${attrsString}>${title}${cache.innerSVG}</svg>`;
-
-          output += html.slice(pos, tagStartPos) + inlineSvg;
-          pos = tagEndPos;
-        }
-      }
-
-      output += html.slice(pos);
-      compilation.assets[assetFile] = new RawSource(output);
+    // parse all inline SVG images in HTML
+    for (let [sourceFile, item] of this.data) {
+      if (item?.inlineSvg?.issuerFilenames.has(entryFilename)) results.push(...parseValues(content, sourceFile));
     }
+
+    results.sort(comparePos);
+
+    // compile parsed data to HTML with inlined SVG
+    const excludeAttrs = ['src', 'href', 'xmlns', 'alt'];
+    let output = '';
+    let pos = 0;
+
+    for (let { value, attrs, tagStartPos, tagEndPos, valueStartPos, valueEndPos } of results) {
+      const { source } = this.data.get(value);
+
+      if (hasHead && tagStartPos < headEndPos) {
+        // in head inline as data URL
+        output += content.slice(pos, valueStartPos) + source.dataUrl;
+        pos = valueEndPos;
+      } else {
+        // in body inline as SVG tag
+        attrs = { ...source.svgAttrs, ...attrs };
+        const attrsString = attrsToString(attrs, [...excludeAttrs, 'title']);
+        const titleStr = 'title' in attrs ? attrs['title'] : 'alt' in attrs ? attrs['alt'] : null;
+        const title = titleStr ? `<title>${titleStr}</title>` : '';
+        const inlineSvg = `<svg${attrsString}>${title}${source.innerSVG}</svg>`;
+
+        output += content.slice(pos, tagStartPos) + inlineSvg;
+        pos = tagEndPos;
+      }
+    }
+
+    return output + content.slice(pos);
   }
 }
 

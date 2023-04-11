@@ -1,0 +1,23 @@
+/* inlined style */
+
+.iphone {
+  width: 24px;
+  height: 24px;
+  border: 5px solid limegreen;
+  background-image: url('../images/iphone.png');
+}
+
+.imac {
+  width: 24px;
+  height: 24px;
+  border: 5px solid royalblue;
+  background-image: url('../images/imac.svg');
+}
+
+/* the image is used exclusive only here */
+.plum {
+  width: 160px;
+  height: 130px;
+  border: 5px solid #4e32cd;
+  background-image: url('../images/plum.png');
+}

@@ -1,0 +1,110 @@
+ ENTRY  index.html 
+source: src/views/home/index.html
+output: dist/
+assets:
+     style: src/styles/style.css
+         -> css/style.507a33ff.css
+            resource: src/fonts/dummy-font/font-01.woff2
+                   -> ../assets/fonts/font-01.woff2
+            resource: src/fonts/dummy-font/font-02.woff2
+                   -> ../assets/fonts/font-02.woff2
+    inline: src/styles/inlined.css?inline
+            resource: src/images/pear.png
+                   -> assets/img/pear.6b9b072a.png
+              inline: src/images/iphone.png
+              inline: src/images/imac.svg
+            resource: src/images/plum.png
+                   -> assets/img/plum.d39e7174.png
+     style: src/views/home/style.css
+         -> css/style.1a552ac3.css
+            resource: src/images/kiwi.png
+                   -> ../assets/img/kiwi.da3e3cc9.png
+              inline: src/images/iphone.png
+  resource: src/images/apple.png
+         -> assets/img/apple.02a7c382.png
+  resource: src/images/image.webp
+         -> assets/img/image-160w.webp
+    inline: src/images/imac.svg
+    inline: src/images/iphone.png
+    inline: src/images/home.svg
+  resource: src/images/favorite.svg
+         -> assets/img/favorite.876f98e8.svg
+    script: src/views/home/home.js
+         -> js/home.4d440414.js
+
+ ENTRY  lang/de/index.html 
+source: src/views/home/index.html
+output: dist/
+assets:
+     style: src/styles/style.css
+         -> ../../css/style.507a33ff.css
+            resource: src/fonts/dummy-font/font-01.woff2
+                   -> ../assets/fonts/font-01.woff2
+            resource: src/fonts/dummy-font/font-02.woff2
+                   -> ../assets/fonts/font-02.woff2
+    inline: src/styles/inlined.css?inline
+            resource: src/images/pear.png
+                   -> ../../assets/img/pear.6b9b072a.png
+              inline: src/images/iphone.png
+              inline: src/images/imac.svg
+            resource: src/images/plum.png
+                   -> ../../assets/img/plum.d39e7174.png
+     style: src/views/home/style.css
+         -> ../../css/style.1a552ac3.css
+            resource: src/images/kiwi.png
+                   -> ../assets/img/kiwi.da3e3cc9.png
+              inline: src/images/iphone.png
+  resource: src/images/apple.png
+         -> ../../assets/img/apple.02a7c382.png
+  resource: src/images/image.webp
+         -> ../../assets/img/image-160w.webp
+    inline: src/images/imac.svg
+    inline: src/images/iphone.png
+    inline: src/images/home.svg
+  resource: src/images/favorite.svg
+         -> ../../assets/img/favorite.876f98e8.svg
+    script: src/views/home/home.js
+         -> ../../js/home.4d440414.js
+
+ ENTRY  pages/about.html 
+source: src/views/about/index.html
+output: dist/
+assets:
+     style: @test-fixtures/scss/dist/fixture-styles.css
+         -> ../css/fixture-styles.22de7687.css
+            resource: @test-fixtures/scss/fixture-images/fixture-image-bg.png
+                   -> ../assets/img/fixture-image-bg.697ef306.png
+     style: src/styles/style.css
+         -> ../css/style.507a33ff.css
+            resource: src/fonts/dummy-font/font-01.woff2
+                   -> ../assets/fonts/font-01.woff2
+            resource: src/fonts/dummy-font/font-02.woff2
+                   -> ../assets/fonts/font-02.woff2
+    inline: src/styles/inlined.css?inline
+            resource: src/images/pear.png
+                   -> ../assets/img/pear.6b9b072a.png
+              inline: src/images/iphone.png
+              inline: src/images/imac.svg
+            resource: src/images/plum.png
+                   -> ../assets/img/plum.d39e7174.png
+     style: src/views/about/style.css
+         -> ../css/style.9a0dab35.css
+            resource: src/images/melon.png
+                   -> ../assets/img/melon.a92cb911.png
+              inline: src/images/token.svg
+  resource: src/images/fig.png
+         -> ../assets/img/fig.c6809878.png
+  resource: src/images/printer.webp?size=300
+         -> ../assets/img/printer-300w.webp
+  resource: src/images/printer.webp?sizes[]=200&sizes[]=400
+         -> ../assets/img/printer-200w.webp 200w,../assets/img/printer-400w.webp 400w
+    script: src/views/about/about-split.js
+         -> chunks:
+              - ../js/612.0ffbd578.js
+              - ../js/about-split.e5502f4f.js
+    inline: src/views/about/about-inline-split.js?inline
+            inline chunks:
+              - 544.d9bb278f.js
+              - about-inline-split.3998d019.js
+    script: src/views/about/about.js
+         -> ../js/about.2bc4e9a4.js

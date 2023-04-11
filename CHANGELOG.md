@@ -1,5 +1,16 @@
 # Change log
 
+## 1.16.0 (2023-04-15)
+- feat: new compact verbose output, all resources are grouped by their issuers
+- feat: remove `js.verbose` option, because it makes no sense with new verbose output (no breaking change)
+- feat: remove `css.verbose` option, because it makes no sense with new verbose output (no breaking change)
+- feat: improve performance
+- fix: display loader dependencies only once in the watch mode
+- fix: correct inline CSS and JS when is used minify, #8
+- refactor: optimize processing for inline resources and preload tags
+- chore: update packages
+- docs: update readme
+
 ## 1.15.0 (2023-04-05)
 - feat: add the `views` option for the `nunjucks` preprocessor
 - feat: allow to pass the configuration options for the `nunjucks` preprocessor

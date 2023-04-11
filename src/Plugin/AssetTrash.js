@@ -1,5 +1,3 @@
-const Options = require('./Options');
-
 /**
  * AssetTrash singleton.
  * Accumulate and remove junk assets from compilation.
@@ -8,14 +6,6 @@ class AssetTrash {
   static trash = [];
   static commentRegexp = /^\/\*\!.+\.LICENSE\.txt\s*\*\/\s*/;
   static commentFileSuffix = '.LICENSE.txt';
-
-  /**
-   * Reset settings.
-   * Called before each compilation after changes by `webpack serv/watch`.
-   */
-  static reset() {
-    this.trash = [];
-  }
 
   /**
    * Add a junk asset file to trash.
@@ -43,19 +33,27 @@ class AssetTrash {
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
   static removeComments(compilation) {
-    if (compilation.assets) {
-      const { commentRegexp, commentFileSuffix: suffix } = this;
-      const { RawSource } = compilation.compiler.webpack.sources;
-      const assets = Object.keys(compilation.assets);
-      const licenseFiles = assets.filter((file) => file.endsWith(suffix));
+    if (!compilation.assets) return;
 
-      for (let filename of licenseFiles) {
-        const sourceFilename = filename.replace(suffix, '');
-        const source = compilation.assets[sourceFilename].source();
-        compilation.updateAsset(sourceFilename, new RawSource(source.replace(commentRegexp, '')));
-        this.add(filename);
-      }
+    const { commentRegexp, commentFileSuffix: suffix } = this;
+    const { RawSource } = compilation.compiler.webpack.sources;
+    const assets = Object.keys(compilation.assets);
+    const licenseFiles = assets.filter((file) => file.endsWith(suffix));
+
+    for (let filename of licenseFiles) {
+      const sourceFilename = filename.replace(suffix, '');
+      const source = compilation.assets[sourceFilename].source();
+      compilation.updateAsset(sourceFilename, new RawSource(source.replace(commentRegexp, '')));
+      this.add(filename);
     }
+  }
+
+  /**
+   * Reset settings.
+   * Called before each new compilation after changes, in the serv/watch mode.
+   */
+  static reset() {
+    this.trash.length = 0;
   }
 }
 

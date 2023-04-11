@@ -1,4 +1,3 @@
-const PluginService = require('../Plugin/PluginService');
 const Loader = require('./Loader');
 const Options = require('./Options');
 
@@ -127,21 +126,7 @@ class Template {
       // skip not resolvable value, e.g. URL
       if (!resolvedFile) continue;
 
-      output += html.slice(pos, startPos);
-
-      switch (type) {
-        case 'inline/style':
-          output += '<style>' + resolvedFile + '</style>';
-          break;
-        case 'inline/script':
-          // note: the closing tag `</script>` is already present in the tail of the html
-          output += '<script>' + resolvedFile;
-          break;
-        default:
-          output += resolvedFile;
-          break;
-      }
-
+      output += html.slice(pos, startPos) + resolvedFile;
       pos = endPos;
     }
 
@@ -185,10 +170,8 @@ class Template {
 
     switch (type) {
       case 'style':
-      case 'inline/style':
         return Loader.compiler.loaderRequireStyle(file, issuer);
       case 'script':
-      case 'inline/script':
         return Loader.compiler.loaderRequireScript(file, issuer);
     }
 
@@ -202,7 +185,6 @@ class Template {
    * @return {Array<{}>}
    */
   static normalizeTagsList(tags) {
-    const pluginOptions = PluginService.getOptions();
     const result = [];
 
     for (let { type, startPos: tagStartPos, endPos: tagEndPos, attrs } of tags) {
@@ -224,16 +206,6 @@ class Template {
         } else {
           let startPos = attrStartPos;
           let endPos = tagStartPos + attrEndOffset;
-
-          if (
-            (type === 'script' && pluginOptions.isInlineJs(value)) ||
-            (type === 'style' && pluginOptions.isInlineCss(value))
-          ) {
-            // cut the source tag completely to inject an inline `<script>` or `<style>` tag
-            startPos = tagStartPos;
-            endPos = tagEndPos;
-            type = `inline/${type}`;
-          }
 
           result.push({
             type,
