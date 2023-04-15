@@ -65,26 +65,25 @@ jobs:
           flags: integration
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      - name: Set up Node.js 18.x
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-
-      - name: Install dependencies
-        run: npm i
-
-      - name: Run the tests
-        run: npm run test:coverage
-
-      - name: Submit coverage data to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          flags: windows
-          token: ${{ secrets.CODECOV_TOKEN }}
+# Note: test on Windows is impossible,
+#  because all test assets becomes diff content hash in filenames.
+#  windows:
+#    runs-on: windows-latest
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 2
+#      - name: Set up Node.js 18.x
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: 18.x
+#      - name: Install dependencies
+#        run: npm i
+#      - name: Run the tests
+#        run: npm run test:coverage
+#      - name: Submit coverage data to codecov
+#        uses: codecov/codecov-action@v3
+#        with:
+#          flags: windows
+#          token: ${{ secrets.CODECOV_TOKEN }}

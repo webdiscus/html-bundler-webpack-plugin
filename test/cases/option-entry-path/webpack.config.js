@@ -24,7 +24,8 @@ module.exports = {
 
       filename: ({ filename, chunk: { name } }) => {
         // transform 'home/index' filename to output file 'index.html'
-        if (name === 'home/index') {
+        // note: compare the name with the valid path on windows
+        if (name === path.join('home', 'index')) {
           return 'index.html'; // save as index.html in output directory
         }
         // bypass the original structure
