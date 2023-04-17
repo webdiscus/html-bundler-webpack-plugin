@@ -684,13 +684,13 @@ class AssetCompiler {
    */
   done(stats) {
     if (Options.isVerbose()) verbose();
-    //verbose();
 
     Asset.reset();
     AssetEntry.reset();
     AssetScript.reset();
     AssetTrash.reset();
     Resolver.reset();
+    PluginService.reset();
   }
 
   /**

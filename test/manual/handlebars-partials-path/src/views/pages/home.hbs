@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html>
 <head>
   <title>{{ title }}</title>
+  <script disable-src="app.js"></script>
 </head>
 <body>
   {{> header }}
@@ -18,6 +20,14 @@
     {{/each}}
   </ul>
   <img src="../../images/apple.png" alt="apple" />
+
+  <h1>{{ articleTitle }}</h1>
+  <ul class="articles">
+    {{#each articles}}
+    <li>{{this.name}}: {{this.price}}</li>
+    {{/each}}
+  </ul>
+
   {{> footer }}
 </body>
 </html>

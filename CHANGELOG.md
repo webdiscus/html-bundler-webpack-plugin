@@ -1,5 +1,11 @@
 # Change log
 
+## 1.17.0 (2023-04-17)
+- feat: allow the `data` loader option as a filename for dynamically loading global template variables
+- feat: allow the `data` entry-point option as a filename for dynamically loading page template variables
+- fix: inject hot update js file after changes when the template has no scripts
+- docs: add description of new features
+
 ## 1.16.0 (2023-04-15)
 - feat: new compact verbose output, all resources are grouped by their issuers
 - feat: remove `js.verbose` option, because it makes no sense with new verbose output (no breaking change)

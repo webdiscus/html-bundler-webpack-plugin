@@ -2,7 +2,7 @@ const path = require('path');
 const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
 const { isWin, pathToPosix } = require('../Common/Helpers');
-const { watchPathsException } = require('./Messages/Exeptions');
+const { watchPathsException, dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
 
 /**
  * @typedef OptionSources
@@ -28,13 +28,14 @@ class Options {
     let options = PluginService.getLoaderCache(loaderId);
 
     this.fileSystem = loaderContext.fs.fileSystem;
-    this.#webpackOptions = loaderContext._compiler.options || {};
     this.#watch = PluginService.isWatchMode();
+    this.#webpackOptions = loaderContext._compiler.options || {};
     this.#rootContext = rootContext;
     this.#resourcePath = resourcePath;
 
     if (!options) {
-      options = { ...PluginService.getLoaderOptions(), ...(loaderContext.getOptions() || {}) };
+      const loaderOptions = PluginService.getLoaderOptions();
+      options = { ...loaderOptions, ...(loaderContext.getOptions() || {}) };
 
       // assets root path used for resolving files specified in attributes (`sources` option)
       // allow both 'root' and 'basedir' option name for compatibility
@@ -43,17 +44,20 @@ class Options {
 
       PluginService.setLoaderCache(loaderId, options);
     }
+    this.#options = options;
+
+    // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
+    const loaderData = this.loadData(options.data);
+    const entryData = this.loadData(loaderContext.entryData);
 
     // merge plugin and loader data, the plugin data property overrides the same loader data property
-    const data = { ...options.data, ...(loaderContext.entryData || {}) };
+    const data = { ...loaderData, ...entryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
 
     Preprocessor.init({ fileSystem: this.fileSystem, rootContext, watch: this.#watch });
     if (!Preprocessor.isReady(options.preprocessor)) {
       options.preprocessor = Preprocessor.factory(options.preprocessor, options.preprocessorOptions);
     }
-
-    this.#options = options;
 
     // clean loaderContext of artifacts
     if (loaderContext.entryData != null) delete loaderContext.entryData;
@@ -62,6 +66,35 @@ class Options {
     if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
 
     if (this.#watch) this.#initWatchFiles();
+  }
+
+  /**
+   * @param {Object|string|null} dataValue If string, the relative or absolute filename.
+   * @return {Object}
+   */
+  static loadData(dataValue) {
+    if (typeof dataValue !== 'string') return dataValue || {};
+
+    let dataFile = PluginService.dataFiles.get(dataValue);
+
+    if (!dataFile) {
+      const fs = this.fileSystem;
+      dataFile = path.isAbsolute(dataValue) ? dataValue : path.join(process.cwd(), dataValue);
+
+      if (!fs.existsSync(dataFile)) {
+        dataFileNotFoundException(dataFile);
+      }
+      PluginService.dataFiles.set(dataValue, dataFile);
+    }
+
+    let data;
+    try {
+      data = require(dataFile);
+    } catch (error) {
+      dataFileException(error, dataFile);
+    }
+
+    return data || {};
   }
 
   /**
@@ -128,6 +161,10 @@ class Options {
     return defaultSources;
   };
 
+  static getCustomWatchFiles() {
+    return Array.from(PluginService.dataFiles.values());
+  }
+
   /**
    * Returns preprocessor to compile a template.
    * The default preprocessor use the Eta templating engine.
@@ -190,14 +227,14 @@ class Options {
       watchDirs.add(watchDir);
     }
 
-    // TODO: optimize watchDirs, add only unique directory and ignore subdirectories:
-    //  /project/src/views/           -- ignore subdir
-    //  /project/src/views/partials/  -- ignore subdir
-    //  /project/src/                 ++ OK (lowest unique root)
-    //  /project/src/views/includes/  -- ignore subdir
-    //  /project/templates/partials/  -- ignore subdir
-    //  /project/templates/           ++ OK (lowest unique root)
-    //  /project/templates/includes/  -- ignore subdir
+    // TODO: optimize watchDirs, add only unique directory and ignore subdirectories
+    //   /project/src/views/           -- ignore subdir
+    //   /project/src/views/partials/  -- ignore subdir
+    //   /project/src/                 ++ OK (lowest unique root)
+    //   /project/src/views/includes/  -- ignore subdir
+    //   /project/templates/partials/  -- ignore subdir
+    //   /project/templates/           ++ OK (lowest unique root)
+    //   /project/templates/includes/  -- ignore subdir
 
     // set the list of unique watch directories
     watchFiles.paths = Array.from(watchDirs);

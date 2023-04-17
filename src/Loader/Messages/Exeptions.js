@@ -73,6 +73,25 @@ const watchPathsException = (dir, paths) => {
 };
 
 /**
+ * @param {string} file
+ * @throws {Error}
+ */
+const dataFileNotFoundException = (file) => {
+  const message = `The data file not found: ${cyan(file)}.`;
+
+  throw new LoaderException(message);
+};
+
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @throws {Error}
+ */
+const dataFileException = (error, file) => {
+  throw new LoaderException(`Load the data file failed.\nFile: ${cyan(file)}`, error);
+};
+
+/**
  * @returns {Error}
  */
 const notInitializedPluginError = () => {
@@ -83,6 +102,15 @@ const notInitializedPluginError = () => {
         `See the documentation: ${cyanBright`https://github.com/webdiscus/html-bundler-webpack-plugin`}`
     )
   );
+};
+
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @returns {Error}
+ */
+const initError = (error, file) => {
+  return new LoaderException(`Loader initialisation failed.\nFile: ${cyan(file)}`, error);
 };
 
 /**
@@ -117,7 +145,10 @@ module.exports = {
   resolveException,
   unsupportedPreprocessorException,
   watchPathsException,
+  dataFileNotFoundException,
+  dataFileException,
   notInitializedPluginError,
+  initError,
   preprocessorError,
   compileError,
   exportError,

@@ -28,6 +28,7 @@ The plugin automatically substitutes the output filenames of the processed resou
 - Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - Support for both `async` and `sync` preprocessor.
+- Dynamically loading template variables after changes using the [data](#loader-option-data) option.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
 
 ✅ **Profit**
@@ -35,14 +36,16 @@ The plugin automatically substitutes the output filenames of the processed resou
 You specify all the source scripts and styles in **one right place**, in HTML, 
 and you no longer need to define them in Webpack entry or import styles in JS.
 
-❓If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
+❓**Question / Feature Request / Bug**
+
+If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
 ## 🔆 Last changes
 
+- Allow the [data](#loader-option-data) option as a filename for dynamically loading template variables.
 - NEW compact [verbose](#option-verbose) output, all resources are grouped by their issuers.
 - Add the [root](#loader-option-root) loader option to enable processing of asset files with the leading `/` root path.
 - Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style.
-- Add the `views` option for the `nunjucks` preprocessor.
 
 📋 See the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md) for full **release notes**.
 
@@ -187,6 +190,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
 - support the `auto` publicPath
 - enable/disable extraction of comments to `*.LICENSE.txt` file
 - supports all JS template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- dynamically loading template variables after changes using the [data](#loader-option-data) option
 - minification of generated HTML
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
@@ -431,13 +435,15 @@ The entry value might be an object:
 type entryValue = {
   import: string,
   filename: string
-  data: object,
+  data: object|string,
 }
 ```
 
 - `import` - a source file, absolute or relative by the Webpack config file
 - `filename` - an output file, relative by the 'outputPath' option
-- `data` - an object passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
+- `data` - a data passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
+     - type `object` - a data object is loaded once with Webpack start
+     - type `string` - an absolute or relative filename of the JSON or JS file. The JS file must export an object. The data file will be reloaded after changes.
 
 To pass global variables in all templates use the [data](#loader-option-data) loader option.
 
@@ -450,7 +456,7 @@ Usage example:
     'news/sport': { // the key is the output file name without '.html'
       import: 'src/views/news/sport.html',
       data: {
-        title: 'Sport',
+        title: 'Sport', // pass data as an object
       }
     },
 
@@ -458,8 +464,16 @@ Usage example:
     about: {
       import: 'src/views/about.html',
       filename: 'about/index.html', // define custom output filename
+      data: 'src/data/about.json', // load data from JSON file
     },
   },
+}
+```
+
+The data file _src/data/about.json_:
+```json
+{
+  "title": "About"
 }
 ```
 
@@ -1789,10 +1803,22 @@ For the complete list of Nunjucks options see [here](https://mozilla.github.io/n
 #### [↑ back to contents](#contents)
 <a id="loader-option-data" name="loader-option-data" href="#loader-option-data"></a>
 ### `data`
-Type: `Object` Default: `{}`
+Type: `Object|string` Default: `{}`
+
+#### Data as an object
+Type: `Object`
+
+The data defined as an object are loaded once with Webpack start.
+
+#### Data as file path
+Type: `string`
+
+The string value is an absolute or relative filename of a JSON or JS file. The JS file must export an object.
+The data file will be reloaded after changes. So you can use it to dynamically update variables in a template.
+
 
 The properties defined in the `data` loader option are available as variables in all templates defined in the `entry` option.
-Use this option to pass the global variable into all templates.
+Use this option to pass global variables into all templates.
 
 To pass page variables to a specific template, use the `data` property of the [entry](#webpack-option-entry) option.
 
@@ -1810,14 +1836,16 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          import: './src/home.html',
+          import: 'src/views/home.html',
           data: {
             // page specifically variables
             title: 'Home', // overrides the `title` defined in the loader data
             headline: 'Homepage',
           },
+          // - OR -
+          data: 'src/data/home.json',
         },
-        about: './src/about.html',
+        about: 'src/views/about.html',
       },
       loaderOptions: {
         data: {
@@ -1825,13 +1853,32 @@ module.exports = {
           title: 'Default Title',
           globalData: 'Global Data',
         },
+        // - OR -
+        data: 'src/data/global.js',
       },
     }),
   ],
 };
 ```
 
-In the `./src/home.html` template are available following variables:
+JSON data file _src/data/home.json_
+```json
+{
+  "title": "Home",
+  "headline": "Homepage"
+}
+```
+
+JS data file _src/data/global.js_
+```js
+module.exports = {
+  title: 'Default Title',
+  globalData: 'Global Data',
+}
+```
+
+
+In the `./src/views/home.html` template are available following variables:
 ```js
 {
   title: 'Home',
@@ -1840,7 +1887,7 @@ In the `./src/home.html` template are available following variables:
 }
 ```
 
-In the `./src/about.html` template are available following variables:
+In the `./src/views/about.html` template are available following variables:
 ```js
 {
   title: 'Default Title',

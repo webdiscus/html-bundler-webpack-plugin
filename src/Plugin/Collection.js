@@ -14,9 +14,9 @@ const replaceAll = (str, search, replace) => {
  */
 
 class Collection {
-  static scriptAmount = 0;
   static files = new Map();
   static data = new Map();
+  static entriesWithScript = new Set();
 
   /**
    * Resource types.
@@ -31,6 +31,33 @@ class Collection {
   };
 
   static ScriptOrStyleType = new Set(['script', 'style']);
+
+  /**
+   * @param {AssetEntryOptions} entry The entry point.
+   */
+  static initEntry(entry) {
+    const { request, filename } = entry;
+
+    // create entry point in data
+    if (entry.isTemplate) this.setData(entry, null, {});
+
+    for (const item of this.files.values()) {
+      if (item.entryRequests.has(request)) {
+        item.entryFilenames.add(filename);
+      }
+    }
+  }
+
+  /**
+   * Whether the template contains a script.
+   * Called in loader when HMR is enabled.
+   *
+   * @param entryResource
+   * @return {boolean}
+   */
+  static hasScript(entryResource) {
+    return this.entriesWithScript.has(entryResource);
+  }
 
   /**
    * Whether resource is a script.
@@ -97,36 +124,27 @@ class Collection {
     return item && item.inline && item.type === this.type.style;
   }
 
-  static has(resource) {
-    return this.files.has(resource);
-  }
-
-  static getScriptAmount() {
-    return this.scriptAmount;
-  }
-
   /**
    * Add the resource.
    * Called in loader by parsing scripts and styles.
    *
    * @param {string} resource The resource file, including query.
-   * @param {string} issuer The issuer of resource.
+   * @param {string} issuer The issuer request of resource.
    * @param {string} type The type of resource. One of: `script`, `style`.
    */
   static add(resource, issuer, type) {
-    const [file] = resource.split('?', 1);
-
     // note: the same source file can be either as file or as inlined,
     // but can't be in one place as file and in other as inlined
+    let item = this.files.get(resource);
     let inline = false;
+
     if (type === this.type.script) {
       inline = Options.isInlineJs(resource);
+      this.entriesWithScript.add(issuer);
     } else if (type === this.type.style) {
       inline = Options.isInlineCss(resource);
     }
 
-    //let item = this.files.get(file);
-    let item = this.files.get(resource);
     if (!item) {
       item = {
         // entry name, used only when resource is defined in Webpack entry
@@ -143,9 +161,6 @@ class Collection {
       this.files.set(resource, item);
     }
 
-    if (item.type === this.type.script) this.scriptAmount++;
-
-    // add only unique issuer
     item.entryRequests.add(issuer);
   }
 
@@ -157,29 +172,11 @@ class Collection {
    * @param {string} name The unique name of entry point.
    */
   static setName(resource, name) {
-    let item = this.files.get(resource);
+    const item = this.files.get(resource);
     if (item) {
       item.name = name;
     }
   }
-
-  /**
-   * @param {AssetEntryOptions} entry The entry point.
-   */
-  static initEntry(entry) {
-    const { request, filename } = entry;
-
-    // create entry point in data
-    if (entry.isTemplate) this.setData(entry, null, {});
-
-    for (const item of this.files.values()) {
-      if (item.entryRequests.has(request)) {
-        item.entryFilenames.add(filename);
-      }
-    }
-  }
-
-  static resourcesRef = [];
 
   /**
    * Save info of resolved data.
@@ -467,6 +464,7 @@ class Collection {
       if (item.assets != null) item.assets.length = 0;
     });
     this.data.clear();
+    this.entriesWithScript.clear();
   }
 }
 

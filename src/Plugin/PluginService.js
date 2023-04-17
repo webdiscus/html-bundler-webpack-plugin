@@ -16,10 +16,13 @@ class PluginService {
 
   // cached loader options
   static #loaderCache = new Map();
-
   static #used = false;
   static #watchMode = false;
   static #contextCache = new Set();
+  static dataFiles = new Map();
+
+  // dependency injected instances
+  static Dependency = null;
 
   /**
    * Set use state of the plugin.
@@ -36,6 +39,10 @@ class PluginService {
     this.#options = options;
     this.#loaderOptions = options.get().loaderOptions || {};
     this.#loaderCache.clear();
+  }
+
+  static setDependencyInstance(Dependency) {
+    this.Dependency = Dependency;
   }
 
   /**
@@ -113,12 +120,20 @@ class PluginService {
   }
 
   /**
+   * Reset settings.
+   * Called before each new compilation after changes, in the serv/watch mode.
+   */
+  static reset() {}
+
+  /**
    * Called when the compiler is closing.
    * Used for tests to reset data after each test case.
    */
   static shutdown() {
     this.#used = false;
     this.#contextCache.clear();
+    this.dataFiles.clear();
+    this.Dependency && this.Dependency.shutdown();
   }
 }
 

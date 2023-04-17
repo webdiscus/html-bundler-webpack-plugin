@@ -18,14 +18,15 @@ class Loader {
     const queryData = parseQuery(resourceQuery);
     let loaderMode = mode;
 
-    if (queryData.hasOwnProperty('mode')) {
-      // rule: the mode defined in query has prio over the loader option
-      if (this.modes.has(queryData.mode)) {
-        loaderMode = queryData.mode;
-      }
-      // remove mode from query data to pass in the template only clean data
-      delete queryData['mode'];
-    }
+    // reserved for future feature
+    // if (queryData.hasOwnProperty('mode')) {
+    //   // rule: the mode defined in query has prio over the loader option
+    //   if (this.modes.has(queryData.mode)) {
+    //     loaderMode = queryData.mode;
+    //   }
+    //   // remove mode from query data to pass in the template only clean data
+    //   delete queryData['mode'];
+    // }
 
     this.data = merge(data || {}, queryData);
 

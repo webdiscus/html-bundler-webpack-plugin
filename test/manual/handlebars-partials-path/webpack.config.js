@@ -11,19 +11,22 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      verbose: true,
+
       entry: {
         index: {
-          import: './src/views/pages/home.hbs',
-          data: {
-            title: 'Home',
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
+          import: 'src/views/pages/home.hbs',
+          data: 'src/views/pages/home-data.json',
         },
-        about: 'src/views/pages/about.hbs',
+
+        about: {
+          import: 'src/views/pages/about.hbs',
+          data: 'src/views/pages/about-data.json',
+        },
       },
 
       loaderOptions: {
+        data: 'data-global.json',
         preprocessor: 'handlebars',
         preprocessorOptions: {
           partials: [
@@ -55,7 +58,7 @@ module.exports = {
       directory: path.join(__dirname, 'dist'),
     },
     watchFiles: {
-      paths: ['src/**/*.*'],
+      paths: ['src/**/*.*', 'data-global.json'],
       options: {
         usePolling: true,
       },

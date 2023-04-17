@@ -11,12 +11,13 @@ class PluginException extends Error {
   constructor(message, error) {
     message = `\n${reset.whiteBright.bgRedBright` ${pluginName} `} ${whiteBright(message)}\n`;
 
-    super(message);
-    this.name = this.constructor.name;
-
     if (error && error.stack) {
-      this.stack = error.stack;
+      message += error.stack;
     }
+
+    super();
+    this.name = this.constructor.name;
+    this.message = message;
   }
 }
 

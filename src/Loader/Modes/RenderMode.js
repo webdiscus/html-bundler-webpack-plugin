@@ -108,8 +108,7 @@ class RenderMode {
    * @return {string}
    */
   export(content, data, issuer) {
-    const scriptsAmount = Collection.getScriptAmount();
-    if (this.hot && (scriptsAmount === 0 || (scriptsAmount === 1 && Collection.has(hmrFile)))) {
+    if (this.hot && !Collection.hasScript(issuer)) {
       // note: it can be tested only manually, because Webpack API no provide `loaderContext.hot` for testing
       content = this.injectHmrFile(content);
       Collection.add(hmrFile, issuer, 'script');

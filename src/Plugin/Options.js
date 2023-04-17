@@ -29,7 +29,7 @@ const { optionEntryPathException, optionModulesException } = require('./Messages
  * @property {Array<ModuleOptions>=} [modules = []] For inner usage only.
  * @property {Object=} extractJs For inner usage only.
  * @property {Object=} extractCss For inner usage only.
- * @property {Object=} loaderOptions Options defined in plugin but provided for the loader. Experimental.
+ * @property {Object=} loaderOptions Options defined in plugin but provided for the loader.
  * @property {Array<Object>|boolean=} preload Options to generate preload link tags for assets.
  * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
  */

@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <!-- resize image -->
+    <link href="Images/favicon.png?size=32" rel="icon">
+  </head>
+  <body>
+    <h1>Home</h1>
+
+    <!-- default image -->
+    <img src="Images/image.png">
+
+    <!-- using the query as JSON -->
+    <img src="Images/image.png?{size:105, format:'webp'}">
+
+    <!-- responsible image -->
+    <img
+      src="Images/image.png?size=120"
+      srcset="Images/image.png?{sizes: [50,100,150], format: 'jpg'}"
+    >
+
+    <!-- image placeholder and properties -->
+    <!-- note: GitHub generate other inline data for placeholder -->
+    <!-- Images/image.png?prop=placeholder&placeholder=true&placeholderSize=4 -->
+    <img
+      src="Images/image.png?size=20"
+      data-src="Images/image.png"
+      width="Images/image.png?prop=width"
+      height="Images/image.png?prop=height"
+      class="lazy-image"
+    >
+  </body>
+</html>

@@ -14,6 +14,7 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
+    publicPath: 'auto', // test with auto path
   },
 
   plugins: [

@@ -508,6 +508,10 @@ describe('plugin options', () => {
     compareFileListAndContent(PATHS, 'option-entry', done);
   });
 
+  test('entry data file', (done) => {
+    compareFileListAndContent(PATHS, 'option-entry-data-file', done);
+  });
+
   test('entry path', (done) => {
     compareFileListAndContent(PATHS, 'option-entry-path', done);
   });
@@ -608,6 +612,10 @@ describe('loader options', () => {
 describe('loader options for templating', () => {
   test('loader data', (done) => {
     compareFileListAndContent(PATHS, 'loader-option-preprocessor-data', done);
+  });
+
+  test('loader data file', (done) => {
+    compareFileListAndContent(PATHS, 'loader-option-preprocessor-data-file', done);
   });
 
   test('preprocessor Eta', (done) => {
@@ -805,8 +813,12 @@ describe('special cases', () => {
 });
 
 describe('extras: responsive images', () => {
-  test('responsive images in template', (done) => {
+  test('responsive images in template, publicPath="auto"', (done) => {
     compareFileListAndContent(PATHS, 'responsive-images', done);
+  });
+
+  test('responsive images in template, publicPath="/"', (done) => {
+    compareFileListAndContent(PATHS, 'responsive-images-publicPath-root', done);
   });
 
   test('require images in template and in style', (done) => {
@@ -876,6 +888,16 @@ describe('loader exceptions', () => {
     return exceptionContain(PATHS, 'msg-exception-handlebars-partial', containString);
   });
 
+  test('exception: loader data file not found', () => {
+    const containString = `The data file not found`;
+    return exceptionContain(PATHS, 'msg-exception-loader-data-file-not-found', containString);
+  });
+
+  test('exception: loader data file is invalid', () => {
+    const containString = `Load the data file failed`;
+    return exceptionContain(PATHS, 'msg-exception-loader-data-file-invalid', containString);
+  });
+
   test('exception preprocessor: load module', (done) => {
     const containString = 'Cannot find module';
     try {
@@ -932,9 +954,16 @@ describe('plugin exceptions', () => {
   });
 
   // TODO: catch the fatal error: processTicksAndRejections (node:internal/process/task_queues:95:5)
+
   // test it manual only, because Jest fail
   // test('preload invalid option', () => {
   //   const containString = `Missing the 'as' property in a configuration object of the plugin option preload`;
   //   return exceptionContain(PATHS, 'msg-exception-plugin-option-preload-as', containString);
+  // });
+
+  // test it manual only, because Jest fail
+  // test('option afterProcess', () => {
+  //   const containString = 'Custom after process failed';
+  //   return exceptionContain(PATHS, 'msg-exception-plugin-option-afterProcess', containString);
   // });
 });

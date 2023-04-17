@@ -5,7 +5,13 @@ const Loader = require('./Loader');
 const RenderMode = require('./Modes/RenderMode');
 const Dependency = require('./Dependency');
 const Options = require('./Options');
-const { notInitializedPluginError, preprocessorError, compileError, exportError } = require('./Messages/Exeptions');
+const {
+  notInitializedPluginError,
+  initError,
+  preprocessorError,
+  compileError,
+  exportError,
+} = require('./Messages/Exeptions');
 
 /**
  * @param {string} content
@@ -16,7 +22,7 @@ const loader = function (content, map, meta) {
   const loaderContext = this;
   const loaderCallback = loaderContext.async();
   const { rootContext, resource, resourcePath } = loaderContext;
-  let errorStage = 'init';
+  let errorStage = '';
 
   const callback = (error, result = null) => {
     if (error) {
@@ -36,6 +42,7 @@ const loader = function (content, map, meta) {
 
   new Promise((resolve) => {
     // the options must be initialized before others
+    errorStage = 'init';
     Options.init(loaderContext);
     Loader.init(loaderContext);
 
@@ -66,6 +73,9 @@ const loader = function (content, map, meta) {
       const issuer = path.relative(rootContext, resourcePath);
 
       switch (errorStage) {
+        case 'init':
+          error = initError(error, issuer);
+          break;
         case 'preprocessor':
           error = preprocessorError(error, issuer);
           break;
@@ -76,9 +86,10 @@ const loader = function (content, map, meta) {
           error = exportError(error, issuer);
           break;
         default:
+          // TODO: test this case
           // unrecoverable configuration error, requires to restart Webpack
-          const mode = new RenderMode({});
-          const browserErrorMessage = mode.exportError(error, resource);
+          const render = new RenderMode({});
+          const browserErrorMessage = render.exportError(error, resource);
           callback(error, browserErrorMessage);
           return;
       }

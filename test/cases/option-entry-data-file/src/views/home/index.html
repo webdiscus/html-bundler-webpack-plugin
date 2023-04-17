@@ -1,0 +1,14 @@
+<html>
+<head>
+  <title><%= title %></title>
+</head>
+<body>
+  <h1>Home</h1>
+  <h2><%= articleTitle %></h2>
+  <ul>
+    <% for (let i = 0; i < articles.length; i++) {%>
+    <li><%= articles[i].name %>: <%= articles[i].price %></li>
+    <% } %>
+  </ul>
+</body>
+</html>
