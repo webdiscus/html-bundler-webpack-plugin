@@ -1,5 +1,19 @@
 # Change log
 
+## 1.17.1 (2023-04-19)
+- fix: pass data via query parameters into template imported in JS file\
+  _template.html_
+  ```html
+  <div>Hello <%= name %>!</div>
+  ```
+  _app.js_
+  ```js
+  import tmpl from './template.html?name=World'; // exports '<div>Hello World!</div>'
+  document.body.innerHTML = html;
+  ```
+- test: add test for import a template in JS as rendered HTML string
+- docs: update readme
+
 ## 1.17.0 (2023-04-17)
 - feat: allow the `data` loader option as a filename for dynamically loading global template variables
 - feat: allow the `data` entry-point option as a filename for dynamically loading page template variables

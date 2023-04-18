@@ -11,4 +11,4 @@ assets:
   resource: src/image.png
          -> assets/img/image.697ef306.png
     script: src/main.js
-         -> assets/js/main.9a4bbb82.js
+         -> assets/js/main.3b64a15d.js

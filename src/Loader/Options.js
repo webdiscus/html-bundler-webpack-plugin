@@ -1,7 +1,7 @@
 const path = require('path');
 const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
-const { isWin, pathToPosix } = require('../Common/Helpers');
+const { isWin, pathToPosix, parseQuery } = require('../Common/Helpers');
 const { watchPathsException, dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
 
 /**
@@ -21,10 +21,14 @@ class Options {
   static #rootContext;
   static #resourcePath;
 
+  // TODO: add compile|compiling, render|rendering and string|html modes;
+  static modes = new Set(['render']);
+
   static init(loaderContext) {
-    const { loaderIndex, rootContext, resourcePath } = loaderContext;
+    const { loaderIndex, rootContext, resourcePath, resourceQuery } = loaderContext;
     const loaderObject = loaderContext.loaders[loaderIndex];
     const loaderId = loaderObject.path + loaderObject.query;
+    const queryData = parseQuery(resourceQuery);
     let options = PluginService.getLoaderCache(loaderId);
 
     this.fileSystem = loaderContext.fs.fileSystem;
@@ -42,6 +46,16 @@ class Options {
       const basedir = options.root || options.basedir || false;
       options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
 
+      // reserved for future feature
+      // if (queryData.hasOwnProperty('_mode')) {
+      //   // rule: the mode defined in query has prio over the loader option
+      //   if (this.modes.has(queryData._mode)) {
+      //     options.mode = queryData._mode;
+      //   }
+      //   // remove mode from query data to pass in the template only clean data
+      //   delete queryData['_mode'];
+      // }
+
       PluginService.setLoaderCache(loaderId, options);
     }
     this.#options = options;
@@ -51,7 +65,7 @@ class Options {
     const entryData = this.loadData(loaderContext.entryData);
 
     // merge plugin and loader data, the plugin data property overrides the same loader data property
-    const data = { ...loaderData, ...entryData };
+    const data = { ...loaderData, ...entryData, ...queryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
 
     Preprocessor.init({ fileSystem: this.fileSystem, rootContext, watch: this.#watch });

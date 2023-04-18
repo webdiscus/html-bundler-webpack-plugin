@@ -75,6 +75,41 @@ export const removeDirsSync = function (dir, test) {
 };
 
 /**
+ * Copy current generated files form `dist/` to `expected/`.
+ *
+ * TODO: add exclude dirs contained expected/output.txt. This files must be updated manually.
+ *
+ * @param {string} dir The absolute path.
+ * @param {string} from The relative path to the `dir`.
+ * @param {string} to The relative path to the `dir`.
+ */
+export const syncExpected = function (dir, { from, to }) {
+  if (dir === '/') return;
+
+  // 1. remove outdated files
+  const expectedDirs = readDirOnlyRecursiveSync(dir, new RegExp(`${to}$`));
+  expectedDirs.forEach((current) => fs.rmSync(current, { recursive: true, force: true }));
+
+  // 2. read all dist dirs
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const distDirs = entries.filter((folder) => folder.isDirectory());
+
+  // 3. copy files recursively `from` to `to` path
+  distDirs.forEach(({ name }) => {
+    const currentDir = path.join(dir, name);
+    const fromDir = path.join(currentDir, from);
+    const toDir = path.join(currentDir, to);
+
+    if (!fs.existsSync(fromDir)) {
+      return;
+    }
+
+    console.log('>>> fromDir: ', { fromDir, __toDir: toDir });
+    copyRecursiveSync(fromDir, toDir);
+  });
+};
+
+/**
  * Return content of file as string.
  *
  * @param {string} file
@@ -82,8 +117,7 @@ export const removeDirsSync = function (dir, test) {
  */
 export const readTextFileSync = (file) => {
   if (!fs.existsSync(file)) {
-    console.log(`\nWARN: the file "${file}" not found.`);
-    return '';
+    throw new Error(`\nERROR: the file "${file}" not found.`);
   }
   return fs.readFileSync(file, 'utf-8');
 };

@@ -1,34 +1,19 @@
-const { merge } = require('webpack-merge');
 const PluginService = require('../Plugin/PluginService');
+const Options = require('./Options');
 const Resolver = require('./Resolver');
 const RenderMode = require('./Modes/RenderMode');
-const Options = require('./Options');
-const { parseQuery } = require('../Common/Helpers');
 
 class Loader {
   static compiler = null;
-  static modes = new Set(['render']); // TODO: add compile|compiling, render|rendering and string|html modes;
 
   /**
    * @param {Object} loaderContext
    */
   static init(loaderContext) {
-    const { rootContext, resourcePath: templateFile, resourceQuery, hot } = loaderContext;
+    const { rootContext, resourcePath: templateFile, hot } = loaderContext;
     const { data, esModule, mode, name: templateName, self: useSelf } = Options.get();
-    const queryData = parseQuery(resourceQuery);
-    let loaderMode = mode;
 
-    // reserved for future feature
-    // if (queryData.hasOwnProperty('mode')) {
-    //   // rule: the mode defined in query has prio over the loader option
-    //   if (this.modes.has(queryData.mode)) {
-    //     loaderMode = queryData.mode;
-    //   }
-    //   // remove mode from query data to pass in the template only clean data
-    //   delete queryData['mode'];
-    // }
-
-    this.data = merge(data || {}, queryData);
+    this.data = data;
 
     // prevent double initialisation with same options, occurs when many entry files used in one webpack config
     if (!PluginService.isCached(rootContext)) {
@@ -36,7 +21,7 @@ class Loader {
     }
 
     this.compiler = this.compilerFactory({
-      loaderMode,
+      mode,
       templateFile,
       templateName,
       esModule,
@@ -50,7 +35,7 @@ class Loader {
    *
    * Note: default mode is `render`
    *
-   * @param {string} loaderMode The loader mode: compile, render or html.
+   * @param {string} mode The loader mode: compile or render.
    * @param {string} templateFile
    * @param {string} templateName
    * @param {boolean} esModule
@@ -58,8 +43,8 @@ class Loader {
    * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
    * @return {RenderMode}
    */
-  static compilerFactory({ loaderMode, templateFile, templateName, esModule, useSelf, hot }) {
-    switch (loaderMode) {
+  static compilerFactory({ mode, templateFile, templateName, esModule, useSelf, hot }) {
+    switch (mode) {
       case 'render':
       default:
         return new RenderMode({ templateFile, templateName, esModule, hot });

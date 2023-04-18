@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import {
   compareFileListAndContent,
@@ -9,7 +10,7 @@ import {
   watchStdoutContain,
   watchStdoutCompare,
 } from './utils/helpers';
-import { removeDirsSync } from './utils/file';
+import { removeDirsSync, syncExpected } from './utils/file';
 import { parseQuery, getFileExtension } from '../src/Common/Helpers';
 import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
@@ -17,7 +18,11 @@ import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
 import { PATHS } from './config';
-import { compile } from './utils/webpack';
+
+// !!! ATTENTION - DANGER !!!
+// After update packages and clean install, the new generated hashed filenames may be different from already expected.
+// In this case enable function `syncExpected` and run any single test, e.g. `hello world` only once. Then disable it.
+// syncExpected(path.join(__dirname, 'cases'), { from: 'dist', to: 'expected' });
 
 beforeAll(() => {
   // remove all 'dist/' directories from tests, use it only for some local tests
@@ -827,6 +832,12 @@ describe('extras: responsive images', () => {
 
   test('require many duplicate images in template and styles', (done) => {
     compareFileListAndContent(PATHS, 'responsive-images-many-duplicates', done);
+  });
+});
+
+describe('use template in js', () => {
+  test('require default template in js', (done) => {
+    compareFileListAndContent(PATHS, 'require-tmpl-in-js', done);
   });
 });
 

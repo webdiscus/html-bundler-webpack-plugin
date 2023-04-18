@@ -30,7 +30,7 @@ assets:
   resource: src/images/favorite.svg
          -> assets/img/favorite.876f98e8.svg
     script: src/views/home/home.js
-         -> js/home.4d440414.js
+         -> js/home.d4872ea4.js
 
  ENTRY  lang/de/index.html 
 source: src/views/home/index.html
@@ -64,7 +64,7 @@ assets:
   resource: src/images/favorite.svg
          -> ../../assets/img/favorite.876f98e8.svg
     script: src/views/home/home.js
-         -> ../../js/home.4d440414.js
+         -> ../../js/home.d4872ea4.js
 
  ENTRY  pages/about.html 
 source: src/views/about/index.html
@@ -101,10 +101,10 @@ assets:
     script: src/views/about/about-split.js
          -> chunks:
               - ../js/612.0ffbd578.js
-              - ../js/about-split.e5502f4f.js
+              - ../js/about-split.29e9ade0.js
     inline: src/views/about/about-inline-split.js?inline
             inline chunks:
               - 544.d9bb278f.js
-              - about-inline-split.3998d019.js
+              - about-inline-split.fbbcdb3d.js
     script: src/views/about/about.js
-         -> ../js/about.2bc4e9a4.js
+         -> ../js/about.2681e4a0.js

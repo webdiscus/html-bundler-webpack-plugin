@@ -212,14 +212,12 @@ class AssetCompiler {
 
       // after render module's sources
       // note: only here is possible to modify an asset content via async function
-      compilation.hooks.processAssets.tapPromise(
-        { name: pluginName, stage: compilation.PROCESS_ASSETS_STAGE_REPORT },
-        (assets) => {
-          const result = this.afterRenderModules(compilation);
+      // `Infinity` ensures that the processAssets will only run after all other taps
+      compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) => {
+        const result = this.afterRenderModules(compilation);
 
-          return Promise.resolve(result);
-        }
-      );
+        return Promise.resolve(result);
+      });
 
       // postprocess for assets content
       compilation.hooks.afterProcessAssets.tap(pluginName, this.afterProcessAssets);

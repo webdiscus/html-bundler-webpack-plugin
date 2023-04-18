@@ -7,4 +7,4 @@ coverage.lcov
 node_modules
 dist
 test/output/
-**/package-lock.json
+test/**/package-lock.json
