@@ -16,7 +16,6 @@ const replaceAll = (str, search, replace) => {
 class Collection {
   static files = new Map();
   static data = new Map();
-  static entriesWithScript = new Set();
 
   /**
    * Resource types.
@@ -46,17 +45,6 @@ class Collection {
         item.entryFilenames.add(filename);
       }
     }
-  }
-
-  /**
-   * Whether the template contains a script.
-   * Called in loader when HMR is enabled.
-   *
-   * @param entryResource
-   * @return {boolean}
-   */
-  static hasScript(entryResource) {
-    return this.entriesWithScript.has(entryResource);
   }
 
   /**
@@ -121,7 +109,7 @@ class Collection {
   static isInlineStyle(resource) {
     const item = this.files.get(resource);
 
-    return item && item.inline && item.type === this.type.style;
+    return item != null && item.inline && item.type === this.type.style;
   }
 
   /**
@@ -140,7 +128,6 @@ class Collection {
 
     if (type === this.type.script) {
       inline = Options.isInlineJs(resource);
-      this.entriesWithScript.add(issuer);
     } else if (type === this.type.style) {
       inline = Options.isInlineCss(resource);
     }
@@ -181,6 +168,8 @@ class Collection {
   /**
    * Save info of resolved data.
    *
+   * TODO: set .ref for css from node module
+   *
    * Note[1]: resolve the collision when the same issuer, e.g. a style file, is used in many entries.
    *   If an issuer then only by first usage is set the data.
    *   In this case, we use the unique reference object to save common used assets.
@@ -214,7 +203,15 @@ class Collection {
     if (this.ScriptOrStyleType.has(type)) {
       // set reference to original object, because same resource can be used in many entries, 1:n
       data.ref = this.files.get(data.resource);
+
+      // if CSS is imported with a filename, including the `.css` extension, e.g. `@import 'npm-module/styles.css'`,
+      // this file will not be injected into the compiled CSS, but it will be loaded as a separate file
+      if (!data.ref) {
+        data.ref = { assets: [] };
+      }
+
       resources.push(data);
+
       return;
     }
 
@@ -464,7 +461,6 @@ class Collection {
       if (item.assets != null) item.assets.length = 0;
     });
     this.data.clear();
-    this.entriesWithScript.clear();
   }
 }
 

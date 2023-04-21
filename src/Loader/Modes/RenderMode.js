@@ -7,9 +7,8 @@ const { errorToHtml } = require('../Messages/Exeptions');
  * Render into HTML and export a JS module.
  */
 class RenderMode {
-  constructor({ templateFile, templateName, esModule, hot }) {
+  constructor({ esModule, hot }) {
     this.hot = hot === true;
-    this.templateFile = templateFile;
     this.exportCode = esModule ? 'export default ' : 'module.exports=';
   }
 
@@ -108,7 +107,7 @@ class RenderMode {
    * @return {string}
    */
   export(content, data, issuer) {
-    if (this.hot && !Collection.hasScript(issuer)) {
+    if (this.hot) {
       // note: it can be tested only manually, because Webpack API no provide `loaderContext.hot` for testing
       content = this.injectHmrFile(content);
       Collection.add(hmrFile, issuer, 'script');

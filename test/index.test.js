@@ -407,6 +407,14 @@ describe('resolve url in style', () => {
     compareFileListAndContent(PATHS, 'resolve-url-in-css', done);
   });
 
+  test('resolve the url(image) in CSS imported from module with .css', (done) => {
+    compareFileListAndContent(PATHS, 'import-css-from-module-with-ext', done);
+  });
+
+  test('resolve the url(image) in CSS imported from module without .css', (done) => {
+    compareFileListAndContent(PATHS, 'import-css-from-module-wo-ext', done);
+  });
+
   test('@import url() in CSS', (done) => {
     compareFileListAndContent(PATHS, 'import-url-in-css', done);
   });
@@ -767,6 +775,10 @@ describe('split chunks', () => {
 
   test('load vendor scripts from node module', (done) => {
     compareFileListAndContent(PATHS, 'split-chunk-vendor', done);
+  });
+
+  test('issue if copy plugin copies a html file', (done) => {
+    compareFileListAndContent(PATHS, 'issue-copy-plugin', done);
   });
 });
 

@@ -12,12 +12,8 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: {
-          import: './src/views/home.html',
-          data: {
-            title: 'Home',
-          },
-        },
+        index: './src/views/home.html',
+        news: './src/views/news.html',
       },
     }),
   ],
@@ -28,10 +24,21 @@ module.exports = {
         test: /\.(png|jpe?g|svg|webp|ico)$/i,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
+          filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],
+  },
+
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        scripts: {
+          test: /\.(js|ts)$/,
+          chunks: 'all',
+        },
+      },
+    },
   },
 
   // enable HMR with live reload

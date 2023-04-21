@@ -1,0 +1,19 @@
+// Note:
+// if CSS file is imported with a filename, excluding the `.css` extension,
+// then this file will be injected into the compiled CSS
+@import '@test-fixtures/scss/dist/fixture-styles';
+
+// Note:
+// if CSS file is imported with a filename, including the `.css` extension,
+// then this file will be loaded as a separate file from the CSS output directory
+//@import '@test-fixtures/scss/dist/fixture-styles.css';
+
+h1 {
+  color: red;
+}
+
+.apple {
+  background-image: url('./apple.png');
+  width: 160px;
+  height: 130px;
+}

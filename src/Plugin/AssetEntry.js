@@ -1,7 +1,7 @@
 const path = require('path');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
-const { isFunction, getFileExtension } = require('../Common/Helpers');
+const { isFunction } = require('../Common/Helpers');
 
 /**
  * @typedef {Object} AssetEntryOptions
@@ -32,7 +32,7 @@ class AssetEntry {
   static entryMap = new Map();
   static compilationEntryNames = new Set();
   static entryFiles = [];
-  static entryPointExtensions = new Set();
+  static entryPointFilenames = new Set();
 
   static compilation = null;
   static EntryPlugin = null;
@@ -166,11 +166,6 @@ class AssetEntry {
       assetEntryOptions.filename = filename;
       assetEntryOptions.isTemplate = Options.isEntry(assetEntryOptions.importFile);
 
-      if (assetEntryOptions.isTemplate) {
-        const ext = getFileExtension(filename);
-        this.entryPointExtensions.add(ext);
-      }
-
       return filename;
     };
 
@@ -249,6 +244,10 @@ class AssetEntry {
    */
   static setFilename(entry, chunk) {
     entry.filename = this.compilation.getPath(chunk.filenameTemplate, { contentHashType: 'javascript', chunk });
+
+    if (entry.isTemplate) {
+      this.entryPointFilenames.add(entry.filename);
+    }
   }
 
   /**
@@ -270,8 +269,7 @@ class AssetEntry {
    * @return {boolean}
    */
   static isEntrypoint(filename) {
-    const ext = getFileExtension(filename);
-    return this.entryPointExtensions.has(ext);
+    return this.entryPointFilenames.has(filename);
   }
 
   /**
@@ -293,7 +291,7 @@ class AssetEntry {
    */
   static clear() {
     this.entryMap.clear();
-    this.entryPointExtensions.clear();
+    this.entryPointFilenames.clear();
     this.entryFiles.length = 0;
   }
 

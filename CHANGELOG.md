@@ -1,5 +1,10 @@
 # Change log
 
+## 1.17.2 (2023-04-21)
+- fix: live reload after changes if a template contains commented out script
+- fix: issue if a CSS file is imported in SCSS with a filename, including the `.css` extension, e.g. `@import 'npm-module/styles.css'`
+- fix: issue if used the copy plugin which copies an HTML file
+
 ## 1.17.1 (2023-04-19)
 - fix: pass data via query parameters into template imported in JS file\
   _template.html_
