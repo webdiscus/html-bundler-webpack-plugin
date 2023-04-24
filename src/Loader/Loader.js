@@ -15,7 +15,7 @@ class Loader {
 
     this.data = data;
 
-    // prevent double initialisation with same options, occurs when many entry files used in one webpack config
+    // prevent double initialisation with same options, it occurs when many entry files used in one webpack config
     if (!PluginService.isCached(rootContext)) {
       Resolver.init(loaderContext);
     }

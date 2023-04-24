@@ -24,7 +24,6 @@ class Plugin extends AssetCompiler {
       outputPath: null,
       filename: '[name].html',
       postprocess: null,
-      modules: [],
       js: {},
       css: {},
       extractComments: false,
@@ -126,7 +125,7 @@ class Plugin extends AssetCompiler {
    * Called after the processAssets hook had finished without error.
    * Override abstract method.
    *
-   * Reserved for future.
+   * Reserved for the future.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
    * @param {string} sourceFile The resource file of the template.

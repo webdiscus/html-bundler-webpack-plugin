@@ -1,9 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const extractCssModule = require('./Modules/extractCss');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
-const { optionEntryPathException, optionModulesException } = require('./Messages/Exception');
+const { optionEntryPathException, postprocessException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} PluginOptions
@@ -15,23 +14,37 @@ const { optionEntryPathException, optionModulesException } = require('./Messages
  * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
  *  See https://webpack.js.org/configuration/output/#outputfilename.
  *  Must be an absolute or a relative by the context path.
- * @property {ModuleOptions|{}} css The options for embedded plugin module to extract CSS.
- * @property {ExtractJsOptions|{}} js The options for embedded plugin module to extract CSS.
- * @property {function(string, ResourceInfo, Compilation): string|null =} postprocess The post process for extracted content from entry.
+ * @property {CssOptions=} css The options for embedded plugin module to extract CSS.
+ * @property {JsOptions=} js The options for embedded plugin module to extract CSS.
+ * @property {function(string, ResourceInfo, Compilation): string|null =} postprocess The post-process for extracted content from entry.
  * @property {function(content: string, {sourceFile: string, assetFile: string})} afterProcess Called after processing all plugins.
  * @property {boolean} [extractComments = false] Whether comments should be extracted to a separate file.
  *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
  *  This option enable/disable storing of *.LICENSE.txt file.
  *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
- * @property {Object|string} entry The entry points. The key is route to output file w/o extension, value is a template source file.
+ * @property {Object|string} entry The entry points.
+ *  The key is route to output file w/o an extension, value is a template source file.
  *  When the entry is a string, this should be a relative or absolute path to pages.
  * @property {{paths: Array<string>, files: Array<RegExp>, ignore: Array<RegExp>}} watchFiles Paths and files to watch file changes.
- * @property {Array<ModuleOptions>=} [modules = []] For inner usage only.
- * @property {Object=} extractJs For inner usage only.
- * @property {Object=} extractCss For inner usage only.
  * @property {Object=} loaderOptions Options defined in plugin but provided for the loader.
  * @property {Array<Object>|boolean=} preload Options to generate preload link tags for assets.
  * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
+ * @property {boolean|Object|'auto'|null} [minifyOptions = null] Minification options, it is used for auto minify.
+ */
+
+/**
+ * @typedef {Object} JsOptions
+ * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
+ * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
+ * @property {boolean|string} [`inline` = false] Whether the compiled JS should be inlined.
+ */
+
+/**
+ * @typedef {Object} CssOptions
+ * @property {RegExp} test RegEx to match style files.
+ * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
+ * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
+ * @property {boolean|string} [`inline` = false] Whether the compiled CSS should be inlined.
  */
 
 class Options {
@@ -46,23 +59,15 @@ class Options {
    *
    * @param {Object} options
    * @param {AssetEntry} AssetEntry The instance of the AssetEntry class.
-   *  Note: this file cannot be imported due to a circular dependency, therefore this dependency is injected.
+   *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
   static init(options, { AssetEntry }) {
     this.options = options;
     this.AssetEntry = AssetEntry;
-
-    if (options.modules && !Array.isArray(options.modules)) {
-      optionModulesException(options.modules);
-    }
-
-    const extractCssOptions = extractCssModule(options.css);
-
-    this.options.modules.unshift(extractCssOptions);
-    this.options.extractJs = options.js || {};
-    this.options.extractCss = extractCssOptions;
     this.options.afterProcess = isFunction(options.afterProcess) ? options.afterProcess : null;
+    this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
 
+    if (!options.js) this.options.js = {};
     if (!options.watchFiles) this.options.watchFiles = {};
   }
 
@@ -73,34 +78,34 @@ class Options {
    */
   static initWebpack(options) {
     const webpackOutput = options.output;
-    const { extractJs, extractCss } = this.options;
+    const { js, css } = this.options;
 
     this.webpackOptions = options;
     this.rootContext = options.context;
     this.prodMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
-    extractJs.inline = this.toBool(extractJs.inline, false, false);
-    extractCss.inline = this.toBool(extractCss.inline, false, false);
+    js.inline = this.toBool(js.inline, false, false);
+    css.inline = this.toBool(css.inline, false, false);
 
     this.#initWebpackOutput(webpackOutput);
 
-    if (extractJs.filename) {
-      webpackOutput.filename = extractJs.filename;
+    if (js.filename) {
+      webpackOutput.filename = js.filename;
     } else {
-      extractJs.filename = webpackOutput.filename;
+      js.filename = webpackOutput.filename;
     }
 
     // resolve js filename by outputPath
-    if (extractJs.outputPath) {
-      const filename = extractJs.filename;
+    if (js.outputPath) {
+      const filename = js.filename;
 
-      extractJs.filename = isFunction(filename)
-        ? (pathData, assetInfo) => this.resolveOutputFilename(filename(pathData, assetInfo), extractJs.outputPath)
-        : this.resolveOutputFilename(extractJs.filename, extractJs.outputPath);
+      js.filename = isFunction(filename)
+        ? (pathData, assetInfo) => this.resolveOutputFilename(filename(pathData, assetInfo), js.outputPath)
+        : this.resolveOutputFilename(js.filename, js.outputPath);
 
-      webpackOutput.filename = extractJs.filename;
+      webpackOutput.filename = js.filename;
     } else {
-      extractJs.outputPath = webpackOutput.path;
+      js.outputPath = webpackOutput.path;
     }
 
     if (!this.options.sourcePath) this.options.sourcePath = this.rootContext;
@@ -108,6 +113,16 @@ class Options {
 
     // options.entry
     this.#initWebpackEntry();
+  }
+
+  /**
+   * Set default CSS options.
+   *
+   * @param {Object} options The default options.
+   */
+  static setDefaultCssOptions(options) {
+    this.options.css = { ...options, ...this.options.css };
+    if (!this.options.css.outputPath) this.options.css.outputPath = this.options.outputPath;
   }
 
   static initWatchMode() {
@@ -152,7 +167,7 @@ class Options {
   }
 
   /**
-   * Entries defined in plugin options are merged with Webpack entry option.
+   * Entries defined in plugin options are merged with a Webpack entry option.
    */
   static #initWebpackEntry() {
     let { entry } = this.webpackOptions;
@@ -236,14 +251,14 @@ class Options {
   }
 
   static isStyle(file) {
-    return this.options.extractCss.enabled && this.options.extractCss.test.test(file);
+    return this.options.css.enabled && this.options.css.test.test(file);
   }
 
   /**
    * Whether the resource should be inlined.
    *
-   * @param {string} resource The resource file, including query.
-   * @param {boolean} defaultValue When resource query doesn't have the `inline` parameter then return default value.
+   * @param {string} resource The resource file, including a query.
+   * @param {boolean} defaultValue When a resource query doesn't have the `inline` parameter then return default value.
    * @return {boolean}
    */
   static #isInlineResource(resource, defaultValue) {
@@ -256,27 +271,27 @@ class Options {
   /**
    * Whether the JS resource should be inlined.
    *
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isInlineJs(resource) {
-    return this.#isInlineResource(resource, this.options.extractJs.inline);
+    return this.#isInlineResource(resource, this.options.js.inline);
   }
 
   /**
    * Whether the CSS resource should be inlined.
    *
-   * @param {string} resource
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isInlineCss(resource) {
-    return this.#isInlineResource(resource, this.options.extractCss.inline);
+    return this.#isInlineResource(resource, this.options.css.inline);
   }
 
   /**
    * Whether the source file is a template entry file.
    *
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isEntry(resource) {
@@ -298,14 +313,14 @@ class Options {
   /**
    * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
    *
-   * @param {boolean|string|undefined} value The value one of true, false, 'auto'.
+   * @param {boolean|string|undefined} value The value one of the values: true, false, 'auto'.
    * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
    * @param {boolean} defaultValue Returns default value when value is undefined.
    * @return {boolean}
    */
   static toBool(value, autoValue, defaultValue) {
     if (value == null) return defaultValue;
-    // note: if parameter is defined without a value or value is empty then the value is true
+    // note: if a parameter is defined without a value or value is empty, then the value is true
     if (value === '' || value === 'true') return true;
     if (value === 'false') return false;
     if (value === true || value === false) return value;
@@ -329,11 +344,11 @@ class Options {
   }
 
   static getJs() {
-    return this.options.extractJs;
+    return this.options.js;
   }
 
   static getCss() {
-    return this.options.extractCss;
+    return this.options.css;
   }
 
   static getWatchFiles() {
@@ -344,14 +359,29 @@ class Options {
     return this.options.preload == null ? false : this.options.preload;
   }
 
-  /**
-   * Get plugin module depend on type of source file.
-   *
-   * @param {string} sourceFile The source file of asset.
-   * @returns {ModuleOptions|undefined}
-   */
-  static getModule(sourceFile) {
-    return this.options.modules.find((module) => module.enabled !== false && module.test.test(sourceFile));
+  static getStyleOptions(sourceFile) {
+    if (!this.isStyle(sourceFile)) return null;
+
+    return this.options.css;
+  }
+
+  static getEntryOptions(sourceFile) {
+    const isEntry = this.isEntry(sourceFile);
+    const isStyle = this.isStyle(sourceFile);
+
+    if (!isEntry && !isStyle) return null;
+
+    let { filename, sourcePath, outputPath } = this.options;
+    let verbose = Options.isVerbose();
+
+    if (isStyle) {
+      const cssOptions = this.options.css;
+      if (cssOptions.filename) filename = cssOptions.filename;
+      if (cssOptions.sourcePath) sourcePath = cssOptions.sourcePath;
+      if (cssOptions.outputPath) outputPath = cssOptions.outputPath;
+    }
+
+    return { verbose, filename, sourcePath, outputPath };
   }
 
   static getWebpackOutputPath() {
@@ -380,6 +410,28 @@ class Options {
     return this.webpackPublicPath;
   }
 
+  static hasPostprocess() {
+    return this.options.postprocess != null;
+  }
+
+  /**
+   * @param {string} content A content of processed file.
+   * @param {ResourceInfo} info The resource info object.
+   * @param {Compilation} compilation The Webpack compilation object.
+   * @return {string}
+   * @throws
+   */
+  static postprocess(content, info, compilation) {
+    let result;
+    try {
+      return this.options.postprocess(content, info, compilation);
+    } catch (error) {
+      postprocessException(error, info);
+    }
+
+    return result;
+  }
+
   /**
    * Get the output asset file regards the publicPath.
    *
@@ -390,7 +442,7 @@ class Options {
   static getAssetOutputFile(assetFile, issuer) {
     const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(issuer);
 
-    // if public path is relative, then a resource using not in the template file must be auto resolved
+    // if the public path is relative, then a resource using not in the template file must be auto resolved
     if (this.isAutoPublicPath || isAutoRelative) {
       if (!issuer) return assetFile;
 

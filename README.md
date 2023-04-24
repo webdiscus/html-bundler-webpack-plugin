@@ -169,6 +169,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to use some different template engines](#recipe-diff-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
+   - [How to split CSS files](#recipe-split-css)
    - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
 1. Demo examples
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
@@ -3267,42 +3268,94 @@ module.exports = {
 
 > **Warning**
 >
-> Splitting CSS to many chunk is principal impossible. Splitting works only for JS files.
-> If you use vendor styles in your style file, e.g.:
->
-> _style.scss_
-> ```scss
-> @use "bootstrap/scss/bootstrap";
-> body {
->   color: bootstrap.$primary;
-> }
-> ```
->
-> Then vendor styles will not be saved to a separate file, because `sass-loader` generates one CSS bundle code.
-> Therefore vendor styles should be loaded in a template separately.
+> If you will to use the `test` as `/[\\/]node_modules[\\/]`, without extension specification,
+> then Webpack concatenates JS code together with CSS in one file and Webpack compilation will failed or generate files with a wrong content.
+> Webpack can't differentiate CSS module from JS module, therefore you MUST match only JS files.
+
+#### [↑ back to contents](#contents)
+<a id="recipe-split-css" name="recipe-split-css" href="#recipe-split-css"></a>
+### How to split CSS files
+
 
 > **Warning**
->
-> If you will to use the `test` as `/[\\/]node_modules[\\/]`, without extension specification,
-> then Webpack concatenates JS code together with CSS in one file,
-> because Webpack can't differentiate CSS module from JS module, therefore you MUST match only JS files.
->
-> If you want save module styles separate from your styles, then load them in a template separately:
-> ```html
-> <html>
-> <head>
->   <title>Home</title>
->   <!-- load module styles separately -->
->   <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
->   <!-- load your styles separately -->
->   <link href="./style.scss" rel="stylesheet">
-> </head>
-> <body>
->   <h1>Hello World!</h1>
->   <script src="./main.js"></script>
-> </body>
-> </html>
-> ```
+> 
+> Splitting CSS to many chunks is principal impossible. Splitting works only for JS files.
+
+Using the bundler plugin all your styles MUST be specified directly in template, not in Webpack entry.
+Unlike using the mini-css-extract-plugin and html-webpack-plugin, using the bundler plugin you cannot import a style in JavaScript.
+Importing a style in JavaScript is a dirty hack, BAD practice.
+
+So far as the style files must be manually defined in the template, you can separate the styles into multiple bundles yourself.
+
+For example, there are style files used in your app:
+```
+- components/banner/styles.scss 150 KB
+- components/button/styles.scss  50 KB
+- components/menu/styles.scss    50 KB
+- components/modal/styles.scss  100 KB
+- components/panel/styles.scss  100 KB
+- styles/main.scss  250 KB
+```
+We want to have a bundle file ~250 KB, then create the bundles manually:
+
+_styles/bundle01.scss_ 200 KB
+```scss
+@use '../components/banner/styles.scss';
+@use '../components/button/styles.scss';
+```
+
+_styles/bundle02.scss_ 250 KB
+```scss
+@use '../components/menu/styles.scss';
+@use '../components/modal/styles.scss';
+@use '../components/panel/styles.scss';
+```
+
+Add the bundles in the template:
+
+```html
+<html>
+<head>
+  <title>Home</title>
+  <link href="./styles/bundle01.scss" rel="stylesheet">
+  <link href="./styles/bundle02.scss" rel="stylesheet">
+  <link href="./styles/main.scss" rel="stylesheet">
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+If you use vendor styles in your style file, then vendor styles will not be saved to a separate file, because `sass-loader` generates one CSS bundle code.
+
+_style.scss_
+```scss
+@use "bootstrap/scss/bootstrap";
+body {
+  color: bootstrap.$primary;
+}
+// ...
+```
+
+
+If you want save module styles separate from your styles, then load them in a template separately:
+```html
+<html>
+<head>
+  <title>Home</title>
+  <!-- load module styles separately -->
+  <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- load your styles separately -->
+  <link href="./style.scss" rel="stylesheet">
+</head>
+<body>
+  <h1>Hello World!</h1>
+  <script src="./main.js"></script>
+</body>
+</html>
+```
+
 
 ---
 

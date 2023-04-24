@@ -44,7 +44,7 @@ class RenderMode {
 
   /**
    * Resolve resource file after compilation of source code.
-   * At this stage the filename is interpolated in VM.
+   * The filename is interpolated in VM at this stage.
    *
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
@@ -93,7 +93,7 @@ class RenderMode {
    * @return {string}
    */
   injectHmrFile(content) {
-    const hmrScript = `<script src="${this.encodeRequire(hmrFile)}"></script>`;
+    const hmrScript = `<script src="${this.encodeRequire(hmrFile)}" defer="defer"></script>`;
 
     return injectBeforeEndHead(content, hmrScript);
   }

@@ -5,7 +5,7 @@ const Collection = require('./Collection');
 
 class AssetScript {
   /**
-   * Unique last index for each file with same name.
+   * Unique last index for each file with the same name.
    * @type {Object<file: string, index: number>}
    */
   static index = {};
@@ -20,11 +20,11 @@ class AssetScript {
   static files = new Map();
 
   /**
-   * Add script to cache.
-   * After rebuild the scripts loaded from node modules will be added to compilation from the cache.
+   * Add the script to cache.
+   * After rebuild, the scripts loaded from node modules will be added to compilation from the cache.
    * Called after AssetScript.optimizeDependencies.
    *
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @param {string} issuer
    * @param {string} context
    * @return {boolean|undefined}
@@ -75,7 +75,7 @@ class AssetScript {
 
   /**
    * Clear cache.
-   * Called only once, when the plugin is applied.
+   * Called only once when the plugin is applied.
    */
   static clear() {
     this.index = {};

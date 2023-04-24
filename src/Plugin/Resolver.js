@@ -37,7 +37,7 @@ class Resolver {
   /**
    * The data of assets to resolving output assets.
    * For each new chunk must be cleaned.
-   * Note: same module can have many issuers and can be saved under different asset filenames.
+   * Note: the same module can have many issuers and can be saved under different asset filenames.
    *
    * @type {Map<string, {assets:Map, originalFilename?:string, resolve?:(issuer:FileInfo) => string}>}
    */
@@ -72,7 +72,7 @@ class Resolver {
   /**
    * Add the context and resolved path of the resource to resolve it in require() at render time.
    *
-   * @param {{resource: string, filename: string, resolve?: (FileInfo)=> string}} assetInfo The  asset info.
+   * @param {{resource: string, filename: string, resolve?: (FileInfo)=> string}} assetInfo The asset info.
    */
   static addAsset(assetInfo) {
     let sourceFile = path.resolve(assetInfo.resource);
@@ -94,7 +94,7 @@ class Resolver {
   }
 
   /**
-   * Resolve full path of asset source file by raw request and issuer.
+   * Resolve the full path of asset source file by raw request and issuer.
    *
    * @param {string} rawRequest The raw request of resource.
    * @param {string} issuer The issuer of resource.
@@ -133,7 +133,7 @@ class Resolver {
   }
 
   /**
-   * Get key of asset file to save it as resolved under its issuer.
+   * Get the key of asset file to save it as resolved under its issuer.
    *
    * Note: the key can be an output filename when the issuer is a current entry point
    *  otherwise is a source file of an issuer, e.g. a style.
@@ -142,14 +142,14 @@ class Resolver {
    * @param {AssetEntryOptions} entryPoint
    */
   static getAssetKey(issuer, entryPoint) {
-    return issuer === entryPoint.request ? entryPoint.filename : issuer;
+    return issuer === entryPoint.resource ? entryPoint.filename : issuer;
   }
 
   /**
    * Resolve output filename, given the auto public path.
    * Resolves styles, images, fonts and others except scripts.
    *
-   * @param {string} resource The full path resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @return {string|null}
    */
   static resolveAsset(resource) {
@@ -179,7 +179,7 @@ class Resolver {
       item.assets.set(assetKey, outputFilename);
 
       if (Collection.isStyle(resource)) {
-        // set the output filename to already created (in renderManifest) data
+        // set the output filename for already created (in renderManifest) data
         Collection.setDataFilename(this.entryPoint, { resource, filename: outputFilename });
       } else {
         Collection.setData(this.entryPoint, issuer, {
@@ -212,7 +212,7 @@ class Resolver {
     // bypass the asset contained data-URL
     if (AssetInline.isDataUrl(rawRequest)) return rawRequest;
 
-    // bypass the source script file to replace it after process
+    // bypass the source script file to replace it after the process
     if (Collection.isScript(rawRequest)) return rawRequest;
 
     const resource = this.getSourceFile(rawRequest, issuerFile);
@@ -252,7 +252,7 @@ class Resolver {
 
   /**
    * Clear caches.
-   * Called only once, when the plugin is applied.
+   * Called only once when the plugin is applied.
    */
   static clear() {
     this.data.clear();

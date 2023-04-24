@@ -1,3 +1,75 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`option watchFiles watchFiles.files 1`] = `
+"
+ html-bundler-webpack-plugin  Extract resources in entries 
+
+watch files:
+  - src/index.html
+  - src/style.css
+
+ ENTRY  index.html 
+source: src/index.html
+output: dist/
+assets:
+     style: src/style.css
+         -> assets/css/style.7036e3af.css
+  resource: src/image.png
+         -> assets/img/image.697ef306.png
+    script: src/main.js
+         -> assets/js/main.2c7d3fc8.js
+
+"
+`;
+
+exports[`option watchFiles watchFiles.ignore 1`] = `
+"
+ html-bundler-webpack-plugin  Extract resources in entries 
+
+watch files:
+  - src/index.html
+  - src/main.js
+
+ ENTRY  index.html 
+source: src/index.html
+output: dist/
+assets:
+     style: src/style.css
+         -> assets/css/style.7036e3af.css
+  resource: src/image.png
+         -> assets/img/image.697ef306.png
+    script: src/main.js
+         -> assets/js/main.2c7d3fc8.js
+
+"
+`;
+
+exports[`option watchFiles watchFiles.paths 1`] = `
+"
+ html-bundler-webpack-plugin  Extract resources in entries 
+
+watch files:
+  - src/index.html
+  - templates/footer.html
+
+ ENTRY  index.html 
+source: src/index.html
+output: dist/
+assets:
+     style: src/style.css
+         -> assets/css/style.7036e3af.css
+  resource: src/image.png
+         -> assets/img/image.697ef306.png
+    script: src/main.js
+         -> assets/js/main.2c7d3fc8.js
+
+"
+`;
+
+exports[`plugin options verbose output 1`] = `
+"
+ html-bundler-webpack-plugin  Extract resources in entries 
+
  ENTRY  index.html 
 source: src/views/home/index.html
 output: dist/
@@ -30,7 +102,7 @@ assets:
   resource: src/images/favorite.svg
          -> assets/img/favorite.876f98e8.svg
     script: src/views/home/home.js
-         -> js/home.d4872ea4.js
+         -> js/home.235b1a3d.js
 
  ENTRY  lang/de/index.html 
 source: src/views/home/index.html
@@ -64,7 +136,7 @@ assets:
   resource: src/images/favorite.svg
          -> ../../assets/img/favorite.876f98e8.svg
     script: src/views/home/home.js
-         -> ../../js/home.d4872ea4.js
+         -> ../../js/home.235b1a3d.js
 
  ENTRY  pages/about.html 
 source: src/views/about/index.html
@@ -101,10 +173,13 @@ assets:
     script: src/views/about/about-split.js
          -> chunks:
               - ../js/612.0ffbd578.js
-              - ../js/about-split.29e9ade0.js
+              - ../js/about-split.4f313695.js
     inline: src/views/about/about-inline-split.js?inline
             inline chunks:
               - 544.d9bb278f.js
-              - about-inline-split.fbbcdb3d.js
+              - about-inline-split.45b83e21.js
     script: src/views/about/about.js
-         -> ../js/about.2681e4a0.js
+         -> ../js/about.3804b456.js
+
+"
+`;

@@ -21,12 +21,12 @@ class UrlDependency {
    */
   static resolve(resolveData) {
     const fs = this.fs;
-    const [resource, query] = resolveData.request.split('?');
+    const [file, query] = resolveData.request.split('?');
 
-    if (!fs.existsSync(path.resolve(resolveData.context, resource))) {
+    if (!fs.existsSync(path.resolve(resolveData.context, file))) {
       const dependency = resolveData.dependencies[0];
       const parentModule = this.moduleGraph.getParentModule(dependency);
-      const sourceFile = this.resolveInSnapshot(parentModule.buildInfo.snapshot, resource);
+      const sourceFile = this.resolveInSnapshot(parentModule.buildInfo.snapshot, file);
 
       if (sourceFile != null) {
         const resolvedRequest = query ? sourceFile + '?' + query : sourceFile;
@@ -44,7 +44,7 @@ class UrlDependency {
 
   /**
    * @param {Snapshot} snapshot The Webpack snapshot.
-   * @param {string} resource The file to be resolved.
+   * @param {string} resource The resource file, including a query, to be resolved.
    * @return {null|{file: string, context: string}}
    */
   static resolveInSnapshot(snapshot, resource) {
@@ -67,7 +67,7 @@ class UrlDependency {
       if (!!path.extname(dependency)) {
         context = path.dirname(dependency);
         if (cache.has(context)) {
-          // skip directory that is already checked and the resource was not resolved in this directory
+          // skip the directory that is already checked, and the resource was not resolved in this directory
           continue;
         }
 

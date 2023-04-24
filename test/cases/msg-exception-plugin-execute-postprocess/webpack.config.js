@@ -14,14 +14,9 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-      modules: [
-        {
-          test: /\.html$/,
-          postprocess: () => {
-            throw new Error('issue an error');
-          },
-        },
-      ],
+      postprocess: () => {
+        throw new Error('issue an error');
+      },
     }),
   ],
 };

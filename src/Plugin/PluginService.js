@@ -1,6 +1,6 @@
 /**
  * The plugin services for common usage.
- * The instance available both in the plugin and loader.
+ * The instance is available both in the plugin and loader.
  */
 
 const Preprocessor = require('../Loader/Preprocessor');
@@ -31,7 +31,7 @@ class PluginService {
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
-   * @param {PluginOptionInstance} options The plugin options instance.
+   * @param {Options} options The plugin options instance.
    */
   static init(options) {
     this.#used = true;
@@ -71,7 +71,7 @@ class PluginService {
   }
 
   /**
-   * Returns options defined in plugin but provided for the loader.
+   * Returns options defined in the plugin but provided for the loader.
    *
    * @return {Object}
    */

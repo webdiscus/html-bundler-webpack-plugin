@@ -26,7 +26,7 @@ class Resolver {
     this.hasAlias = Object.keys(this.aliases).length > 0;
     this.hasPlugins = options.plugins && Object.keys(options.plugins).length > 0;
 
-    // resolver for scripts from the 'script' tag, npm modules and other js files
+    // resolver for scripts from the 'script' tag, npm modules, and other js files
     this.resolveFile = ResolverFactory.create.sync({
       ...options,
       preferRelative: options.preferRelative !== false,
@@ -41,7 +41,7 @@ class Resolver {
       preferRelative: options.preferRelative !== false,
       byDependency: {},
       conditionNames: ['style', 'sass'],
-      // firstly try to resolve 'browser' or 'style' fields in package.json to get compiled CSS bundle of a module,
+      // firstly, try to resolve 'browser' or 'style' fields in package.json to get compiled CSS bundle of a module,
       // e.g. bootstrap has the 'style' field, but material-icons has the 'browser' field for resolving the CSS file;
       // if a module has not a client specified field, then must be used path to client file of the module,
       // like `module-name/dist/bundle.css`
@@ -144,17 +144,17 @@ class Resolver {
   }
 
   /**
-   * Resolve script request w/o extension.
-   * The extension must be resolved to generate correct unique JS filename in the plugin.
-   * For example: `vendor.min?key=val` resolve to `vendor.min.js?key=val`.
+   * Resolve script request w/o the extension.
+   * The extension must be resolved to generate a correct unique JS filename in the plugin.
+   * For example, `vendor.min?key=val` resolve to `vendor.min.js?key=val`.
    *
    * @param {string} request The request of script.
    * @return {string}
    */
   static resolveScriptExtension(request) {
-    const [resource, query] = request.split('?');
+    const [file, query] = request.split('?');
     const scriptExtensionRegexp = /\.(js|ts)$/;
-    const resolvedFile = scriptExtensionRegexp.test(resource) ? resource : require.resolve(resource);
+    const resolvedFile = scriptExtensionRegexp.test(file) ? file : require.resolve(file);
 
     return query ? resolvedFile + '?' + query : resolvedFile;
   }
@@ -163,7 +163,7 @@ class Resolver {
    * Resolve an alias in the argument of require() function.
    *
    * @param {string} request The value of extends/include/require().
-   * @return {string | [] | null} If found an alias return resolved normalized path otherwise return null.
+   * @return {string | [] | null} If found an alias return the resolved normalized path otherwise return null.
    * @private
    */
   static resolveAlias(request) {

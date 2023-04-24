@@ -4,8 +4,8 @@ const JSON5 = require('json5');
 const isWin = path.sep === '\\';
 
 /**
- * Converts the win path to POSIX standard.
- * The require() function understands only POSIX format.
+ * Converts the win path to the POSIX standard.
+ * The require() function understands only the POSIX format.
  *
  * Fix path, for example:
  *   - `..\\some\\path\\file.js` to `../some/path/file.js`
@@ -25,9 +25,9 @@ const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 /**
  * Returns a file extension without leading '.'.
  *
- * Note: this implementation fix many issues of node path.parse().
+ * Note: this implementation fixes many issues of node path.parse().
  *
- * @param {string} resource The resource file, can contain a URL query.
+ * @param {string} resource The resource file, including a query.
  * @param {boolean} win Whether the path is in windows format. This parameter is autodetect.
  *  It is used for unit testing only.
  * @return {string}
@@ -51,7 +51,6 @@ const parseQuery = (request) => {
   if (!query) return {};
 
   if (isJSON(query)) {
-    // TODO: write own micro parser to avoid external dependency of json5 module
     return JSON5.parse(decodeURIComponent(query));
   }
 
@@ -66,7 +65,9 @@ const parseQuery = (request) => {
   for (let arg of queryArgs) {
     let [name, value] = arg.split('=');
 
-    if (value) {
+    if (value == null) {
+      result[name] = true;
+    } else if (value) {
       value = decodeURIComponent(value);
 
       if (specialValues.hasOwnProperty(value)) {
@@ -87,17 +88,6 @@ const parseQuery = (request) => {
   }
 
   return result;
-};
-
-/**
- * Parse resource path and raw query from request.
- *
- * @param {string} request
- * @return {{resource: string, query: string|null}}
- */
-const parseRequest = (request) => {
-  const [resource, query] = request.split('?');
-  return { resource, query };
 };
 
 /**
@@ -122,7 +112,6 @@ module.exports = {
   pathToPosix,
   getFileExtension,
   parseQuery,
-  parseRequest,
   detectIndent,
   outToConsole,
 };

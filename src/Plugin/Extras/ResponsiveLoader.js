@@ -29,7 +29,7 @@ class ResponsiveLoader {
   }
 
   /**
-   * Find loader option used in the module.
+   * Find a loader option used in the module.
    * Note: different modules may have their own loader options.
    *
    * @param {Object} module The Webpack module of asset.
@@ -58,8 +58,8 @@ class ResponsiveLoader {
   /**
    * Get the result of resource processing via `responsive-loader`.
    *
-   * Note: in the template is impossible use `responsive-loader` as object,
-   * because a processing happen in a later stage then used result in template.
+   * Note: in the template is impossible to use `responsive-loader` as an object,
+   * because processing happens in a later stage then used the result in template.
    *
    * @param {Object} module The Webpack module of asset.
    * @param {FileInfo} issuer The issuer of the module.
@@ -102,7 +102,7 @@ class ResponsiveLoader {
       return resultProp;
     }
 
-    // fallback: retrieve all generated assets as coma-separated list
+    // fallback: retrieve all generated assets as the coma-separated list
     // get the real filename of the asset by usage a loader for the resource, e.g. `responsive-loader`
     // and add the original asset file to trash to remove it from compilation
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];

@@ -9,12 +9,12 @@ describe('issue tests', () => {
   // - the 2nd attribute is the directory name of your test case under `./test/cases/`
   // - run test: `npm run test:issue`
 
-  test('issue base template', (done) => {
-    compareFileListAndContent(PATHS, 'issue-0-base-template', done);
+  test('issue base template', () => {
+    return compareFileListAndContent(PATHS, 'issue-0-base-template');
   });
 
-  test('issue advanced template', (done) => {
-    compareFileListAndContent(PATHS, 'issue-0-advanced-template', done);
+  test('issue advanced template', () => {
+    return compareFileListAndContent(PATHS, 'issue-0-advanced-template');
   });
 
   // add your issue test here

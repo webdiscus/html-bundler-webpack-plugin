@@ -4,7 +4,7 @@
  */
 class AssetTrash {
   static trash = [];
-  static commentRegexp = /^\/\*\!.+\.LICENSE\.txt\s*\*\/\s*/;
+  static commentRegexp = /^\/\*!.+\.LICENSE\.txt\s*\*\/\s*/;
   static commentFileSuffix = '.LICENSE.txt';
 
   /**

@@ -11,7 +11,7 @@ const toCommonJS = (code) => {
     code = code.replace(match, `var ${variable} = require('${file}');`);
   }
   // new URL to require
-  const urlMatches = code.matchAll(/= new URL\("(.+?)"(?:.*?)\);/g);
+  const urlMatches = code.matchAll(/= new URL\("(.+?)".*?\);/g);
   for (const [match, file] of urlMatches) {
     code = code.replace(match, `= require('${file}');`);
   }

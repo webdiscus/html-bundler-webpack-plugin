@@ -28,7 +28,7 @@ const mimeType = {
 };
 
 /**
- * The valid values of the type of content for 'as' attribute.
+ * The valid type values of content for 'as' attribute.
  * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
  *
  * @type {Array<string>}
@@ -63,7 +63,7 @@ class Preload {
    * @return {string}
    */
   static getPreloadFile(entry, issuer, assetFile) {
-    if (issuer && issuer.resource !== entry.request) {
+    if (issuer && issuer.resource !== entry.resource) {
       // recovery preload output file of an asset relative by entry point
       const issuerDir = path.dirname(issuer.filename);
       const webRootPath = path.posix.join(issuerDir, assetFile);
@@ -101,7 +101,7 @@ class Preload {
     // create sorted groups in the order of the specified 'preload' options
     options.forEach(({ as }) => (groupBy[as] = []));
 
-    // prepare flat array with preload assets
+    // prepare a flat array with preload assets
     for (let item of data.resources) {
       if (item.inline) continue;
       const assets = item?.ref?.assets ? item.ref.assets : item.assets;

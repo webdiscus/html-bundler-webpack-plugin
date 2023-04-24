@@ -41,14 +41,14 @@ class Options {
       const loaderOptions = PluginService.getLoaderOptions();
       options = { ...loaderOptions, ...(loaderContext.getOptions() || {}) };
 
-      // assets root path used for resolving files specified in attributes (`sources` option)
+      // the assets root path is used for resolving files specified in attributes (`sources` option)
       // allow both 'root' and 'basedir' option name for compatibility
       const basedir = options.root || options.basedir || false;
       options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
 
       // reserved for future feature
       // if (queryData.hasOwnProperty('_mode')) {
-      //   // rule: the mode defined in query has prio over the loader option
+      //   // rule: the mode defined in the query has prio over the loader option
       //   if (this.modes.has(queryData._mode)) {
       //     options.mode = queryData._mode;
       //   }
@@ -181,7 +181,7 @@ class Options {
 
   /**
    * Returns preprocessor to compile a template.
-   * The default preprocessor use the Eta templating engine.
+   * The default preprocessor uses the Eta templating engine.
    *
    * @return {null|(function(string, {data?: {}}): Promise|null)}
    */
@@ -199,7 +199,7 @@ class Options {
 
   static #initWatchFiles() {
     const watchFiles = {
-      // watch files only in the directories,
+      // watch files only in the directories;
       // defaults is first-level subdirectory of a template, relative to root context
       paths: [],
 

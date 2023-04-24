@@ -21,7 +21,7 @@ class Preprocessor {
 
   /**
    * Returns preprocessor to compile a template.
-   * The default preprocessor use the Eta templating engine.
+   * The default preprocessor uses the Eta templating engine.
    *
    * @param {Object} options The loader options.
    * @return {null|(function(string, {data?: {}}): Promise|null)}
@@ -37,7 +37,7 @@ class Preprocessor {
 
   /**
    * Factory preprocessor as a function.
-   * The default preprocessor use the Eta template engine.
+   * The default preprocessor uses the Eta template engine.
    *
    * @param {string|null|*} preprocessor The preprocessor value, should be a string
    * @param {Object} options The preprocessor options.

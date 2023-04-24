@@ -1,6 +1,6 @@
 class Asset {
   /**
-   * Unique last index for each file with same name.
+   * Unique last index for each file with the same name.
    * @type {Object<file: string, index: number>}
    */
   static index = {};
@@ -18,7 +18,7 @@ class Asset {
    * Add resolved module asset.
    * This asset can be as issuer for other resource assets.
    *
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @param {string} filename The output filename.
    */
   static add(resource, filename) {
@@ -26,7 +26,7 @@ class Asset {
   }
 
   /**
-   * @param {string} sourceFile The source file, without query.
+   * @param {string} sourceFile The source file, without a query.
    * @param {string} assetFile The output filename.
    * @return {{isCached: boolean, filename: string}}
    */

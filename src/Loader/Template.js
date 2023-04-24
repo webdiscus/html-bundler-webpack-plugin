@@ -99,7 +99,7 @@ class Template {
   static issuer;
 
   /**
-   * Resolve all source resource in HTML.
+   * Resolve all source resources in HTML.
    *
    * @param {string} html The source HTML string.
    * @param {string} issuer The template file.
@@ -117,7 +117,7 @@ class Template {
     this.root = Options.getBasedir();
 
     const tags = this.parseTags(html);
-    const result = this.normalizeTagsList(tags);
+    const result = this.normalizeTagList(tags);
     let output = '';
     let pos = 0;
 
@@ -140,7 +140,7 @@ class Template {
    * Resolve alias: href="@styles/basic.css", href="~Styles/basic.css", href="Styles/basic.css"
    * Resolve file with query: srcset="image.png?{sizes: [100,200,300], format: 'jpg'}"
    *
-   * If `loader.root` option is not false then resolve a file with leading `/`: `/img/logo.png`
+   * If the `loader.root` option is not false, then resolve a file with leading `/`: `/img/logo.png`
    *
    * Ignore:
    *  - https://example.com/style.css
@@ -154,7 +154,7 @@ class Template {
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} file The source file of resource.
    * @param {string} issuer The issuer of source file.
-   * @return {string|boolean} Return resolved full path of source file or false
+   * @return {string|boolean} Return a resolved full path of source file or false.
    */
   static resolve({ type, file, issuer }) {
     file = file.trim();
@@ -184,7 +184,7 @@ class Template {
    * @param {Array<{}>} tags
    * @return {Array<{}>}
    */
-  static normalizeTagsList(tags) {
+  static normalizeTagList(tags) {
     const result = [];
 
     for (let { type, startPos: tagStartPos, endPos: tagEndPos, attrs } of tags) {

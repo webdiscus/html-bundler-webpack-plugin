@@ -35,13 +35,13 @@ class Collection {
    * @param {AssetEntryOptions} entry The entry point.
    */
   static initEntry(entry) {
-    const { request, filename } = entry;
+    const { resource, filename } = entry;
 
     // create entry point in data
     if (entry.isTemplate) this.setData(entry, null, {});
 
     for (const item of this.files.values()) {
-      if (item.entryRequests.has(request)) {
+      if (item.entryRequests.has(resource)) {
         item.entryFilenames.add(filename);
       }
     }
@@ -50,7 +50,7 @@ class Collection {
   /**
    * Whether resource is a script.
    *
-   * @param {string} resource The resource file.
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isScript(resource) {
@@ -60,7 +60,7 @@ class Collection {
   /**
    * Whether resource is a style.
    *
-   * @param {string} resource The resource file.
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isStyle(resource) {
@@ -83,7 +83,8 @@ class Collection {
     return module.__isScript;
   }
 
-  // Reserved for future. Enable when will be used the AssetCompiler.beforeBuildModule.
+  // Reserved for the future.
+  // Enable when will be used the AssetCompiler.beforeBuildModule.
   // /**
   //  * @param {{__isStyle?:boolean|undefined, resource:string}} module The Webpack chunk module.
   //  * Properties:<br>
@@ -103,7 +104,7 @@ class Collection {
   /**
    * Whether resource is an inlined style.
    *
-   * @param {string} resource The resource file.
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isInlineStyle(resource) {
@@ -116,13 +117,13 @@ class Collection {
    * Add the resource.
    * Called in loader by parsing scripts and styles.
    *
-   * @param {string} resource The resource file, including query.
-   * @param {string} issuer The issuer request of resource.
+   * @param {string} resource The resource file, including a query.
+   * @param {string} issuer The issuer resource, including a query.
    * @param {string} type The type of resource. One of: `script`, `style`.
    */
   static add(resource, issuer, type) {
     // note: the same source file can be either as file or as inlined,
-    // but can't be in one place as file and in other as inlined
+    // but can't be in one place as file and in another place as inlined
     let item = this.files.get(resource);
     let inline = false;
 
@@ -155,7 +156,7 @@ class Collection {
    * Set asset name, the filename part w/o path, hash, extension.
    * One script can be used in many templates.
    *
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @param {string} name The unique name of entry point.
    */
   static setName(resource, name) {
@@ -168,21 +169,19 @@ class Collection {
   /**
    * Save info of resolved data.
    *
-   * TODO: set .ref for css from node module
-   *
    * Note[1]: resolve the collision when the same issuer, e.g. a style file, is used in many entries.
    *   If an issuer then only by first usage is set the data.
-   *   In this case, we use the unique reference object to save common used assets.
+   *   In this case, we use the unique reference object to save commonly used assets.
    *
    *   If an issuer is an inlined file, then for each usage is set the data.
-   *   In this case, we save assets in local data object, because asset output filenames can be different
+   *   In this case, we save assets in the local data object, because asset output filenames can be different
    *   by entries with different output paths, eg.: 'home/' -> 'img/fig.png', 'home/en/' -> '../img/fig.png'.
    *
    * @param {AssetEntryOptions} entry The entry where is specified the resource.
-   * @param {FileInfo|null} issuer The issuer of the resource, can be a template, style or script.
+   * @param {FileInfo|null} issuer The issuer of the resource can be a template, style or script.
    * @param {string} type The type of resource.
    * @param {boolean} inline Whether should be inlined into HTML.
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @param {string|null} assetFile The output filename.
    * @param {string|null} source The source content of asset.
    */
@@ -201,7 +200,7 @@ class Collection {
 
     // 2. create a style or script
     if (this.ScriptOrStyleType.has(type)) {
-      // set reference to original object, because same resource can be used in many entries, 1:n
+      // set reference to an original object because the same resource can be used in many entries, 1:n
       data.ref = this.files.get(data.resource);
 
       // if CSS is imported with a filename, including the `.css` extension, e.g. `@import 'npm-module/styles.css'`,
@@ -215,27 +214,27 @@ class Collection {
       return;
     }
 
-    // 3.1. add a resource data to an entry
-    if (issuer.resource === entry.request) {
+    // 3.1. add resource data to an entry
+    if (issuer.resource === entry.resource) {
       resources.push(data);
       return;
     }
 
     // find a parent resource (style) to add the resource as the dependency
     const parent = resources.find((item) => item.resource === issuer.resource);
-    let assetsRef = parent;
+    let reference = parent;
 
     // see the Note[1] in docBlock
     if (!parent.inline) {
-      assetsRef = parent.ref;
+      reference = parent.ref;
       data.issuer = issuer;
     }
 
     // 3.2. add the dependency to the parent
-    if (assetsRef.assets == null) {
-      assetsRef.assets = [data];
+    if (reference.assets == null) {
+      reference.assets = [data];
     } else {
-      assetsRef.assets.push(data);
+      reference.assets.push(data);
     }
   }
 
@@ -257,7 +256,7 @@ class Collection {
    * Set source code for inlined asset.
    *
    * @param {AssetEntryOptions} entry The entry where is defined the asset.
-   * @param {string} resource The resource file, including query.
+   * @param {string} resource The resource file, including a query.
    * @param {string} source The source content of asset.
    */
   static setDataSource(entry, resource, source) {
@@ -273,7 +272,7 @@ class Collection {
    * Inline JS, CSS, substitute output JS filenames.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
-   * @param {Function} callback The callback to allow to modify the content with an external function.
+   * @param {Function} callback A callback that allows content to be modified using an external function.
    */
   static render(compilation, callback = null) {
     const RawSource = compilation.compiler.webpack.sources.RawSource;
@@ -399,7 +398,7 @@ class Collection {
       if (!chunkGroup) continue;
 
       const chunkFiles = chunkGroup.getFiles().filter((file) => assetsInfo.get(file).hotModuleReplacement !== true);
-      const isSplitChunks = chunkFiles.length > 1;
+      const hasSplitChunks = chunkFiles.length > 1;
 
       for (let entry of entryFilenames) {
         // let's show an original error
@@ -408,13 +407,13 @@ class Collection {
         const data = { type, inline, resource, chunks: [] };
         let injectedChunks;
 
-        if (isSplitChunks) {
+        if (hasSplitChunks) {
           if (!chunkCache.has(entry)) chunkCache.set(entry, new Set());
           injectedChunks = chunkCache.get(entry);
         }
 
         for (let chunkFile of chunkFiles) {
-          if (isSplitChunks) {
+          if (hasSplitChunks) {
             if (injectedChunks.has(chunkFile)) continue;
             injectedChunks.add(chunkFile);
           }
@@ -434,18 +433,21 @@ class Collection {
     }
 
     // remove generated unused split files
-    for (let { chunkReason, files } of chunks) {
-      if (chunkReason && chunkReason.startsWith('split chunk')) {
-        for (let file of files) {
-          if (!splitChunks.has(file)) AssetTrash.add(file);
-        }
+    for (let { chunkReason, files, preventIntegration } of chunks) {
+      if (!this.isSplitChunk(chunkReason)) continue;
+      for (let file of files) {
+        if (!splitChunks.has(file)) AssetTrash.add(file);
       }
     }
   }
 
+  static isSplitChunk(reason) {
+    return reason != null && reason.indexOf('split') > -1;
+  }
+
   /**
    * Clear cache.
-   * Called only once, when the plugin is applied.
+   * Called only once when the plugin is applied.
    */
   static clear() {
     this.files.clear();

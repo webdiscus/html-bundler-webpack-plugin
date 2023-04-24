@@ -1,6 +1,6 @@
 /**
  * @param {{key: string, value: string}} attrs
- * @param {Array<string>} exclude The list of excluded attributes from result.
+ * @param {Array<string>} exclude The list of excluded attributes from the result.
  * @return {string}
  */
 const attrsToString = (attrs, exclude = []) => {
@@ -18,11 +18,11 @@ const attrsToString = (attrs, exclude = []) => {
  * Parse tag attributes in a tag string.
  *
  * @param {string} string
- * @returns {Object<key: string, value: string>} The parsed attributes as object key:value.
+ * @returns {Object<key: string, value: string>} The parsed attributes as the object key:value.
  */
 const parseAttributes = (string) => {
   let attrs = {};
-  const matches = string.matchAll(/([^\s]+)="(.+?)"/gm);
+  const matches = string.matchAll(/(\S+)="(.+?)"/gm);
   for (const [, key, val] of matches) {
     attrs[key] = val;
   }
@@ -84,7 +84,7 @@ const parseSvg = (svg) => {
   const svgAttrsStartPos = svgOpenTag.length;
   const svgAttrsEndPos = svg.indexOf('>', svgAttrsStartPos);
   const svgAttrsString = svg.slice(svgAttrsStartPos, svgAttrsEndPos);
-  const svgAttrs = parseAttributes(svgAttrsString, ['id', 'version', 'xml', 'xmlns']);
+  const svgAttrs = parseAttributes(svgAttrsString);
   const innerSVG = svg.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
 
   // encode reserved chars in data URL for IE 9-11 (enable if needed)
@@ -162,7 +162,7 @@ class AssetInline {
   }
 
   /**
-   * @param {string} resource The resource files of an asset.
+   * @param {string} resource The resource file, including a query.
    * @param {string} issuer The source file of the issuer.
    * @param {boolean} isEntry Whether the issuer is an entry file.
    */
@@ -210,7 +210,7 @@ class AssetInline {
     if (!item) return;
 
     if (item.isSvg) {
-      // extract SVG content from processed source via a loader like svgo-loader
+      // extract SVG content from the processed source via a loader like svgo-loader
       const svg = module.originalSource().source().toString();
 
       if (item.inlineSvg) {

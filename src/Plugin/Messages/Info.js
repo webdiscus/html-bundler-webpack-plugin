@@ -48,7 +48,7 @@ const verbose = () => {
 
   // display resources
   for (let [entryAsset, { entry, resources, preloads }] of Collection.data) {
-    const entrySource = pathRelativeByPwd(entry.request);
+    const entrySource = pathRelativeByPwd(entry.resource);
     const outputPath = pathRelativeByPwd(entry.outputPath);
 
     str += '\n';

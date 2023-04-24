@@ -1,5 +1,14 @@
 # Change log
 
+## 1.17.3 (2023-04-24)
+- fix: correct parsing of a query where the key does not contain a value, e.g. `?enable&size=100`
+- refactor: code refactoring and optimization
+- chore: small performance improvement due to code optimization
+- chore: spelling corrections in code
+- chore: update dev dependencies
+- test: refactor tests to async run
+- docs: update readme
+
 ## 1.17.2 (2023-04-21)
 - fix: live reload after changes if a template contains commented out script
 - fix: issue if a CSS file is imported in SCSS with a filename, including the `.css` extension, e.g. `@import 'npm-module/styles.css'`

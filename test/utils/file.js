@@ -2,29 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Get files with relative paths.
- * @param {string} dir
- * @param {boolean} returnAbsolutePath If is false then return relative paths by dir.
- * @return {[]}
- */
-export const readDirRecursiveSync = function (dir = './', returnAbsolutePath = true) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-  dir = path.resolve(dir);
-
-  // get files within the current directory and add a path key to the file objects
-  const files = entries.filter((file) => !file.isDirectory()).map((file) => path.join(dir, file.name));
-  // get folders within the current directory
-  const folders = entries.filter((folder) => folder.isDirectory());
-
-  for (const folder of folders) {
-    files.push(...readDirRecursiveSync(path.join(dir, folder.name)));
-  }
-
-  return returnAbsolutePath ? files : files.map((file) => file.replace(path.join(dir, '/'), ''));
-};
-
-/**
  * Get directories only.
  * @param {string} dir
  * @param {RegExp} test Include dirs matching this RegExp.
@@ -44,6 +21,42 @@ export const readDirOnlyRecursiveSync = function (dir = './', test = null) {
   }
 
   return result;
+};
+
+/**
+ * Returns a list of absolut files.
+ *
+ * @param {string} dir The starting directory.
+ * @param {FileSystem} fs The file system. Should be used the improved Webpack FileSystem.
+ * @param {Array<RegExp>} includes Include matched files only.
+ * @param {Array<RegExp>} excludes Exclude matched files. It has priority over includes.
+ * @return {Array<string>}
+ */
+export const readDirRecursiveSync = (dir, { includes = [], excludes = [] } = {}) => {
+  const noIncludes = includes.length < 1;
+  const noExcludes = excludes.length < 1;
+
+  /**
+   * @param {string} dir
+   * @return {Array<string>}
+   */
+  const readDir = (dir) => {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const result = [];
+
+    for (const file of entries) {
+      const current = path.join(dir, file.name);
+
+      if (noExcludes || !excludes.find((regex) => regex.test(current))) {
+        if (file.isDirectory()) result.push(...readDir(current));
+        else if (noIncludes || includes.find((regex) => regex.test(current))) result.push(current);
+      }
+    }
+
+    return result;
+  };
+
+  return readDir(dir);
 };
 
 /**
@@ -75,41 +88,6 @@ export const removeDirsSync = function (dir, test) {
 };
 
 /**
- * Copy current generated files form `dist/` to `expected/`.
- *
- * TODO: add exclude dirs contained expected/output.txt. This files must be updated manually.
- *
- * @param {string} dir The absolute path.
- * @param {string} from The relative path to the `dir`.
- * @param {string} to The relative path to the `dir`.
- */
-export const syncExpected = function (dir, { from, to }) {
-  if (dir === '/') return;
-
-  // 1. remove outdated files
-  const expectedDirs = readDirOnlyRecursiveSync(dir, new RegExp(`${to}$`));
-  expectedDirs.forEach((current) => fs.rmSync(current, { recursive: true, force: true }));
-
-  // 2. read all dist dirs
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const distDirs = entries.filter((folder) => folder.isDirectory());
-
-  // 3. copy files recursively `from` to `to` path
-  distDirs.forEach(({ name }) => {
-    const currentDir = path.join(dir, name);
-    const fromDir = path.join(currentDir, from);
-    const toDir = path.join(currentDir, to);
-
-    if (!fs.existsSync(fromDir)) {
-      return;
-    }
-
-    console.log('>>> fromDir: ', { fromDir, __toDir: toDir });
-    copyRecursiveSync(fromDir, toDir);
-  });
-};
-
-/**
  * Return content of file as string.
  *
  * @param {string} file
@@ -120,4 +98,41 @@ export const readTextFileSync = (file) => {
     throw new Error(`\nERROR: the file "${file}" not found.`);
   }
   return fs.readFileSync(file, 'utf-8');
+};
+
+/**
+ * Copy current generated files from `dist/` to `expected/`.
+ *
+ * @param {string} dir The absolute path.
+ */
+export const syncExpected = function (dir) {
+  if (dir === '/') return;
+
+  const dirMap = new Map();
+
+  // 1. read files
+  const dirs = readDirRecursiveSync(dir, {
+    fs,
+    // match the path containing the `/expected` directory
+    includes: [/expected\/(?:.+?)(?:[^/]+)$/],
+  });
+
+  dirs.forEach((current) => {
+    const toDir = path.dirname(current);
+    const testDir = path.dirname(toDir);
+    const fromDir = path.join(testDir, 'dist');
+
+    if (fs.existsSync(fromDir)) {
+      // distinct the same directories
+      dirMap.set(fromDir, toDir);
+    }
+  });
+
+  dirMap.forEach((toDir, fromDir) => {
+    console.log({ from: fromDir, __to: toDir });
+    // 2. remove old files
+    fs.rmSync(toDir, { recursive: true, force: true });
+    // 3. copy files recursively
+    copyRecursiveSync(fromDir, toDir);
+  });
 };

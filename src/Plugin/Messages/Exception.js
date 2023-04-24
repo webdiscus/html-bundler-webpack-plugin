@@ -34,18 +34,6 @@ const optionEntryPathException = (dir) => {
 };
 
 /**
- * @param {ModuleOptions[]} modules
- * @throws {Error}
- */
-const optionModulesException = (modules) => {
-  const message =
-    `The plugin option ${green`modules`} must be the array of ${green`ModuleOptions`} but given:\n` +
-    cyanBright(JSON.stringify(modules, null, '  '));
-
-  throw new PluginException(message);
-};
-
-/**
  * @param {Object} config
  * @throws {Error}
  */
@@ -103,8 +91,8 @@ const resolveException = (file, issuer) => {
  * @param {string} sourceFile
  * @throws {Error}
  */
-const executeTemplateFunctionException = (error, sourceFile) => {
-  const message = `Failed to execute the template function.\nSource file: '${cyan(sourceFile)}'`;
+const executeFunctionException = (error, sourceFile) => {
+  const message = `Failed to execute the function.\nSource file: '${cyan(sourceFile)}'`;
 
   throw new PluginException(message, error);
 };
@@ -123,9 +111,8 @@ const postprocessException = (error, info) => {
 module.exports = {
   PluginException,
   optionEntryPathException,
-  optionModulesException,
   optionPreloadAsException,
   resolveException,
-  executeTemplateFunctionException,
+  executeFunctionException,
   postprocessException,
 };
