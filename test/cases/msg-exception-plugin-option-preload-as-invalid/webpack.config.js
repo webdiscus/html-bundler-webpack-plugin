@@ -1,0 +1,37 @@
+const path = require('path');
+const HtmlBundlerPlugin = require('../../../');
+
+module.exports = {
+  mode: 'production',
+
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
+
+      preload: [
+        {
+          test: /\.(png|jpe?g|webp|svg)$/,
+          as: 'invalid', // test exception: the property `as` has invalid value
+        },
+      ],
+    }),
+  ],
+
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|ico|svg)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'img/[name].[hash:8][ext]',
+        },
+      },
+    ],
+  },
+};

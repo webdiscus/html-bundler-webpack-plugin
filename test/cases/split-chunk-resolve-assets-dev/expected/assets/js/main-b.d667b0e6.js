@@ -83,7 +83,7 @@
 /******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
 /******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
 /******/ 		var installedChunks = {
-/******/ 			"main-a": 0
+/******/ 			"main-b": 0
 /******/ 		};
 /******/ 		
 /******/ 		// no chunk on demand loading
@@ -133,7 +133,7 @@
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["scripts-src_assets_js_module-c_js","scripts-src_assets_js_module-a_js","scripts-src_assets_js_main-a_js-_8b421"], () => (__webpack_require__("./src/assets/js/main-a.js")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["scripts-src_assets_js_module-c_js","scripts-src_assets_js_main-b_js"], () => (__webpack_require__("./src/assets/js/main-b.js")))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

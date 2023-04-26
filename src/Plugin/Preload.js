@@ -79,6 +79,7 @@ class Preload {
    * @param {string} content The template content.
    * @param {string} entryAsset The output filename of template.
    * @param {Map} collection The reference to `Collection.data`.
+   * @throws
    */
   static insertPreloadAssets(content, entryAsset, collection) {
     const data = collection.get(entryAsset);
@@ -98,8 +99,31 @@ class Preload {
     const indent = LF + detectIndent(content, insertPos - 1);
     const groupBy = {};
 
-    // create sorted groups in the order of the specified 'preload' options
-    options.forEach(({ as }) => (groupBy[as] = []));
+    // normalize preload attributes and create sorted groups in the order of the specified 'preload' options
+    for (const conf of options) {
+      const as = conf.as || conf.attributes?.as;
+
+      // note: `as` property is a required valid value
+      if (!as || contentType.indexOf(as) < 0) {
+        optionPreloadAsException(conf, as, contentType);
+      }
+
+      // determine the order of the attributes in the link tag
+      const attrs = { rel: 'preload', href: undefined, as, type: undefined, ...(conf.attributes || {}) };
+
+      // override attributes with main properties
+      if (conf.rel) attrs.rel = conf.rel;
+      if (conf.type) attrs.type = conf.type;
+
+      // whether the 'type' property exist regardless of a value;
+      // if the property exists and have the undefined value, exclude this attribute in generating preload tag
+      const hasType = 'type' in conf || (conf.attributes && 'type' in conf.attributes) || optionalTypeBy.has(attrs.as);
+
+      // save normalized attributes
+      conf._opts = { attrs, hasType };
+
+      groupBy[as] = [];
+    }
 
     // prepare a flat array with preload assets
     for (let item of data.resources) {
@@ -111,11 +135,11 @@ class Preload {
         if (Array.isArray(item.chunks)) {
           // js
           for (let { chunkFile, assetFile } of item.chunks) {
-            preloadAssets.set(assetFile, conf);
+            preloadAssets.set(assetFile, conf._opts);
           }
         } else {
           // css
-          preloadAssets.set(item.assetFile, conf);
+          preloadAssets.set(item.assetFile, conf._opts);
         }
       }
 
@@ -131,34 +155,18 @@ class Preload {
             ? this.getPreloadFile(data.entry, assetItem.issuer, assetItem.assetFile)
             : assetItem.assetFile;
 
-          preloadAssets.set(preloadFile, conf);
+          preloadAssets.set(preloadFile, conf._opts);
         }
       }
     }
 
     // save generated preload tags for verbose
     data.preloads = [];
-
-    for (const [filename, conf] of preloadAssets.entries()) {
-      // determine the order of the main attributes in the link tag
-      const props = { rel: 'preload', href: undefined, as: undefined, type: undefined };
-
-      if (!conf.attributes) conf.attributes = {};
-      if (conf.rel) props.rel = conf.rel;
-      if (conf.as) props.as = conf.as;
-      if (conf.type) props.type = conf.type;
-
-      const attrs = { ...props, ...conf.attributes };
-      const hasType = 'type' in conf || 'type' in conf.attributes;
-
-      // note: `as` property is a required valid value
-      if (!attrs.as || contentType.indexOf(attrs.as) < 0) {
-        optionPreloadAsException(conf);
-      }
+    for (const [filename, opts] of preloadAssets.entries()) {
+      const attrs = { ...opts.attrs };
 
       attrs.href = filename;
-
-      if (!optionalTypeBy.has(attrs.as) && !hasType) {
+      if (!opts.hasType) {
         const ext = getFileExtension(filename);
         attrs.type = mimeType[attrs.as]?.[ext] || attrs.as + '/' + ext;
       }
@@ -178,8 +186,8 @@ class Preload {
       groupBy[attrs.as].push(tag);
     }
 
+    // inject preload tags into the template
     const tags = Object.values(groupBy).flat();
-
     if (tags.length) {
       const str = tags.join(indent) + indent;
       return content.slice(0, insertPos) + str + content.slice(insertPos);

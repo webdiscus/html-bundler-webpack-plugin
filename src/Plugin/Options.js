@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
-const { optionEntryPathException, postprocessException } = require('./Messages/Exception');
+const { optionEntryPathException, postprocessException, afterProcessException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} PluginOptions
@@ -35,7 +35,8 @@ const { optionEntryPathException, postprocessException } = require('./Messages/E
 /**
  * @typedef {Object} JsOptions
  * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
+ * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The output filename of extracted JS.
+ * @property {string|function(PathData, AssetInfo): string} [chunkFilename = '[id].js'] The output filename of non-initial chunk files.
  * @property {boolean|string} [`inline` = false] Whether the compiled JS should be inlined.
  */
 
@@ -95,15 +96,26 @@ class Options {
       js.filename = webpackOutput.filename;
     }
 
+    if (js.chunkFilename) {
+      webpackOutput.chunkFilename = js.chunkFilename;
+    } else {
+      js.chunkFilename = webpackOutput.chunkFilename || '[id].js';
+    }
+
     // resolve js filename by outputPath
     if (js.outputPath) {
-      const filename = js.filename;
+      const { filename, chunkFilename } = js;
 
       js.filename = isFunction(filename)
         ? (pathData, assetInfo) => this.resolveOutputFilename(filename(pathData, assetInfo), js.outputPath)
         : this.resolveOutputFilename(js.filename, js.outputPath);
 
+      js.chunkFilename = isFunction(chunkFilename)
+        ? (pathData, assetInfo) => this.resolveOutputFilename(chunkFilename(pathData, assetInfo), js.outputPath)
+        : this.resolveOutputFilename(js.chunkFilename, js.outputPath);
+
       webpackOutput.filename = js.filename;
+      webpackOutput.chunkFilename = js.chunkFilename;
     } else {
       js.outputPath = webpackOutput.path;
     }
@@ -422,14 +434,11 @@ class Options {
    * @throws
    */
   static postprocess(content, info, compilation) {
-    let result;
     try {
       return this.options.postprocess(content, info, compilation);
     } catch (error) {
       postprocessException(error, info);
     }
-
-    return result;
   }
 
   /**
@@ -471,15 +480,11 @@ class Options {
   static afterProcess(content, { sourceFile, assetFile }) {
     if (!this.options.afterProcess || !this.isEntry(sourceFile)) return null;
 
-    let result;
-
     try {
-      result = this.options.afterProcess(content, { sourceFile, assetFile });
-    } catch (err) {
-      throw new Error(err);
+      return this.options.afterProcess(content, { sourceFile, assetFile });
+    } catch (error) {
+      return afterProcessException(error, sourceFile);
     }
-
-    return result;
   }
 
   /**

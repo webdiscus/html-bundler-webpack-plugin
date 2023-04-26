@@ -35,9 +35,11 @@ const optionEntryPathException = (dir) => {
 
 /**
  * @param {Object} config
+ * @param {string|null} type
+ * @param {Array<string>} availableTypes
  * @throws {Error}
  */
-const optionPreloadAsException = (config) => {
+const optionPreloadAsException = (config, type, availableTypes) => {
   const replacer = (key, value) => {
     if (value instanceof RegExp) {
       return value.toString();
@@ -46,11 +48,19 @@ const optionPreloadAsException = (config) => {
   };
 
   const configString = JSON.stringify(config, replacer, '  ');
+  let message = '';
 
-  const message =
-    `Missing the ${green`'as'`} property in a configuration object of the plugin option ${green`preload`}:\n` +
-    configString +
-    '\n';
+  if (type && availableTypes.indexOf(type) < 0) {
+    message =
+      `Invalid value of the ${green`'as'`} property in the plugin option ${green`preload`}:\n` +
+      configString +
+      '\n' +
+      `The value must be one of the following: ` +
+      JSON.stringify(availableTypes) +
+      '\n';
+  } else {
+    message = `Missing the ${green`'as'`} property in the plugin option ${green`preload`}:\n` + configString + '\n';
+  }
 
   throw new PluginException(message);
 };
@@ -64,7 +74,7 @@ const resolveException = (file, issuer) => {
   let message = `Can't resolve the file ${cyan(file)} in ${blueBright(issuer)}`;
 
   if (path.isAbsolute(file) && !fs.existsSync(file)) {
-    message += `\n${yellow`The reason:`} this file not found!`;
+    message += `\n${yellow`The reason:`} this file is not found!`;
   } else if (/\.css$/.test(file) && file.indexOf('??ruleSet')) {
     message +=
       `\nThe handling of ${yellow`@import at-rules in CSS`} is not supported. Disable the 'import' option in 'css-loader':\n` +
@@ -108,6 +118,17 @@ const postprocessException = (error, info) => {
   throw new PluginException(message, error);
 };
 
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @throws {Error}
+ */
+const afterProcessException = (error, file) => {
+  const message = `After process failed. Check you 'afterProcess' option.\nSource file: ${cyan(file)}.`;
+
+  throw new PluginException(message, error);
+};
+
 module.exports = {
   PluginException,
   optionEntryPathException,
@@ -115,4 +136,5 @@ module.exports = {
   resolveException,
   executeFunctionException,
   postprocessException,
+  afterProcessException,
 };

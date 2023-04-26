@@ -122,17 +122,18 @@ describe('plugin exceptions', () => {
     return exceptionContain(PATHS, 'msg-exception-plugin-resolve-asset', containString);
   });
 
-  // TODO: catch the fatal error: processTicksAndRejections (node:internal/process/task_queues:95:5)
+  test('preload option: missing `as` property ', () => {
+    const containString = `Missing the 'as' property in the plugin option preload`;
+    return exceptionContain(PATHS, 'msg-exception-plugin-option-preload-as', containString);
+  });
 
-  // test it manual only, because Jest fail
-  // test('preload invalid option', () => {
-  //   const containString = `Missing the 'as' property in a configuration object of the plugin option preload`;
-  //   return exceptionContain(PATHS, 'msg-exception-plugin-option-preload-as', containString);
-  // });
+  test('preload option: invalid `as` property', () => {
+    const containString = `Invalid value of the 'as' property in the plugin option preload`;
+    return exceptionContain(PATHS, 'msg-exception-plugin-option-preload-as-invalid', containString);
+  });
 
-  // test it manual only, because Jest fail
-  // test('option afterProcess', () => {
-  //   const containString = 'Custom after process failed';
-  //   return exceptionContain(PATHS, 'msg-exception-plugin-option-afterProcess', containString);
-  // });
+  test('option afterProcess', () => {
+    const containString = 'After process failed';
+    return exceptionContain(PATHS, 'msg-exception-plugin-option-afterProcess', containString);
+  });
 });

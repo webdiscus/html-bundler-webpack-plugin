@@ -386,19 +386,28 @@ class Collection {
    */
   static #prepareScriptData(compilation) {
     const { assets, assetsInfo, chunks, namedChunkGroups } = compilation;
-    const splitChunks = new Set();
+    const splitChunkFiles = new Set();
+    const splitChunkIds = new Set();
     const chunkCache = new Map();
 
     for (let [resource, { type, inline, name, entryFilenames }] of this.files) {
       if (type !== this.type.script) continue;
 
-      const chunkGroup = namedChunkGroups.get(name);
+      const entrypoint = namedChunkGroups.get(name);
 
       // prevent error when in HMR mode after removing a script in the template
-      if (!chunkGroup) continue;
+      if (!entrypoint) continue;
 
-      const chunkFiles = chunkGroup.getFiles().filter((file) => assetsInfo.get(file).hotModuleReplacement !== true);
-      const hasSplitChunks = chunkFiles.length > 1;
+      const chunkFiles = new Set();
+
+      for (const { id, files } of entrypoint.chunks) {
+        for (const file of files) {
+          if (assetsInfo.get(file).hotModuleReplacement !== true) chunkFiles.add(file);
+        }
+        splitChunkIds.add(id);
+      }
+
+      const hasSplitChunks = chunkFiles.size > 1;
 
       for (let entry of entryFilenames) {
         // let's show an original error
@@ -423,7 +432,7 @@ class Collection {
             AssetTrash.add(chunkFile);
           } else {
             assetFile = Options.getAssetOutputFile(chunkFile, entry);
-            splitChunks.add(chunkFile);
+            splitChunkFiles.add(chunkFile);
           }
           data.chunks.push({ chunkFile, assetFile });
         }
@@ -432,11 +441,15 @@ class Collection {
       }
     }
 
-    // remove generated unused split files
-    for (let { chunkReason, files, preventIntegration } of chunks) {
-      if (!this.isSplitChunk(chunkReason)) continue;
+    const chunkIds = Array.from(splitChunkIds);
+
+    // remove generated unused split chunks
+    for (let { ids, files, chunkReason } of chunks) {
+      if (ids.length < 2 || !this.isSplitChunk(chunkReason)) continue;
       for (let file of files) {
-        if (!splitChunks.has(file)) AssetTrash.add(file);
+        if (!splitChunkFiles.has(file) && chunkIds.find((id) => ids.indexOf(id) > -1)) {
+          AssetTrash.add(file);
+        }
       }
     }
   }

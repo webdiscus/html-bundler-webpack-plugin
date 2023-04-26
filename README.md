@@ -40,7 +40,7 @@ and you no longer need to define them in Webpack entry or import styles in JS.
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
-## 🔆 Last changes
+## 🔆 What's New
 
 - Allow the [data](#loader-option-data) option as a filename for dynamically loading template variables.
 - NEW compact [verbose](#option-verbose) output, all resources are grouped by their issuers.
@@ -170,7 +170,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to use some different template engines](#recipe-diff-templates)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split CSS files](#recipe-split-css)
-   - [How to split multiple node modules and save under own names](#recipe-split-many-modules)
+   - [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name)
 1. Demo examples
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
@@ -585,18 +585,25 @@ Type: `Object`\
 Default properties:
 ```js
 {
-  filename: '[name].js', 
+  filename: '[name].js',
+  chunkFilename: '[id].js',
   outputPath: null,
   inline: false,
 }
 ```
 
 - `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).
+- `chunkFilename` - an output filename of non-initial chunk files. Details see by [chunkFilename](https://webpack.js.org/configuration/output/#outputchunkfilename).
 - `outputPath` - an output path of extracted JS. Details see by [outputPath option](#option-outputPath).
 - `inline` - globally inline all extracted JS into HTML, available values:
   - `false` - extract processed JS in an output file, defaults
   - `true` - inline processed JS into HTML
   - `'auto'` - in `development` mode - inline JS, in `production` mode - extract in a file
+
+> **Note**
+> 
+> The `filename` and `chunkFilename` options are the same as in Webpack `output` options, just defined in one place along with other relevant plugin options.
+> You don't need to define them in the in Webpack `output` options anymore. Keep the config clean & clear.
 
 The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
 
@@ -625,6 +632,44 @@ The `[name]` is the base filename script.
 For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
+The `chunkFilename` option only takes effect if you have the `optimization.splitChunks` option.
+
+For example:
+
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html',
+      },
+      js: {
+        filename: 'assets/js/[name].[contenthash:8].js',
+        chunkFilename: 'assets/js/[id].[contenthash:8].js',
+      },
+    }),
+  ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        scripts: {
+          test: /\.(js|ts)$/, // <= IMPORTANT: split only JS files
+          chunks: 'all',
+        },
+      },
+    },
+  },
+};
+```
+
+> **Warning**
+> 
+> Webpack tries to split and concatenate chunks of all files (templates, styles, scripts) into jumbles.
+> Therefore, the `test` option `MUST` be specified to match only source JS files, otherwise Webpack will generate **invalid output files**.
+
+Also see [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name).
 
 #### [↑ back to contents](#contents)
 <a id="option-css" name="option-css" href="#option-css"></a>
@@ -3360,10 +3405,10 @@ If you want save module styles separate from your styles, then load them in a te
 ---
 
 #### [↑ back to contents](#contents)
-<a id="recipe-split-many-modules" name="recipe-split-many-modules" href="#recipe-split-many-modules"></a>
-### How to split multiple node modules and save under own names
+<a id="recipe-split-chunks-keep-module-name" name="recipe-split-chunks-keep-module-name" href="#recipe-split-chunks-keep-module-name"></a>
+### How to keep package name for split chunks from node_modules
 
-If you use many node modules and want save each module to separate file then use `optimization.cacheGroups.{cacheGroup}.name` as function.
+To save split chunks under a custom name use `optimization.cacheGroups.{cacheGroup}.name` as function.
 
 For example, many node modules are imported in the `main.js`:
 ```js
@@ -3397,21 +3442,27 @@ module.exports = {
       },
       js: {
         filename: 'js/[name].[contenthash:8].js',
+        chunkFilename: 'js/[id].[contenthash:8].js',
       },
     }),
   ],
   optimization: {
-    runtimeChunk: 'single',
+    runtimeChunk: true,
     splitChunks: {
-      chunks: 'all',
-      minSize: 10000, // extract modules bigger than 10KB, defaults is 30KB
+      // chunks: 'all', // DO NOT use it here, otherwise the compiled pages will be corrupted
+      maxSize: 1000000, // split chunks bigger than 100KB, defaults is 20KB
       cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // split JS only, ignore CSS modules
-          // save chunk under a name
-          name(module, chunks, groupName) {
-            const moduleName = module.resourceResolveData.descriptionFileData.name.replace('@', '');
-            return `${groupName}.${moduleName}`;
+        app: {
+          test: /\.(js|ts)$/, // split only JS files
+          chunks: 'all', // <- use it only in cache groups
+          name({ context }, chunks, groupName) {
+            // save split chunks of the node module under package name
+            if (/[\\/]node_modules[\\/]/.test(context)) {
+              const moduleName = context.match(/[\\/]node_modules[\\/](.*?)(?:[\\/]|$)/)[1].replace('@', '');
+              return `npm.${moduleName}`;
+            }
+            // save split chunks of the application
+            return groupName;
           },
         },
       },
@@ -3420,13 +3471,26 @@ module.exports = {
 };
 ```
 
+> **Warning**
+> 
+> The group name MUST be different from the script names used in the template.
+> Otherwise, a chunk name conflict occurs.
+> 
+> For example,
+> if you are already using `main.js` in the template, the group name should not be `main`.
+> Take another name, e.g. `app`.
+
 The split files will be saved like this:
 ```
-dist/js/vendor.popperjs/core.f96a1152.js <- `popperjs/core` is extracted from bootstrap
-dist/js/vendor.bootstrap.f69a4e44.js
-dist/js/vendor.underscore.4e44f69a.js
-dist/js/runtime.9cd0e0f9.js <- common runtime code
-dist/js/script.3010da09.js
+dist/js/runtime.9cd0e0f9.js
+dist/js/npm.popperjs/core.f96a1152.js <- split chunks of node modules
+dist/js/npm.bootstrap.f69a4e44.js
+dist/js/npm.underscore.4e44f69a.js
+dist/js/main.3010da09.js <- base code of main script
+dist/js/app-5fa74877.7044e96a.js <- split chinks of main script
+dist/js/app-d6ae2b10.92215a4e.js
+dist/js/app-5fa74877.1aceb2db.js
+
 ```
 
 ---

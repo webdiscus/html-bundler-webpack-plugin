@@ -6,7 +6,17 @@
  * or disable the default devtool with "devtool: false".
  * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
  */
-(self["webpackChunk"] = self["webpackChunk"] || []).push([["scripts-src_assets_js_module-b_js"],{
+(self["webpackChunk"] = self["webpackChunk"] || []).push([["scripts-src_assets_js_main-b_js"],{
+
+/***/ "./src/assets/js/main-b.js":
+/*!*********************************!*\
+  !*** ./src/assets/js/main-b.js ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+
+eval("const modB = __webpack_require__(/*! ./module-b */ \"./src/assets/js/module-b.js\");\nconst modC = __webpack_require__(/*! ./module-c */ \"./src/assets/js/module-c.js\");\n\nconsole.log('>> main-b:');\nconsole.log(' - B: ', modB);\nconsole.log(' - C: ', modC);\n\n//# sourceURL=webpack:///./src/assets/js/main-b.js?");
+
+/***/ }),
 
 /***/ "./src/assets/js/module-b.js":
 /*!***********************************!*\

@@ -87,7 +87,8 @@ export const exceptionContain = (PATHS, relTestCasePath, containString) => {
         return Promise.reject('the test should throw an error');
       })
       .catch((error) => {
-        return Promise.reject(error.toString());
+        const message = ansis.strip(error.toString());
+        return Promise.reject(message);
       })
   ).rejects.toContain(containString);
 };
@@ -101,7 +102,8 @@ export const watchExceptionContain = function (PATHS, relTestCasePath, containSt
         return Promise.reject('the test should throw an error');
       })
       .catch((error) => {
-        return Promise.reject(error.toString());
+        const message = ansis.strip(error.toString());
+        return Promise.reject(message);
       })
   ).rejects.toContain(containString);
 };

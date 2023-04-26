@@ -50,7 +50,7 @@ module.exports = {
         {
           test: /\.(eot|ttf|woff2?)$/,
           as: 'font',
-          // test: set type as undefined to avoid the type attribute in the preload tag
+          // test: set type as undefined to exclude the type attribute in the preload tag
           attributes: { crossorigin: true, type: undefined },
         },
       ],

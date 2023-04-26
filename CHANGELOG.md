@@ -1,5 +1,16 @@
 # Change log
 
+## 1.18.0 (2023-04-26)
+- feat: add the `js.chunkFilename` option
+- fix: do not delete split chunks from compilation loading dynamically
+- fix: allow to define the `as` property of the preload option in the attributes, e.g.:
+  ```js
+  {
+    test: /\.(ttf|woff2?)$/,
+    attributes: { as: 'font', crossorigin: true },
+  },
+  ```
+
 ## 1.17.3 (2023-04-24)
 - fix: correct parsing of a query where the key does not contain a value, e.g. `?enable&size=100`
 - refactor: code refactoring and optimization

@@ -80,6 +80,9 @@ class AssetCompiler {
   /** @type AssetEntryOptions The current entry point during dependency compilation. */
   currentEntryPoint;
 
+  /** @type Set<Error> Buffered exceptions thrown in hooks. */
+  exceptions = new Set();
+
   /**
    * @param {PluginOptions|{}} options
    */
@@ -212,8 +215,16 @@ class AssetCompiler {
         return Promise.resolve(result);
       });
 
-      // postprocess for assets content
-      compilation.hooks.afterProcessAssets.tap(pluginName, this.afterProcessAssets);
+      // postprocess for the content of assets
+      compilation.hooks.afterProcessAssets.tap(pluginName, (assets) => {
+        // note: this hook not provides testable exceptions,
+        // therefore, we save the exception to throw it in the done hook
+        try {
+          this.afterProcessAssets(assets);
+        } catch (error) {
+          this.exceptions.add(error);
+        }
+      });
     });
 
     compiler.hooks.done.tap(pluginName, this.done);
@@ -619,6 +630,12 @@ class AssetCompiler {
    * @param {Object} stats
    */
   done(stats) {
+    if (this.exceptions.size > 0) {
+      const messages = Array.from(this.exceptions).join('\n\n');
+      this.exceptions.clear();
+      throw new Error(messages);
+    }
+
     if (Options.isVerbose()) verbose();
 
     Asset.reset();

@@ -132,6 +132,14 @@ describe('plugin options', () => {
     return compareFileListAndContent(PATHS, 'option-js-filename');
   });
 
+  test('js.chunkFilename', () => {
+    return compareFileListAndContent(PATHS, 'option-js-chunkFilename');
+  });
+
+  test('js.chunkFilename as function', () => {
+    return compareFileListAndContent(PATHS, 'option-js-chunkFilename-function');
+  });
+
   test('js and css outputPath absolute', () => {
     return compareFileListAndContent(PATHS, 'option-js-css-outputPath-absolute');
   });
@@ -194,6 +202,10 @@ describe('plugin options', () => {
 
   test('preload', () => {
     return compareFileListAndContent(PATHS, 'option-preload');
+  });
+
+  test('preload attributes', () => {
+    return compareFileListAndContent(PATHS, 'option-preload-attributes');
   });
 
   test('preload with responsive images', () => {
