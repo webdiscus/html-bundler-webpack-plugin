@@ -23,7 +23,6 @@ module.exports = {
   },
 
   plugins: [
-    // enable processing of Pug files from entry
     new HtmlBundlerPlugin({
       verbose: 'auto',
       //minify: 'auto',

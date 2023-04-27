@@ -30,7 +30,7 @@ class Resolver {
     this.resolveFile = ResolverFactory.create.sync({
       ...options,
       preferRelative: options.preferRelative !== false,
-      // resolve 'exports' field in package.json, default value is ['webpack', 'production', 'browser']
+      // resolve 'exports' field in package.json, default value is: ['webpack', 'production', 'browser']
       conditionNames: ['require', 'node'],
       // restrict default extensions list '.js', '.json', '.wasm' for faster resolving
       extensions: options.extensions.length ? options.extensions : ['.js'],

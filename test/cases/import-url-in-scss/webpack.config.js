@@ -3,7 +3,8 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: 'source-map',
+  // disable the devtool because is generated a different contenthash when run the single test and when run all tests
+  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -11,6 +12,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
+      verbose: true, // test resolving css file in scss file
       entry: {
         index: './src/views/index.html',
       },

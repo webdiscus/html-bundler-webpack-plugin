@@ -4,7 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>The plugin renders HTML files from any templates containing source files of styles, scripts, images</div>
+    <div>The plugin renders HTML templates with referenced resources of styles, scripts, images</div>
 </div>
 
 ---
@@ -15,39 +15,54 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
+## HTML as entrypoint
 
-This plugin allows to use an HTML template as a starting point for all resources used in your web application.
-The source files of scripts, styles, images specified in HTML are processed and extracted to the output directory.
-In the generated HTML, the plugin substitutes the output filenames of the processed resources.
+The plugin supports HTML templates as entrypoints, as web apps usually start with HTML.\
+In HTML entrypoints can be referenced any resources such as JS, SCSS, images and other assets.\
+For example: 
+- `<link href="@images/favicon.png" type="image/png" rel=icon />`
+- `<link href="./style.scss" rel="stylesheet">`
+- `<script src="./App.tsx" defer="defer"></script>`
+- `<img src="@images/fig.webp" srcset="@images/fig-640.webp 640w, @images/fig-800.webp 800w" />`
+   
+Note: `@images` is the Webpack alias to a source images directory.
 
-💡 **Highlights**
+The source files of assets referenced in HTML are processed and extracted to the output directory.
+In the generated HTML and CSS, the plugin substitutes the output filenames of the processed resources.
+
+
+### 💡 Highlights
 
 - An [entry point](#option-entry) is an HTML template.
-- Source **scripts** and **styles** can be specified directly in HTML using `<script>` and `<link>`.
-- Resolving [source](#loader-option-sources) assets specified in standard attributes `href` `src` `srcset` etc.
+- Binding the source **script/style** filenames directly in HTML using `<script>` and `<link>`.
+- Resolving [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
 - Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
-- Support for both `async` and `sync` preprocessor.
 - Dynamically loading template variables after changes using the [data](#loader-option-data) option.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
 
-✅ **Profit**
+### ✅ Profit
 
-You specify all the source scripts and styles in **one right place**, in HTML, 
-and you no longer need to define them in Webpack entry or import styles in JS.
+You can specify the script and style source files directly in an HTML template,
+no longer need to define them in the Webpack entry or import styles in JavaScript.
 
-❓**Question / Feature Request / Bug**
+### ❓Question / Feature Request / Bug
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
-## 🔆 What's New
 
-- Allow the [data](#loader-option-data) option as a filename for dynamically loading template variables.
-- NEW compact [verbose](#option-verbose) output, all resources are grouped by their issuers.
-- Add the [root](#loader-option-root) loader option to enable processing of asset files with the leading `/` root path.
-- Add the [preload](#option-preload) option to auto generate preload tags for resources such as font, image, script, style.
+## 🔆 What's New in v2
+
+- **NEW:** added support for importing style files in JavaScript.\
+  **Note:** this feature was added for compatibility with `React` projects.\
+  The importing styles in JavaScript is the `bad practice`. This is the `wrong way`.\
+  In new projects you should specify style source files directly in HTML. This the `right way`.
+- **BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
+  If you use the `Eta` syntax, may be you need to update templates.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
+
+---
 
 ## Simple usage example
 
@@ -56,14 +71,14 @@ Add source scripts and styles directly to HTML:
 ```html
 <html>
 <head>
-  <!-- specify source styles -->
+  <!-- specify source style files -->
   <link href="./style.scss" rel="stylesheet">
-  <!-- specify source scripts here and/or in body -->
+  <!-- specify source script files here and/or in body -->
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
-  <!-- specify source images -->
+  <!-- specify source image files -->
   <img src="./map.png">
 </body>
 </html>
@@ -176,14 +191,16 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
+1. Code examples
+   - How to use the tailwindcss [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
 
 - HTML template is the entry point for all resources
-- extracts CSS from source style specified in HTML via a `<link>` tag
-- extracts JS from source script specified in HTML via a `<script>` tag
-- resolves source files in the CSS `url()` and in HTML attributes
+- extracts CSS from the source style filename specified in HTML via a `<link>` tag
+- extracts JS from the source script filename specified in HTML via a `<script>` tag
+- resolves source filenames in the CSS `url()` and in HTML attributes
 - extracts resolved resources to output directory
 - generated HTML contains output filenames
 - support the module types `asset/resource` `asset/inline` `asset` `asset/source` ([*](#note-asset-source))
@@ -195,9 +212,11 @@ See the [complete Webpack configuration](#simple-webpack-config).
 - auto generation of `<link rel="preload">` to preload used assets
 - support the `auto` publicPath
 - enable/disable extraction of comments to `*.LICENSE.txt` file
-- supports all JS template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- support for both `async` and `sync` preprocessor
 - dynamically loading template variables after changes using the [data](#loader-option-data) option
 - minification of generated HTML
+- support for importing style files in JavaScript (not recomended, because it is `bad practice`)
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
 (*) - `asset/source` works currently for SVG only, in a next version will work for other files too
@@ -936,15 +955,15 @@ For example, there is an HTML template with specified source assets:
 Specify the order of preload tags:
 ```js
 preload: [
-  // 1. preload styles
-  {
-    test: /\.(css|scss)$/,
-    as: 'style',
-  },
-  // 2. preload images
+  // 1. preload images
   {
     test: /\.(png|jpe?g|webp|svg)$/,
     as: 'image',
+  },
+  // 2. preload styles
+  {
+    test: /\.(css|scss)$/,
+    as: 'style',
   },
   // 3. preload scripts
   {
@@ -959,11 +978,11 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
 ```html
 <html>
 <head>
-  <!-- 1. preload styles -->
-  <link rel="preload" href="css/style.1f4faaff.css" as="style">
-  <!-- 2. preload images -->
+  <!-- 1. preload images -->
   <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
   <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
+  <!-- 2. preload styles -->
+  <link rel="preload" href="css/style.1f4faaff.css" as="style">
   <!-- 3. preload scripts -->
   <link rel="preload" href="js/main.c608b1cd.js" as="script">
   <link rel="preload" href="js/app.2c8d13ac.js" as="script">
@@ -977,37 +996,6 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
   <img src="img/lemon.3666c92d.svg" alt="lemon">
 </body>
 </html>
-```
-
-
-The generated preload tag like following:
-```html
-<link rel="preload" href="js/main.c608b1cd.js" as="script">
-```
-
-
-```js
-preload: [
-  // preload styles
-  {
-    test: /\.(css|scss)$/,
-    as: 'style',
-  },
-  // preload scripts
-  {
-    test: /\.(js|ts)$/,
-    as: 'script',
-  },
-  {
-    test: /\.(png|jpe?g|webp|svg)$/,
-    as: 'image',
-  },
-  {
-    test: /\.(ttf|woff2?)$/,
-    // note: font preloading requires the crossorigin attribute to be set
-    attributes: { as: 'font', crossorigin: true },
-  },
-],
 ```
 
 
@@ -1551,14 +1539,15 @@ type preprocessor = (
 ) => string|Promise;
 ```
 
-The default `preprocessor` is pre-configured as following function:
+The default `preprocessor` is pre-configured as the following function:
 ```js
-const config = {
-  async: false, // defaults is false, wenn is true then must be used `await includeFile()`
+const { Eta } = require('eta');
+const eta = new Eta({
+  async: false, // defaults is false, wenn is true then must be used `await includeAsync()`
   useWith: true, // allow to use variables in template without `it.` scope
-  root: process.cwd(), // root path for includes with an absolute path (e.g., /file.html)
-};
-preprocessor = (template, { data }) => Eta.render(template, data, config);
+  views: process.cwd(), // directory that contains templates
+});
+preprocessor = (template, { data }) => eta.renderString(template, data);
 ```
 
 The function arguments:
@@ -1608,7 +1597,7 @@ The example of using `Promise` for your own `async` render function:
 Type: `Object` Default: `{}`
 
 With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars` or `nunjucks`.
-Each preprocessor has its own options depend on using template engine.
+Each preprocessor has its own options, depend on using template engine.
 
 <a id="loader-option-preprocessorOptions-eta" name="loader-option-preprocessorOptions-eta" href="#loader-option-preprocessorOptions-eta"></a>
 #### Options for `preprocessor: 'eta'` (default)
@@ -1616,22 +1605,17 @@ Each preprocessor has its own options depend on using template engine.
 loaderOptions: {
   preprocessor: 'eta',
   preprocessorOptions: {
-    async: false, // defaults 'false', wenn is 'true' then must be used `await includeFile()`
+    async: false, // defaults 'false', wenn is 'true' then must be used `await includeAsync()`
     useWith: true, // defaults 'true', use variables in template without `it.` scope
-    // defaults process.cwd(), root path for includes with an absolute path (e.g., /file.html)
-    root: path.join(__dirname, 'src/views/'), // defaults process.cwd()
-    // defaults [], an array of paths to use when resolving includes with relative paths
-    views: [
-      'src/views/includes', // relative path
-      path.join(__dirname, 'src/views/partials'), // absolute path
-    ],
+    views: 'src/views', // relative path to directory that contains templates
+    // views: path.join(__dirname, 'src/views'), // absolute path to directory that contains templates
   },
 },
 ```
 
 For the complete list of options see [here](https://eta.js.org/docs/api/configuration).
 
-For example, there are template page and partials:
+For example, there are a template page and partials:
 ```
 src/views/page/home.html
 src/views/includes/gallery.html
@@ -1641,19 +1625,15 @@ src/views/partials/menu/nav.html
 src/views/partials/menu/top/desktop.html
 ```
 
-Include the partials in the `src/views/page/home.html` template with the `includeFile()`:
+Include the partials in the `src/views/page/home.html` template with the `include()`:
 ```html
-<!-- root path -->
-<%~ includeFile('/includes/gallery.html') %>
-
-<!-- views paths -->
-<%~ includeFile('teaser.html') %>
-<%~ includeFile('menu/nav.html') %>
-<%~ includeFile('menu/top/desktop.html') %>
-<%~ includeFile('footer.html') %>
+<%~ include('teaser.html') %>
+<%~ include('menu/nav.html') %>
+<%~ include('menu/top/desktop.html') %>
+<%~ include('footer.html') %>
 ```
 
-If you have partials with `.eta` extensions, then the extension can be omitted.
+If partials have `.eta` extensions, then the extension can be omitted in the include argument.
 
 <a id="loader-option-preprocessorOptions-ejs" name="loader-option-preprocessorOptions-ejs" href="#loader-option-preprocessorOptions-ejs"></a>
 #### Options for `preprocessor: 'ejs'`
@@ -2016,7 +1996,7 @@ For example, there is the template _src/views/page/index.eta_
     <li><%= people[i] %>></li>
     <% } %>
   </ul>
-  <%~ includeFile('/src/views/partials/footer') %>
+  <%~ include('/src/views/partials/footer') %>
 </body>
 </html>
 ```
@@ -2048,7 +2028,7 @@ The default preprocessor is `eta`, you can omit it:
 new HtmlBundlerPlugin({
   loaderOptions: {
     preprocessor: 'eta',
-    // preprocessorOptions: {},
+    // preprocessorOptions: {...},
   },
 })
 ```
@@ -2059,7 +2039,7 @@ For the `eta` preprocessor options see [here](#loader-option-preprocessorOptions
 > **Warning**
 >
 > For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
-> to use variables in template without the Eta-specific `it.` scope
+> to use variables in template without the Eta-specific `it.` scope.
 
 #### [↑ back to contents](#contents)
 <a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
@@ -2104,7 +2084,7 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'ejs', // enable EJS compiler
-        // preprocessorOptions: {},
+        // preprocessorOptions: {...},
       },
     }),
   ],
@@ -2156,7 +2136,7 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'handlebars', // enable Handlebars compiler
-        // preprocessorOptions: {},
+        // preprocessorOptions: {...},
       },
     }),
   ],
@@ -2259,7 +2239,7 @@ module.exports = {
       },
       loaderOptions: {
         preprocessor: 'nunjucks', // enable Nunjucks compiler
-        // preprocessorOptions: {},
+        // preprocessorOptions: {...},
       },
     }),
   ],
@@ -2359,7 +2339,7 @@ Define the `entry` option as a path to templates. For details see the [entry pat
 
 #### [↑ back to contents](#contents)
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
-## How to use source images in HTML
+## How to use source image files in HTML
 
 Add to Webpack config the rule:
 ```js
@@ -2545,8 +2525,7 @@ module.exports = {
       preload: [
         {
           test: /\.(woff2|woff)$/,
-          as: 'font',
-          attributes: { crossorigin: true },
+          attributes: { as: 'font', crossorigin: true },
         },
       ],
     }),

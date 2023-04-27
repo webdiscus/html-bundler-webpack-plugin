@@ -1,5 +1,18 @@
 # Change log
 
+## 2.0.0 (2023-06-21)
+- feat: add support for importing style files in JavaScript. (!!! FOR COMPATIBILITY WITH REACT ONLY !!!)
+  NOTE: import a style in JavaScript is a `bad practice`, DON'T use it in new projects!
+  DO IT RIGHT: specify a source style file directly in an HTML template.
+- feat(BREAKING CHANGE): upgrade the default preprocessor `eta` to next major version 3.0.
+  Perhaps you may need to migrate your Eta templates to v3 syntax.
+- refactor: optimize source code
+- fix: some invisible rare bug fixes
+- test: add namy tests for new features and bug fixes
+- chore: add code example how to use the tailwindcss
+- chore: update npm packages
+- docs: update readme
+
 ## 1.18.0 (2023-04-26)
 - feat: add the `js.chunkFilename` option
 - fix: do not delete split chunks from compilation loading dynamically
@@ -21,7 +34,7 @@
 - docs: update readme
 
 ## 1.17.2 (2023-04-21)
-- fix: live reload after changes if a template contains commented out script
+- fix: live reload after changes if a template contains a commented out script
 - fix: issue if a CSS file is imported in SCSS with a filename, including the `.css` extension, e.g. `@import 'npm-module/styles.css'`
 - fix: issue if used the copy plugin which copies an HTML file
 

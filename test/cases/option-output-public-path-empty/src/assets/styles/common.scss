@@ -1,7 +1,7 @@
-.header {
-  font-size: 26px;
+.common {
+  width: 160px;
+  height: 130px;
+  background-image: url('@images/apple.png');
+  border: 5px solid blue;
   color: blue;
-  background-image: url('../images/image-bg.png');
-  background-repeat: no-repeat;
-  height: 240px;
 }

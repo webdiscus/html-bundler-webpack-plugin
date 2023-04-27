@@ -10,4 +10,6 @@ const vendor = {
   },
 };
 
+vendor.run();
+
 module.exports = vendor;

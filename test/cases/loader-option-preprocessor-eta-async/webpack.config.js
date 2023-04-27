@@ -8,6 +8,12 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       test: /\.(html|ejs|eta)$/,
@@ -23,10 +29,8 @@ module.exports = {
       },
       loaderOptions: {
         preprocessorOptions: {
-          async: true, // defaults is false, wenn async is true then must be used `await includeFile()`
-          views: [
-            path.join(process.cwd(), 'src/views/partials'), // include a partial relative to this directory, a relative or absolute path
-          ],
+          async: true, // defaults false, wenn async is true then must be used `await includeAsync()`
+          views: path.join(process.cwd(), 'src/views'), // a relative or absolute path
         },
       },
     }),

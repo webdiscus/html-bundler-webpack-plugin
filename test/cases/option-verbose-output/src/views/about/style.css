@@ -7,12 +7,12 @@ h1 {
   width: 160px;
   height: 130px;
   border: 2px solid darkcyan;
-  background-image: url('../../images/melon.png');
+  background-image: url('@images/melon.png');
 }
 
 .about-bg-inlined {
   width: 48px;
   height: 48px;
   border: 5px solid mediumvioletred;
-  background-image: url('../../images/token.svg');
+  background-image: url('@images/token.svg');
 }

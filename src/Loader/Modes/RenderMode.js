@@ -38,9 +38,28 @@ class RenderMode {
    * @param {string} file
    * @return {string}
    */
+  encodeFile(file) {
+    return `\\u0027 + \\u0027${file}\\u0027 + \\u0027`;
+  }
+
+  /**
+   * @param {string} file
+   * @return {string}
+   */
   encodeRequire(file) {
     return `\\u0027 + require(\\u0027${file}\\u0027) + \\u0027`;
   }
+
+  /**
+   * Require the same script only once to avoid double processing.
+   * Reserved.
+   *
+   * @param {string} file
+   * @return {string}
+   */
+  // encodeRequireOnce(file) {
+  //   return Collection.existsResource(file) ? this.encodeFile(file) : this.encodeRequire(file);
+  // }
 
   /**
    * Resolve resource file after compilation of source code.
@@ -48,9 +67,10 @@ class RenderMode {
    *
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
+   * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string}
    */
-  loaderRequire(file, issuer) {
+  loaderRequire(file, issuer, entryId) {
     let resolvedFile = Resolver.resolve(file, issuer);
 
     return this.encodeRequire(resolvedFile);
@@ -61,14 +81,17 @@ class RenderMode {
    *
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
+   * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string}
    */
-  loaderRequireScript(file, issuer) {
-    const resolvedFile = Resolver.resolve(file, issuer, 'script');
+  loaderRequireScript(file, issuer, entryId) {
+    const type = 'script';
+    const resolvedFile = Resolver.resolve(file, issuer, type);
+    const result = this.encodeRequire(resolvedFile);
 
-    Collection.add(resolvedFile, issuer, 'script');
+    Collection.add({ type, resource: resolvedFile, issuer, entryId });
 
-    return this.encodeRequire(resolvedFile);
+    return result;
   }
 
   /**
@@ -76,14 +99,17 @@ class RenderMode {
    *
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
+   * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string}
    */
-  loaderRequireStyle(file, issuer) {
-    const resolvedFile = Resolver.resolve(file, issuer, 'style');
+  loaderRequireStyle(file, issuer, entryId) {
+    const type = 'style';
+    const resolvedFile = Resolver.resolve(file, issuer, type);
+    const result = this.encodeRequire(resolvedFile);
 
-    Collection.add(resolvedFile, issuer, 'style');
+    Collection.add({ type, resource: resolvedFile, issuer, entryId });
 
-    return this.encodeRequire(resolvedFile);
+    return result;
   }
 
   /**
@@ -110,7 +136,7 @@ class RenderMode {
     if (this.hot) {
       // note: it can be tested only manually, because Webpack API no provide `loaderContext.hot` for testing
       content = this.injectHmrFile(content);
-      Collection.add(hmrFile, issuer, 'script');
+      Collection.add({ type: 'script', resource: hmrFile, issuer });
     }
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
@@ -126,7 +152,7 @@ class RenderMode {
   exportError(error, issuer) {
     let content = errorToHtml(error);
     content = this.injectHmrFile(content);
-    Collection.add(hmrFile, issuer, 'script');
+    Collection.add({ type: 'script', resource: hmrFile, issuer });
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
   }

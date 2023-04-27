@@ -19,7 +19,7 @@ module.exports = {
   // cacheDirectory: "/tmp/jest",
 
   // Automatically clear mock calls and instances between every test
-  // clearMocks: false,
+  clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   // collectCoverage: false,
@@ -83,6 +83,7 @@ module.exports = {
 
   // A number limiting the number of tests that are allowed to run at the same time when using test.concurrent.
   // maxConcurrency: 5,
+  maxConcurrency: 1,
 
   // Specifies the maximum number of workers the worker-pool will spawn for running tests.
   // In single run mode, this defaults to the number of the cores available on your machine minus one for the main thread.
@@ -131,7 +132,7 @@ module.exports = {
   // reporters: undefined,
 
   // Automatically reset mock state between every test
-  // resetMocks: false,
+  resetMocks: true,
 
   // Reset the module registry before running each individual test
   // resetModules: false,
@@ -205,7 +206,7 @@ module.exports = {
   // testSequencer: '@jest/test-sequencer',
 
   // Default timeout of a test in milliseconds.
-  testTimeout: isLocalEnv ? 1000 : 5000,
+  testTimeout: isLocalEnv ? 2000 : 5000,
 
   // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
   // testURL: "http://localhost",

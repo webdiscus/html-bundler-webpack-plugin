@@ -199,11 +199,11 @@ class AssetInline {
 
   /**
    * @param {AssetEntryOptions} entry The entry where is specified the resource.
-   * @param {Module} module The Webpack module.
    * @param {Chunk} chunk The Webpack chunk.
+   * @param {Module} module The Webpack module.
    * @param {CodeGenerationResults|Object} codeGenerationResults Code generation results of resource modules.
    */
-  static saveData(entry, module, chunk, codeGenerationResults) {
+  static saveData(entry, chunk, module, codeGenerationResults) {
     const sourceFile = module.resource;
     const item = this.data.get(sourceFile);
 
@@ -274,6 +274,14 @@ class AssetInline {
     }
 
     return output + content.slice(pos);
+  }
+
+  /**
+   * Clear cache.
+   * Called only once when the plugin is applied.
+   */
+  static clear() {
+    this.data.clear();
   }
 }
 

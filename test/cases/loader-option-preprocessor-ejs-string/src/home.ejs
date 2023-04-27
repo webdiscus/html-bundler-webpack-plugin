@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <title><%= title %></title>
@@ -6,10 +7,10 @@
   <h1><%= headline %></h1>
   <ul class="people">
     <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
+    <li><%= people[i] %></li>
     <% } %>
   </ul>
-  <img src="apple.png" alt="apple" />
+  <img src="@images/apple.png" alt="apple" />
   <%- include('partials/footer.html'); %>
 </body>
 </html>

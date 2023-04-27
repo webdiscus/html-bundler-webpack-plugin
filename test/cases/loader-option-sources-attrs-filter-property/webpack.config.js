@@ -8,6 +8,13 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+      '@videos': path.join(__dirname, '../../fixtures/videos'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
@@ -15,7 +22,7 @@ module.exports = {
       },
       loaderOptions: {
         sources: [
-          // resolve one attribute only if other attribute has special value
+          // resolve one attribute only if another attribute has a special value
           {
             tag: 'meta',
             attributes: ['content'],

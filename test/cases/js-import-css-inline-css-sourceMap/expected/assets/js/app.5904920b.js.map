@@ -1,0 +1,1 @@
+{"version":3,"file":"assets/js/app.5904920b.js","mappings":"mBAIAA,QAAQC,IAAI,S","sources":["webpack:///./src/views/app.js"],"sourcesContent":["// test inline CSS into HTML\nimport '@styles/app1.css';\nimport '@styles/app2.css';\n\nconsole.log('>> app');\n"],"names":["console","log"],"sourceRoot":""}

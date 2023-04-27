@@ -1,0 +1,1 @@
+{"version":3,"file":"assets/js/home.0b77c4dc.js","mappings":"mBAIAA,QAAQC,IAAI,U","sources":["webpack:///./src/views/home.js"],"sourcesContent":["// test inline CSS into HTML\nimport '@styles/home1.css';\nimport '@styles/home2.css';\n\nconsole.log('>> home');\n"],"names":["console","log"],"sourceRoot":""}

@@ -1,0 +1,15 @@
+/* mapping to line 2, OK */
+.a1 {
+  width: 160px;
+  height: 130px;
+  /* if the url is an external URL, the mapping line to the next section is OK */
+  background-image: url(https://picsum.photos/id/100/160);
+  border: 5px solid green;
+}
+
+/* mapping to line 11, OK */
+.b1 {
+  color: green;
+}
+
+/*# sourceMappingURL=test1.css.map*/

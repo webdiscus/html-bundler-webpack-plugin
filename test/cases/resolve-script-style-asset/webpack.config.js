@@ -8,6 +8,13 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {

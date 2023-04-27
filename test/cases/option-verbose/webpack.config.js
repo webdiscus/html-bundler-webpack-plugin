@@ -9,6 +9,13 @@ module.exports = {
     publicPath: 'auto',
   },
 
+  resolve: {
+    alias: {
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       // test verbose option
@@ -25,11 +32,11 @@ module.exports = {
         'pages/about': './src/views/about/index.html',
       },
       js: {
-        filename: 'js/[name].[contenthash:8].js',
+        filename: 'js/[name].bundle.js',
       },
       css: {
         verbose: true,
-        filename: 'css/[name].[contenthash:8].css',
+        filename: 'css/[name].bundle.css',
       },
     }),
   ],

@@ -1,22 +1,21 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Test</title>
 
-    <link href="assets/img/apple.697ef306.png">
-    <link imagesrcset="assets/img/apple.697ef306.png" rel="preload" as="image">
+    <link href="assets/img/apple.02a7c382.png">
+    <link imagesrcset="assets/img/apple.02a7c382.png" rel="preload" as="image">
 
-    <link href="assets/img/favicon.697ef306.ico" rel="icon" />
-    <link href="assets/css/preload.7f96b9a0.css" as="style" rel="preload" />
-    <link href="assets/css/preload2.3530b5c5.css" as="stylesheet" rel="preload" /><!-- test invalide value as="stylesheet" -->
-    <link href="assets/css/style.026fd625.css" type="text/css" />
-    <link href="assets/css/base.e58351d5.css" rel="alternate stylesheet" />
-    <link href="assets/fonts/open-sans-regular.woff2" rel="preload" as="font" type="font/woff2" />
-    <script src="assets/js/main.ef390457.js"></script>
+    <link href="assets/img/favicon.edda23bf.ico" rel="icon" />
+    <link href="assets/css/preload.e41d476d.css" as="style" rel="preload" />
+    <link href="assets/css/preload2.c1c1e4bf.css" as="stylesheet" rel="preload" /><!-- test invalide value as="stylesheet" -->
+    <link href="assets/css/style.7f152e84.css" type="text/css" />
+    <link href="assets/css/base.a3456dfc.css" rel="alternate stylesheet" />
+    <link href="assets/fonts/font-01.woff2" rel="preload" as="font" type="font/woff2" />
+    <script src="assets/js/main.7693a3d5.js"></script>
   </head>
   <body>
     <h1>Hello World!</h1>
-
-    <img src="assets/img/apple.697ef306.png">
 
     <!-- tag w/o any attributes -->
     <img>
@@ -26,57 +25,57 @@
     <img alt="apple">
 
     <!-- tag with source attribute only -->
-    <img src="assets/img/apple.697ef306.png">
+    <img src="assets/img/apple.02a7c382.png">
 
     <!-- w/o space between attributes -->
-    <img src="assets/img/fig1.697ef306.png"title="fig">
-
-    <!-- ignore resolving of src attribute when leading char is not a space symbol
-         there should be a space between attribute and previous attribute -->
-    <img title="fig"src="./fig2.png">
+    <img src="assets/img/fig.c6809878.png"title="fig">
 
     <!-- test tags sort -->
     <picture>
-      <source srcset="assets/img/fig1.697ef306.png, assets/img/fig2.697ef306.png 100w, assets/img/fig3.697ef306.png 1.5x">
+      <source srcset="assets/img/fig.c6809878.png, assets/img/fig2.c6809878.png 100w, assets/img/fig3.c6809878.png 1.5x">
     </picture>
 
     <!-- test attributes sort -->
-    <img srcset="assets/img/lime1.697ef306.png, assets/img/lime2.697ef306.png 100w, assets/img/lime3.697ef306.png 1.5x" src="assets/img/lime.697ef306.png">
+    <img srcset="assets/img/lemon.7b66be8e.png, assets/img/lemon2.7b66be8e.png 100w, assets/img/lemon3.7b66be8e.png 1.5x" src="assets/img/lemon.7b66be8e.png">
 
     <!-- space around values in srcset attribute -->
-    <img srcset=" assets/img/fig1.697ef306.png  , assets/img/fig2.697ef306.png  100w  ,  assets/img/fig3.697ef306.png 1.5x " src="assets/img/lime.697ef306.png">
+    <img srcset=" assets/img/fig.c6809878.png  , assets/img/fig2.c6809878.png  100w  ,  assets/img/fig3.c6809878.png 1.5x " src="assets/img/fig.c6809878.png">
 
     <!-- w/o space around values in srcset attribute -->
-    <img srcset="assets/img/lime1.697ef306.png,assets/img/lime2.697ef306.png 100w,assets/img/lime3.697ef306.png 1.5x" src="assets/img/lime.697ef306.png">
+    <img srcset="assets/img/lemon.7b66be8e.png,assets/img/lemon2.7b66be8e.png 100w,assets/img/lemon3.7b66be8e.png 1.5x" src="assets/img/lemon.7b66be8e.png">
 
     <!-- multiline attributes -->
     <img
       alt="apple"
-      src="assets/img/apple.697ef306.png"
+      src="assets/img/apple.02a7c382.png"
     >
 
     <!-- multiline attributes -->
-    <img srcset="assets/img/lime1.697ef306.png,
-                 assets/img/lime2.697ef306.png 100w,
-                 assets/img/lime3.697ef306.png 1.5x"
-         src="assets/img/lime.697ef306.png">
+    <img srcset="assets/img/lemon.7b66be8e.png,
+                 assets/img/lemon2.7b66be8e.png 100w,
+                 assets/img/lemon3.7b66be8e.png 1.5x"
+         src="assets/img/lemon.7b66be8e.png">
 
     <div class="logo">
-      <img src="assets/img/apple.697ef306.png" alt="apple">
+      <img src="assets/img/apple.02a7c382.png" alt="apple">
     </div>
 
-    <!-- image with query -->
-    <img src="assets/img/apple.697ef306.png?foo=bar" alt="apple">
+    <!-- image with a query -->
+    <img src="assets/img/apple.02a7c382.png?foo=bar" alt="apple">
 
     <picture>
-      <source srcset="assets/img/plum.697ef306.png" type="image/png" />
+      <source srcset="assets/img/plum.d39e7174.png" type="image/png" />
     </picture>
 
-    <input src="assets/img/apple.697ef306.png" type="image">
+    <input src="assets/img/apple.02a7c382.png" type="image">
 
-    <object width="200" height="150" data="assets/img/apple.697ef306.png"></object>
+    <object width="200" height="150" data="assets/img/apple.02a7c382.png"></object>
 
-    <p>Ignore resources</p>
+    <h2>Ignore resources</h2>
+
+    <!-- ignore resolving of src attribute when leading char is not a space symbol
+         there should be a space between attribute and previous attribute -->
+    <img title="kiwi"src="@images/kiwi.png">
 
     <!-- bypass url -->
     <img src="https://example.com/img/image.png">

@@ -7,7 +7,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
 
   plugins: [
@@ -16,10 +15,10 @@ module.exports = {
         index: './src/index.html',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
     }),
   ],
@@ -41,7 +40,7 @@ module.exports = {
       cacheGroups: {
         vendor: {
           //test: /[\\/]node_modules[\\/]/,
-          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // use it when in Pug is defined CSS from node modules to exclude CSS from group
+          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // use it when in the template is defined CSS from node modules to exclude CSS from the group
           name(module, chunks, groupName) {
             const moduleName = module.resourceResolveData.descriptionFileData.name.replace('@', '');
             return `${groupName}.${moduleName}`;

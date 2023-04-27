@@ -5,7 +5,7 @@ const preprocessor = ({ watch, rootContext, options = {} }) => {
   const templatesPath = options.views || rootContext;
 
   if (watch === true) {
-    // enable to watch changes in serv/watch mode
+    // enable to watch changes in serve/watch mode
     options.noCache = true;
     // disable the Nunjucks watch, because we use Webpack watch
     options.watch = false;

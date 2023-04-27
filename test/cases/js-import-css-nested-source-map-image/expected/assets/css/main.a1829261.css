@@ -1,0 +1,55 @@
+.apple {
+  width: 160px;
+  height: 130px;
+  /* test using image the with the mapping to a correct code line */
+  background-image: url(../img/apple.02a7c3824c348ceacbd0.png);
+  background-repeat: no-repeat;
+}
+
+.a {
+  border: 5px solid teal;
+  color: seagreen;
+}
+.apple {
+  color: teal;
+  font-size: 17px;
+}
+.apple {
+  padding: 3px;
+}
+.melon {
+  width: 160px;
+  height: 130px;
+  /* test using image the with the mapping to a correct code line */
+  background-image: url(../img/melon.a92cb911764f3cbac263.png);
+}
+
+.b {
+  border: 5px solid mediumvioletred;
+}
+.melon {
+  color: violet;
+  font-size: 17px;
+}
+.melon {
+  padding: 3px;
+}
+.kiwi {
+  width: 160px;
+  height: 130px;
+  /* test using image the with the mapping to a correct code line */
+  background-image: url(../img/kiwi.da3e3cc948da3b084255.png);
+}
+
+.c {
+  border: 5px solid limegreen;
+}
+.kiwi {
+  color: limegreen;
+  font-size: 17px;
+}
+.kiwi {
+  padding: 3px;
+}
+
+/*# sourceMappingURL=main.a1829261.css.map*/

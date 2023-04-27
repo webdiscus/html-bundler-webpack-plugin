@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Test</title>
-    <link href="~Images/favicons/favicon.svg" rel="icon" type='image/svg+xml' sizes='any' />
-    <link href="~Images/favicons/favicon-32px.png" rel="icon" type='image/png' sizes='32x32' />
+    <link href="@images/favicons/favicon.svg" rel="icon" type='image/svg+xml' sizes='any' />
+    <link href="@images/favicons/favicon.png" rel="icon" type='image/png' sizes='32x32' />
     <link href="../assets/styles/style.scss" rel="stylesheet" />
   </head>
   <body>
@@ -11,15 +12,15 @@
     <!-- caching test of the same resources used in another file. -->
 
     <!-- size < 2K, data-URL -->
-    <img src="~Images/icons/iphone.png" class="inline">
+    <img src="@images/icons/iphone.png" class="inline">
 
     <!-- size < 2K, inline SVG -->
-    <img src="~Images/icons/imac.svg" class="inline">
+    <img src="@images/icons/imac.svg" class="inline">
 
     <!-- size > 2K, file -->
-    <img src="~Images/bild.png" class="file">
+    <img src="@images/2k-over/bild.png" class="file">
 
     <!-- size > 2K, file -->
-    <img src="~Images/bild.svg" class="file">
+    <img src="@images/2k-over/bild.svg" class="file">
   </body>
 </html>

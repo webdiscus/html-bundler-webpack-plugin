@@ -1,0 +1,4 @@
+/* can be imported in many nested files, but must be once included */
+.single {
+  color: red;
+}

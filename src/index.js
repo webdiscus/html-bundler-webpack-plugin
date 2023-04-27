@@ -62,7 +62,7 @@ class Plugin extends AssetCompiler {
   }
 
   /**
-   * Called after module sources have been rendered, in the next stage `processAssets`.
+   * Called after module sources have been rendered, in the next `processAssets` stage.
    * Override abstract method.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
@@ -75,7 +75,6 @@ class Plugin extends AssetCompiler {
     const promises = [];
 
     const options = Options.get();
-    //let isMinify = Options.toBool(options.minify, true, false);
     let minifyOptions;
 
     // https://github.com/terser/html-minifier-terser#options-quick-reference

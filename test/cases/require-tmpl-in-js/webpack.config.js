@@ -8,12 +8,18 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  entry: {
-    index: './src/index.html',
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
   },
 
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+
       loaderOptions: {
         data: {
           component: {

@@ -56,7 +56,7 @@ class ResponsiveLoader {
   }
 
   /**
-   * Get the result of resource processing via `responsive-loader`.
+   * Get the result of resource processing via responsive-loader.
    *
    * Note: in the template is impossible to use `responsive-loader` as an object,
    * because processing happens in a later stage then used the result in template.
@@ -79,7 +79,7 @@ class ResponsiveLoader {
 
     // return one of image object properties: src, srcSet, width, height
     // but in reality is the `srcSet` property useful
-    // note: if no query param `prop` and used param `sizes`, then return value of `srcSet`
+    // note: if no query param `prop` and used the 'sizes' param, then return value of `srcSet`
     if (query.prop) {
       const prop = query.prop;
       const originalSource = module.originalSource();

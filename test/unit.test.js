@@ -2,9 +2,15 @@ import fs from 'fs';
 import { parseQuery, getFileExtension } from '../src/Common/Helpers';
 import { loadModule, resolveFile } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
+import Asset from '../src/Plugin/Asset';
 import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
+
+beforeAll(() => {
+  // important: the environment constant is used in code
+  process.env.NODE_ENV_TEST = 'true';
+});
 
 describe('parseQuery tests', () => {
   test('parseQuery key w/o value should be true', () => {
@@ -95,6 +101,57 @@ describe('parseQuery tests', () => {
       format: 'webp',
     };
     return expect(received).toStrictEqual(expected);
+  });
+});
+
+describe('unique filename tests', () => {
+  test('js/file.js', () => {
+    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.js');
+    const expected = 'js/file.js';
+    Asset.reset();
+    return expect(received.filename).toStrictEqual(expected);
+  });
+
+  test('js/file.1 w/o ext', () => {
+    Asset.index = {
+      'js/file': 1,
+    };
+    const received = Asset.getUniqueFilename('/src/file.js', 'js/file');
+    const expected = 'js/file.1';
+    Asset.reset();
+    return expect(received.filename).toStrictEqual(expected);
+  });
+
+  test('js/file.1.js', () => {
+    Asset.index = {
+      'js/file.js': 1,
+    };
+    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.js');
+    const expected = 'js/file.1.js';
+    Asset.reset();
+    return expect(received.filename).toStrictEqual(expected);
+  });
+
+  test('file.a1b2c3d4.1.js', () => {
+    Asset.index = {
+      'js/file.a1b2c3d4.js': 1,
+    };
+    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
+    const expected = 'js/file.a1b2c3d4.1.js';
+    Asset.reset();
+    return expect(received.filename).toStrictEqual(expected);
+  });
+
+  test('file.1.a1b2c3d4.js cache', () => {
+    Asset.files = new Map([
+      ['/src/file.css', 'css/file.a1b2c3d4.css'],
+      ['/src/file.js', 'js/file.1.a1b2c3d4.js'], // <= already cached by source filename
+    ]);
+
+    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
+    const expected = 'js/file.1.a1b2c3d4.js';
+    Asset.reset();
+    return expect(received.filename).toStrictEqual(expected);
   });
 });
 
@@ -372,5 +429,19 @@ describe('misc tests', () => {
   test('FileUtils: resolveFile', () => {
     const received = resolveFile('not-exists-file', { fs, root: __dirname });
     return expect(received).toBeFalsy();
+  });
+
+  test('ordered array', () => {
+    const data = [];
+    data[5] = 'c';
+    data[3] = 'b';
+    data[1] = 'a';
+
+    const received = data.flat(); // OK
+    //const received = [...data]; // empty slots
+
+    const expected = ['a', 'b', 'c'];
+
+    return expect(received).toStrictEqual(expected);
   });
 });

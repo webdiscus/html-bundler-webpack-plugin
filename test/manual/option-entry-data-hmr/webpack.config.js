@@ -28,23 +28,23 @@ module.exports = {
       entry: {
         index: {
           import: 'src/views/index.html',
+          // pass static data into template, Webpack must be reloaded after changes in the data
           data: {
-            // pass data into template
             teaser: 'This is the string variable passed from Webpack configuration.',
           },
         },
 
         'www/index': {
           import: 'src/views/index.html',
+          // pass data into template
           data: {
-            // pass data into template
             teaser: 'The generated page under the "www" route.',
           },
         },
 
-        // pass diff data into same template
         contact: {
           import: 'src/views/template.html',
+          // pass diff data into same template
           data: {
             title: 'Contact',
             header: 'Contact page',
@@ -53,10 +53,8 @@ module.exports = {
 
         about: {
           import: 'src/views/template.html',
-          data: {
-            title: 'About',
-            header: 'About page',
-          },
+          // pass dynamic data as a file, it takes effect after changes in the file
+          data: 'src/data/about.json',
         },
       },
     }),

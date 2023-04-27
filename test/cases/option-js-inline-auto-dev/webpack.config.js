@@ -3,7 +3,6 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'development',
-  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -15,7 +14,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, 'src/assets/images/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
       '@scripts': path.join(__dirname, 'src/assets/scripts/'),
     },
   },
@@ -28,7 +27,8 @@ module.exports = {
       },
       js: {
         inline: 'auto', // false; true; 'auto' - in dev mode is true, in prod mode is false
-        filename: 'assets/js/[name].[contenthash:8].js',
+        //filename: 'assets/js/[name].[contenthash:8].js', // problem by testing: randomized hash
+        filename: 'assets/js/[name].js',
       },
     }),
   ],

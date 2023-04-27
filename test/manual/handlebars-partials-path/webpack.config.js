@@ -1,9 +1,15 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'production',
   stats: 'minimal',
+
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -11,7 +17,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      verbose: true,
+      //verbose: true,
 
       entry: {
         index: {

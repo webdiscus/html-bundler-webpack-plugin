@@ -1,0 +1,20 @@
+{
+  "description": "Example how to use the tailwindcss",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "watch": "webpack watch --mode development",
+    "build": "webpack --mode=production --progress"
+  },
+  "devDependencies": {
+    "html-bundler-webpack-plugin": "1.18.0",
+    "postcss": "^8.4.24",
+    "postcss-loader": "^7.3.3",
+    "postcss-preset-env": "^8.5.0",
+    "sass": "^1.62.1",
+    "sass-loader": "^13.3.1",
+    "tailwindcss": "^3.3.2",
+    "webpack": "^5.85.0",
+    "webpack-cli": "5.1.1",
+    "webpack-dev-server": "^4.15.0"
+  }
+}

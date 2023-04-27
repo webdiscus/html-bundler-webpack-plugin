@@ -1,10 +1,10 @@
 /**
- * Transform source code from ESM to CommonJS.
+ * Transform source code from ESM to CommonJS syntax.
  *
  * @param {string} code ESM code.
  * @returns {string} CommonJS code.
  */
-const toCommonJS = (code) => {
+const transformToCommonJS = (code) => {
   // import to require
   const importMatches = code.matchAll(/import (.+) from "(.+)";/g);
   for (const [match, variable, file] of importMatches) {
@@ -26,5 +26,5 @@ const toCommonJS = (code) => {
 };
 
 module.exports = {
-  toCommonJS,
+  transformToCommonJS,
 };

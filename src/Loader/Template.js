@@ -103,9 +103,10 @@ class Template {
    *
    * @param {string} html The source HTML string.
    * @param {string} issuer The template file.
+   * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string}
    */
-  static compile(html, issuer) {
+  static compile(html, issuer, entryId) {
     const sources = Options.getSources();
 
     if (sources === false) {
@@ -122,7 +123,7 @@ class Template {
     let pos = 0;
 
     for (let { type, file, startPos, endPos } of result) {
-      const resolvedFile = this.resolve({ type, file, issuer });
+      const resolvedFile = this.resolve({ type, file, issuer, entryId });
       // skip not resolvable value, e.g. URL
       if (!resolvedFile) continue;
 
@@ -154,9 +155,10 @@ class Template {
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} file The source file of resource.
    * @param {string} issuer The issuer of source file.
+   * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string|boolean} Return a resolved full path of source file or false.
    */
-  static resolve({ type, file, issuer }) {
+  static resolve({ type, file, issuer, entryId }) {
     file = file.trim();
 
     if (
@@ -170,12 +172,12 @@ class Template {
 
     switch (type) {
       case 'style':
-        return Loader.compiler.loaderRequireStyle(file, issuer);
+        return Loader.compiler.loaderRequireStyle(file, issuer, entryId);
       case 'script':
-        return Loader.compiler.loaderRequireScript(file, issuer);
+        return Loader.compiler.loaderRequireScript(file, issuer, entryId);
     }
 
-    return Loader.compiler.loaderRequire(file, issuer);
+    return Loader.compiler.loaderRequire(file, issuer, entryId);
   }
 
   /**

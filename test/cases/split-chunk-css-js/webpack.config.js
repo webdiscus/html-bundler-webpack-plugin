@@ -16,10 +16,10 @@ module.exports = {
       js: {
         // test verbose for JS
         verbose: true,
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
     }),
   ],
@@ -38,7 +38,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         vendor: {
-          // test case: when used min css and js directly in Pug,
+          // test case: when used min css and js directly in the template,
           // then the `test` option must match exactly only js files from node_modules,
           // otherwise Webpack merge source JS together with source CSS in one file
           //test: /[\\/]node_modules[\\/]/, // Note: CSS will be not extracted!

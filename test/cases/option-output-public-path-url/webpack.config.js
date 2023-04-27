@@ -9,16 +9,16 @@ module.exports = {
     publicPath: 'http://localhost:8080/',
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: {
-          import: './src/index.html',
-          data: {
-            title: 'Home',
-            name: 'World',
-          },
-        },
+        index: './src/index.html',
       },
 
       js: {

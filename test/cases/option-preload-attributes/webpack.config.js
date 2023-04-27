@@ -10,7 +10,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@fonts': path.join(__dirname, 'src/assets/fonts'),
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
     },
   },
 
@@ -21,7 +21,7 @@ module.exports = {
       },
 
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
 
       preload: [

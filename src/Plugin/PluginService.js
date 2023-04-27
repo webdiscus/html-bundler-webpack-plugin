@@ -27,7 +27,7 @@ class PluginService {
   /**
    * Set use state of the plugin.
    *
-   * If the plugin is used, then this method will be called by the plugin initialisation
+   * If the plugin is used, then this method will be called by the plugin initialization
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
@@ -53,7 +53,7 @@ class PluginService {
   }
 
   /**
-   * Called before each new compilation, in the serv/watch mode.
+   * Called before each new compilation, in the serve/watch mode.
    */
   static watchRun() {
     for (const [id, options] of this.#loaderCache) {
@@ -90,7 +90,7 @@ class PluginService {
   }
 
   /**
-   * Save initialized loader options in cache to avoid double initialisation
+   * Save initialized loader options in cache to avoid double initialization
    * when many templates loaded with same loader options.
    *
    * @param {string} id
@@ -121,7 +121,7 @@ class PluginService {
 
   /**
    * Reset settings.
-   * Called before each new compilation after changes, in the serv/watch mode.
+   * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {}
 

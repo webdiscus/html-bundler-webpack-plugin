@@ -1,23 +1,26 @@
 const vm = require('vm');
-const { toCommonJS } = require('./Utils');
+const { transformToCommonJS } = require('./Utils');
 const { executeFunctionException } = require('./Messages/Exception');
 
 class VMScript {
+  context = {};
+
   /**
    *
    * @param {Object} context The context object.
    */
   constructor(context) {
-    this.contex = vm.createContext(context);
+    this.context = vm.createContext(context);
   }
 
   /**
    *
    * @param source
    * @param {string} filename The filename used in stack traces produced by this script.
+   * @param {boolean} esModule
    * @return {*|string}
    */
-  run(source, filename) {
+  compile(source, filename, esModule) {
     let code = source.source();
 
     if (Buffer.isBuffer(code)) {
@@ -25,13 +28,13 @@ class VMScript {
     }
 
     // transform the code to CommonJS
-    if (code.indexOf('export default') > -1) {
-      code = toCommonJS(code);
+    if (esModule === true) {
+      code = transformToCommonJS(code);
     }
 
     try {
       const script = new vm.Script(code, { filename });
-      const compiledCode = script.runInContext(this.contex);
+      const compiledCode = script.runInContext(this.context);
 
       return typeof compiledCode === 'function' ? compiledCode() : compiledCode || '';
     } catch (error) {

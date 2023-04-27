@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- test for auto publicPath when used same asset from different paths -->
+  <link href="@styles/common.scss" rel="stylesheet">
+  <link href="./style.scss" rel="stylesheet">
+  <script src="@scripts/common.min.js"></script>
+  <!-- test to resolve script filename w/o the extension `.js` -->
+  <script src="./science"></script>
+</head>
+<body>
+  <h1>News / science</h1>
+  <div class="common">common</div>
+  <div class="science">science</div>
+  <img src="@images/apple.png">
+</body>
+</html>

@@ -3,6 +3,7 @@
   $headline = 'Homepage';
 ?>
 
+<!DOCTYPE html>
 <html>
 <head>
   <title><?= $title ?></title>
@@ -11,6 +12,6 @@
 </head>
 <body>
   <h1><?= $headline ?></h1>
-  <img src="./image.png">
+  <img src="@images/apple.png">
 </body>
 </html>

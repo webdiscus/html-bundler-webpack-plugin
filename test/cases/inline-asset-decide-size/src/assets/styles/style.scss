@@ -1,6 +1,6 @@
 // size < 1K, data-URL
 .data-url-png {
-  background: url('../images/icons/iphone.png');
+  background: url('@images/icons/iphone.png');
   width: 100px;
   height: 100px;
   border: 1px solid chocolate;
@@ -8,7 +8,7 @@
 
 // size < 1K, data-URL
 .data-url-svg {
-  background: url('../images/icons/imac.svg');
+  background: url('@images/icons/imac.svg');
   width: 100px;
   height: 100px;
   border: 1px solid chocolate;
@@ -16,7 +16,7 @@
 
 // size > 1K then resource file
 .file-svg {
-  background: url('../images/bild.svg');
+  background: url('@images/2k-over/bild.svg');
   background-size: auto;
   width: 180px;
   height: 140px;
@@ -24,7 +24,7 @@
 }
 // size > 1K then resource file
 .file-png {
-  background: url('../images/bild.png');
+  background: url('@images/2k-over/bild.png');
   width: 180px;
   height: 140px;
   border: 1px solid chocolate;

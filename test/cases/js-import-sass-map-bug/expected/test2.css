@@ -1,0 +1,15 @@
+/* mapping to line 2, OK */
+.a2 {
+  width: 160px;
+  height: 130px;
+  /* if the url is an data URL, the mapping line to the next section is WRONG */
+  background-image: url(data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==);
+  border: 5px solid darkorange;
+}
+
+/* expected the mapping to line 11 but received 12, BUG */
+.b2 {
+  color: crimson;
+}
+
+/*# sourceMappingURL=test2.css.map*/

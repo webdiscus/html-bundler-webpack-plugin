@@ -3,18 +3,17 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   resolve: {
     alias: {
-      Images: path.join(__dirname, 'src/assets/images/'),
-      Styles: path.join(__dirname, 'src/assets/styles/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
+      '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
   },
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/', // test with root path
+    publicPath: '/', // test with the root path
   },
 
   plugins: [
@@ -46,7 +45,7 @@ module.exports = {
         use: {
           loader: 'responsive-loader',
           options: {
-            // output filename of images
+            // the output filename of images
             // note: GitHub generate different hash as local test
             //name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
             name: 'assets/img/[name]-[width]w.[ext]',

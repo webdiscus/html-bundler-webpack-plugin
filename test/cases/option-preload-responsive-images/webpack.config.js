@@ -10,7 +10,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, 'src/assets/images'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
       '@scripts': path.join(__dirname, 'src/assets/scripts'),
       '@styles': path.join(__dirname, 'src/assets/styles'),
     },
@@ -21,7 +21,7 @@ module.exports = {
       //verbose: true,
 
       entry: {
-        // test same template with diff output filenames
+        // test the same template with diff output filenames
         index: {
           import: './src/views/pages/home/index.html',
           data: { title: 'EN Home' },
@@ -33,12 +33,8 @@ module.exports = {
         'news/sport': './src/views/pages/news/sport/index.html?q=3',
       },
 
-      js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
-      },
-
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
 
       preload: [
@@ -86,7 +82,6 @@ module.exports = {
         use: {
           loader: 'responsive-loader',
           options: {
-            // output filename of images
             // note: GitHub generate different hash as local test
             //name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
             name: 'assets/img/[name]-[width]w.[ext]',

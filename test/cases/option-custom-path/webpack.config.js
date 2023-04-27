@@ -9,13 +9,12 @@ module.exports = {
 
   resolve: {
     alias: {
-      Images: path.join(__dirname, 'src/assets/images/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
     },
   },
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -29,9 +28,12 @@ module.exports = {
         // test an absolute path for import
         about: path.join(templatePath, 'about.html'),
         // test the option `outputPath` to resolve the output filename
-        'pages/contact': {
-          import: 'pages/contact.html',
-          filename: '[name].html',
+        'news/science': {
+          import: 'news/science.html',
+          // test `outputPath` and filename as function
+          filename: (pathData) => {
+            return 'custom/[name].html';
+          },
         },
       },
     }),
@@ -43,7 +45,7 @@ module.exports = {
         test: /\.(png|jpg|jpeg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/images/[name].[hash:8][ext]',
+          filename: 'assets/img/[name].[hash:8][ext]',
         },
       },
     ],

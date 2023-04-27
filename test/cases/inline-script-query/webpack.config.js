@@ -10,7 +10,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      Scripts: path.join(__dirname, 'src/assets/scripts/'),
+      '@scripts': path.join(__dirname, 'src/assets/scripts/'),
     },
   },
 

@@ -50,7 +50,7 @@ class AssetTrash {
 
   /**
    * Reset settings.
-   * Called before each new compilation after changes, in the serv/watch mode.
+   * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {
     this.trash.length = 0;

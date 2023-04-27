@@ -10,15 +10,15 @@
 
 .png-data-url2 {
   // url must be as `data:image/png;base64,iVBO...`
-  background: url('Images/icons/iphone.png');
+  background: url('@images/icons/iphone.png');
 }
 
 .svg-data-url-alias {
   // resolve inline asset via alias
-  background: url('~Images/icons/imac.svg');
+  background: url('@images/icons/imac.svg');
 }
 
 .png-data-url-alias {
   // resolve inline asset via alias
-  background: url('~Images/icons/imac.png');
+  background: url('@images/icons/imac.png');
 }

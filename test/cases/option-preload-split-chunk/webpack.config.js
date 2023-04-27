@@ -10,8 +10,8 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, 'src/assets/images'),
-      '@fonts': path.join(__dirname, 'src/assets/fonts'),
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
       '@scripts': path.join(__dirname, 'src/assets/scripts'),
       '@styles': path.join(__dirname, 'src/assets/styles'),
     },
@@ -27,11 +27,11 @@ module.exports = {
       },
 
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
 
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
 
       preload: [
@@ -91,6 +91,7 @@ module.exports = {
           test: /\.(js|ts)$/,
           chunks: 'all',
           enforce: true,
+          maxSize: 50,
         },
       },
     },

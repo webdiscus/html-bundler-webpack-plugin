@@ -1,7 +1,7 @@
 const { resolveFile } = require('../../../../Common/FileUtils');
 
 /**
- * Returns the include helper function.
+ * Return the include helper function.
  *
  * @param {FileSystem} fs The file system.
  * @param {Handlebars} Handlebars The instance of Handlebars module.
@@ -12,7 +12,7 @@ const { resolveFile } = require('../../../../Common/FileUtils');
  */
 module.exports = ({ fs, Handlebars, root, views = [], extensions = [] }) => {
   /**
-   * Include the partial file into a template.
+   * Include the partial file in a template.
    *
    * @param {string} filename The partial file name.
    * @param {Object} options The options passed via tag attributes into a template.

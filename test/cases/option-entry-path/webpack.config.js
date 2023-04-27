@@ -6,12 +6,11 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, 'src/assets/images'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
       '@scripts': path.join(__dirname, 'src/assets/scripts'),
       '@styles': path.join(__dirname, 'src/assets/styles'),
     },

@@ -6,7 +6,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -15,10 +14,10 @@ module.exports = {
         index: './src/index.html',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
       postprocess: (content, info, compilation) => {
         return content.replace('REPLACE ME', 'The new replaced content.');

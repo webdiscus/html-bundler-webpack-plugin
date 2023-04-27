@@ -1,13 +1,11 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
-const { undefined } = require('nunjucks/src/tests');
 
 module.exports = {
   mode: 'production',
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -16,10 +14,10 @@ module.exports = {
         index: './src/index.html',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
       afterProcess: (content, { sourceFile, assetFile }) => {
         return content.replace('REPLACE ME', 'The new replaced content.');

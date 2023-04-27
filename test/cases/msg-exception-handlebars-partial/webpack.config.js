@@ -3,7 +3,6 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   plugins: [
     new HtmlBundlerPlugin({

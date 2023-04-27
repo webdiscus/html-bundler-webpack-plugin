@@ -1,1 +1,0 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[961],{961:()=>{console.log(">> main")}}]);

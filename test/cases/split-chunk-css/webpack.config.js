@@ -3,11 +3,9 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
   },
   plugins: [
     new HtmlBundlerPlugin({

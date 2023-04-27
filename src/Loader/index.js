@@ -21,7 +21,7 @@ const {
 const loader = function (content, map, meta) {
   const loaderContext = this;
   const loaderCallback = loaderContext.async();
-  const { rootContext, resource, resourcePath } = loaderContext;
+  const { rootContext, resource, resourcePath, entryName, entryId, entryData } = loaderContext;
   let errorStage = '';
 
   const callback = (error, result = null) => {
@@ -57,7 +57,7 @@ const loader = function (content, map, meta) {
   })
     .then((value) => {
       errorStage = 'compile';
-      return Template.compile(value, resource);
+      return Template.compile(value, resource, entryId);
     })
     .then((value) => {
       errorStage = 'export';

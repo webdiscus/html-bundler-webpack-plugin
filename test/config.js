@@ -5,7 +5,7 @@ const PATHS = {
   testSource: path.join(__dirname, 'cases'),
   // relative path in the test directory to web root dir name, same as by a web server (e.g. nginx)
   webRoot: '/dist/',
-  // relative path in the test directory to expected files for test
+  // relative path in the test directory to expect files for test
   expected: '/expected/',
   // relative path in the public directory
   output: '/assets/',

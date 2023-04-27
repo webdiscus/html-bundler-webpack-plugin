@@ -212,7 +212,7 @@ class Preload {
     }
 
     let startPos = content.indexOf('<link', headStartPos);
-    if (startPos < 0) {
+    if (startPos < 0 || startPos > headEndPos) {
       startPos = content.indexOf('<script', headStartPos);
     }
     if (startPos < 0 || startPos > headEndPos) {

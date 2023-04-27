@@ -17,13 +17,19 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: 'auto', // test with auto public path
+    publicPath: 'auto', // test with the auto public path
+  },
+
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
   },
 
   plugins: [
     new HtmlBundlerPlugin({
       //verbose: true,
-      // test: same script and style file used in many pages generated from same template file
+      // test: same script and style file used in many pages generated from the same template file
       entry: {
         home: {
           import: 'src/template.html',
@@ -31,11 +37,11 @@ module.exports = {
             title: 'Home',
           },
         },
-        // test: resolve correct auto public path for assets used in diff route/pages generated from one template
-        'pages/privacy': {
+        // test: resolve the correct auto public path for assets used in diff route/pages generated from one template
+        'news/sport': {
           import: 'src/template.html',
           data: {
-            title: 'Privacy',
+            title: 'News / sport',
           },
         },
         contact: {
@@ -73,16 +79,8 @@ module.exports = {
         use: ['css-loader'],
       },
 
-      // {
-      //   test: /\.(png|jpe?g|ico)$/,
-      //   type: 'asset/resource',
-      //   generator: {
-      //     filename: 'assets/img/[name].[hash:8][ext]',
-      //   },
-      // },
-
       {
-        test: /\.(gif|png|jpe?g|ico|svg|webp)$/i,
+        test: /\.(gif|png|jpe?g|ico|svg|webp)/i,
         type: 'asset/resource',
         use: {
           loader: 'responsive-loader',

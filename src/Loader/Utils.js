@@ -1,5 +1,9 @@
 const path = require('path');
 
+// constants used for imported styles in JavaScript
+const baseUri = 'webpack://';
+const urlPathPrefix = '/__HTML_BUNDLER_PLUGIN__/';
+
 /**
  * Inject a string before closing </head> tag.
  *
@@ -24,7 +28,7 @@ const injectBeforeEndBody = (content, string) => injectBefore(content, string, [
  * @param {string} content Where should be injected a string.
  * @param {string} string The string to inject in content.
  * @param {Array<string>} before The string will be injected before the first found entry.
- *  If no entry found, the string will be added to the end of the content.
+ *  If no entry is found, the string will be added to the end of the content.
  * @return string
  */
 const injectBefore = (content, string, before = []) => {
@@ -42,6 +46,8 @@ const injectBefore = (content, string, before = []) => {
 };
 
 module.exports = {
+  baseUri,
+  urlPathPrefix,
   hmrFile: path.join(__dirname, 'Hmr/hot-update.js'),
   injectBeforeEndHead,
   injectBeforeEndBody,

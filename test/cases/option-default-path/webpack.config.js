@@ -6,24 +6,23 @@ module.exports = {
 
   resolve: {
     alias: {
-      Images: path.join(__dirname, 'src/assets/images/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
     },
   },
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   entry: {
-    // test default value of the option `sourcePath` to resolve the import filename
+    // test the default value of the option `sourcePath` to resolve the import filename
     index: './src/views/index.html',
     // test an absolute path for import
     about: path.join(__dirname, 'src/views/about.html'),
-    // test default value of the option `outputPath` to resolve the output filename
-    contact: {
-      import: './src/views/pages/contact.html',
-      filename: 'pages/[name].html',
+    // test the default value of the option `outputPath` to resolve the output filename
+    science: {
+      import: './src/views/news/science.html',
+      filename: 'news/[name].html',
     },
   },
 
@@ -38,7 +37,7 @@ module.exports = {
         test: /\.(png|jpg|jpeg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/images/[name].[hash:8][ext]',
+          filename: 'assets/img/[name].[hash:8][ext]',
         },
       },
     ],

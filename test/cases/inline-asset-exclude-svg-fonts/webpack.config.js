@@ -6,14 +6,13 @@ module.exports = {
 
   resolve: {
     alias: {
-      Fonts: path.join(__dirname, 'src/assets/fonts/'),
-      Images: path.join(__dirname, 'src/assets/images/'),
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
     },
   },
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    //publicPath: '/',
   },
 
   plugins: [

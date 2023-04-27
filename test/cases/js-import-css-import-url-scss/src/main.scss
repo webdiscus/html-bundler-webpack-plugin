@@ -1,0 +1,10 @@
+// the url stays as is
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+
+// when the scss file is imported in JavaScript, the css file imported via url() will be injected here
+@import url('./test.css');
+
+body {
+  font-family: Montserrat, sans-serif;
+  color: red;
+}

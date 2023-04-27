@@ -4,10 +4,10 @@ h1 {
   color: $color;
 }
 
-.chery {
+.pear {
   width: 120px;
   height: 98px;
   border: 2px solid darkred;
   // test preload image with query
-  background-image: url('@images/chery.png?size=120');
+  background-image: url('@images/pear.png?size=120');
 }

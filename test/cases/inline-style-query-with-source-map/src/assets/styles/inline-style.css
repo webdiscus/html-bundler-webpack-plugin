@@ -6,5 +6,5 @@ h1 {
   border: 2px solid orangered;
   width: 160px;
   height: 130px;
-  background-image: url("Images/image.png");
+  background-image: url("@images/apple.png");
 }

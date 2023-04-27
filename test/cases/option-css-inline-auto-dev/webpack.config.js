@@ -10,7 +10,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, 'src/assets/images/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
       '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
   },
@@ -23,7 +23,7 @@ module.exports = {
       },
       css: {
         inline: 'auto', // false; true; 'auto' - in dev mode is true, in prod mode is false
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
     }),
   ],

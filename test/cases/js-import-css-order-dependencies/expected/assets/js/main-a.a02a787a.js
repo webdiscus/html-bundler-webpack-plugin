@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log(">> component-a2"),console.log(">> component-a1"),console.log(">> component-b2"),console.log(">> component-b1"),console.log(">> main-a")})();

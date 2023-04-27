@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log(">> module: components/Toolbar"),console.log(">> main")})();

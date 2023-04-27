@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   elm.style.backgroundImage = `url(${image})`;
   elm.style.width = '160px';
   elm.style.height = '130px';
-  elm.style.border = '2px solid steelblue';
+  elm.style.border = '5px solid steelblue';
 });
 
 console.log('>> script-inline-false.js?inline=false', { image });

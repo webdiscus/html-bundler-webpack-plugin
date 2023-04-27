@@ -1,0 +1,10 @@
+.kiwi {
+  width: 160px;
+  height: 130px;
+  /* test using image the with the mapping to a correct code line */
+  background-image: url('@images/kiwi.png');
+}
+
+.c {
+  border: 5px solid limegreen;
+}

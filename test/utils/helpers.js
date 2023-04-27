@@ -2,6 +2,7 @@ import path from 'path';
 import ansis from 'ansis';
 import { readDirRecursiveSync, readTextFileSync } from './file';
 import { compile, watch } from './webpack';
+import { PATHS } from '../config';
 
 /**
  * This is the patch for some environments, like `jest`.
@@ -28,7 +29,13 @@ export const getCompareFileContents = function (receivedFile, expectedFile, filt
     : { received: '', expected: '' };
 };
 
-export const compareFileListAndContent = (PATHS, relTestCasePath) => {
+/**
+ * Compare the file list and content of files.
+ *
+ * @param {string} relTestCasePath The relative path to the test directory.
+ * @return {Promise<void>}
+ */
+export const compareFiles = (relTestCasePath) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
     webRootPath = path.join(absTestPath, PATHS.webRoot),
     expectedPath = path.join(absTestPath, PATHS.expected);
@@ -54,7 +61,7 @@ export const compareFileListAndContent = (PATHS, relTestCasePath) => {
   ).resolves.toBe(true);
 };
 
-export const watchCompareFileListAndContent = (PATHS, relTestCasePath) => {
+export const watchCompareFiles = (relTestCasePath) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
     webRootPath = path.join(absTestPath, PATHS.webRoot),
     expectedPath = path.join(absTestPath, PATHS.expected);
@@ -80,7 +87,7 @@ export const watchCompareFileListAndContent = (PATHS, relTestCasePath) => {
   ).resolves.toBe(true);
 };
 
-export const exceptionContain = (PATHS, relTestCasePath, containString) => {
+export const exceptionContain = (relTestCasePath, containString) => {
   return expect(
     compile(PATHS, relTestCasePath, {})
       .then(() => {
@@ -93,7 +100,7 @@ export const exceptionContain = (PATHS, relTestCasePath, containString) => {
   ).rejects.toContain(containString);
 };
 
-export const watchExceptionContain = function (PATHS, relTestCasePath, containString) {
+export const watchExceptionContain = function (relTestCasePath, containString) {
   return expect(
     watch(PATHS, relTestCasePath, {}, (watching) => {
       watching.close();
@@ -108,7 +115,7 @@ export const watchExceptionContain = function (PATHS, relTestCasePath, containSt
   ).rejects.toContain(containString);
 };
 
-export const stdoutSnapshot = function (PATHS, relTestCasePath, done) {
+export const stdoutSnapshot = function (relTestCasePath, done) {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   return expect(
@@ -125,7 +132,7 @@ export const stdoutSnapshot = function (PATHS, relTestCasePath, done) {
   ).resolves.toMatchSnapshot();
 };
 
-export const watchStdoutSnapshot = function (PATHS, relTestCasePath, done) {
+export const watchStdoutSnapshot = function (relTestCasePath, done) {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   return expect(

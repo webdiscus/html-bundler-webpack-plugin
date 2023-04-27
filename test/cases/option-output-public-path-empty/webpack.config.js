@@ -11,25 +11,25 @@ module.exports = {
 
   resolve: {
     alias: {
-      Images: path.join(__dirname, 'src/assets/images/'),
-      Scripts: path.join(__dirname, 'src/assets/scripts/'),
-      Styles: path.join(__dirname, 'src/assets/styles/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
+      '@scripts': path.join(__dirname, 'src/assets/scripts/'),
+      '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
   },
 
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/views/index.html',
-        'about/index': './src/views/about/index.html',
+        index: './src/views/home/index.html',
+        'news/science': './src/views/news/science/index.html',
       },
       js: {
-        filename: 'assets/js/[name].js',
+        filename: 'assets/js/[name].[contenthash:8].js',
       },
       css: {
         // output filename of styles
         filename: (pathInfo) => {
-          // test auto publicPath for CSS url() from different paths
+          // test publicPath for CSS url() from different paths
           if (pathInfo.chunk.name === 'common') {
             return 'assets/vendor/css/[name].[contenthash:8].css';
           }

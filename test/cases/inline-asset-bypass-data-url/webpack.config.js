@@ -7,7 +7,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -21,8 +20,8 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(css|sass|scss)$/,
-        use: ['css-loader', 'sass-loader'],
+        test: /\.css$/,
+        use: ['css-loader'],
       },
     ],
   },

@@ -25,12 +25,12 @@ module.exports = {
 
       js: {
         // output filename of extracted JS
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
 
       css: {
         // output filename of extracted CSS
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
     }),
   ],

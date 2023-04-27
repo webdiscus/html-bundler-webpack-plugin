@@ -1,1 +1,1 @@
-console.log('Main');
+console.log('>> main');

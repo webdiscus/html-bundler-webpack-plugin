@@ -1,16 +1,29 @@
+const path = require('path');
 const { loadModule } = require('../../../Common/FileUtils');
 
 const preprocessor = ({ rootContext, options }) => {
-  const Eta = loadModule('eta');
+  const Eta = loadModule('eta', () => require('eta').Eta);
+  let views = options.views;
 
-  return (template, { resourcePath, data = {} }) =>
-    Eta.render(template, data, {
-      //async: false, // defaults is false, wenn is true then must be used `await includeFile()`
-      useWith: true, // allow to use variables in template without `it.` scope
-      root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
-      ...options,
-      filename: resourcePath, // allow to include a partial relative to the template
-    });
+  if (!views) {
+    views = rootContext;
+  } else if (!path.isAbsolute(views)) {
+    views = path.join(rootContext, views);
+  }
+
+  const eta = new Eta({
+    useWith: true, // allow using variables in template without `it.` scope
+    ...options,
+    views, // directory that contains templates
+  });
+
+  // since eta v3 the `async` option is removed, but for compatibility, it is still used in this plugin
+  // defaults is false, wenn is true then must be used `await includeAsync()`
+  const async = options?.async === true;
+
+  return async
+    ? (template, { data = {} }) => eta.renderStringAsync(template, data)
+    : (template, { data = {} }) => eta.renderString(template, data);
 };
 
 module.exports = preprocessor;

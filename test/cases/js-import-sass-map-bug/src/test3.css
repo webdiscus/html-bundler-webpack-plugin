@@ -1,0 +1,13 @@
+/* mapping to line 2, OK */
+.a3 {
+  width: 160px;
+  height: 130px;
+  /* if the url is relative file, the mapping line to the next section is WRONG */
+  background-image: url('./apple.png');
+  border: 5px solid red;
+}
+
+/* expected the mapping to line 11 but received 7, BUG */
+.b3 {
+  color: red;
+}

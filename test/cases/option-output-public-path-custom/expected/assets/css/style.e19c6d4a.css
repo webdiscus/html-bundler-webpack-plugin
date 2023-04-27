@@ -1,0 +1,7 @@
+.apple {
+  width: 160px;
+  height: 130px;
+  background-image: url(/sub-path/assets/img/apple.02a7c382.png);
+  border: 5px solid red;
+  color: red;
+}

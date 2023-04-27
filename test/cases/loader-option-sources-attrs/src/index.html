@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <title>Test</title>
@@ -6,38 +7,38 @@
     <h1>Home</h1>
 
     <!-- data-src and data-srcset attributes -->
-    <img data-src="./apple.png" data-srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x">
+    <img data-src="@images/apple.png" data-srcset="@images/fig.png, @images/fig2.png 100w, @images/fig3.png 1.5x">
 
     <img
-      data-srcset="./fig1.png, ./fig2.png 100w, ./fig3.png 1.5x"
-      srcset="./lime1.png, ./lime2.png 200w, ./lime3.png 2.5x"
-      src="./apple.png"
+      data-srcset="@images/fig.png, @images/fig2.png 100w, @images/fig3.png 1.5x"
+      srcset="@images/lemon.png, @images/lemon2.png 200w, @images/lemon3.png 2.5x"
+      src="@images/apple.png"
     >
 
     <!-- custom attributes -->
     <img
-      data-ignore-src="./fig1.png"
-      data-resolve-src="./fig2.png"
-      alt="custom image"
+      data-ignore-src="@images/fig.png"
+      data-resolve-src="@images/fig2.png"
+      alt="resolve custom attribute"
     />
 
     <!-- new custom tag with new attributes -->
     <img-ng
-      data-src-one="./fig1.png"
-      data-src-two="./fig2.png"
+      data-src-one="@images/fig.png"
+      data-src-two="@images/fig2.png"
       alt="custom image"
     ></img-ng>
 
     <svg width="160" height="130">
-      <image href="./fig1.png"></image>
+      <image href="@images/fig.png"></image>
     </svg>
 
     <svg width="24" height="24">
-      <use href="./icons.svg#circle"></use>
+      <use href="@images/icons/shapes.svg#circle"></use>
     </svg>
 
     <svg width="24" height="24">
-      <use href="./icons.svg#rect"></use>
+      <use href="@images/icons/shapes.svg#rect"></use>
     </svg>
 
   </body>

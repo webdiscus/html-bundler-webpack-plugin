@@ -11,7 +11,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      Scripts: path.join(__dirname, 'src/js/'),
+      '@scripts': path.join(__dirname, 'src/js/'),
     },
   },
 

@@ -76,20 +76,20 @@ class Resolver {
    */
   static addAsset(assetInfo) {
     let sourceFile = path.resolve(assetInfo.resource);
-    let item = this.data.get(sourceFile);
+    let resourceData = this.data.get(sourceFile);
 
-    if (!item) {
-      item = {
+    if (!resourceData) {
+      resourceData = {
         assets: new Map(),
         sourceFile,
       };
-      this.data.set(sourceFile, item);
+      this.data.set(sourceFile, resourceData);
     }
 
     if (assetInfo.resolve) {
-      item.resolve = assetInfo.resolve;
+      resourceData.resolve = assetInfo.resolve;
     } else {
-      item.originalFilename = assetInfo.filename;
+      resourceData.originalFilename = assetInfo.filename;
     }
   }
 
@@ -136,13 +136,13 @@ class Resolver {
    * Get the key of asset file to save it as resolved under its issuer.
    *
    * Note: the key can be an output filename when the issuer is a current entry point
-   *  otherwise is a source file of an issuer, e.g. a style.
+   *  otherwise is a source file of an issuer, e.g., a style.
    *
    * @param {string} issuer
    * @param {AssetEntryOptions} entryPoint
    */
   static getAssetKey(issuer, entryPoint) {
-    return issuer === entryPoint.resource ? entryPoint.filename : issuer;
+    return issuer === entryPoint?.resource ? entryPoint.filename : issuer;
   }
 
   /**
@@ -153,30 +153,35 @@ class Resolver {
    * @return {string|null}
    */
   static resolveAsset(resource) {
-    const item = this.data.get(resource);
+    const resourceData = this.data.get(resource);
 
-    if (!item) return null;
+    if (!resourceData) return null;
 
     const { entryPoint, issuer } = this;
     const assetKey = this.getAssetKey(issuer.resource, entryPoint);
-    const assetFile = item.assets.get(assetKey);
+    const assetFile = resourceData.assets.get(assetKey);
     const isIssuerInlinedStyle = Collection.isInlineStyle(issuer.resource);
 
     if (assetFile && !isIssuerInlinedStyle) return assetFile;
 
-    const { originalFilename, resolve } = item;
+    const { originalFilename, resolve } = resourceData;
+    const realIssuer = isIssuerInlinedStyle
+      ? {
+          resource: entryPoint.resource,
+          filename: entryPoint.filename,
+        }
+      : issuer;
     let outputFilename;
 
     if (originalFilename != null) {
-      const issuerFilename = isIssuerInlinedStyle ? entryPoint.filename : issuer.filename;
-      outputFilename = Options.getAssetOutputFile(originalFilename, issuerFilename);
+      outputFilename = Options.getAssetOutputFile(originalFilename, realIssuer.filename);
     } else if (resolve != null) {
       // resolve asset filename processed via external loader, e.g. `responsive-loader`
-      outputFilename = resolve(issuer);
+      outputFilename = resolve(realIssuer);
     }
 
     if (outputFilename != null) {
-      item.assets.set(assetKey, outputFilename);
+      resourceData.assets.set(assetKey, outputFilename);
 
       if (Collection.isStyle(resource)) {
         // set the output filename for already created (in renderManifest) data
@@ -261,7 +266,7 @@ class Resolver {
 
   /**
    * Reset settings.
-   * Called before each new compilation after changes, in the serv/watch mode.
+   * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {
     // reset outdated assets after rebuild via webpack dev server

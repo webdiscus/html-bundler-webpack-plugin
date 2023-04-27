@@ -4,6 +4,10 @@
 // the css file will be automatically coped to output directory and the filename will be resolved
 @import url('./test.css');
 
+body {
+  font-family: Montserrat, sans-serif;
+}
+
 h1 {
   color: red;
 }

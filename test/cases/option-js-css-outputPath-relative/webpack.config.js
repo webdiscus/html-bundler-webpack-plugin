@@ -3,11 +3,9 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -16,12 +14,12 @@ module.exports = {
         index: './src/views/home/index.html',
       },
       js: {
-        filename: '[name].[contenthash:8].js',
+        filename: '[name].bundle.js',
         // test the path relative by output.path
         outputPath: 'assets/js/',
       },
       css: {
-        filename: '[name].[contenthash:8].css',
+        filename: '[name].bundle.css',
         // test the path relative by output.path
         outputPath: 'assets/css/',
       },

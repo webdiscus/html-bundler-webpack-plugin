@@ -8,6 +8,12 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       verbose: true,
@@ -16,14 +22,13 @@ module.exports = {
       },
 
       js: {
-        // output filename of extracted JS
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
 
       css: {
-        // output filename of extracted CSS
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
+
       watchFiles: {
         paths: ['src'],
         files: [/\.(html|css)$/, '.js'], // include files

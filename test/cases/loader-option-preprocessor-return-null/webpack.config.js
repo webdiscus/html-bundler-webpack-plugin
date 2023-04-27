@@ -6,7 +6,12 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
+  },
+
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
   },
 
   plugins: [
@@ -25,7 +30,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        // test preprocessor return null, has same effect as `preprocessor: false`
+        // test preprocessor return null, has the same effect as `preprocessor: false`
         preprocessor: () => null,
       },
     }),

@@ -2,9 +2,10 @@
 <html>
 <head>
   <title><%= title %></title>
-  <link href="@images/favicon.ico" rel="icon">
+  <link href="@images/favicons/favicon.ico" rel="icon">
 
-  <link href="@styles/inlined.css" rel="stylesheet">
+  <!-- test the relativ path generated for responsive image in inlined css -->
+  <link href="@styles/inlined.css?inline" rel="stylesheet">
   <link href="./home.scss" rel="stylesheet">
 </head>
 <body>
@@ -12,9 +13,9 @@
   <img src="@images/apple.png" alt="apple original size">
   <img src="@images/apple.png?q=home-html" alt="apple original size with query">
   <img src="@images/apple.png?size=100" alt="apple resize 100">
-  <img src="@images/hardware.webp?format=jpg&size=300" alt="hardware resize 300">
+  <img src="@images/responsive/hardware.webp?format=jpg&size=300" alt="hardware resize 300">
 
-  <div class="chery"></div>
+  <div class="pear"></div>
   <div class="plum"></div>
   <div class="iphone"></div>
   <div class="imac"></div>

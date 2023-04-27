@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <title>About</title>
@@ -8,19 +9,23 @@
   <!-- inline JS: ?inline=true -->
   <script src="@scripts/script-inline-true.js?inline=true" defer="defer"></script>
 
-  <!-- inline JS: ?inline -->
+  <!-- inline common JS: ?inline -->
   <script src="@scripts/script-inline.js?inline" defer="defer"></script>
+
+  <!-- inline about JS: ?inline -->
+  <script src="@scripts/about-inline.js?inline" defer="defer"></script>
 
   <!-- inline/file JS: ?inline=auto -->
   <script src="@scripts/script-auto.js?inline=auto" defer="defer"></script>
 
   <!-- inline/file JS: depend on js.inline option -->
-  <script src="@scripts/script.js"></script>
+  <script src="@scripts/script.js" defer="defer"></script>
 
 </head>
 <body>
   <h1>About</h1>
   <div class="js-image-script-inline-false"></div>
   <div class="js-image-script-inline-true"></div>
+  <div class="js-kiwi"></div>
 </body>
 </html>

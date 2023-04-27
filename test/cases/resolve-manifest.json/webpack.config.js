@@ -8,6 +8,12 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
@@ -33,7 +39,7 @@ module.exports = {
         use: ['css-loader'],
       },
 
-      // copy manifest to output path
+      // copy manifest to the output path
       {
         test: /manifest\.json$/,
         type: 'asset/resource',

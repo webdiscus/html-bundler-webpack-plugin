@@ -1,4 +1,6 @@
-h1 {
-  color: red;
-  background-image: url("./image.png");
+.apple {
+  width: 160px;
+  height: 130px;
+  background-image: url("@images/apple.png");
+  border: 5px solid orangered;
 }

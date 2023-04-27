@@ -8,12 +8,13 @@
 // then this file will be loaded as a separate file from the CSS output directory
 //@import '@test-fixtures/scss/dist/fixture-styles.css';
 
-h1 {
-  color: red;
-}
-
 .apple {
-  background-image: url('./apple.png');
   width: 160px;
   height: 130px;
+  background-image: url('@images/apple.png');
+}
+
+.image-bg,
+.apple {
+  border: 5px solid orangered;
 }

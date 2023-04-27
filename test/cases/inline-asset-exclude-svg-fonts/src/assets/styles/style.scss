@@ -1,6 +1,6 @@
 // size < 1K, data-URL
 .data-url-svg {
-  background: url('~Images/icons/imac.svg');
+  background: url('@images/icons/imac.svg');
   width: 100px;
   height: 100px;
   border: 1px solid chocolate;
@@ -8,7 +8,7 @@
 
 // size < 1K, data-URL
 .data-url-png {
-  background: url('~Images/icons/iphone.png');
+  background: url('@images/icons/iphone.png');
   width: 100px;
   height: 100px;
   border: 1px solid chocolate;
@@ -16,26 +16,30 @@
 
 // size > 1K, file
 .file-svg {
-  background: url('~Images/bild.svg');
+  background: url('@images/2k-over/bild.svg');
 }
 
 // size > 1K, file
 .file-png {
-  background: url('~Images/bild.png');
+  background: url('@images/2k-over/bild.png');
+}
+
+body {
+  font-family: 'OpenSans';
 }
 
 @font-face {
   font-family: 'OpenSans';
   src:
-    url('~Fonts/OpenSans/open-sans-regular.svg') format('svg'),
-    url('~Fonts/OpenSans/open-sans-regular.woff2') format('woff2');
+    url('@fonts/OpenSans/open-sans-regular.svg') format('svg'),
+    url('@fonts/OpenSans/open-sans-regular.woff2') format('woff2');
   font-style: normal;
 }
 
 @font-face {
   font-family: 'GlyphIcons';
   src:
-    url('~Fonts/icons/GlyphIcons/glyphicons-halflings-regular.svg') format('svg'),
-    url('~Fonts/icons/GlyphIcons/glyphicons-halflings-regular.woff2') format('woff2');
+    url('@fonts/GlyphIcons/glyphicons-halflings-regular.svg') format('svg'),
+    url('@fonts/GlyphIcons/glyphicons-halflings-regular.woff2') format('woff2');
   font-style: normal;
 }

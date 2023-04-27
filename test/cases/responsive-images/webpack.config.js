@@ -3,18 +3,17 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   resolve: {
     alias: {
-      Images: path.join(__dirname, 'src/assets/images/'),
-      Styles: path.join(__dirname, 'src/assets/styles/'),
+      '@images': path.join(__dirname, '../../fixtures/images'),
+      '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
   },
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: 'auto', // test with auto path
+    publicPath: 'auto', // test with the auto path
   },
 
   plugins: [

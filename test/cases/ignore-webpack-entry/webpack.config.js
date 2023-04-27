@@ -8,10 +8,16 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   entry: {
     'style.entry': './src/style.css',
     'script.entry': './src/script.js',
-    'home.entry': './src/home.svg',
+    'home.entry': './src/home.svg', // test: ignore processing in plugin
   },
 
   plugins: [

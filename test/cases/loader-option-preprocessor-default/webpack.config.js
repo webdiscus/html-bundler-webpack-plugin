@@ -6,7 +6,12 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    clean: true,
+  },
+
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
   },
 
   plugins: [

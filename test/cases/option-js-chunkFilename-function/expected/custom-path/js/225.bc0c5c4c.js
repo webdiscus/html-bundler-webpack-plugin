@@ -1,1 +1,0 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[225],{225:(e,l,n)=>{Promise.all([n.e(838),n.e(481),n.e(235)]).then(n.bind(n,838)),console.log(">> main.js")}}]);

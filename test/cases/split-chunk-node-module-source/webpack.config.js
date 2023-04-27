@@ -7,8 +7,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
-    clean: true,
   },
 
   plugins: [
@@ -18,10 +16,10 @@ module.exports = {
         index: './src/index.html',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'assets/js/[name].bundle.js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'assets/css/[name].bundle.css',
       },
     }),
   ],

@@ -8,7 +8,7 @@ const preprocessor = ({ rootContext, options }) => {
       async: false,
       root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
       ...options,
-      filename: resourcePath, // allow to include a partial relative to the template
+      filename: resourcePath, // allow including a partial relative to the template
     });
 };
 

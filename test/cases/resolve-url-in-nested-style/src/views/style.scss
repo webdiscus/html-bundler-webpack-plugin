@@ -1,0 +1,7 @@
+@use '../styles/fonts/icons';
+
+.mat {
+  font-family: icons.$font-family;
+  font-size: 20px;
+  color: orangered;
+}

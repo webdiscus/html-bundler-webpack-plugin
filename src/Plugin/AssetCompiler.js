@@ -1,12 +1,12 @@
 const path = require('path');
 
-const NormalModule = require('webpack/lib/NormalModule');
-// const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
-// const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
+//const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
+//const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
 const { pluginName } = require('../config');
+const { baseUri, urlPathPrefix } = require('../Loader/Utils');
 
-const ExtractCss = require('./Modules/ExtractCss');
+const CssExtractModule = require('./Modules/CssExtractModule');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
 const Collection = require('./Collection');
@@ -17,11 +17,18 @@ const Asset = require('./Asset');
 const AssetEntry = require('./AssetEntry');
 const AssetResource = require('./AssetResource');
 const AssetInline = require('./AssetInline');
-const AssetScript = require('./AssetScript');
 const AssetTrash = require('./AssetTrash');
 const VMScript = require('./VMScript');
 
 const { verbose } = require('./Messages/Info');
+
+// the loader must have the structure
+const cssLoader = {
+  loader: require.resolve('../Loader/cssLoader.js'),
+  type: undefined,
+  options: undefined,
+  ident: undefined,
+};
 
 /** @typedef {import('webpack').Compiler} Compiler */
 /** @typedef {import('webpack').Compilation} Compilation */
@@ -68,8 +75,7 @@ const { verbose } = require('./Messages/Info');
  * @property {string|undefined} filename The output filename.
  */
 
-/** @type RawSource This objects will be assigned by plugin initialisation. */
-let RawSource, HotUpdateChunk;
+let HotUpdateChunk;
 
 class AssetCompiler {
   entryLibrary = {
@@ -78,7 +84,7 @@ class AssetCompiler {
   };
 
   /** @type AssetEntryOptions The current entry point during dependency compilation. */
-  currentEntryPoint;
+  currentEntryPoint = null;
 
   /** @type Set<Error> Buffered exceptions thrown in hooks. */
   exceptions = new Set();
@@ -96,6 +102,8 @@ class AssetCompiler {
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
     this.afterCreateModule = this.afterCreateModule.bind(this);
+    this.beforeLoader = this.beforeLoader.bind(this);
+    this.afterBuildModule = this.afterBuildModule.bind(this);
     this.renderManifest = this.renderManifest.bind(this);
     this.afterProcessAssets = this.afterProcessAssets.bind(this);
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
@@ -112,7 +120,8 @@ class AssetCompiler {
   initialize(compiler) {}
 
   /**
-   * Called after asset sources have been rendered in the next stage `processAssets`.
+   * Called after asset sources have been rendered in the next 'processAssets' stage.
+   *
    * Abstract method should be overridden in child class.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
@@ -143,21 +152,23 @@ class AssetCompiler {
     if (!Options.isEnabled()) return;
 
     const { webpack } = compiler;
+    const { NormalModule } = webpack;
 
-    RawSource = webpack.sources.RawSource;
+    this.webpack = webpack;
     HotUpdateChunk = webpack.HotUpdateChunk;
 
     Options.initWebpack(compiler.options);
-    Options.setDefaultCssOptions(ExtractCss.getOptions());
+    Options.setDefaultCssOptions(CssExtractModule.getOptions());
     Options.enableLibraryType(this.entryLibrary.type);
     this.initialize(compiler);
 
     AssetResource.init(compiler);
 
     // clear caches by tests for webpack serve/watch
-    AssetScript.clear();
-    Resolver.clear();
     AssetEntry.clear();
+    AssetInline.clear();
+    Collection.clear();
+    Resolver.clear();
 
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
@@ -171,6 +182,7 @@ class AssetCompiler {
 
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
+      const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
       this.compilation = compilation;
 
       Resolver.init({
@@ -184,6 +196,7 @@ class AssetCompiler {
       });
 
       AssetEntry.setCompilation(compilation);
+      Collection.setCompilation(compilation);
 
       // resolve modules
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
@@ -194,20 +207,22 @@ class AssetCompiler {
       compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
       compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
 
-      // called after the module hook but right before the execution of a loader
-      NormalModule.getCompilationHooks(compilation).loader.tap(pluginName, (loaderContext, module) => {
-        if (typeof module.layer === 'string' && module.layer.startsWith('__entryDataId')) {
-          const [, entryDataId] = module.layer.split('=', 2);
-          loaderContext.entryData = AssetEntry.getData(entryDataId);
-          loaderContext.data = AssetEntry.getData(entryDataId);
-        }
-      });
+      // called after the succeedModule hook but right before the execution of a loader
+      normalModuleHooks.loader.tap(pluginName, this.beforeLoader);
+
+      // for debugging
+      // normalModuleHooks.beforeLoaders.tap(pluginName, (loaders, module, loaderContext) => {});
+      // normalModuleHooks.beforeParse.tap(pluginName, (module) => {});
+      // normalModuleHooks.beforeSnapshot.tap(pluginName, (module) => {});
+
+      // TODO: implement real content hash for css
+      // compilation.hooks.contentHash.tap(pluginName, (chunk) => {});
 
       // render source code of modules
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
       // after render module's sources
-      // note: only here is possible to modify an asset content via async function
+      // note: only here is possible to modify an asset content via async function;
       // `Infinity` ensures that the processAssets will only run after all other taps
       compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) => {
         const result = this.afterRenderModules(compilation);
@@ -218,7 +233,7 @@ class AssetCompiler {
       // postprocess for the content of assets
       compilation.hooks.afterProcessAssets.tap(pluginName, (assets) => {
         // note: this hook not provides testable exceptions,
-        // therefore, we save the exception to throw it in the done hook
+        // therefore, we save an exception to throw it in the done hook
         try {
           this.afterProcessAssets(assets);
         } catch (error) {
@@ -243,34 +258,6 @@ class AssetCompiler {
   }
 
   /**
-   * Called when a new dependency request is encountered.
-   *
-   * @param {Object} resolveData
-   * @return {boolean|undefined} Return undefined to processing, false to ignore dependency.
-   */
-  beforeResolve(resolveData) {
-    const { context, request, contextInfo } = resolveData;
-    const { issuer } = contextInfo;
-    const [file] = request.split('?', 2);
-
-    // ignore data-URL
-    if (request.startsWith('data:')) return;
-
-    if (issuer) {
-      // ignore and exclude from compilation the runtime script of a css loader
-      if (Options.isStyle(issuer) && file.endsWith('.js')) return false;
-
-      if (Collection.isScript(request)) {
-        return AssetScript.add({ resource: request, issuer, context });
-      }
-    }
-
-    if (resolveData.dependencyType === 'url') {
-      UrlDependency.resolve(resolveData);
-    }
-  }
-
-  /**
    * Filter alternative requests.
    *
    * Entry files should not have alternative requests.
@@ -287,34 +274,118 @@ class AssetCompiler {
   }
 
   /**
-   * Called after a NormalModule instance is created.
+   * Called when a new dependency request is encountered.
+   *
+   * @param {Object} resolveData
+   * @return {boolean|undefined} Return undefined to processing, false to ignore dependency.
+   */
+  beforeResolve(resolveData) {
+    const { context, request, contextInfo, dependencyType } = resolveData;
+    // note: the contextInfo.issuer is the filename w/o a query
+    const { issuer, issuerLayer } = contextInfo;
+    const [file] = request.split('?', 1);
+
+    // skip data-URL
+    if (request.startsWith('data:')) return;
+
+    // skip the module loaded via importModule
+    if (dependencyType === 'loaderImport') return;
+
+    if (dependencyType === 'url') {
+      UrlDependency.resolve(resolveData);
+      return;
+    }
+
+    if (issuer) {
+      const isIssuerStyle = Options.isStyle(issuer);
+      const parentModule = resolveData.dependencies[0]?._parentModule;
+      const isParentLoaderImport = parentModule?._isLoaderImport;
+
+      // reserved for debug
+      // const entryId = parentModule?._entryId;
+      // const issuerResource = parentModule?.resource;
+
+      // skip the module loaded via importModule
+      if (isParentLoaderImport) {
+        resolveData._isParentLoaderImport = true;
+        return;
+      }
+
+      // exclude from compilation the css-loader runtime scripts for styles specified in HTML only,
+      // to avoid splitting the loader runtime scripts;
+      // allow runtime scripts for styles imported in JavaScript, regards deep imported styles via url()
+      if (isIssuerStyle && file.endsWith('.js')) {
+        resolveData._isScript = true;
+
+        const rootIssuer = Collection.findRootIssuer(issuer);
+
+        // return true if the root issuer is a JS (not style and not template), otherwise return false
+        return rootIssuer != null && !Options.isStyle(rootIssuer) && !Options.isEntry(rootIssuer);
+      }
+    }
+
+    resolveData._isScript = Collection.isScript(request);
+  }
+
+  /**
+   * Called after a module instance is created.
    *
    * @param {Object} module
    * @param {Object} createData
    * @param {Object} resolveData
    */
   afterCreateModule(module, createData, resolveData) {
+    const { dependencyType } = resolveData;
+
+    module._isTemplate = false;
+    module._isScript = resolveData._isScript === true;
+    module._isParentLoaderImport = resolveData._isParentLoaderImport === true;
+    module._isLoaderImport = dependencyType === 'loaderImport';
+    module._isDependencyUrl = dependencyType === 'url';
+
+    // skip the module loaded via importModule
+    if (module._isLoaderImport || module._isParentLoaderImport) return;
+
     const { type, loaders } = module;
     const { rawRequest, resource } = createData;
     const { issuer } = resolveData.contextInfo;
+    const [file] = resource.split('?', 1);
+    const entryId = AssetEntry.getEntryId(module);
 
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
+
+    // try to detect imported style as resolved resource file, because a request can be a node module w/o an extension
+    // the issuer can be a style if a scss contains like `@import 'main.css'`
+    if (issuer && !Options.isStyle(issuer) && !Options.isEntry(issuer) && Options.isStyle(file)) {
+      const rootIssuer = Collection.findRootIssuer(issuer);
+
+      Collection.importStyleRootIssuers.add(rootIssuer || issuer);
+      module._isImportedStyle = true;
+
+      // check entryId to avoid adding duplicate loaders after changes in serve mode
+      if (entryId !== false) {
+        // set the correct module type to enable the usage of built-in CSS support together with the bundler plugin
+        if (this.compilation.compiler.options?.experiments?.css && type === 'css') {
+          module.type = 'javascript/auto';
+        }
+        // add the CSS loader for only styles imported in JavaScript
+        module.loaders.unshift(cssLoader);
+      }
+
+      return;
+    }
 
     if (type === 'asset/inline' || type === 'asset' || (type === 'asset/source' && AssetInline.isSvgFile(resource))) {
       AssetInline.add(resource, issuer, Options.isEntry(issuer));
     }
 
-    if (resolveData.dependencyType === 'url') {
-      if (Collection.isModuleScript(module)) return;
-
-      module.__isDependencyTypeUrl = true;
-    }
+    if (module._isDependencyUrl && module._isScript) return;
 
     // add resolved sources in use cases:
     // - if used url() in SCSS for source assets
     // - if used import url() in CSS, like `@import url('./styles.css');`
     // - if used webpack context
-    if (module.__isDependencyTypeUrl === true || loaders.length > 0 || type === 'asset/resource') {
+    if (module._isDependencyUrl || loaders.length > 0 || type === 'asset/resource') {
       Resolver.addSourceFile(resource, rawRequest, issuer);
     }
   }
@@ -326,9 +397,11 @@ class AssetCompiler {
    */
   beforeBuildModule(module) {
     // reserved code for future
+    // skip the module loaded via importModule
+    // if (module._isLoaderImport) return;
     // if (
     //   module.type === 'asset/resource' &&
-    //   (Collection.isModuleScript(module) || (module.__isDependencyTypeUrl === true && Collection.isModuleStyle(module)))
+    //   (Collection.isModuleScript(module) || (module._isDependencyUrl === true && Collection.isModuleStyle(module)))
     // ) {
     //   // set correct module type for scripts and styles when used the `html` mode of a loader
     //   module.type = 'javascript/auto';
@@ -339,7 +412,36 @@ class AssetCompiler {
   }
 
   /**
-   * Called after a module has been built successfully.
+   * Called after the build module but right before the execution of a loader.
+   *
+   * @param {Object} loaderContext The Webpack loader context.
+   * @param {Object} module The Webpack module.
+   */
+  beforeLoader(loaderContext, module) {
+    // skip the module loaded via importModule
+    if (module._isLoaderImport) return;
+
+    const entryId = AssetEntry.getEntryId(module);
+
+    if (entryId !== false) {
+      const entry = AssetEntry.getById(entryId);
+
+      if (entry.isTemplate && entry.resource === module.resource) {
+        this.beforeProcessTemplate(entryId);
+      }
+
+      module._entryId = entryId;
+      loaderContext.entryId = entryId;
+      loaderContext.entryName = entry.name;
+      loaderContext.entryData = AssetEntry.getData(entryId);
+
+      AssetEntry.applyTemplateFilename(entry);
+      Collection.addEntry(entry);
+    }
+  }
+
+  /**
+   * Called after a module has been built successfully, after loader processing.
    *
    * @param {Object} module The Webpack module.
    */
@@ -357,39 +459,41 @@ class AssetCompiler {
    * @param {Object} outputOptions
    * @param {Object} codeGenerationResults
    */
-  renderManifest(result, { chunk, chunkGraph, outputOptions, codeGenerationResults }) {
+  renderManifest(result, { chunk, chunkGraph, codeGenerationResults }) {
     if (chunk instanceof HotUpdateChunk) return;
 
     const entry = AssetEntry.get(chunk.name);
 
     // process only entries supported by this plugin
-    if (!entry) return;
+    if (!entry || (!entry.isTemplate && !entry.isStyle)) return;
 
+    const { RawSource, ConcatSource } = this.webpack.sources;
     const assetModules = new Set();
     const chunkModules = chunkGraph.getChunkModulesIterable(chunk);
-    this.currentEntryPoint = null;
 
     AssetEntry.setFilename(entry, chunk);
-    Collection.initEntry(entry);
+    Collection.setEntryDependencies(entry);
 
     for (const module of chunkModules) {
-      const { resource, resourceResolveData } = module;
+      const { resource, resourceResolveData, _isScript } = module;
 
-      if (!resource || !resourceResolveData?.context || AssetInline.isDataUrl(resource)) continue;
+      if (_isScript || !resource || !resourceResolveData?.context || AssetInline.isDataUrl(resource)) {
+        // do nothing for scripts because webpack itself compiles and extracts JS files from scripts
+        continue;
+      }
 
       const contextIssuer = resourceResolveData.context.issuer;
 
       // note: the contextIssuer may be wrong, as previous entry, because Webpack distinct same modules by first access
       let issuer = contextIssuer === entry.sourceFile ? entry.resource : contextIssuer;
-      let issuerFile = contextIssuer;
 
       if (!issuer || Options.isEntry(issuer)) {
         issuer = entry.resource;
-        issuerFile = entry.sourceFile;
       }
 
       if (module.type === 'javascript/auto') {
-        const assetModule = this.createAssetModule(entry, module, chunk);
+        const assetModule = this.createAssetModule(entry, chunk, module);
+
         if (assetModule === false) return;
         if (assetModule == null) continue;
 
@@ -398,40 +502,55 @@ class AssetCompiler {
         // resource required in the template or in the CSS via url()
         AssetResource.saveData(module);
       } else if (module.type === 'asset/inline') {
-        AssetInline.saveData(entry, module, chunk, codeGenerationResults);
+        AssetInline.saveData(entry, chunk, module, codeGenerationResults);
       } else if (module.type === 'asset/source') {
         // support the source type for SVG only
         if (AssetInline.isSvgFile(resource)) {
-          AssetInline.saveData(entry, module, chunk, codeGenerationResults);
+          AssetInline.saveData(entry, chunk, module, codeGenerationResults);
         }
       }
     }
 
-    // render modules after the collection of dependencies in all chunks
+    // 1. render entries and styles specified in HTML
+
     for (const module of assetModules) {
       const { fileManifest } = module;
       const content = this.renderModule(module);
 
-      if (content != null) {
-        fileManifest.filename = module.assetFile;
-        fileManifest.render = () => new RawSource(content);
-        result.push(fileManifest);
-      }
+      if (content == null) continue;
+
+      fileManifest.filename = module.assetFile;
+      fileManifest.render = () => new RawSource(content);
+      result.push(fileManifest);
+    }
+
+    // 2. render styles imported in JavaScript
+    if (Collection.hasImportedStyle(this.currentEntryPoint?.id)) {
+      this.renderImportStyles(result, { chunk });
     }
   }
 
-  createAssetModule(entry, module, chunk) {
-    // extract JS: do nothing for scripts because webpack itself compiles and extracts JS files from scripts
-    if (Collection.isModuleScript(module)) return;
-
-    const source = module.originalSource();
-
-    // break process by module builder error
-    if (source == null) return false;
-
+  /**
+   * @param {Object} entry The entry point of the chunk.
+   * @param {Object} chunk The chunk of an asset.
+   * @param {Object} module The module of the chunk.
+   * @return {Object|null|boolean} assetModule Returns the asset module object.
+   *   If returns undefined, then skip processing of the module.
+   *   If returns null, then break the hook processing to show the original error, occurs by an inner error.
+   */
+  createAssetModule(entry, chunk, module) {
     const { compilation } = this;
     const { buildInfo, resource } = module;
     const [sourceFile] = resource.split('?', 1);
+    const source = module.originalSource();
+
+    // break process if occurs an error in module builder
+    if (source == null) return false;
+
+    // note: the `id` is
+    // - in production mode as a number
+    // - in development mode as a relative path
+    const moduleId = compilation.chunkGraph.getModuleId(module);
     const assetModule = {
       // resourceInfo
       outputPath: undefined,
@@ -450,17 +569,18 @@ class AssetCompiler {
     };
 
     if (sourceFile === entry.sourceFile) {
-      // note: the entry can be not a template file, e.g. a style or script defined directly in entry
+      // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
-        assetModule.type = 'template';
         this.currentEntryPoint = entry;
+        module._isTemplate = true;
+        assetModule.type = Collection.type.template;
 
         // save the template request with the query, because it can be resolved with different output paths:
         // - 'index':    './index.ext'         => dist/index.html
         // - 'index/de': './index.ext?lang=de' => dist/de/index.html
         Asset.add(resource, entry.filename);
       } else if (Options.isStyle(sourceFile)) {
-        assetModule.type = 'style';
+        assetModule.type = Collection.type.style;
       } else {
         // skip unsupported entry type
         return;
@@ -470,59 +590,215 @@ class AssetCompiler {
       assetModule.assetFile = entry.filename;
       assetModule.fileManifest.identifier = `${pluginName}.${chunk.id}`;
       assetModule.fileManifest.hash = chunk.contentHash['javascript'];
-    } else {
-      // extract CSS
-      const cssOptions = Options.getStyleOptions(sourceFile);
-      if (cssOptions == null) return;
 
-      // note: the `id` is
-      // - in production mode as a number
-      // - in development mode as a relative path
-      const id = compilation.chunkGraph.getModuleId(module);
-      const { name } = path.parse(sourceFile);
-      const hash = buildInfo.assetInfo?.contenthash || buildInfo.hash;
-
-      /** @type {PathData} The data to generate an asset path by the filename template. */
-      const pathData = {
-        contentHash: hash,
-        chunk: {
-          chunkId: chunk.id,
-          id,
-          name,
-          hash,
-        },
-        filename: sourceFile,
-      };
-
-      const assetPath = compilation.getAssetPath(cssOptions.filename, pathData);
-      const { isCached, filename: uniqueFilename } = Asset.getUniqueFilename(sourceFile, assetPath);
-      const assetFile = Options.resolveOutputFilename(uniqueFilename, cssOptions.outputPath);
-      const inline = Collection.isInlineStyle(resource);
-
-      Resolver.addAsset({ resource, filename: assetFile });
-
-      Collection.setData(this.currentEntryPoint, null, {
-        type: Collection.type.style,
-        inline,
-        resource,
-        assetFile,
-      });
-
-      // skip already processed asset except inlined asset
-      if (isCached && !inline) {
-        return;
-      }
-
-      assetModule.type = 'style';
-      assetModule.inline = inline;
-      assetModule.outputPath = cssOptions.outputPath;
-      assetModule.filename = cssOptions.filename;
-      assetModule.assetFile = assetFile;
-      assetModule.fileManifest.identifier = `${pluginName}.${chunk.id}.${id}`;
-      assetModule.fileManifest.hash = hash;
+      return assetModule;
     }
 
+    // extract CSS
+    const cssOptions = Options.getStyleOptions(sourceFile);
+    if (cssOptions == null) return;
+
+    const inline = Collection.isInlineStyle(resource);
+    const { name } = path.parse(sourceFile);
+    const hash = buildInfo.assetInfo?.contenthash || buildInfo.hash;
+    const { isCached, filename: assetFile } = this.getStyleAsseFile({
+      name,
+      chunkId: chunk.id,
+      hash,
+      resource: sourceFile,
+    });
+    const data = {
+      type: Collection.type.style,
+      inline,
+      resource,
+      assetFile,
+    };
+
+    Collection.setData(this.currentEntryPoint, null, data);
+    Resolver.addAsset({ resource, filename: assetFile });
+
+    // skip already processed styles except inlined
+    if (isCached && !inline) {
+      return;
+    }
+
+    assetModule.type = Collection.type.style;
+    assetModule.inline = inline;
+    assetModule.outputPath = cssOptions.outputPath;
+    assetModule.filename = cssOptions.filename;
+    assetModule.assetFile = assetFile;
+    assetModule.fileManifest.identifier = `${pluginName}.${chunk.id}.${moduleId}`;
+    assetModule.fileManifest.hash = hash;
+
     return assetModule;
+  }
+
+  /**
+   * Render styles imported in JavaScript.
+   *
+   * @param {Array<Object>} result
+   * @param {Object} chunk
+   */
+  renderImportStyles(result, { chunk }) {
+    const { createHash } = this.webpack.util;
+    const isAutoPublicPath = Options.isAutoPublicPath();
+    const publicPath = Options.getPublicPath();
+    const inline = Options.getCss().inline;
+    const esModule = Collection.isImportStyleEsModule();
+    const urlRegex = new RegExp(`${esModule ? baseUri : ''}${urlPathPrefix}(.+?)(?=\\))`, 'g');
+
+    const orderedRootIssuers = Collection.orderedResources.get(this.currentEntryPoint.id);
+
+    for (const issuer of orderedRootIssuers) {
+      if (!Collection.importStyleRootIssuers.has(issuer)) continue;
+
+      const issuerEntry = AssetEntry.getByResource(issuer);
+      const sources = [];
+      const imports = [];
+      let cssHash = '';
+
+      // 1. get styles from all nested files imported in the root JS file and sort them
+      const modules = Collection.findImportedModules(this.currentEntryPoint.id, issuer);
+
+      // 2. squash styles from all nested files into one file
+      modules.forEach((module) => {
+        const data = {
+          type: Collection.type.style,
+          imported: true,
+          inline: undefined,
+          resource: module.resource,
+          assetFile: undefined,
+        };
+
+        cssHash += module.buildInfo.hash;
+        sources.push(...module._cssSource);
+        imports.push(data);
+      });
+
+      if (sources.length === 0) continue;
+
+      // 3. generate output filename
+
+      // mixin importStyleIdx into hash to generate new hash after changes
+      cssHash += Collection.importStyleIdx++;
+
+      //const hash = this.webpack.util.createHash('md4').update(sources.toString()).digest('hex');
+      const hash = createHash('md4').update(cssHash).digest('hex');
+      const { isCached, filename: assetFile } = this.getStyleAsseFile({
+        name: issuerEntry.name,
+        chunkId: chunk.id,
+        hash,
+        resource: issuer,
+      });
+
+      const outputFilename = Options.getAssetOutputFile(assetFile, this.currentEntryPoint.filename);
+      const existsAsset = outputFilename in this.compilation.assets;
+
+      Collection.setData(
+        this.currentEntryPoint,
+        { resource: issuer },
+        {
+          type: Collection.type.style,
+          inline,
+          imports,
+          // if exists imports then resource must be null
+          resource: null,
+          assetFile: outputFilename,
+        }
+      );
+
+      // avoid double processing when the same JS file with included styles used in many pages
+      if (existsAsset) continue;
+
+      // 4. extract CSS content from squashed sources
+      const cssContent = CssExtractModule.applyForImportedStyle(
+        this.compilation,
+        {
+          data: sources,
+          assetFile,
+          inline,
+        },
+        (content) =>
+          content.replace(urlRegex, (match, file) => {
+            const outputFilename = isAutoPublicPath
+              ? Options.getAssetOutputFile(file, assetFile)
+              : path.posix.join(publicPath, file);
+
+            // note: Webpack itself embeds the asset/inline resources,
+            // here will be processed asset/resource only
+
+            for (const styleModule of modules) {
+              const assetsInfo = styleModule.buildInfo.assetsInfo?.get(file);
+
+              if (!assetsInfo) continue;
+
+              Collection.setData(
+                this.currentEntryPoint,
+                { resource: styleModule.resource },
+                {
+                  type: Collection.type.resource,
+                  inline: undefined,
+                  resource: assetsInfo.sourceFilename,
+                  assetFile: outputFilename,
+                }
+              );
+            }
+
+            return outputFilename;
+          })
+      );
+
+      // 5.0 store CSS to inline it into HTML
+      if (inline) {
+        Collection.setDataSource(this.currentEntryPoint, undefined, issuer, cssContent);
+        continue;
+      }
+
+      // 5.1 add CSS file into compilation
+      const fileManifest = {
+        render: () => cssContent,
+        filename: assetFile,
+        identifier: `${pluginName}.${chunk.id}.import-style`,
+        //identifier: `${pluginName}.${chunk.id}`,
+        hash,
+      };
+
+      result.push(fileManifest);
+    }
+  }
+
+  /**
+   * Get a unique output CSS filename relative to the output path.
+   *
+   * @param {string} name
+   * @param {string} chunkId
+   * @param {string} hash
+   * @param {string} resource
+   * @return {{isCached: boolean, filename: string}}
+   */
+  getStyleAsseFile({ name, chunkId, hash, resource }) {
+    const { compilation } = this;
+    const cssOptions = Options.getCss();
+
+    /** @type {PathData} The data to generate an asset path by the filename template. */
+    const pathData = {
+      contentHash: hash,
+      chunk: {
+        chunkId,
+        name,
+        hash,
+      },
+      filename: resource,
+    };
+
+    const assetPath = compilation.getAssetPath(cssOptions.filename, pathData);
+    const outputFilename = Options.resolveOutputFilename(assetPath, cssOptions.outputPath);
+    const [sourceFile] = resource.split('?', 1);
+
+    // avoid the conflict: multiple chunks emit assets to the same filename
+    // this occurs when filename template not contains a hash subsituation,
+    // then the output name of css and its issuer is the same
+    return Asset.getUniqueFilename(sourceFile, outputFilename);
   }
 
   /**
@@ -568,7 +844,7 @@ class AssetCompiler {
   /**
    * Render the module source code generated by a loader.
    *
-   * @param {string} type The type of module, one of the values: 'template', 'style'.
+   * @param {string} type The type of module, one of the values: template, style.
    * @param {boolean} inline Whether the resource should be inlined.
    * @param {Object} source The Webpack source.
    * @param {string} sourceFile The full path of source file w/o a query.
@@ -593,22 +869,26 @@ class AssetCompiler {
       // required for ssr
       __filename: sourceFile,
     });
-    let result = vmScript.run(source, sourceFile);
+
+    // the css-loader defaults generate ESM code, which must be transformed into CommonJS to compile the code
+    // the template loader generates CommonJS code, no need to transform
+    const esModule = type === 'style';
+    let result = vmScript.compile(source, sourceFile, esModule);
 
     switch (type) {
       case 'style':
-        result = ExtractCss.apply(this.compilation, { sourceMaps: result, assetFile, inline });
+        result = CssExtractModule.apply(this.compilation, { data: result, assetFile, inline });
         if (inline) {
-          Collection.setDataSource(this.currentEntryPoint, sourceRequest, result);
+          Collection.setDataSource(this.currentEntryPoint, sourceRequest, undefined, result);
           return null;
         }
         break;
       case 'template':
         if (Options.hasPostprocess()) {
           const resourceInfo = {
-            isEntry: type === 'template',
-            inline,
+            isEntry: true,
             verbose: Options.isVerbose(),
+            inline,
             outputPath,
             sourceFile,
             assetFile,
@@ -621,6 +901,10 @@ class AssetCompiler {
     }
 
     return result;
+  }
+
+  beforeProcessTemplate(entryId) {
+    Collection.beforeProcessTemplate(entryId);
   }
 
   /**
@@ -640,10 +924,10 @@ class AssetCompiler {
 
     Asset.reset();
     AssetEntry.reset();
-    AssetScript.reset();
     AssetTrash.reset();
-    Resolver.reset();
+    Collection.reset();
     PluginService.reset();
+    Resolver.reset();
   }
 
   /**

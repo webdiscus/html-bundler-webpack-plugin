@@ -3,11 +3,9 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -21,7 +19,7 @@ module.exports = {
         //filename: '[name].[contenthash:8].js',
         // test filename as function
         filename: (pathData) => {
-          return '[name].[contenthash:8].js';
+          return '[name].bundle.js';
         },
         // test the absolute path
         outputPath: path.join(__dirname, 'dist/assets/js/'),
@@ -30,7 +28,7 @@ module.exports = {
         //filename: '[name].[contenthash:8].css',
         // test filename as function
         filename: (pathData) => {
-          return '[name].[contenthash:8].css';
+          return '[name].bundle.css';
         },
         // test the absolute path
         outputPath: path.join(__dirname, 'dist/assets/css/'),

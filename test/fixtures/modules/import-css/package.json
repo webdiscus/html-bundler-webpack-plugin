@@ -1,0 +1,5 @@
+{
+  "name": "@test/import-css",
+  "description": "Test node module for import CSS in JS",
+  "module": "esm/index.js"
+}

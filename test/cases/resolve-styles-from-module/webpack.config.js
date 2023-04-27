@@ -7,7 +7,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      Styles: path.join(__dirname, 'src/assets/styles/'),
+      '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
   },
 

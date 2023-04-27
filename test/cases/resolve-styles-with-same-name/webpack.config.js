@@ -6,7 +6,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   plugins: [
@@ -14,7 +13,7 @@ module.exports = {
       entry: {
         home: './src/views/home/index.html',
         about: './src/views/about/index.html',
-        demo: './src/views/demo/index.html',
+        mix: './src/views/mix/index.html',
       },
       css: {
         // test conflict: Multiple chunks emit assets to the same filename

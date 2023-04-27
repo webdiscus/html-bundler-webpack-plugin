@@ -1,5 +1,9 @@
-import { compareFileListAndContent } from './utils/helpers';
-import { PATHS } from './config';
+import { compareFiles } from './utils/helpers';
+
+beforeAll(() => {
+  // important: the environment constant is used in code
+  process.env.NODE_ENV_TEST = 'true';
+});
 
 describe('issue tests', () => {
   // - create new test based on the base or advanced template
@@ -9,13 +13,9 @@ describe('issue tests', () => {
   // - the 2nd attribute is the directory name of your test case under `./test/cases/`
   // - run test: `npm run test:issue`
 
-  test('issue base template', () => {
-    return compareFileListAndContent(PATHS, 'issue-0-base-template');
-  });
+  test('issue base template', () => compareFiles('issue-0-base-template'));
 
-  test('issue advanced template', () => {
-    return compareFileListAndContent(PATHS, 'issue-0-advanced-template');
-  });
+  test('issue advanced template', () => compareFiles('issue-0-advanced-template'));
 
   // add your issue test here
 });

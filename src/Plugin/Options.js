@@ -163,14 +163,14 @@ class Options {
     }
 
     // reset initial states
-    this.isAutoPublicPath = false;
+    this.autoPublicPath = false;
     this.isUrlPublicPath = false;
     this.isRelativePublicPath = false;
     this.webpackPublicPath = publicPath;
     this.webpackOutputPath = output.path;
 
     if (publicPath === 'auto') {
-      this.isAutoPublicPath = true;
+      this.autoPublicPath = true;
     } else if (/^(\/\/|https?:\/\/)/i.test(publicPath)) {
       this.isUrlPublicPath = true;
     } else if (!publicPath.startsWith('/')) {
@@ -214,10 +214,10 @@ class Options {
       }
 
       this.webpackOptions.entry = { ...entry, ...pluginEntry };
-
-      // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
-      this.webpackOptions.experiments.layers = true;
     }
+
+    // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
+    this.webpackOptions.experiments.layers = true;
   }
 
   /**
@@ -322,6 +322,17 @@ class Options {
     return this.options.preload != null && this.options.preload !== false;
   }
 
+  static isAutoPublicPath() {
+    return this.autoPublicPath === true;
+  }
+
+  /**
+   * @return {string}
+   */
+  static getPublicPath() {
+    return this.webpackPublicPath;
+  }
+
   /**
    * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
    *
@@ -409,7 +420,7 @@ class Options {
   static getAssetOutputPath(assetFile = null) {
     const isAutoRelative = assetFile && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(assetFile);
 
-    if (this.isAutoPublicPath || isAutoRelative) {
+    if (this.autoPublicPath || isAutoRelative) {
       if (!assetFile) return '';
 
       const fullFilename = path.resolve(this.webpackOutputPath, assetFile);
@@ -452,7 +463,7 @@ class Options {
     const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(issuer);
 
     // if the public path is relative, then a resource using not in the template file must be auto resolved
-    if (this.isAutoPublicPath || isAutoRelative) {
+    if (this.autoPublicPath || isAutoRelative) {
       if (!issuer) return assetFile;
 
       const issuerFullFilename = path.resolve(this.webpackOutputPath, issuer);

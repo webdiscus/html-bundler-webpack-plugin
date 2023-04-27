@@ -3,20 +3,18 @@ const HtmlBundlerPlugin = require('../../../');
 
 module.exports = {
   mode: 'production',
-  devtool: false,
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: '/',
   },
 
   resolve: {
     alias: {
       // test standard naming of assets
+      Fonts: path.join(__dirname, '../../fixtures/fonts'),
+      Images: path.join(__dirname, '../../fixtures/images'),
       Styles: path.join(__dirname, './src/assets/styles/'),
       Scripts: path.join(__dirname, './src/assets/scripts/'),
-      Images: path.join(__dirname, './src/assets/images/'),
-      Fonts: path.join(__dirname, './src/assets/fonts/'),
 
       // test the `@` prefix only as alias
       '@': path.join(__dirname, './src/assets/'),
@@ -32,10 +30,10 @@ module.exports = {
       '~ImagesB': path.join(__dirname, './src/assets-b/images2/'),
       '@ImagesB': path.join(__dirname, './src/assets-b/images3/'),
 
-      // test alias as array
+      // test alias as the array
       ImagesC: [path.join(__dirname, './src/assets/images/'), path.join(__dirname, './src/assets-c/images/')],
 
-      // test alias as array contained a prefix in name
+      // test alias as the array contained a prefix in name
       ImagesD: [path.join(__dirname, './src/assets/images/'), path.join(__dirname, './src/assets-d/images1/')],
       '~ImagesD': [path.join(__dirname, './src/assets/images/'), path.join(__dirname, './src/assets-d/images2/')],
       '@ImagesD': [path.join(__dirname, './src/assets/images/'), path.join(__dirname, './src/assets-d/images3')],
