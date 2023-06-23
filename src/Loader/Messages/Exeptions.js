@@ -1,5 +1,5 @@
 const ansis = require('ansis');
-const { yellow, cyan, green, ansi256, cyanBright, reset, whiteBright } = require('ansis/colors');
+const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis/colors');
 const { pluginName } = require('../../config');
 
 const redBright = ansi256(203);
@@ -119,7 +119,13 @@ const initError = (error, file) => {
  * @returns {Error}
  */
 const preprocessorError = (error, file) => {
-  return new LoaderException(`Preprocessor failed.\nFile: ${cyan(file)}`, error);
+  return new LoaderException(
+    red`Preprocessor failed.` +
+      `\n` +
+      `File: ${cyan(file)}\n\n` +
+      `${yellow`If you see this message after fixing the error, try to reload your browser manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
+    error
+  );
 };
 
 /**

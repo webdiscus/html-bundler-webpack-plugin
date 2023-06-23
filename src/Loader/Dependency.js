@@ -38,7 +38,6 @@ class Dependency {
 
   /**
    * @param {string} file
-   * @private
    */
   static addFile(file) {
     this.files.add(file);
@@ -47,6 +46,13 @@ class Dependency {
     if (file in require.cache) {
       delete require.cache[file];
     }
+  }
+
+  /**
+   * @param {string} file
+   */
+  static removeFile(file) {
+    this.files.delete(file);
   }
 
   /**

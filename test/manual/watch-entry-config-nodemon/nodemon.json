@@ -1,8 +1,7 @@
 {
   "watch": [
-    "src/views/pages/**/*",
     "webpack.config.js"
   ],
-  "ext": "json,js,html,hbs",
+  "ext": "json,js",
   "exec": "webpack serve --mode development"
 }

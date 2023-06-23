@@ -29,8 +29,6 @@ const pitchLoader = function (request) {
   const options = loaderContext.getOptions() || {};
   const callback = loaderContext.async();
 
-  module._isImportedStyle = true;
-
   loaderContext.importModule(
     `${resourcePath}.webpack[javascript/auto]!=!!!${request}`,
     {

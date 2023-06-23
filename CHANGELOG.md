@@ -1,5 +1,9 @@
 # Change log
 
+## 2.0.1 (2023-06-23)
+- fix: watching for create/rename Handlebars partials
+- chore: update npm packages
+
 ## 2.0.0 (2023-06-21)
 - feat: add support for importing style files in JavaScript. (!!! FOR COMPATIBILITY WITH REACT ONLY !!!)
   NOTE: import a style in JavaScript is a `bad practice`, DON'T use it in new projects!
@@ -8,7 +12,7 @@
   Perhaps you may need to migrate your Eta templates to v3 syntax.
 - refactor: optimize source code
 - fix: some invisible rare bug fixes
-- test: add namy tests for new features and bug fixes
+- test: add tests for new features and bug fixes
 - chore: add code example how to use the tailwindcss
 - chore: update npm packages
 - docs: update readme

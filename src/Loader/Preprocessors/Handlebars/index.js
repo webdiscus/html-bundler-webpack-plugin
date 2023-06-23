@@ -1,4 +1,5 @@
 const path = require('path');
+const Dependency = require('../../Dependency');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
@@ -11,16 +12,11 @@ const preprocessor = ({ fs, rootContext, options }) => {
   let partials = {};
 
   /**
-   * Update cached partials.
+   * Read partial files in the directories.
+   *
+   * @param {Array<string>} dirs
+   * @return {{}}
    */
-  const updatePartials = () => {
-    for (const partial in partials) {
-      const partialFile = partials[partial];
-      const template = fs.readFileSync(partialFile, 'utf8');
-      Handlebars.registerPartial(partial, template);
-    }
-  };
-
   const getEntries = (dirs) => {
     const result = {};
     for (let dir of dirs) {
@@ -37,6 +33,53 @@ const preprocessor = ({ fs, rootContext, options }) => {
     }
 
     return result;
+  };
+
+  /**
+   * Get actual partials.
+   *
+   * @param {Array<string>|{}} partialsOption The partials option.
+   * @return {{}}
+   */
+  const getPartials = (partialsOption) => {
+    return Array.isArray(partialsOption)
+      ? // read partial files
+        getEntries(partialsOption)
+      : // object of partial name => absolute path to partial file
+        partialsOption;
+  };
+
+  /**
+   * Update partials after changes in watch/serve mode.
+   */
+  const updatePartials = () => {
+    if (!options.partials) return;
+
+    const actualPartials = getPartials(options.partials);
+    const oldNames = Object.keys(partials);
+    const newNames = Object.keys(actualPartials);
+    const outdatedPartialsNames = oldNames.filter((name) => !newNames.includes(name));
+    // const newPartialsNames = newNames.filter((name) => !oldNames.includes(name));
+
+    // remove deleted/renamed partials
+    outdatedPartialsNames.forEach((name) => {
+      Dependency.removeFile(partials[name]);
+      Handlebars.unregisterPartial(name);
+    });
+
+    partials = actualPartials;
+
+    // update content of actual partials
+    for (const partial in partials) {
+      const partialFile = partials[partial];
+
+      if (!fs.existsSync(partialFile)) {
+        throw new Error(`Could not find the partial '${partialFile}'`);
+      }
+
+      const template = fs.readFileSync(partialFile, 'utf8');
+      Handlebars.registerPartial(partial, template);
+    }
   };
 
   if (!Array.isArray(views)) views = [views];
@@ -72,24 +115,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
     Handlebars.registerHelper(helper, helpers[helper]);
   }
 
-  if (options.partials) {
-    if (Array.isArray(options.partials)) {
-      partials = getEntries(options.partials);
-    } else {
-      // object of partial name => absolute path to partial file
-      partials = options.partials;
-    }
-
-    for (const partial in partials) {
-      const partialFile = partials[partial];
-      if (!fs.existsSync(partialFile)) {
-        throw new Error(`Could not find the partial '${partialFile}'`);
-      }
-
-      const template = fs.readFileSync(partialFile, 'utf8');
-      Handlebars.registerPartial(partial, template);
-    }
-  }
+  if (options.partials) updatePartials();
 
   return {
     /**

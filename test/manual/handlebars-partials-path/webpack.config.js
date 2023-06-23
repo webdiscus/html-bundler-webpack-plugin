@@ -17,7 +17,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      //verbose: true,
+      verbose: true,
 
       entry: {
         index: {

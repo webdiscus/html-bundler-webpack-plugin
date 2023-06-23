@@ -19,14 +19,10 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      // test: add/remove/rename a template file in the entry directory
-      entry: 'src/views/pages',
-
-      // transform the source `home.html` template name to output filename `index.html`
-      filename: ({ filename, chunk: { name } }) => {
-        if (name === 'home') return 'index.html';
-        // bypass the original structure
-        return '[name].html';
+      // add/remove a template in the entry then the Webpack compilation will be auto restarted via 'nodemon'
+      entry: {
+        index: './src/views/pages/home.html',
+        //news: './src/views/pages/news.html',
       },
     }),
   ],

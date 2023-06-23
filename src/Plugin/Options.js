@@ -54,6 +54,7 @@ class Options {
   static webpackOptions = {};
   static prodMode = true;
   static context = '';
+  static rootContext = '';
 
   /**
    * Initialize plugin options.

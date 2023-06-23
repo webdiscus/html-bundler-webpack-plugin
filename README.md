@@ -17,13 +17,13 @@
 
 ## HTML as entrypoint
 
-The plugin supports HTML templates as entrypoints, as web apps usually start with HTML.\
-In HTML entrypoints can be referenced any resources such as JS, SCSS, images and other assets.\
+The plugin supports HTML templates as entrypoints.\
+In HTML templates can be referenced any resources such as JS, SCSS, images and other assets.\
 For example: 
 - `<link href="@images/favicon.png" type="image/png" rel=icon />`
 - `<link href="./style.scss" rel="stylesheet">`
 - `<script src="./App.tsx" defer="defer"></script>`
-- `<img src="@images/fig.webp" srcset="@images/fig-640.webp 640w, @images/fig-800.webp 800w" />`
+- `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
    
 Note: `@images` is the Webpack alias to a source images directory.
 
@@ -593,7 +593,6 @@ If type is `Function` then following arguments are available in the function:
 - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
   - `pathData.filename` the full path to source file
   - `pathData.chunk.name` the name of entry key
-- `@param {AssetInfo} assetInfo` Mostly this object is empty.
 - `@return {string}` The name or template string of output file.
 
 

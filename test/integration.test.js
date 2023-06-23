@@ -203,7 +203,7 @@ describe('import styles in JavaScript', () => {
   //test('js-import-css-debug-watch', () => compareFiles('js-import-css-debug-watch'));
 });
 
-// TODO: implement entryId via query instead of layer to split all modules in separate files,
+// TODO: implement entryId via the query instead of layer to split all modules in separate files,
 //  currently modules are grouped by layer, that is not optimal
 describe('split chunks', () => {
   test('extract css and js w/o runtime code of css-loader', () => compareFiles('split-chunk-css-js'));

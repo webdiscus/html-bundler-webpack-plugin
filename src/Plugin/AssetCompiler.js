@@ -160,9 +160,8 @@ class AssetCompiler {
     Options.initWebpack(compiler.options);
     Options.setDefaultCssOptions(CssExtractModule.getOptions());
     Options.enableLibraryType(this.entryLibrary.type);
-    this.initialize(compiler);
-
     AssetResource.init(compiler);
+    this.initialize(compiler);
 
     // clear caches by tests for webpack serve/watch
     AssetEntry.clear();
@@ -183,15 +182,17 @@ class AssetCompiler {
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
       const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
+      const fs = normalModuleFactory.fs.fileSystem;
+
       this.compilation = compilation;
 
       Resolver.init({
-        fs: normalModuleFactory.fs.fileSystem,
+        fs,
         rootContext: Options.rootContext,
       });
 
       UrlDependency.init({
-        fs: normalModuleFactory.fs.fileSystem,
+        fs,
         moduleGraph: compilation.moduleGraph,
       });
 
