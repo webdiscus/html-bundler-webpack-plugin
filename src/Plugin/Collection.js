@@ -785,10 +785,14 @@ class Collection {
    * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {
+    if (Options.isDynamicEntry()) return;
+
     this.index = {};
     this.files.forEach((item, key) => {
       if (item.assets != null) item.assets.length = 0;
     });
+
+    // TODO: non't remove if entry is dynamic
     this.data.clear();
     this.importStyleRootIssuers.clear();
     this.importStyleSources.clear();

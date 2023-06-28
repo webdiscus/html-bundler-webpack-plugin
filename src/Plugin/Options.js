@@ -1,8 +1,5 @@
-const fs = require('fs');
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
-const { readDirRecursiveSync } = require('../Common/FileUtils');
-const { optionEntryPathException, postprocessException, afterProcessException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} PluginOptions
@@ -52,7 +49,8 @@ class Options {
   /** @type {PluginOptions} */
   static options = {};
   static webpackOptions = {};
-  static prodMode = true;
+  static productionMode = true;
+  static dynamicEntry = false;
   static context = '';
   static rootContext = '';
 
@@ -80,16 +78,24 @@ class Options {
    */
   static initWebpack(options) {
     const webpackOutput = options.output;
-    const { js, css } = this.options;
+    const { entry, js, css } = this.options;
 
+    this.dynamicEntry = typeof entry === 'string';
     this.webpackOptions = options;
+    // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
+    this.webpackOptions.experiments.layers = true;
     this.rootContext = options.context;
-    this.prodMode = options.mode == null || options.mode === 'production';
+    this.productionMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
     js.inline = this.toBool(js.inline, false, false);
     css.inline = this.toBool(css.inline, false, false);
 
     this.#initWebpackOutput(webpackOutput);
+
+    if (Object.keys(options.entry).length === 1 && Object.keys(Object.entries(options.entry)[0][1]).length === 0) {
+      // set the empty object to avoid Webpack error, defaults the structure is `{ main: {} }`,
+      this.webpackOptions.entry = {};
+    }
 
     if (js.filename) {
       webpackOutput.filename = js.filename;
@@ -124,8 +130,16 @@ class Options {
     if (!this.options.sourcePath) this.options.sourcePath = this.rootContext;
     if (!this.options.outputPath) this.options.outputPath = webpackOutput.path;
 
-    // options.entry
-    this.#initWebpackEntry();
+    // normalize minify options
+    if (this.options.minify != null && typeof this.options.minify === 'object') {
+      this.options.minifyOptions = this.options.minify;
+      this.options.minify = true;
+    } else {
+      if (this.options.minifyOptions == null) {
+        this.options.minifyOptions = {};
+      }
+      this.options.minify = this.toBool(this.options.minify, true, false);
+    }
   }
 
   /**
@@ -179,72 +193,12 @@ class Options {
     }
   }
 
-  /**
-   * Entries defined in plugin options are merged with a Webpack entry option.
-   */
-  static #initWebpackEntry() {
-    let { entry } = this.webpackOptions;
-    let pluginEntry = this.options.entry;
-
-    // check whether the entry in config is empty, defaults Webpack set structure: `{ main: {} }`,
-    if (Object.keys(entry).length === 1 && Object.keys(Object.entries(entry)[0][1]).length === 0) {
-      // set empty entry to avoid Webpack error
-      entry = {};
-    }
-
-    if (pluginEntry) {
-      if (typeof pluginEntry === 'string') {
-        let dir = pluginEntry;
-        if (!path.isAbsolute(dir)) {
-          dir = path.join(this.rootContext, dir);
-        }
-        pluginEntry = this.readEntryDir(dir);
-      }
-
-      for (const key in pluginEntry) {
-        const entry = pluginEntry[key];
-
-        if (entry.import == null) {
-          pluginEntry[key] = { import: [entry] };
-          continue;
-        }
-
-        if (!Array.isArray(entry.import)) {
-          entry.import = [entry.import];
-        }
-      }
-
-      this.webpackOptions.entry = { ...entry, ...pluginEntry };
-    }
-
-    // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
-    this.webpackOptions.experiments.layers = true;
+  static isProduction() {
+    return this.productionMode;
   }
 
-  /**
-   * Returns templates read recursively from the entry path.
-   *
-   * @param {string} dir
-   * @return {Object}
-   * @throws
-   */
-  static readEntryDir(dir) {
-    try {
-      if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
-    } catch (error) {
-      optionEntryPathException(dir);
-    }
-
-    const entry = {};
-    const files = readDirRecursiveSync(dir, { fs, includes: [this.options.test] });
-
-    files.forEach((file) => {
-      let outputFile = path.relative(dir, file);
-      let key = outputFile.slice(0, outputFile.lastIndexOf('.'));
-      entry[key] = file;
-    });
-
-    return entry;
+  static isDynamicEntry() {
+    return this.dynamicEntry;
   }
 
   static isEnabled() {
@@ -252,7 +206,7 @@ class Options {
   }
 
   static isMinify() {
-    return this.toBool(this.options.minify, true, false);
+    return this.options.minify;
   }
 
   static isVerbose() {
@@ -265,6 +219,10 @@ class Options {
 
   static isStyle(file) {
     return this.options.css.enabled && this.options.css.test.test(file);
+  }
+
+  static isRealContentHash() {
+    return this.webpackOptions.optimization.realContentHash === true;
   }
 
   /**
@@ -349,7 +307,7 @@ class Options {
     if (value === 'false') return false;
     if (value === true || value === false) return value;
 
-    return value === 'auto' && this.prodMode === autoValue;
+    return value === 'auto' && this.productionMode === autoValue;
   }
 
   static get() {

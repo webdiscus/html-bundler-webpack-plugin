@@ -22,6 +22,8 @@ module.exports = {
       entry: 'src/views/pages/',
 
       filename: ({ filename, chunk: { name } }) => {
+        console.log('\n\n~~~ filename: ', { name, filename });
+
         // transform 'home/index' filename to output file 'index.html'
         // note: compare the name with the valid path on windows
         if (name === path.join('home', 'index')) {

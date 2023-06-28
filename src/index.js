@@ -70,12 +70,12 @@ class Plugin extends AssetCompiler {
    * @async
    */
   afterRenderModules(compilation) {
+    if (!Options.isMinify()) return;
+
     const { compiler, assets } = compilation;
     const { RawSource } = compiler.webpack.sources;
-    const promises = [];
-
     const options = Options.get();
-    let minifyOptions;
+    const promises = [];
 
     // https://github.com/terser/html-minifier-terser#options-quick-reference
     const defaultMinifyOptions = {
@@ -90,16 +90,7 @@ class Plugin extends AssetCompiler {
       minifyJS: true,
     };
 
-    if (Options.isMinify()) {
-      minifyOptions =
-        options.minifyOptions && typeof options.minifyOptions === 'object'
-          ? { ...defaultMinifyOptions, ...options.minifyOptions }
-          : defaultMinifyOptions;
-    } else if (options.minify && typeof options.minify === 'object') {
-      minifyOptions = { ...defaultMinifyOptions, ...options.minify };
-    } else {
-      return;
-    }
+    const minifyOptions = { ...defaultMinifyOptions, ...options.minifyOptions };
 
     for (const assetFile in assets) {
       if (!AssetEntry.isEntrypoint(assetFile)) {

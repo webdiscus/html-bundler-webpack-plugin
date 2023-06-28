@@ -1,7 +1,10 @@
+const fs = require('fs');
 const path = require('path');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
 const { isFunction } = require('../Common/Helpers');
+const { readDirRecursiveSync } = require('../Common/FileUtils');
+const { optionEntryPathException } = require('./Messages/Exception');
 
 /** @typedef {import("webpack").Compilation} Compilation */
 /** @typedef {import("webpack").Module} Module */
@@ -54,9 +57,83 @@ class AssetEntry {
   /** @type {Compilation} */
   static compilation = null;
 
+  /** @type {Object} */
+  static entryLibrary = null;
+
   // the id to bind loader with data passed into template via entry.data
   static idIndex = 1;
   static data = new Map();
+
+  static init({ compilation, entryLibrary }) {
+    this.compilation = compilation;
+    this.entryLibrary = entryLibrary;
+  }
+
+  static initEntry() {
+    const { entry } = Options.webpackOptions;
+    const pluginEntry = Options.options.entry;
+
+    for (const key in pluginEntry) {
+      const entry = pluginEntry[key];
+
+      if (entry.import == null) {
+        pluginEntry[key] = { import: [entry] };
+        continue;
+      }
+
+      if (!Array.isArray(entry.import)) {
+        entry.import = [entry.import];
+      }
+    }
+
+    Options.webpackOptions.entry = { ...entry, ...pluginEntry };
+  }
+
+  static initDynamicEntry() {
+    const { entry } = Options.webpackOptions;
+    const dir = Options.options.entry;
+
+    Options.webpackOptions.entry = () => {
+      const dynEntry = this.getDynamicEntry(dir);
+      const entries = { ...entry, ...dynEntry };
+
+      this.addEntries(entries);
+
+      console.log('\n++ DYN ENTRY: ', entries);
+
+      return entries;
+    };
+  }
+
+  /**
+   * Returns dynamic entries read recursively from the entry path.
+   *
+   * @param {string} dir The entry path.
+   * @return {Object}
+   * @throws
+   */
+  static getDynamicEntry(dir) {
+    if (!path.isAbsolute(dir)) {
+      dir = path.join(Options.rootContext, dir);
+    }
+
+    try {
+      if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
+    } catch (error) {
+      optionEntryPathException(dir);
+    }
+
+    const entry = {};
+    const files = readDirRecursiveSync(dir, { fs, includes: [Options.options.test] });
+
+    files.forEach((file) => {
+      let outputFile = path.relative(dir, file);
+      let key = outputFile.slice(0, outputFile.lastIndexOf('.'));
+      entry[key] = { import: [file] };
+    });
+
+    return entry;
+  }
 
   /**
    * Whether the entry is unique.
@@ -146,6 +223,19 @@ class AssetEntry {
   }
 
   /**
+   * @param {AssetEntryOptions} entry
+   */
+  static getFilename(entry) {
+    // TODO: test
+    // let filename = entry.filename;
+    // if (filename != null) return filename;
+    // this.applyTemplateFilename(entry);
+    // console.log('\n=== getFilename: ', { filename }, entry);
+
+    return entry.filename;
+  }
+
+  /**
    * Set generated output filename for the asset defined as entrypoint.
    *
    * Called by renderManifest() stage.
@@ -159,6 +249,9 @@ class AssetEntry {
     }
   }
 
+  /**
+   * @param {AssetEntryOptions} entry
+   */
   static applyTemplateFilename(entry) {
     if (entry.isTemplate) {
       entry.filename = this.compilation.getAssetPath(entry.filenameTemplate, {
@@ -182,9 +275,19 @@ class AssetEntry {
 
   /**
    * @param {Array<Object>} entries
-   * @param {Object} entryLibrary
    */
-  static addEntries(entries, { entryLibrary }) {
+  static addEntries(entries) {
+    // let isDynEntry = false;
+    // if (typeof entries === 'function') {
+    //   entries = entries();
+    //   console.log('\n++++++++++++++++++++ add DYNAMIC Entries: ', entries);
+    //   isDynEntry = true;
+    //
+    //   //if (!dynamicEntry) return;
+    // }
+
+    console.log('\n++ addEntries: ', entries);
+
     for (let name in entries) {
       const entry = entries[name];
       const importFile = entry.import[0];
@@ -199,7 +302,7 @@ class AssetEntry {
       const id = this.idIndex++;
       let { verbose, filename: filenameTemplate, sourcePath, outputPath } = options;
 
-      if (!entry.library) entry.library = entryLibrary;
+      if (!entry.library) entry.library = this.entryLibrary;
       if (entry.filename) filenameTemplate = entry.filename;
       if (entry.data) this.data.set(id, entry.data);
 
@@ -258,6 +361,8 @@ class AssetEntry {
     }
 
     entry.filename = (pathData, assetInfo) => {
+      console.log('** ENTRY filename: ', { filenameTemplate }, assetEntryOptions);
+
       if (assetEntryOptions.filename != null) return assetEntryOptions.filename;
 
       // the `filename` property of the `PathData` type should be a source file, but in entry this property not exists
@@ -274,6 +379,7 @@ class AssetEntry {
     };
 
     assetEntryOptions.originalEntry = entry;
+    //console.log('++ ADD ENTRY: ', assetEntryOptions);
 
     this.entries.set(name, assetEntryOptions);
     this.entriesByResource.set(assetEntryOptions.id, assetEntryOptions);
@@ -301,6 +407,8 @@ class AssetEntry {
     let [sourceFile] = importFile.split('?', 1);
 
     const issuerEntry = [...this.entries.values()].find(({ resource }) => resource === issuer);
+
+    //console.log('++ addToCompilation: ', this.entries);
 
     const entry = {
       name,

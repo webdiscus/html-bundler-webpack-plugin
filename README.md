@@ -18,7 +18,7 @@
 ## HTML as entrypoint
 
 The plugin supports HTML templates as entrypoints.\
-In HTML templates can be referenced any resources such as JS, SCSS, images and other assets.\
+In HTML templates can be referenced any resources such as JS, SCSS, images and other assets, similar to how it works in Vite.\
 For example: 
 - `<link href="@images/favicon.png" type="image/png" rel=icon />`
 - `<link href="./style.scss" rel="stylesheet">`
@@ -27,9 +27,11 @@ For example:
    
 Note: `@images` is the Webpack alias to a source images directory.
 
-The source files of assets referenced in HTML are processed and extracted to the output directory.
-In the generated HTML and CSS, the plugin substitutes the output filenames of the processed resources.
 
+The plugin detects all source files referenced in HTML and extracts processed assets to the output directory.
+In the generated HTML and CSS, the plugin substitutes the source filenames with the output filenames.
+
+<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/devel/images/workflow.png">
 
 ### 💡 Highlights
 
@@ -40,6 +42,7 @@ In the generated HTML and CSS, the plugin substitutes the output filenames of th
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - Dynamically loading template variables after changes using the [data](#loader-option-data) option.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
+
 
 ### ✅ Profit
 

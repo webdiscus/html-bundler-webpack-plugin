@@ -177,7 +177,12 @@ class AssetCompiler {
     });
 
     // entry options
-    compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
+    if (Options.isDynamicEntry()) {
+      AssetEntry.initDynamicEntry();
+    } else {
+      AssetEntry.initEntry();
+      compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
+    }
 
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
@@ -185,6 +190,8 @@ class AssetCompiler {
       const fs = normalModuleFactory.fs.fileSystem;
 
       this.compilation = compilation;
+
+      AssetEntry.init({ compilation, entryLibrary: this.entryLibrary });
 
       Resolver.init({
         fs,
@@ -196,7 +203,6 @@ class AssetCompiler {
         moduleGraph: compilation.moduleGraph,
       });
 
-      AssetEntry.setCompilation(compilation);
       Collection.setCompilation(compilation);
 
       // resolve modules
@@ -216,25 +222,30 @@ class AssetCompiler {
       // normalModuleHooks.beforeParse.tap(pluginName, (module) => {});
       // normalModuleHooks.beforeSnapshot.tap(pluginName, (module) => {});
 
-      // TODO: implement real content hash for css
-      // compilation.hooks.contentHash.tap(pluginName, (chunk) => {});
-
       // render source code of modules
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
       // after render module's sources
-      // note: only here is possible to modify an asset content via async function;
-      // `Infinity` ensures that the processAssets will only run after all other taps
+      // note:
+      // - only here is possible to modify an asset content via async function
+      // - `Infinity` ensures that the process will be run after all optimizations
       compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) => {
+        // minify html before injecting inlined js and css to avoid:
+        // - needles minification already minified assets in production mode
+        // - issues by parsing the inlined js/css code with the html minification module
         const result = this.afterRenderModules(compilation);
+
+        // TODO: calc real content hash for js and css
+        // if (Options.isRealContentHash()) {
+        //   console.log('*** afterProcessAssets: ', { assets: Object.keys(assets) });
+        // }
 
         return Promise.resolve(result);
       });
 
       // postprocess for the content of assets
       compilation.hooks.afterProcessAssets.tap(pluginName, (assets) => {
-        // note: this hook not provides testable exceptions,
-        // therefore, we save an exception to throw it in the done hook
+        // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
         try {
           this.afterProcessAssets(assets);
         } catch (error) {
@@ -255,7 +266,7 @@ class AssetCompiler {
    * @param {Object<name:string, entry: Object>} entries The webpack entries.
    */
   afterProcessEntry(context, entries) {
-    AssetEntry.addEntries(entries, { entryLibrary: this.entryLibrary });
+    AssetEntry.addEntries(entries);
   }
 
   /**
@@ -498,6 +509,8 @@ class AssetCompiler {
         if (assetModule === false) return;
         if (assetModule == null) continue;
 
+        //console.log('\n++ assetModule: ', { filename: assetModule.filename }, assetModule);
+
         assetModules.add(assetModule);
       } else if (module.type === 'asset/resource') {
         // resource required in the template or in the CSS via url()
@@ -523,6 +536,8 @@ class AssetCompiler {
       fileManifest.filename = module.assetFile;
       fileManifest.render = () => new RawSource(content);
       result.push(fileManifest);
+
+      //console.log('\n++ fileManifest: ', { filename: fileManifest.filename }, fileManifest);
     }
 
     // 2. render styles imported in JavaScript
@@ -570,25 +585,31 @@ class AssetCompiler {
     };
 
     if (sourceFile === entry.sourceFile) {
+      let assetFile = AssetEntry.getFilename(entry);
       // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
         this.currentEntryPoint = entry;
         module._isTemplate = true;
         assetModule.type = Collection.type.template;
 
+        console.log('\n++ createAssetModule: ', { filename: entry.filename, assetFile }, entry);
+
         // save the template request with the query, because it can be resolved with different output paths:
         // - 'index':    './index.ext'         => dist/index.html
         // - 'index/de': './index.ext?lang=de' => dist/de/index.html
-        Asset.add(resource, entry.filename);
+        //Asset.add(resource, entry.filename);
+        Asset.add(resource, assetFile);
       } else if (Options.isStyle(sourceFile)) {
         assetModule.type = Collection.type.style;
       } else {
         // skip unsupported entry type
         return;
       }
+
       assetModule.outputPath = entry.outputPath;
       assetModule.filename = entry.filenameTemplate;
-      assetModule.assetFile = entry.filename;
+      //assetModule.assetFile = entry.filename;
+      assetModule.assetFile = assetFile;
       assetModule.fileManifest.identifier = `${pluginName}.${chunk.id}`;
       assetModule.fileManifest.hash = chunk.contentHash['javascript'];
 
@@ -804,7 +825,10 @@ class AssetCompiler {
 
   /**
    * Called after the processAssets hook had finished without error.
-   * @note: Only at this stage the js file has the final hashed name.
+   *
+   * @note:
+   * This stage has the final hashed output js filename.
+   * This is the last stage where is able to modify compiled assets.
    *
    * @param {Object} assets
    */
@@ -837,6 +861,11 @@ class AssetCompiler {
     };
 
     Collection.render(compilation, callback);
+
+    // if (Options.isRealContentHash()) {
+    //   // TODO: calc real content hash for js and css
+    //   console.log('*** afterProcessAssets: ', { assets: Object.keys(assets) });
+    // }
 
     // remove all unused assets from compilation
     AssetTrash.clearCompilation(compilation);

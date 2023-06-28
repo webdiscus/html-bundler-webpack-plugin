@@ -24,6 +24,7 @@ module.exports = {
 
       // transform the source `home.html` template name to output filename `index.html`
       filename: ({ filename, chunk: { name } }) => {
+        console.log('\n\n~~~ filename: ', { name, filename });
         if (name === 'home') return 'index.html';
         // bypass the original structure
         return '[name].html';

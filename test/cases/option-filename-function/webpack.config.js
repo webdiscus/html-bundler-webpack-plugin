@@ -15,8 +15,8 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      filename: (pathData) => {
-        return pathData.chunk.name === 'home' ? 'index.html' : '[name].html';
+      filename: ({ filename, chunk: { name } }) => {
+        return name === 'home' ? 'index.html' : '[name].html';
       },
     }),
   ],

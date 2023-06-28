@@ -44,6 +44,10 @@ describe('resolve styles', () => {
   test('resolve styles with same name', () => compareFiles('resolve-styles-with-same-name'));
 });
 
+describe('real content hash', () => {
+  test('real-contenthash-js', () => compareFiles('real-contenthash-js'));
+});
+
 describe('resolve url() in style', () => {
   test('url(image) in CSS', () => compareFiles('resolve-url-in-css'));
   test('CSS imported in module with .css', () => compareFiles('import-css-from-module-with-ext'));
