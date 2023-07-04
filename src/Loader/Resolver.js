@@ -1,10 +1,10 @@
-const fs = require('fs');
 const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
 
 const Options = require('./Options');
 const PluginService = require('../Plugin/PluginService');
+const Snapshot = require('../Plugin/Snapshot');
 const { resolveException } = require('./Messages/Exeptions');
 
 class Resolver {
@@ -12,6 +12,7 @@ class Resolver {
   static aliasFileRegexp = /^([~@])?(.*?)$/;
   static hasAlias = false;
   static hasPlugins = false;
+  static fs = null;
 
   /**
    * @param {Object} loaderContext
@@ -19,6 +20,7 @@ class Resolver {
   static init(loaderContext) {
     const options = Options.getWebpackResolve();
 
+    this.fs = loaderContext.fs.fileSystem;
     this.loaderContext = loaderContext;
     this.rootContext = loaderContext.rootContext;
     this.basedir = Options.getBasedir();
@@ -27,12 +29,12 @@ class Resolver {
     this.hasPlugins = options.plugins && Object.keys(options.plugins).length > 0;
 
     // resolver for scripts from the 'script' tag, npm modules, and other js files
-    this.resolveFile = ResolverFactory.create.sync({
+    this.resolveScript = ResolverFactory.create.sync({
       ...options,
       preferRelative: options.preferRelative !== false,
       // resolve 'exports' field in package.json, default value is: ['webpack', 'production', 'browser']
       conditionNames: ['require', 'node'],
-      // restrict default extensions list '.js', '.json', '.wasm' for faster resolving
+      // restrict default extensions list '.js', '.json', '.wasm' for faster resolving of script files
       extensions: options.extensions.length ? options.extensions : ['.js'],
     });
 
@@ -49,6 +51,16 @@ class Resolver {
       mainFiles: ['_index', 'index'],
       extensions: ['.scss', '.sass', '.css'],
       restrictions: this.getStyleResolveRestrictions(),
+    });
+
+    // resolver for resources: images, fonts, etc.
+    this.resolveFile = ResolverFactory.create.sync({
+      ...options,
+      preferRelative: options.preferRelative !== false,
+      // resolve 'exports' field in package.json, default value is: ['webpack', 'production', 'browser']
+      conditionNames: ['require', 'node'],
+      // remove extensions for faster resolving of files different from styles and scripts
+      extensions: [],
     });
 
     // const resolveFileAsync = loaderContext.getResolve({
@@ -92,55 +104,91 @@ class Resolver {
   }
 
   /**
-   * Resolve filename.
+   * Resolve the request.
    *
-   * @param {string} file The file to resolve.
+   * @param {string} request The request to resolve.
    * @param {string} issuer The issuer of resource.
    * @param {string} [type = 'default'] The require type: 'default', 'script', 'style'.
    * @return {string}
    */
-  static resolve(file, issuer, type = 'default') {
-    const [filename] = issuer.split('?', 1);
-    const context = path.dirname(filename);
+  static resolve(request, issuer, type = 'default') {
+    const fs = this.fs;
+    const [issuerFile] = issuer.split('?', 1);
+    const context = path.dirname(issuerFile);
     const isScript = type === 'script';
     const isStyle = type === 'style';
     let isAliasArray = false;
-    let resolvedFile = null;
+    let resolvedRequest = null;
+    let usedEnhancedResolver = false;
 
     // resolve an absolute path by prepending options.basedir
-    if (file[0] === '/') {
-      resolvedFile = path.join(this.basedir, file);
+    if (request[0] === '/') {
+      resolvedRequest = path.join(this.basedir, request);
     }
 
     // resolve a relative file
-    if (resolvedFile == null && file[0] === '.') {
-      resolvedFile = path.join(context, file);
+    if (resolvedRequest == null && request[0] === '.') {
+      resolvedRequest = path.join(context, request);
     }
 
     // resolve a file by webpack `resolve.alias`
-    if (resolvedFile == null) {
-      resolvedFile = this.resolveAlias(file);
-      isAliasArray = Array.isArray(resolvedFile);
+    if (resolvedRequest == null) {
+      resolvedRequest = this.resolveAlias(request);
+      isAliasArray = Array.isArray(resolvedRequest);
     }
 
     // fallback to enhanced resolver
-    if (resolvedFile == null || isAliasArray) {
-      let request = file;
+    if (resolvedRequest == null || isAliasArray) {
+      let normalizedRequest = request;
       // remove optional prefix in request for enhanced resolver
-      if (isAliasArray) request = this.removeAliasPrefix(request);
+      if (isAliasArray) normalizedRequest = this.removeAliasPrefix(normalizedRequest);
 
       try {
-        resolvedFile = isStyle ? this.resolveStyle(context, request) : this.resolveFile(context, request);
+        resolvedRequest = isScript
+          ? this.resolveScript(context, normalizedRequest)
+          : isStyle
+          ? this.resolveStyle(context, normalizedRequest)
+          : this.resolveFile(context, normalizedRequest);
       } catch (error) {
-        resolveException(error, file, path.relative(this.rootContext, issuer));
+        if (isScript) {
+          // extract important ending of filename from the request
+          // app.js => app.js
+          // @alias/app.js => app.js
+          // @alias/path/to/app.js => path/to/app.js
+          // TODO: fix limitation, when a request is like `../../app.js` and used an array of aliases in the tsconfig
+
+          let [requestFile] = normalizedRequest.split('?', 1);
+          let beginPos = requestFile.indexOf('/');
+
+          if (beginPos > 0) requestFile = requestFile.slice(beginPos);
+
+          Snapshot.addMissingFile(issuer, requestFile);
+        }
+
+        resolveException(error, request, path.relative(this.rootContext, issuer));
       }
     }
 
     if (isScript) {
-      resolvedFile = this.resolveScriptExtension(resolvedFile);
+      resolvedRequest = this.resolveScriptExtension(resolvedRequest);
     }
 
-    return resolvedFile;
+    if (!usedEnhancedResolver) {
+      // request of the svg file can contain a fragment id, e.g. shapes.svg#circle
+      const separator = resolvedRequest.indexOf('#') > 0 ? '#' : '?';
+      const [resolvedFile] = resolvedRequest.split(separator, 1);
+
+      if (!fs.existsSync(resolvedFile)) {
+        if (isScript) {
+          Snapshot.addMissingFile(issuer, resolvedFile);
+        }
+
+        const error = new Error(`Can't resolve '${request}' in '${context}'`);
+        resolveException(error, request, path.relative(this.rootContext, issuer));
+      }
+    }
+
+    return resolvedRequest;
   }
 
   /**
@@ -153,6 +201,8 @@ class Resolver {
    */
   static resolveScriptExtension(request) {
     const [file, query] = request.split('?');
+    // TODO: get resolve extension from webpack config `resolve.extensions` and merge with the default (js|ts)
+
     const scriptExtensionRegexp = /\.(js|ts)$/;
     const resolvedFile = scriptExtensionRegexp.test(file) ? file : require.resolve(file);
 
@@ -169,6 +219,7 @@ class Resolver {
   static resolveAlias(request) {
     if (this.hasAlias === false) return null;
 
+    const fs = this.fs;
     const hasPath = request.indexOf('/') > -1;
     const aliasRegexp = hasPath ? this.aliasRegexp : this.aliasFileRegexp;
     const [, prefix, aliasName] = aliasRegexp.exec(request) || [];

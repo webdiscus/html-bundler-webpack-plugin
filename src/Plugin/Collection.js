@@ -4,6 +4,7 @@ const AssetEntry = require('./AssetEntry');
 const AssetInline = require('./AssetInline');
 const AssetTrash = require('./AssetTrash');
 const Preload = require('./Preload');
+const Dependency = require('../Loader/Dependency');
 
 /**
  * @typedef {Object} CollectionData
@@ -27,11 +28,14 @@ const replaceAll = (str, search, replace) => {
  */
 
 class Collection {
-  static compilation;
+  static compilation = null;
 
+  // resource files
   static files = new Map();
-  static data = new Map();
   static uniqueFiles = new Set();
+
+  // entries data
+  static data = new Map();
 
   /**
    * Unique last index for each file with the same name.
@@ -74,6 +78,7 @@ class Collection {
 
     // the entrypoint name must be unique, if already exists then add an index: `main` => `main.1`, etc.
     if (!AssetEntry.isUnique(name, file)) {
+      // create unique name
       if (!this.index[name]) {
         this.index[name] = 1;
       }
@@ -82,6 +87,28 @@ class Collection {
 
     return uniqueName;
   }
+
+  // /**
+  //  * Reserved method for debugging.
+  //  *
+  //  * @param {string} resource
+  //  * @return {Array<string>}
+  //  */
+  // static getResourceIssuers(resource) {
+  //   const item = this.files.get(resource);
+  //
+  //   if (!item) return [];
+  //
+  //   const issuers = Array.from(item.entries.keys());
+  //
+  //   // extract from all issuer's request only filename, w/o a query
+  //   issuers.forEach((request, index) => {
+  //     let [file] = request.split('?', 1);
+  //     issuers[index] = file;
+  //   });
+  //
+  //   return issuers;
+  // }
 
   static addEntry(entry) {
     const entryPoint = this.data.get(entry.filename);
@@ -100,29 +127,30 @@ class Collection {
     const { resource, filename } = entry;
 
     for (const item of this.files.values()) {
-      if (item.entryRequests.has(resource)) {
-        item.entryFilenames.add(filename);
+      const entryFilenames = item.entries.get(resource);
+      if (entryFilenames) {
+        entryFilenames.add(filename);
       }
     }
   }
 
   /**
-   * Whether resource is a script.
+   * Whether the collection contains the script file.
    *
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isScript(resource) {
+  static hasScript(resource) {
     return this.files.get(resource)?.type === this.type.script;
   }
 
   /**
-   * Whether resource is a style.
+   * Whether the collection contains the style file.
    *
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isStyle(resource) {
+  static hasStyle(resource) {
     return this.files.get(resource)?.type === this.type.style;
   }
 
@@ -234,7 +262,7 @@ class Collection {
   //  */
   // static isModuleStyle(module) {
   //   if (module.__isStyle == null) {
-  //     module.__isStyle = this.isStyle(module.resource);
+  //     module.__isStyle = this.hasStyle(module.resource);
   //   }
   //
   //   return module.__isStyle;
@@ -316,15 +344,13 @@ class Collection {
         type: type,
         // whether resource should be inlined in HTML
         inline,
-        // entry source requests where the resource is loaded
-        entryRequests: new Set(),
-        // entry output filenames to match entry in compilation.assets
-        entryFilenames: new Set(),
+        // the key is an entry source requests where the resource is loaded
+        // the value are entry output filenames to match entry in compilation.assets
+        entries: new Map(),
       };
       this.files.set(resource, item);
     }
-
-    item.entryRequests.add(issuer);
+    item.entries.set(issuer, new Set());
   }
 
   /**
@@ -417,6 +443,52 @@ class Collection {
       reference.assets = [data];
     } else {
       reference.assets.push(data);
+    }
+  }
+
+  /**
+   * Delete entry data.
+   *
+   * Called when used the dynamic entry in serve/watch mode.
+   *
+   * @param {string} resource
+   */
+  static deleteData(resource) {
+    this.files.delete(resource);
+
+    // find all keys, the same entry file can be used as a template for many entries
+    let dataKey = [];
+    for (const [key, item] of this.data) {
+      if (item.entry.resource === resource) {
+        dataKey.push({
+          key,
+          filename: item.entry.filename,
+          resource,
+        });
+      }
+    }
+
+    dataKey.forEach(({ key, filename, resource }) => {
+      this.data.delete(key);
+
+      this.files.forEach((item, file) => {
+        item.entries.delete(resource);
+      });
+
+      AssetTrash.add(filename);
+    });
+
+    Dependency.removeFile(resource);
+  }
+
+  /**
+   * Disconnect entry in all resources.
+   *
+   * @param {string} resource The file of entry.
+   */
+  static disconnectEntry(resource) {
+    for (const [, item] of this.files) {
+      item.entries.delete(resource);
     }
   }
 
@@ -693,7 +765,7 @@ class Collection {
     const splitChunkIds = new Set();
     const chunkCache = new Map();
 
-    for (let [resource, { type, inline, name, entryFilenames }] of this.files) {
+    for (let [resource, { type, inline, name, entries }] of this.files) {
       if (type !== this.type.script) continue;
 
       const entrypoint = namedChunkGroups.get(name);
@@ -705,12 +777,26 @@ class Collection {
 
       for (const { id, files } of entrypoint.chunks) {
         for (const file of files) {
-          if (assetsInfo.get(file).hotModuleReplacement !== true) chunkFiles.add(file);
+          const info = assetsInfo.get(file);
+
+          // when is used dynamic entry in serve/watch mode and
+          // after renaming of an entry file the webpack generate additional needles entry file with the `.js` extension
+          // in this case, the entrypoint.chunks.files contains a wrong file with the `.html` extension
+          // for what we check the asset info, whether the chunk is a javascript
+          const isJavascript = 'javascriptModule' in info;
+
+          if (isJavascript && info.hotModuleReplacement !== true) chunkFiles.add(file);
         }
         splitChunkIds.add(id);
       }
 
       const hasSplitChunks = chunkFiles.size > 1;
+
+      // do flat the Map<string, Set>
+      const entryFilenames = new Set();
+      for (const value of entries.values()) {
+        value.forEach(entryFilenames.add, entryFilenames);
+      }
 
       for (let entryFile of entryFilenames) {
         // let's show an original error
@@ -743,7 +829,9 @@ class Collection {
 
         const entryData = this.data.get(entryFile);
 
-        if (entryData) entryData.resources.push(data);
+        if (entryData) {
+          entryData.resources.push(data);
+        }
       }
     }
 
@@ -772,8 +860,8 @@ class Collection {
    */
   static clear() {
     this.index = {};
-    this.files.clear();
     this.data.clear();
+    this.files.clear();
     this.orderedResources.clear();
     this.importStyleRootIssuers.clear();
     this.importStyleSources.clear();
@@ -785,15 +873,26 @@ class Collection {
    * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {
-    if (Options.isDynamicEntry()) return;
+    // don't clear the index
+    // test case:
+    // there are 3 entries: home.html, news.html and about.html
+    // 1. add the `script.js` to the home.html => script.js
+    // 2. add the `script.js` to the news.html => script.1.js
+    // 3. add the `script.js` to the about.html => script.2.js
+    // but when the index is cleared, then after adding the file with the same name will be not unique
+    // and is generated a js file having a wrong content
+    //this.index = {};
 
-    this.index = {};
+    // don't delete entry data, clear only resources
+    this.data.forEach((item, key) => {
+      if (item.resources != null) item.resources.length = 0;
+    });
+
+    // don't delete files, clear only assets
     this.files.forEach((item, key) => {
       if (item.assets != null) item.assets.length = 0;
     });
 
-    // TODO: non't remove if entry is dynamic
-    this.data.clear();
     this.importStyleRootIssuers.clear();
     this.importStyleSources.clear();
   }

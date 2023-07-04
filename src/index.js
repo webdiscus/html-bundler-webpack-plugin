@@ -93,7 +93,7 @@ class Plugin extends AssetCompiler {
     const minifyOptions = { ...defaultMinifyOptions, ...options.minifyOptions };
 
     for (const assetFile in assets) {
-      if (!AssetEntry.isEntrypoint(assetFile)) {
+      if (!AssetEntry.isEntryFilename(assetFile)) {
         continue;
       }
 

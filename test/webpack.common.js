@@ -1,5 +1,7 @@
 module.exports = {
   devtool: false,
+  // avoid double error output in console
+  stats: 'errors-warnings',
 
   output: {
     // clean the output directory before emit

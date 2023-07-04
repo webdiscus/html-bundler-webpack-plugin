@@ -12,7 +12,7 @@ class Dependency {
   static files = new Set();
   static loaderContext = null;
   static watchFiles = {};
-  static #entryFiles = [];
+  static #entryFiles = new Set();
 
   static init(loaderContext) {
     if (!PluginService.isWatchMode()) return;
@@ -62,10 +62,9 @@ class Dependency {
     if (!PluginService.isWatchMode()) return;
 
     const { loaderContext } = this;
-    const entryFiles = this.#entryFiles;
 
     for (let file of this.files) {
-      if (entryFiles.indexOf(file) < 0) {
+      if (!this.#entryFiles.has(file)) {
         // the dependency already contains the current resource file,
         // add for watching only files not defined in the entry to avoid unnecessary rebuilding of all templates
         loaderContext.addDependency(file);

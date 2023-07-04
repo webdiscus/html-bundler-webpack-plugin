@@ -55,7 +55,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 
 ## 🔆 What's New in v2
-
+- **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
 - **NEW:** added support for importing style files in JavaScript.\
   **Note:** this feature was added for compatibility with `React` projects.\
   The importing styles in JavaScript is the `bad practice`. This is the `wrong way`.\
@@ -142,7 +142,8 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [entry](#webpack-option-entry)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (RegEx to handle matching templates)
-   - [entry](#option-entry) (define templates or path to templates)
+   - [entry](#option-entry) (entry as a list of template files)
+   - [entry dynamic](#option-entry-path) (entry as a path to template files)
    - [outputPath](#option-outputPath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
@@ -571,6 +572,10 @@ new HtmlBundlerPlugin({
   },
 })
 ```
+
+> **Note**
+> 
+> In serve/watch mode you can add/delete/rename a template file in the entry path without restarting Webpack.
 
 #### [↑ back to contents](#contents)
 <a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>

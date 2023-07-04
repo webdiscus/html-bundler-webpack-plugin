@@ -5,12 +5,14 @@ const PluginService = require('./PluginService');
 const { isFunction } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const { optionEntryPathException } = require('./Messages/Exception');
+const AssetTrash = require('./AssetTrash');
 
 /** @typedef {import("webpack").Compilation} Compilation */
 /** @typedef {import("webpack").Module} Module */
 /** @typedef {import("webpack").Chunk} Chunk */
 /** @typedef {import("webpack").EntryPlugin} EntryPlugin */
 /** @typedef {import("webpack/Entrypoint").EntryOptions} EntryOptions */
+/** @typedef {import("Collection")} Collection */
 
 /**
  * @typedef {Object} AssetEntryOptions
@@ -25,14 +27,12 @@ const { optionEntryPathException } = require('./Messages/Exception');
  *  [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
  *  See https://webpack.js.org/configuration/output/#outputfilename
  *
- * TODO: check the 'file' property where is used and remove
- * @property {string=} file The output asset file with absolute path.
  * @property {string=} assetFile The output asset file with relative path by webpack output path.
  *   Note: the method compilation.emitAsset() use this file as key of assets object
  *   and save the file relative by output path, defined in webpack.options.output.path.
- * @property {string} resource The full path of import file with query.
+ * @property {string} resource The absolute import file with query.
  * @property {string} importFile The original import entry file.
- * @property {string} sourceFile The import file only w/o query.
+ * @property {string} sourceFile The absolute import file only w/o query.
  * @property {string} sourcePath The path where are source files.
  * @property {string} outputPath The absolute output path.
  * @property {string} publicPath The public path relative to outputPath.
@@ -49,13 +49,17 @@ class AssetEntry {
 
   /** @type {Map<string, AssetEntryOptions>} */
   static entries = new Map();
-  static entriesByResource = new Map();
+  static entriesById = new Map();
   static compilationEntryNames = new Set();
-  static entrySourceFiles = [];
   static entryFilenames = new Set();
 
   /** @type {Compilation} */
   static compilation = null;
+
+  /** @type {Collection} */
+  static Collection = null;
+
+  static fs = null;
 
   /** @type {Object} */
   static entryLibrary = null;
@@ -64,58 +68,57 @@ class AssetEntry {
   static idIndex = 1;
   static data = new Map();
 
-  static init({ compilation, entryLibrary }) {
+  // TODO:
+  static removedEntries = new Set();
+
+  /**
+   * Inject dependencies.
+   *
+   * @param {Compilation} compilation
+   * @param {Object} entryLibrary
+   * @param {Collection} Collection
+   */
+  static init({ compilation, entryLibrary, Collection }) {
     this.compilation = compilation;
     this.entryLibrary = entryLibrary;
+    this.Collection = Collection;
+    this.fs = compilation.compiler.inputFileSystem.fileSystem;
   }
 
   static initEntry() {
     const { entry } = Options.webpackOptions;
-    const pluginEntry = Options.options.entry;
+    let pluginEntry;
 
-    for (const key in pluginEntry) {
-      const entry = pluginEntry[key];
+    if (Options.isDynamicEntry()) {
+      pluginEntry = this.getDynamicEntry();
+    } else {
+      pluginEntry = Options.options.entry;
+      for (const key in pluginEntry) {
+        const entry = pluginEntry[key];
 
-      if (entry.import == null) {
-        pluginEntry[key] = { import: [entry] };
-        continue;
-      }
+        if (entry.import == null) {
+          pluginEntry[key] = { import: [entry] };
+          continue;
+        }
 
-      if (!Array.isArray(entry.import)) {
-        entry.import = [entry.import];
+        if (!Array.isArray(entry.import)) {
+          entry.import = [entry.import];
+        }
       }
     }
 
     Options.webpackOptions.entry = { ...entry, ...pluginEntry };
   }
 
-  static initDynamicEntry() {
-    const { entry } = Options.webpackOptions;
-    const dir = Options.options.entry;
-
-    Options.webpackOptions.entry = () => {
-      const dynEntry = this.getDynamicEntry(dir);
-      const entries = { ...entry, ...dynEntry };
-
-      this.addEntries(entries);
-
-      console.log('\n++ DYN ENTRY: ', entries);
-
-      return entries;
-    };
-  }
-
   /**
    * Returns dynamic entries read recursively from the entry path.
    *
-   * @param {string} dir The entry path.
    * @return {Object}
    * @throws
    */
-  static getDynamicEntry(dir) {
-    if (!path.isAbsolute(dir)) {
-      dir = path.join(Options.rootContext, dir);
-    }
+  static getDynamicEntry() {
+    //const { fs } = this; // TODO: fix error
+    const dir = Options.options.entry;
 
     try {
       if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
@@ -123,8 +126,8 @@ class AssetEntry {
       optionEntryPathException(dir);
     }
 
-    const entry = {};
     const files = readDirRecursiveSync(dir, { fs, includes: [Options.options.test] });
+    const entry = {};
 
     files.forEach((file) => {
       let outputFile = path.relative(dir, file);
@@ -133,6 +136,21 @@ class AssetEntry {
     });
 
     return entry;
+  }
+
+  /**
+   * Get current entry files from the cache.
+   *
+   * @return {Set<string>}
+   */
+  static getEntryFiles() {
+    const files = new Set();
+
+    for (let { sourceFile, isTemplate } of this.entries.values()) {
+      if (isTemplate && !this.removedEntries.has(sourceFile)) files.add(sourceFile);
+    }
+
+    return files;
   }
 
   /**
@@ -153,22 +171,59 @@ class AssetEntry {
    * @param {string} filename The output filename.
    * @return {boolean}
    */
-  static isEntrypoint(filename) {
+  static isEntryFilename(filename) {
     return this.entryFilenames.has(filename);
+  }
+
+  /**
+   * Whether the resource is a template entrypoint.
+   *
+   * @param {string} resource The resource file.
+   * @return {boolean}
+   */
+  static isEntryResource(resource) {
+    const [resourceFile] = resource.split('?', 1);
+    for (let { isTemplate, sourceFile } of this.entries.values()) {
+      if (isTemplate && sourceFile === resourceFile) return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Whether the entry file was deleted or renamed in serve/watch mode.
+   *
+   * Webpack doesn't want to remove the entrypoint file from compilation permanently.
+   * It is needed to ignore deleted file in hooks beforeResolve and renderManifest.
+   *
+   * @param {string} file The source entry file.
+   * @return {boolean}
+   */
+  static isDeletedEntryFile(file) {
+    return this.removedEntries.has(file);
   }
 
   /**
    * Get an entry object by name.
    *
    * @param {string} name The entry name.
-   * @returns {AssetEntryOptions}
+   * @returns {AssetEntryOptions|null}
    */
   static get(name) {
-    return this.entries.get(name);
+    const entry = this.entries.get(name);
+
+    if (entry && PluginService.isWatchMode() && Options.isDynamicEntry() && this.isDeletedEntryFile(entry.resource)) {
+      // delete artifacts from compilation
+      AssetTrash.add(entry.filename);
+      AssetTrash.add(`${entry.name}.js`);
+      return null;
+    }
+
+    return entry;
   }
 
   static getById(id) {
-    return this.entriesByResource.get(Number(id));
+    return this.entriesById.get(Number(id));
   }
 
   /**
@@ -179,10 +234,10 @@ class AssetEntry {
    * @return {AssetEntryOptions|null}
    */
   static getByResource(resource) {
+    const [resourceFile] = resource.split('?', 1);
+
     for (let entry of this.entries.values()) {
-      const [fileEntry] = entry.resource.split('?', 1);
-      const [fileResource] = resource.split('?', 1);
-      if (fileEntry === fileResource) return entry;
+      if (entry.sourceFile === resourceFile) return entry;
     }
 
     return null;
@@ -193,13 +248,6 @@ class AssetEntry {
   }
 
   /**
-   * @return {Array<string>}
-   */
-  static getEntryFiles() {
-    return this.entrySourceFiles;
-  }
-
-  /**
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
   static setCompilation(compilation) {
@@ -207,7 +255,7 @@ class AssetEntry {
   }
 
   /**
-   * @param {Module} module The Webpack Module of the entry asset.
+   * @param {{layer}} module The object containing the layer property, e.g., Webpack module, or entry options.
    * @return {number|boolean} If module is the entry then return an id, otherwise return false.
    */
   static getEntryId(module) {
@@ -220,19 +268,6 @@ class AssetEntry {
     }
 
     return false;
-  }
-
-  /**
-   * @param {AssetEntryOptions} entry
-   */
-  static getFilename(entry) {
-    // TODO: test
-    // let filename = entry.filename;
-    // if (filename != null) return filename;
-    // this.applyTemplateFilename(entry);
-    // console.log('\n=== getFilename: ', { filename }, entry);
-
-    return entry.filename;
   }
 
   /**
@@ -277,17 +312,6 @@ class AssetEntry {
    * @param {Array<Object>} entries
    */
   static addEntries(entries) {
-    // let isDynEntry = false;
-    // if (typeof entries === 'function') {
-    //   entries = entries();
-    //   console.log('\n++++++++++++++++++++ add DYNAMIC Entries: ', entries);
-    //   isDynEntry = true;
-    //
-    //   //if (!dynamicEntry) return;
-    // }
-
-    console.log('\n++ addEntries: ', entries);
-
     for (let name in entries) {
       const entry = entries[name];
       const importFile = entry.import[0];
@@ -297,10 +321,22 @@ class AssetEntry {
 
       if (options == null) continue;
 
-      // Note: the layer id for all entry dependencies must be the same,
-      // so the index is incremented before the first usage in the new entry.
-      const id = this.idIndex++;
       let { verbose, filename: filenameTemplate, sourcePath, outputPath } = options;
+
+      // Note:
+      // when the entry contains the same source file for many chunks,
+      // add a unique identifier of the entry to execute a loader for all templates,
+      // otherwise Webpack call a loader only for the first template.
+      // See 'webpack/lib/NormalModule.js:identifier()'.
+      // For example, there is the entry containing many pages based on the same template:
+      // {
+      //   page1: { import: 'src/template.html', data: { title: 'A'} },
+      //   page2: { import: 'src/template.html', data: { title: 'B'} },
+      // }
+
+      // Note: the layer id for all entry dependencies must be the same
+      let id = this.idIndex++;
+      entry.layer = `${this.entryIdKey}=${id}`;
 
       if (!entry.library) entry.library = this.entryLibrary;
       if (entry.filename) filenameTemplate = entry.filename;
@@ -318,7 +354,6 @@ class AssetEntry {
         name,
         filenameTemplate,
         filename: undefined,
-        file: undefined,
         assetFile: undefined,
         resource,
         importFile,
@@ -333,56 +368,87 @@ class AssetEntry {
         originalEntry: undefined,
       };
 
-      // IMPORTANT: when the entry contains the same source file for many chunks, for example:
-      // {
-      //   page1: { import: 'src/template.html', data: { title: 'A'} },
-      //   page2: { import: 'src/template.html', data: { title: 'B'} },
-      // }
-      // add an unique identifier of the entry to execute a loader for all templates,
-      // otherwise Webpack call a loader only for the first template.
-      // See 'webpack/lib/NormalModule.js:identifier()'.
-      entry.layer = `${this.entryIdKey}=${id}`;
-
       this.#add(entry, assetEntryOptions);
-      this.entrySourceFiles.push(sourceFile);
     }
   }
 
   /**
-   * @param {EntryOptions} entry The Webpack entry option object.
-   * @param {AssetEntryOptions} assetEntryOptions
-   * @private
+   * Add the entry file to compilation.
+   *
+   * Called after changes in serve/watch mode.
+   *
+   * @param {string} file
    */
-  static #add(entry, assetEntryOptions) {
-    const { name, filenameTemplate, outputPath } = assetEntryOptions;
+  static addEntry(file) {
+    const context = Options.options.sourcePath;
+    const entryDir = Options.options.entry;
 
-    if (path.isAbsolute(assetEntryOptions.outputPath)) {
-      assetEntryOptions.publicPath = path.relative(Options.getWebpackOutputPath(), assetEntryOptions.outputPath);
+    if (!path.isAbsolute(file)) {
+      file = path.join(Options.rootContext, file);
     }
 
-    entry.filename = (pathData, assetInfo) => {
-      console.log('** ENTRY filename: ', { filenameTemplate }, assetEntryOptions);
+    let outputFile = path.relative(entryDir, file);
+    let name = outputFile.slice(0, outputFile.lastIndexOf('.'));
 
-      if (assetEntryOptions.filename != null) return assetEntryOptions.filename;
+    this.removedEntries.delete(file);
 
-      // the `filename` property of the `PathData` type should be a source file, but in entry this property not exists
-      if (pathData.filename == null) {
-        pathData.filename = assetEntryOptions.sourceFile;
-      }
+    if (this.#exists(name, file)) return;
 
-      let filename = isFunction(filenameTemplate) ? filenameTemplate(pathData, assetInfo) : filenameTemplate;
-      if (assetEntryOptions.publicPath) {
-        filename = path.posix.join(assetEntryOptions.publicPath, filename);
-      }
+    const entries = {};
+    const entrypoint = { import: [file], filename: '[name].html' };
 
-      return filename;
+    entries[name] = entrypoint;
+    // note: the `entrypoint.layer` is set in the addEntries() method
+    this.addEntries(entries);
+    Options.webpackOptions.entry = { ...Options.webpackOptions.entry, ...entries };
+
+    // important: the library must be null
+    entrypoint.library = null;
+
+    const entryOptions = {
+      name,
+      runtime: undefined,
+      layer: entrypoint.layer,
+      dependOn: undefined,
+      baseUri: undefined,
+      publicPath: undefined,
+      chunkLoading: undefined,
+      asyncChunks: undefined,
+      wasmLoading: undefined,
+      library: undefined,
     };
 
-    assetEntryOptions.originalEntry = entry;
-    //console.log('++ ADD ENTRY: ', assetEntryOptions);
+    const compilation = this.compilation;
+    const compiler = compilation.compiler;
+    const { EntryPlugin } = compiler.webpack;
 
-    this.entries.set(name, assetEntryOptions);
-    this.entriesByResource.set(assetEntryOptions.id, assetEntryOptions);
+    new EntryPlugin(context, file, entryOptions).apply(compiler);
+  }
+
+  /**
+   * Remove the entry file from cache.
+   *
+   * Called after deleting of an entry file in serve/watch mode.
+   *
+   * @param {string} file
+   */
+  static deleteEntry(file) {
+    this.removedEntries.add(file);
+    this.Collection.deleteData(file);
+
+    for (const [name, entry] of this.entries) {
+      if (entry.resource === file) {
+        // don't delete the entry from 'this.entries', it is used as the cache for the following use case:
+        // in serve/watch mode after renaming an entry file in another name and rename the same file back in previous name,
+        // will be used already created entry instead of the new entry
+        // this.entries.delete(name);
+        this.entryFilenames.delete(entry.filename);
+      }
+    }
+  }
+
+  static deleteMissingFile(file) {
+    this.removedEntries.delete(file);
   }
 
   /**
@@ -397,23 +463,18 @@ class AssetEntry {
    */
   static addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
     // skip duplicate entries
-    if (this.#exists(name, importFile)) return false;
+    if (this.#exists(name, importFile)) {
+      return false;
+    }
 
-    const compilation = this.compilation;
-    const compiler = compilation.compiler;
-    const webpack = compiler.webpack;
-    const { EntryPlugin } = webpack;
-    const entryDependency = EntryPlugin.createDependency(importFile, { name });
     let [sourceFile] = importFile.split('?', 1);
-
     const issuerEntry = [...this.entries.values()].find(({ resource }) => resource === issuer);
 
-    //console.log('++ addToCompilation: ', this.entries);
-
-    const entry = {
+    const entryOptions = {
       name,
       runtime: undefined,
       // Note: the layer of JS added to the compilation must be the same as the entry ot its issuer.
+      // TODO: research the case - the same js file can have many issuers with different layer
       layer: issuerEntry.originalEntry.layer,
       dependOn: undefined,
       baseUri: undefined,
@@ -430,7 +491,6 @@ class AssetEntry {
       name,
       filenameTemplate,
       filename: undefined,
-      file: undefined,
       resource: importFile,
       importFile,
       sourceFile,
@@ -440,10 +500,15 @@ class AssetEntry {
       isTemplate: false,
     };
 
-    this.#add(entry, assetEntryOptions);
+    this.#add(entryOptions, assetEntryOptions);
     this.compilationEntryNames.add(name);
 
-    compilation.addEntry(context, entryDependency, entry, (err, module) => {
+    const compilation = this.compilation;
+    const compiler = compilation.compiler;
+    const { EntryPlugin } = compiler.webpack;
+    const entryDependency = EntryPlugin.createDependency(importFile, { name });
+
+    compilation.addEntry(context, entryDependency, entryOptions, (err, module) => {
       if (err) throw new Error(err);
     });
 
@@ -453,6 +518,40 @@ class AssetEntry {
     }
 
     return true;
+  }
+
+  /**
+   * @param {EntryOptions} entry The Webpack entry option object.
+   * @param {AssetEntryOptions} assetEntryOptions
+   * @private
+   */
+  static #add(entry, assetEntryOptions) {
+    const { name, filenameTemplate, outputPath } = assetEntryOptions;
+
+    if (path.isAbsolute(assetEntryOptions.outputPath)) {
+      assetEntryOptions.publicPath = path.relative(Options.getWebpackOutputPath(), assetEntryOptions.outputPath);
+    }
+
+    entry.filename = (pathData, assetInfo) => {
+      if (assetEntryOptions.filename != null) return assetEntryOptions.filename;
+
+      // the `filename` property of the `PathData` type should be a source file, but in entry this property not exists
+      if (pathData.filename == null) {
+        pathData.filename = assetEntryOptions.sourceFile;
+      }
+
+      let filename = isFunction(filenameTemplate) ? filenameTemplate(pathData, assetInfo) : filenameTemplate;
+
+      if (assetEntryOptions.publicPath) {
+        filename = path.posix.join(assetEntryOptions.publicPath, filename);
+      }
+
+      return filename;
+    };
+
+    assetEntryOptions.originalEntry = entry;
+    this.entries.set(name, assetEntryOptions);
+    this.entriesById.set(assetEntryOptions.id, assetEntryOptions);
   }
 
   /**
@@ -476,9 +575,8 @@ class AssetEntry {
     this.idIndex = 1;
     this.data.clear();
     this.entries.clear();
-    this.entriesByResource.clear();
+    this.entriesById.clear();
     this.entryFilenames.clear();
-    this.entrySourceFiles.length = 0;
   }
 
   /**
@@ -489,10 +587,9 @@ class AssetEntry {
     for (const entryName of this.compilationEntryNames) {
       const entry = this.entries.get(entryName);
       if (entry) {
-        this.entriesByResource.delete(entry.id);
+        this.entriesById.delete(entry.id);
       }
 
-      // TODO: find the use case where it was needed
       // not remove JS file added as the entry for compilation,
       // because after changes any style file imported in the JS file, the JS entry will not be processed
       // this.entries.delete(entryName);

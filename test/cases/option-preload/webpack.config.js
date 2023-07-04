@@ -54,6 +54,8 @@ module.exports = {
           attributes: { crossorigin: true },
         },
       ],
+
+      verbose: true, // test verbose for preload
     }),
   ],
 

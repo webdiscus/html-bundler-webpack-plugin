@@ -1,5 +1,16 @@
 # Change log
 
+## 2.1.0 (2023-07-14)
+- feat: add watching for create/rename/delete files in the entry path, without restarting Webpack
+- fix: watching for create/rename/delete JS files
+- fix: add to watching only parent directories, ignore all subdirectories
+- fix: generate correct output filenames for assets in deep nested pages after changes in serve mode
+- fix: in some cases is missing the hot-update.js file after changes in serve mode
+- fix: missing slash in output filename when publicPath is an url without finishing slash
+- test: add tests for new features and bug fixes
+- chore: update npm packages
+- docs: update readme
+
 ## 2.0.1 (2023-06-23)
 - fix: watching for create/rename Handlebars partials
 - chore: update npm packages

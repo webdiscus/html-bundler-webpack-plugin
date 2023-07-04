@@ -36,12 +36,10 @@ module.exports = {
       },
 
       js: {
-        // output filename of extracted JS
         filename: 'assets/js/[name].[contenthash:8].js',
       },
 
       css: {
-        // output filename of extracted CSS
         filename: 'assets/css/[name].[contenthash:8].css',
       },
     }),

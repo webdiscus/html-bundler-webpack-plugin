@@ -42,7 +42,7 @@ const errorToHtml = (error) => {
  * @throws {Error}
  */
 const resolveException = (error, file, templateFile) => {
-  const message = `The file ${yellow`'${file}'`} can't be resolved in the template ` + cyan(templateFile);
+  const message = `Can't resolve ${yellow`'${file}'`} in the template ` + cyan(templateFile);
 
   throw new LoaderException(message, error);
 };

@@ -3,6 +3,8 @@ const AssetInline = require('./AssetInline');
 const Collection = require('./Collection');
 const Options = require('./Options');
 const { resolveException } = require('./Messages/Exception');
+const Snapshot = require('./Snapshot');
+const AssetEntry = require('./AssetEntry');
 
 class Resolver {
   static fs = null;
@@ -183,7 +185,7 @@ class Resolver {
     if (outputFilename != null) {
       resourceData.assets.set(assetKey, outputFilename);
 
-      if (Collection.isStyle(resource)) {
+      if (Collection.hasStyle(resource)) {
         // set the output filename for already created (in renderManifest) data
         Collection.setDataFilename(this.entryPoint, { resource, filename: outputFilename });
       } else {
@@ -207,38 +209,37 @@ class Resolver {
    * @throws {Error}
    */
   static require(rawRequest) {
-    const { issuerFile, issuer } = this;
+    const { fs, issuer, issuerFile } = this;
 
     // @import CSS rule is not supported
     if (rawRequest.indexOf('??ruleSet') > 0) {
-      resolveException(rawRequest, issuer.resource);
+      resolveException(rawRequest, issuer.resource, this.rootContext);
     }
 
     // bypass the asset contained data-URL
     if (AssetInline.isDataUrl(rawRequest)) return rawRequest;
 
     // bypass the source script file to replace it after the process
-    if (Collection.isScript(rawRequest)) return rawRequest;
-
-    const resource = this.getSourceFile(rawRequest, issuerFile);
-
-    // bypass the asset/inline as inline SVG
-    if (resource && AssetInline.isInlineSvg(resource, issuerFile)) {
-      Collection.setData(this.entryPoint, issuer, {
-        type: Collection.type.inlineSvg,
-        inline: true,
-        resource,
-      });
-      return resource;
-    }
+    if (Collection.hasScript(rawRequest)) return rawRequest;
 
     // bypass the inline CSS
     if (Collection.isInlineStyle(rawRequest)) return rawRequest;
 
+    const resource = this.getSourceFile(rawRequest, issuerFile);
+
     // resolve resource
     if (resource != null) {
-      const assetFile = this.resolveAsset(resource);
+      // bypass the asset/inline as inline SVG
+      if (AssetInline.isInlineSvg(resource, issuerFile)) {
+        Collection.setData(this.entryPoint, issuer, {
+          type: Collection.type.inlineSvg,
+          inline: true,
+          resource,
+        });
+        return resource;
+      }
 
+      const assetFile = this.resolveAsset(resource);
       if (assetFile != null) return assetFile;
 
       // try to resolve inline data url
@@ -249,10 +250,20 @@ class Resolver {
       }
     }
 
-    // require only js code or json data
-    if (/\.js[a-z0-9]*$/i.test(rawRequest)) return require(resource);
+    // if is used the filename like `./main.js`, then the resource is an absolute file
+    // if is used the filename like `../js/main.js`, then the resource is null and the rawRequest is an absolute file
+    const file = resource || rawRequest;
+    if (Options.js.test.test(file) && AssetEntry.isEntryResource(issuer.resource)) {
+      // occur after rename/delete of a js file when the entry module was already rebuilt
+      Snapshot.addMissingFile(issuer.resource, file);
 
-    resolveException(rawRequest, issuer.resource);
+      resolveException(file, issuer.resource, this.rootContext);
+    }
+
+    // require a native JavaScript, JSON or css-loader API file
+    if (/\.js[a-z0-9]*$/i.test(resource)) return require(resource);
+
+    resolveException(rawRequest, issuer.resource, this.rootContext);
   }
 
   /**

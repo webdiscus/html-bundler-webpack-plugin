@@ -1,6 +1,17 @@
 const fs = require('fs');
 const path = require('path');
-const { reset, green, cyan, cyanBright, yellow, white, whiteBright, blueBright } = require('ansis/colors');
+const {
+  reset,
+  green,
+  cyan,
+  cyanBright,
+  yellow,
+  white,
+  whiteBright,
+  magenta,
+  magentaBright,
+  redBright,
+} = require('ansis/colors');
 const { pluginName } = require('../../config');
 
 class PluginException extends Error {
@@ -66,15 +77,25 @@ const optionPreloadAsException = (config, type, availableTypes) => {
 };
 
 /**
- * @param {string} file
- * @param {string} issuer
+ * @param {string} file The unresolved file can be absolute or relative.
+ * @param {string} issuer The absolute issuer file of unresolved file.
+ * @param {string} rootContext The absolute path to project files.
  * @throws {Error}
  */
-const resolveException = (file, issuer) => {
-  let message = `Can't resolve the file ${cyan(file)} in ${blueBright(issuer)}`;
+const resolveException = (file, issuer, rootContext) => {
+  let relFile = file;
+  let isExistsFile = true;
+  issuer = path.relative(rootContext, issuer);
 
-  if (path.isAbsolute(file) && !fs.existsSync(file)) {
-    message += `\n${yellow`The reason:`} this file is not found!`;
+  if (path.isAbsolute(file)) {
+    relFile = path.relative(rootContext, file);
+    isExistsFile = fs.existsSync(file);
+  }
+
+  let message = `Can't resolve ${yellow(relFile)} in the file ${cyan(issuer)}`;
+
+  if (!isExistsFile) {
+    message += `\n${redBright`The reason:`} this file is not found!`;
   } else if (/\.css$/.test(file) && file.indexOf('??ruleSet')) {
     message +=
       `\nThe handling of ${yellow`@import at-rules in CSS`} is not supported. Disable the 'import' option in 'css-loader':\n` +

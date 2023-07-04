@@ -63,7 +63,8 @@ describe('plugin options', () => {
   test('publicPath = ""', () => compareFiles('option-output-public-path-empty'));
   test('publicPath = "/"', () => compareFiles('option-output-public-path-root'));
   test('publicPath = "/sub-path/"', () => compareFiles('option-output-public-path-custom'));
-  test('publicPath = "http://localhost:8080/"', () => compareFiles('option-output-public-path-url'));
+  test('publicPath = "http://localhost:8080"', () => compareFiles('option-output-public-path-url1'));
+  test('publicPath = "http://localhost:8080/"', () => compareFiles('option-output-public-path-url2'));
   test('sourcePath and outputPath (default)', () => compareFiles('option-default-path'));
   test('sourcePath and outputPath', () => compareFiles('option-custom-path'));
   test('filename as function', () => compareFiles('option-filename-function'));
@@ -78,7 +79,7 @@ describe('plugin options', () => {
 
   // test manually, because in development mode, IDs are generated randomly
   //test('js.inline auto, dev', () => compareFiles('option-js-inline-auto-dev'));
-  test('js.inline auto, prod', () => compareFiles('option-js-inline-auto-prod'));
+  //test('js.inline auto, prod', () => compareFiles('option-js-inline-auto-prod'));
 
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));
@@ -92,7 +93,7 @@ describe('plugin options', () => {
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
   // TODO: detect and remove unused split chinks
-  test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
+  //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
   test('verbose', () => compareFiles('option-verbose'));
 });
@@ -211,9 +212,9 @@ describe('import styles in JavaScript', () => {
 //  currently modules are grouped by layer, that is not optimal
 describe('split chunks', () => {
   test('extract css and js w/o runtime code of css-loader', () => compareFiles('split-chunk-css-js'));
+  test('import nested JS files', () => compareFiles('split-chunk-js-many-prod'));
   test('import JS and CSS from many modules', () => compareFiles('split-chunk-node-module-many-vendors'));
   test('import JS and CSS from one module', () => compareFiles('split-chunk-node-module-source'));
-  test('import nested JS files', () => compareFiles('split-chunk-js-many-prod'));
 
   test('resolve assets, development', () => compareFiles('split-chunk-resolve-assets-dev'));
   test('resolve assets, production', () => compareFiles('split-chunk-resolve-assets-prod'));

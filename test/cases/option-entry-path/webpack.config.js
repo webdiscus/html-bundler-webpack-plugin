@@ -18,12 +18,10 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      // path to templates
+      // test the dynamic entry as the path to templates
       entry: 'src/views/pages/',
 
       filename: ({ filename, chunk: { name } }) => {
-        console.log('\n\n~~~ filename: ', { name, filename });
-
         // transform 'home/index' filename to output file 'index.html'
         // note: compare the name with the valid path on windows
         if (name === path.join('home', 'index')) {
@@ -34,12 +32,10 @@ module.exports = {
       },
 
       js: {
-        // output filename of extracted JS
         filename: 'assets/js/[name].[contenthash:8].js',
       },
 
       css: {
-        // output filename of extracted CSS
         filename: 'assets/css/[name].[contenthash:8].css',
       },
     }),

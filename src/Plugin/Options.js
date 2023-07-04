@@ -1,5 +1,7 @@
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
+const LoaderOptions = require('../Loader/Options');
+const { postprocessException, afterProcessException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} PluginOptions
@@ -53,11 +55,14 @@ class Options {
   static dynamicEntry = false;
   static context = '';
   static rootContext = '';
+  static js = {
+    test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
+  };
 
   /**
    * Initialize plugin options.
    *
-   * @param {Object} options
+   * @param {Object} options The plugin options.
    * @param {AssetEntry} AssetEntry The instance of the AssetEntry class.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
@@ -74,7 +79,7 @@ class Options {
   /**
    * Initialize Webpack options.
    *
-   * @param {Object} options
+   * @param {Object} options The Webpack compiler options.
    */
   static initWebpack(options) {
     const webpackOutput = options.output;
@@ -91,6 +96,11 @@ class Options {
     css.inline = this.toBool(css.inline, false, false);
 
     this.#initWebpackOutput(webpackOutput);
+
+    // set the absolute path for dynamic entry
+    if (this.dynamicEntry && !path.isAbsolute(entry)) {
+      this.options.entry = path.join(this.rootContext, entry);
+    }
 
     if (Object.keys(options.entry).length === 1 && Object.keys(Object.entries(options.entry)[0][1]).length === 0) {
       // set the empty object to avoid Webpack error, defaults the structure is `{ main: {} }`,
@@ -177,7 +187,6 @@ class Options {
       publicPath = 'auto';
     }
 
-    // reset initial states
     this.autoPublicPath = false;
     this.isUrlPublicPath = false;
     this.isRelativePublicPath = false;
@@ -219,6 +228,10 @@ class Options {
 
   static isStyle(file) {
     return this.options.css.enabled && this.options.css.test.test(file);
+  }
+
+  static isScript(file) {
+    return this.js.test.test(file);
   }
 
   static isRealContentHash() {
@@ -377,7 +390,7 @@ class Options {
    * @return {string}
    */
   static getAssetOutputPath(assetFile = null) {
-    const isAutoRelative = assetFile && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(assetFile);
+    const isAutoRelative = assetFile && this.isRelativePublicPath && !this.AssetEntry.isEntryFilename(assetFile);
 
     if (this.autoPublicPath || isAutoRelative) {
       if (!assetFile) return '';
@@ -390,6 +403,63 @@ class Options {
     }
 
     return this.webpackPublicPath;
+  }
+
+  /**
+   * Get the output asset file regards the publicPath.
+   *
+   * @param {string} assetFile The output asset filename relative by output path.
+   * @param {string} issuer The output issuer filename relative by output path.
+   * @return {string}
+   */
+  static getAssetOutputFile(assetFile, issuer) {
+    const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntryFilename(issuer);
+
+    // if the public path is relative, then a resource using not in the template file must be auto resolved
+    if (this.autoPublicPath || isAutoRelative) {
+      if (!issuer) return assetFile;
+
+      const issuerFullFilename = path.resolve(this.webpackOutputPath, issuer);
+      const context = path.dirname(issuerFullFilename);
+      const file = path.posix.join(this.webpackOutputPath, assetFile);
+      const outputFilename = path.relative(context, file);
+
+      return isWin ? pathToPosix(outputFilename) : outputFilename;
+    }
+
+    if (this.isUrlPublicPath) {
+      const url = new URL(assetFile, this.webpackPublicPath);
+      return url.href;
+    }
+
+    return path.posix.join(this.webpackPublicPath, assetFile);
+  }
+
+  /**
+   * Get the top level paths containing source files.
+   *
+   * Called after compilation, because watch dirs are defined in loader options.
+   *
+   * The source files can be in many root paths, e.g.:
+   *  - ./packages/
+   *  - ./src/
+   *  - ./vendor/
+   *
+   * @return {Array<string>}
+   */
+  static getRootSourcePaths() {
+    const watchDirs = LoaderOptions.getWatchPaths();
+
+    return watchDirs || [];
+  }
+
+  /**
+   * Get the entry path.
+   *
+   * @return {string|null}
+   */
+  static getEntryPath() {
+    return this.dynamicEntry ? this.options.entry : null;
   }
 
   static hasPostprocess() {
@@ -409,31 +479,6 @@ class Options {
     } catch (error) {
       postprocessException(error, info);
     }
-  }
-
-  /**
-   * Get the output asset file regards the publicPath.
-   *
-   * @param {string} assetFile The output asset filename relative by output path.
-   * @param {string} issuer The output issuer filename relative by output path.
-   * @return {string}
-   */
-  static getAssetOutputFile(assetFile, issuer) {
-    const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntrypoint(issuer);
-
-    // if the public path is relative, then a resource using not in the template file must be auto resolved
-    if (this.autoPublicPath || isAutoRelative) {
-      if (!issuer) return assetFile;
-
-      const issuerFullFilename = path.resolve(this.webpackOutputPath, issuer);
-      const context = path.dirname(issuerFullFilename);
-      const file = path.posix.join(this.webpackOutputPath, assetFile);
-      const outputFilename = path.relative(context, file);
-
-      return isWin ? pathToPosix(outputFilename) : outputFilename;
-    }
-
-    return this.webpackPublicPath + '' + assetFile;
   }
 
   /**

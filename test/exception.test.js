@@ -33,13 +33,23 @@ describe('loader exceptions', () => {
   });
 
   test('exception compile: resolve file', () => {
-    const containString = `can't be resolved in the template`;
+    const containString = `Can't resolve`;
     return exceptionContain('msg-exception-loader-resolve-file', containString);
   });
 
-  test('exception: resolve required file', () => {
-    const containString = `Can't resolve the file`;
-    return exceptionContain('msg-exception-resolve-file', containString);
+  test('exception compile: resolve css file via enhanced-resolve', () => {
+    const containString = `Can't resolve`;
+    return exceptionContain('msg-exception-loader-resolve-file-enhanced', containString);
+  });
+
+  test('exception compile: resolve js file', () => {
+    const containString = `Can't resolve`;
+    return exceptionContain('msg-exception-loader-resolve-js', containString);
+  });
+
+  test('exception compile: resolve js file via enhanced-resolve', () => {
+    const containString = `Can't resolve`;
+    return exceptionContain('msg-exception-loader-resolve-js-enhanced', containString);
   });
 
   test('exception export', () => {

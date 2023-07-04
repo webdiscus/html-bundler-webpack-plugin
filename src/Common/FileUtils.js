@@ -30,6 +30,17 @@ const loadModule = (name, callback) => {
 };
 
 /**
+ * @param {FileSystem} fs
+ * @param {string} file
+ * @return {boolean|null} Returns null if the file not exists, true if the file is directory, otherwise false.
+ */
+const isDir = ({ fs, file }) => {
+  if (!fs.existsSync(file)) return null;
+
+  return fs.lstatSync(file).isDirectory();
+};
+
+/**
  * Returns a list of absolut files.
  *
  * @param {string} dir The starting directory.
@@ -157,9 +168,64 @@ const relativePathForView = (file, dir = process.cwd()) => {
   return isWin ? pathToPosix(relFile) : relFile;
 };
 
+/**
+ * Autodetect a root source directory.
+ * Defaults, it is first-level subdirectory of a template, relative to root context.
+ *
+ * For examples:
+ * ./home.html => ./
+ * ./src/home.html => ./src
+ * ./src/views/home.html => ./src
+ * ./app/views/home.html => ./app
+ *
+ * @param {string} rootContext The root path.
+ * @param {string} file The file in the root context.
+ * @return {string}
+ */
+const rootSourceDir = (rootContext, file) => {
+  let srcDir = rootContext;
+  let filePath = path.dirname(file);
+
+  if (filePath.startsWith(rootContext) && srcDir !== filePath) {
+    let subdir = filePath.replace(rootContext, '');
+    if (isWin) subdir = pathToPosix(subdir);
+
+    let pos = subdir.indexOf('/', 1);
+    if (pos > 0) subdir = subdir.slice(0, pos);
+    srcDir = path.join(rootContext, subdir);
+  }
+
+  return srcDir;
+};
+
+/**
+ * Filter out only unique parent paths.
+ *
+ * For example:
+ * /root/a/       ++ OK parent dir
+ * /root/a/a1/    -- ignore sub dir
+ * /root/b/b1/    ++ OK parent dir
+ * /root/b/b1/b2/ -- ignore sub dir
+ *
+ * @param {Array<string>} paths
+ * @return {Array<string>}
+ */
+const filterParentPaths = (paths) =>
+  paths.length < 2
+    ? paths
+    : paths
+        .sort((a, b) => a.length - b.length)
+        .reduce((result, dir) => {
+          if (!result.some((value) => dir.startsWith(value))) result.push(dir);
+          return result;
+        }, []);
+
 module.exports = {
   loadModule,
+  isDir,
   readDirRecursiveSync,
   resolveFile,
   relativePathForView,
+  rootSourceDir,
+  filterParentPaths,
 };

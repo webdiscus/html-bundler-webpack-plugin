@@ -1,5 +1,16 @@
 const path = require('path');
-const { green, cyan, cyanBright, magenta, black, ansi256, bgAnsi256, yellowBright, ansi } = require('ansis/colors');
+const {
+  red,
+  green,
+  cyan,
+  cyanBright,
+  magenta,
+  black,
+  ansi256,
+  bgAnsi256,
+  yellowBright,
+  bgAnsi,
+} = require('ansis/colors');
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { relativePathForView } = require('../../Common/FileUtils');
@@ -13,6 +24,19 @@ const gray = ansi256(244);
 const padLevel1 = 15;
 const padLevel2 = padLevel1 + 10;
 const padChunks = padLevel1 + 4;
+
+/**
+ * Get the compilation name styled based on the presence of an error.
+ *
+ * The compilation name is displayed in the console output when compilation is finished.
+ *
+ * @param {boolean} error
+ * @return {string}
+ */
+const compilationName = (error) =>
+  error
+    ? bgAnsi(196).whiteBright` HTML Bundler Plugin ` + red` ▶▶▶`
+    : bgAnsi(118).black` HTML Bundler Plugin ` + green` ▶▶▶`;
 
 const colorType = (item, pad) => {
   let { type, inline } = item;
@@ -86,7 +110,9 @@ const verbose = () => {
       str += '\n';
       str += ansi256(134)`watch files:` + `\n`;
 
-      for (let file of watchFiles) {
+      // TODO: correct sort paths
+      const files = Array.from(watchFiles).sort();
+      for (let file of files) {
         file = relativePathForView(file);
         str += `${'-'.padStart(3)} ${ansi256(147)(file)}` + '\n';
       }
@@ -157,5 +183,6 @@ const verbose = () => {
 };
 
 module.exports = {
+  compilationName,
   verbose,
 };

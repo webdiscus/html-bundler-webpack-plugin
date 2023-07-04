@@ -42,11 +42,9 @@ module.exports = {
       },
 
       js: {
-        // output filename of extracted JS from source script loaded in HTML via `<script>` tag
         filename: 'assets/js/[name].[contenthash:8].js',
       },
       css: {
-        // output filename of extracted CSS from source style loaded in HTML via `<link>` tag
         filename: 'assets/css/[name].[contenthash:8].css',
       },
 

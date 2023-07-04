@@ -5,12 +5,14 @@ const path = require('path');
 
 const { pluginName } = require('../config');
 const { baseUri, urlPathPrefix } = require('../Loader/Utils');
+const { isDir } = require('../Common/FileUtils');
 
 const CssExtractModule = require('./Modules/CssExtractModule');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
 const Collection = require('./Collection');
 const Resolver = require('./Resolver');
+const Snapshot = require('./Snapshot');
 const UrlDependency = require('./UrlDependency');
 
 const Asset = require('./Asset');
@@ -20,7 +22,7 @@ const AssetInline = require('./AssetInline');
 const AssetTrash = require('./AssetTrash');
 const VMScript = require('./VMScript');
 
-const { verbose } = require('./Messages/Info');
+const { compilationName, verbose } = require('./Messages/Info');
 
 // the loader must have the structure
 const cssLoader = {
@@ -89,6 +91,14 @@ class AssetCompiler {
   /** @type Set<Error> Buffered exceptions thrown in hooks. */
   exceptions = new Set();
 
+  isSnapshotInitialized = false;
+
+  /** @type {FileSystem} */
+  fs = null;
+
+  /** @type {Compilation} */
+  compilation = null;
+
   /**
    * @param {PluginOptions|{}} options
    */
@@ -99,6 +109,7 @@ class AssetCompiler {
     PluginService.init(Options);
 
     // bind the instance context for using these methods as references in Webpack hooks
+    this.invalidate = this.invalidate.bind(this);
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
     this.afterCreateModule = this.afterCreateModule.bind(this);
@@ -154,6 +165,7 @@ class AssetCompiler {
     const { webpack } = compiler;
     const { NormalModule } = webpack;
 
+    this.fs = compiler.inputFileSystem.fileSystem;
     this.webpack = webpack;
     HotUpdateChunk = webpack.HotUpdateChunk;
 
@@ -161,6 +173,7 @@ class AssetCompiler {
     Options.setDefaultCssOptions(CssExtractModule.getOptions());
     Options.enableLibraryType(this.entryLibrary.type);
     AssetResource.init(compiler);
+
     this.initialize(compiler);
 
     // clear caches by tests for webpack serve/watch
@@ -168,6 +181,7 @@ class AssetCompiler {
     AssetInline.clear();
     Collection.clear();
     Resolver.clear();
+    Snapshot.clear();
 
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
@@ -176,22 +190,26 @@ class AssetCompiler {
       PluginService.watchRun();
     });
 
-    // entry options
-    if (Options.isDynamicEntry()) {
-      AssetEntry.initDynamicEntry();
-    } else {
-      AssetEntry.initEntry();
-      compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
-    }
+    // entry option
+    AssetEntry.initEntry();
+    compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
+
+    // watch changes for entry-points
+    compiler.hooks.invalid.tap(pluginName, this.invalidate);
+
+    // for debugging
+    // compiler.hooks.make.tapAsync(pluginName, (compilation, callback) => {
+    //   callback();
+    // });
 
     // this compilation
     compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
+      const fs = this.fs;
       const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
-      const fs = normalModuleFactory.fs.fileSystem;
 
       this.compilation = compilation;
 
-      AssetEntry.init({ compilation, entryLibrary: this.entryLibrary });
+      AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, Collection });
 
       Resolver.init({
         fs,
@@ -235,9 +253,8 @@ class AssetCompiler {
         // - issues by parsing the inlined js/css code with the html minification module
         const result = this.afterRenderModules(compilation);
 
-        // TODO: calc real content hash for js and css
+        // TODO: calc real content hash for js and css, currently it is impossible
         // if (Options.isRealContentHash()) {
-        //   console.log('*** afterProcessAssets: ', { assets: Object.keys(assets) });
         // }
 
         return Promise.resolve(result);
@@ -246,6 +263,7 @@ class AssetCompiler {
       // postprocess for the content of assets
       compilation.hooks.afterProcessAssets.tap(pluginName, (assets) => {
         // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
+
         try {
           this.afterProcessAssets(assets);
         } catch (error) {
@@ -254,9 +272,112 @@ class AssetCompiler {
       });
     });
 
+    // after this compilation
+    compiler.hooks.afterCompile.tap(pluginName, (compilation, callback) => {});
+
     compiler.hooks.done.tap(pluginName, this.done);
     compiler.hooks.shutdown.tap(pluginName, this.shutdown);
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
+  }
+
+  /**
+   * Invalidate changed file.
+   *
+   * Called in serve/watch mode.
+   *
+   * Limitation: currently supports for change only a single file.
+   *
+   * TODO: add supports to add/remove many files.
+   *      The problem: if added/removed many files,
+   *      then webpack calls the 'invalid' hook many times, for each file separately.
+   *      Research: find the hook, what called once, before the 'invalid' hook,
+   *      to create the snapshot of files after change.
+   *
+   * @param {string} fileName The old filename before change.
+   * @param {Number|null} changeTime
+   */
+  invalidate(fileName, changeTime) {
+    const fs = this.fs;
+    const entryDir = Options.getEntryPath();
+    const isDirectory = isDir({ fs, file: fileName });
+
+    Snapshot.create();
+
+    if (isDirectory === true) return;
+
+    const { actionType, newFileName, oldFileName } = Snapshot.detectFileChange();
+    const isScript = Options.isScript(fileName);
+    const inCollection = Collection.hasScript(fileName);
+    const isEntry = (file) => file && file.startsWith(entryDir) && Options.isEntry(file);
+
+    // 1. Invalidate entry file
+
+    if (Options.isDynamicEntry() && (isEntry(fileName) || isEntry(oldFileName) || isEntry(newFileName))) {
+      switch (actionType) {
+        case 'modify':
+          Collection.disconnectEntry(fileName);
+          break;
+        case 'add':
+          AssetEntry.addEntry(newFileName);
+          Collection.disconnectEntry(newFileName);
+          break;
+        case 'rename':
+          AssetEntry.deleteEntry(oldFileName);
+          AssetEntry.addEntry(newFileName);
+          break;
+        case 'remove':
+          AssetEntry.deleteEntry(oldFileName);
+          break;
+        default:
+          break;
+      }
+
+      return;
+    }
+
+    // 2. Invalidate a JavaScript file loaded in an entry template.
+
+    if (actionType && isScript) {
+      switch (actionType) {
+        case 'add':
+        // through
+        case 'rename':
+          const missingFiles = Snapshot.getMissingFiles();
+          const { modules } = this.compilation;
+
+          missingFiles.forEach((files, issuer) => {
+            const missingFile = Array.from(files).find((file) => newFileName.endsWith(file));
+
+            // if an already used js file was unlinked in html and then renamed
+            if (!missingFile) return;
+
+            for (const module of modules) {
+              // the same template can be in many modules
+              if (module.resource === issuer || module.resource === newFileName) {
+                // reset errors for an unresolved js file, because the file can be renamed
+                module._errors = [];
+
+                // after rename a js file, try to rebuild the module of the entry file where the js file was linked
+                this.compilation.rebuildModule(module, (err) => {
+                  // after rebuild, remove the missing file to avoid double rebuilding by another exception
+                  Snapshot.deleteMissingFile(issuer, missingFile);
+                  AssetEntry.deleteMissingFile(missingFile);
+                });
+              }
+            }
+          });
+          break;
+        case 'remove':
+          // do nothing
+          break;
+        default:
+          break;
+      }
+
+      if (inCollection && (actionType === 'remove' || actionType === 'rename')) {
+        AssetEntry.deleteEntry(oldFileName);
+      }
+    }
   }
 
   /**
@@ -297,6 +418,17 @@ class AssetCompiler {
     const { issuer, issuerLayer } = contextInfo;
     const [file] = request.split('?', 1);
 
+    // prevent compilation of renamed or deleted entry point in serve/watch mode
+    if (Options.isDynamicEntry() && AssetEntry.isDeletedEntryFile(request)) {
+      for (const [entryName, entry] of this.compilation.entries) {
+        if (entry.dependencies[0]?.request === request) {
+          // delete the entry from compilation to prevent creation unused chunks
+          this.compilation.entries.delete(entryName);
+        }
+      }
+      return false;
+    }
+
     // skip data-URL
     if (request.startsWith('data:')) return;
 
@@ -336,7 +468,7 @@ class AssetCompiler {
       }
     }
 
-    resolveData._isScript = Collection.isScript(request);
+    resolveData._isScript = Collection.hasScript(request);
   }
 
   /**
@@ -347,7 +479,7 @@ class AssetCompiler {
    * @param {Object} resolveData
    */
   afterCreateModule(module, createData, resolveData) {
-    const { dependencyType } = resolveData;
+    const { dependencyType, request } = resolveData;
 
     module._isTemplate = false;
     module._isScript = resolveData._isScript === true;
@@ -509,8 +641,6 @@ class AssetCompiler {
         if (assetModule === false) return;
         if (assetModule == null) continue;
 
-        //console.log('\n++ assetModule: ', { filename: assetModule.filename }, assetModule);
-
         assetModules.add(assetModule);
       } else if (module.type === 'asset/resource') {
         // resource required in the template or in the CSS via url()
@@ -536,8 +666,6 @@ class AssetCompiler {
       fileManifest.filename = module.assetFile;
       fileManifest.render = () => new RawSource(content);
       result.push(fileManifest);
-
-      //console.log('\n++ fileManifest: ', { filename: fileManifest.filename }, fileManifest);
     }
 
     // 2. render styles imported in JavaScript
@@ -585,19 +713,17 @@ class AssetCompiler {
     };
 
     if (sourceFile === entry.sourceFile) {
-      let assetFile = AssetEntry.getFilename(entry);
+      //const assetFile = AssetEntry.getFilename(entry);
+      const assetFile = entry.filename;
       // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
         this.currentEntryPoint = entry;
         module._isTemplate = true;
         assetModule.type = Collection.type.template;
 
-        console.log('\n++ createAssetModule: ', { filename: entry.filename, assetFile }, entry);
-
         // save the template request with the query, because it can be resolved with different output paths:
         // - 'index':    './index.ext'         => dist/index.html
         // - 'index/de': './index.ext?lang=de' => dist/de/index.html
-        //Asset.add(resource, entry.filename);
         Asset.add(resource, assetFile);
       } else if (Options.isStyle(sourceFile)) {
         assetModule.type = Collection.type.style;
@@ -608,7 +734,6 @@ class AssetCompiler {
 
       assetModule.outputPath = entry.outputPath;
       assetModule.filename = entry.filenameTemplate;
-      //assetModule.assetFile = entry.filename;
       assetModule.assetFile = assetFile;
       assetModule.fileManifest.identifier = `${pluginName}.${chunk.id}`;
       assetModule.fileManifest.hash = chunk.contentHash['javascript'];
@@ -864,7 +989,6 @@ class AssetCompiler {
 
     // if (Options.isRealContentHash()) {
     //   // TODO: calc real content hash for js and css
-    //   console.log('*** afterProcessAssets: ', { assets: Object.keys(assets) });
     // }
 
     // remove all unused assets from compilation
@@ -944,6 +1068,34 @@ class AssetCompiler {
    * @param {Object} stats
    */
   done(stats) {
+    const { compilation } = this;
+    const hasError = compilation.errors.length > 0 || this.exceptions.size > 0;
+
+    compilation.name = compilationName(hasError);
+
+    if (PluginService.isWatchMode()) {
+      const watchDirs = Options.getRootSourcePaths();
+
+      // initialize snapshot only once, after compilation
+      if (!this.isSnapshotInitialized) {
+        Snapshot.init({
+          fs: this.fs,
+          dir: watchDirs,
+          includes: [Options.options.test, Options.js.test],
+        });
+
+        // create initial snapshot of watching files, before any changes
+        Snapshot.create();
+      }
+
+      // TODO: allow to watch for changes (add/remove/rename) of linked/missing scripts for static entry too.
+      if (Options.isDynamicEntry()) {
+        watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
+      }
+
+      this.isSnapshotInitialized = true;
+    }
+
     if (this.exceptions.size > 0) {
       const messages = Array.from(this.exceptions).join('\n\n');
       this.exceptions.clear();

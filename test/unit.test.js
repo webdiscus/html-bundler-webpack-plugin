@@ -1,8 +1,9 @@
 import fs from 'fs';
 import { parseQuery, getFileExtension } from '../src/Common/Helpers';
-import { loadModule, resolveFile } from '../src/Common/FileUtils';
+import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
+import Snapshot from '../src/Plugin/Snapshot';
 import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
@@ -377,44 +378,44 @@ describe('plugin options unit tests', () => {
   });
 
   test('isTrue: value false', () => {
-    Options.prodMode = true;
+    Options.productionMode = true;
     const received = Options.toBool(false, true, true);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: value true', () => {
-    Options.prodMode = true;
+    Options.productionMode = true;
     const received = Options.toBool(true, false, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = true, prod mode', () => {
-    Options.prodMode = true;
+    Options.productionMode = true;
     const received = Options.toBool('auto', true, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = false, prod mode', () => {
-    Options.prodMode = true;
+    Options.productionMode = true;
     const received = Options.toBool('auto', false, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = true, dev mode', () => {
-    Options.prodMode = false;
+    Options.productionMode = false;
     const received = Options.toBool('auto', true, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = false, dev mode', () => {
-    Options.prodMode = false;
+    Options.productionMode = false;
     const received = Options.toBool('auto', false, false);
     return expect(received).toEqual(true);
   });
 });
 
-describe('load module', () => {
-  test('FileUtils: load module', (done) => {
+describe('FileUtils', () => {
+  test('load module', (done) => {
     try {
       const ansis = loadModule('ansis');
       expect(ansis).toBeDefined();
@@ -423,14 +424,169 @@ describe('load module', () => {
       throw error;
     }
   });
-});
 
-describe('misc tests', () => {
-  test('FileUtils: resolveFile', () => {
+  test('isDir', () => {
+    const received = isDir({ fs, file: __dirname });
+    return expect(received).toBeTruthy();
+  });
+
+  test('resolveFile', () => {
     const received = resolveFile('not-exists-file', { fs, root: __dirname });
     return expect(received).toBeFalsy();
   });
 
+  test('filterParentPaths', () => {
+    const paths = [
+      '/root/src/views/',
+      '/root/src/views/partials/',
+      '/root/src/',
+      '/root/src/views/includes/',
+      '/root/templates/partials/',
+      '/root/templates/',
+      '/root/templates/includes/',
+      '/root/libs/a/src/',
+      '/root/libs/a/',
+      '/root/libs/a/app/',
+    ];
+
+    const expected = ['/root/src/', '/root/libs/a/', '/root/templates/'];
+    const received = filterParentPaths(paths);
+
+    return expect(received).toEqual(expected);
+  });
+});
+
+describe('Snapshot', () => {
+  test('create', () => {
+    Snapshot.prevFiles = ['/src/a.js'];
+    Snapshot.currFiles = ['/src/b.js', '/src/c.js'];
+
+    Snapshot.init({
+      fs,
+      dir: [],
+      includes: [],
+    });
+
+    Snapshot.create();
+
+    const received = Snapshot.prevFiles;
+    const expected = ['/src/b.js', '/src/c.js'];
+    return expect(received).toEqual(expected);
+  });
+
+  test('getOldFiles', () => {
+    Snapshot.prevFiles = ['/src/a.js', '/src/b.js'];
+    Snapshot.currFiles = ['/src/a.js'];
+
+    const received = Snapshot.getOldFiles();
+    const expected = ['/src/b.js'];
+    return expect(received).toEqual(expected);
+  });
+
+  test('getNewFiles', () => {
+    Snapshot.prevFiles = ['/src/a.js'];
+    Snapshot.currFiles = ['/src/a.js', '/src/b.js'];
+
+    const received = Snapshot.getNewFiles();
+    const expected = ['/src/b.js'];
+    return expect(received).toEqual(expected);
+  });
+
+  test('detectFileChange: add', () => {
+    Snapshot.prevFiles = ['/src/a.js'];
+    Snapshot.currFiles = ['/src/a.js', '/src/b.js'];
+
+    const received = Snapshot.detectFileChange();
+    const expected = { actionType: 'add', oldFileName: '', newFileName: '/src/b.js' };
+    return expect(received).toEqual(expected);
+  });
+
+  test('detectFileChange: remove', () => {
+    Snapshot.prevFiles = ['/src/a.js', '/src/b.js'];
+    Snapshot.currFiles = ['/src/a.js'];
+
+    const received = Snapshot.detectFileChange();
+    const expected = { actionType: 'remove', oldFileName: '/src/b.js', newFileName: '' };
+    return expect(received).toEqual(expected);
+  });
+
+  test('detectFileChange: rename', () => {
+    Snapshot.prevFiles = ['/src/a.js'];
+    Snapshot.currFiles = ['/src/b.js'];
+
+    const received = Snapshot.detectFileChange();
+    const expected = { actionType: 'rename', oldFileName: '/src/a.js', newFileName: '/src/b.js' };
+    return expect(received).toEqual(expected);
+  });
+
+  test('detectFileChange: modify', () => {
+    Snapshot.prevFiles = ['/src/a.js'];
+    Snapshot.currFiles = ['/src/a.js'];
+
+    const received = Snapshot.detectFileChange();
+    const expected = { actionType: 'modify', oldFileName: '', newFileName: '' };
+    return expect(received).toEqual(expected);
+  });
+
+  test('hasMissingFile: true', () => {
+    const issuer = '/src/about.html';
+    const file = '/src/a.js';
+
+    Snapshot.addMissingFile(issuer, file);
+
+    const received = Snapshot.hasMissingFile(issuer, '/path/to/src/a.js');
+    const expected = true;
+    return expect(received).toEqual(expected);
+  });
+
+  test('hasMissingFile: false', () => {
+    const issuer = '/src/about.html';
+    const file = '/src/a.js';
+
+    Snapshot.addMissingFile(issuer, file);
+
+    const received = Snapshot.hasMissingFile(issuer, '/src/b.js');
+    const expected = false;
+    return expect(received).toEqual(expected);
+  });
+
+  test('addMissingFile', () => {
+    const issuer = '/src/about.html';
+    const file = '/src/a.js';
+
+    Snapshot.addMissingFile(issuer, file);
+
+    const received = Snapshot.missingFiles;
+    const expected = new Map([[issuer, new Set([file])]]);
+    return expect(received).toEqual(expected);
+  });
+
+  test('getMissingFiles', () => {
+    const issuer = '/src/about.html';
+    const file = '/src/a.js';
+
+    Snapshot.addMissingFile(issuer, file);
+
+    const received = Snapshot.getMissingFiles();
+    const expected = new Map([[issuer, new Set([file])]]);
+    return expect(received).toEqual(expected);
+  });
+
+  test('deleteMissingFile', () => {
+    const issuer = '/src/about.html';
+    const file = '/src/a.js';
+
+    Snapshot.addMissingFile(issuer, '/src/a.js');
+    Snapshot.addMissingFile(issuer, '/src/b.js');
+    Snapshot.deleteMissingFile(issuer, '/src/b.js');
+
+    const received = Snapshot.getMissingFiles();
+    const expected = new Map([[issuer, new Set([file])]]);
+    return expect(received).toEqual(expected);
+  });
+});
+
+describe('misc tests', () => {
   test('ordered array', () => {
     const data = [];
     data[5] = 'c';

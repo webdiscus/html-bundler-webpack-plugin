@@ -22,7 +22,7 @@ module.exports = {
       // add/remove a template in the entry then the Webpack compilation will be auto restarted via 'nodemon'
       entry: {
         index: './src/views/pages/home.html',
-        //news: './src/views/pages/news.html',
+        news: './src/views/pages/news.html',
       },
     }),
   ],

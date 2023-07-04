@@ -24,6 +24,10 @@ class PluginService {
   // dependency injected instances
   static Dependency = null;
 
+  // entry files where js file was not resolved,
+  // used to try to rebuild the entry module when a missing js file is added or renamed to the required name
+  static missingFiles = new Set();
+
   /**
    * Set use state of the plugin.
    *
