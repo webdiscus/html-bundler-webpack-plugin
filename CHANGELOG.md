@@ -1,5 +1,8 @@
 # Change log
 
+## 2.1.1 (2023-07-14)
+- chore: fix image path in readme
+
 ## 2.1.0 (2023-07-14)
 - feat: add watching for create/rename/delete files in the entry path, without restarting Webpack
 - fix: watching for create/rename/delete JS files

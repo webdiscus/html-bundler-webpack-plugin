@@ -31,7 +31,7 @@ Note: `@images` is the Webpack alias to a source images directory.
 The plugin detects all source files referenced in HTML and extracts processed assets to the output directory.
 In the generated HTML and CSS, the plugin substitutes the source filenames with the output filenames.
 
-<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/devel/images/workflow.png">
+<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
 ### 💡 Highlights
 
