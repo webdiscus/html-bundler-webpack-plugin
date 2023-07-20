@@ -87,8 +87,14 @@ class Options {
 
     this.dynamicEntry = typeof entry === 'string';
     this.webpackOptions = options;
-    // the 'layer' entry property is only allowed when 'experiments.layers' is enabled
-    this.webpackOptions.experiments.layers = true;
+
+    // TODO: remove in next release
+    // Note: since v2.2.0 the layer is not used to provide the entry id in a module,
+    // instead of that is used the query parameter,
+    // because the same css file used in many templates is compiled for every template with different layer.
+    // The 'layer' entry property is only allowed when 'experiments.layers' is enabled.
+    //this.webpackOptions.experiments.layers = true;
+
     this.rootContext = options.context;
     this.productionMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
@@ -226,11 +232,13 @@ class Options {
     return this.options.extractComments === true;
   }
 
-  static isStyle(file) {
+  static isStyle(resource) {
+    const [file] = resource.split('?', 1);
     return this.options.css.enabled && this.options.css.test.test(file);
   }
 
-  static isScript(file) {
+  static isScript(resource) {
+    const [file] = resource.split('?', 1);
     return this.js.test.test(file);
   }
 

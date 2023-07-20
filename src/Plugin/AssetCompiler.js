@@ -415,8 +415,10 @@ class AssetCompiler {
   beforeResolve(resolveData) {
     const { context, request, contextInfo, dependencyType } = resolveData;
     // note: the contextInfo.issuer is the filename w/o a query
-    const { issuer, issuerLayer } = contextInfo;
+    const { issuer } = contextInfo;
     const [file] = request.split('?', 1);
+
+    AssetEntry.resolveEntryId(resolveData);
 
     // prevent compilation of renamed or deleted entry point in serve/watch mode
     if (Options.isDynamicEntry() && AssetEntry.isDeletedEntryFile(request)) {
@@ -444,10 +446,6 @@ class AssetCompiler {
       const isIssuerStyle = Options.isStyle(issuer);
       const parentModule = resolveData.dependencies[0]?._parentModule;
       const isParentLoaderImport = parentModule?._isLoaderImport;
-
-      // reserved for debug
-      // const entryId = parentModule?._entryId;
-      // const issuerResource = parentModule?.resource;
 
       // skip the module loaded via importModule
       if (isParentLoaderImport) {
@@ -480,21 +478,22 @@ class AssetCompiler {
    */
   afterCreateModule(module, createData, resolveData) {
     const { dependencyType, request } = resolveData;
+    const { rawRequest, resource } = createData;
 
-    module._isTemplate = false;
+    AssetEntry.connectEntryAndModule(module, resolveData);
+
+    module._isTemplate = AssetEntry.isEntryResource(resource);
     module._isScript = resolveData._isScript === true;
-    module._isParentLoaderImport = resolveData._isParentLoaderImport === true;
+    module._isStyle = Options.isStyle(resource);
     module._isLoaderImport = dependencyType === 'loaderImport';
     module._isDependencyUrl = dependencyType === 'url';
 
     // skip the module loaded via importModule
-    if (module._isLoaderImport || module._isParentLoaderImport) return;
+    if (module._isLoaderImport || resolveData._isParentLoaderImport === true) return;
 
     const { type, loaders } = module;
-    const { rawRequest, resource } = createData;
     const { issuer } = resolveData.contextInfo;
     const [file] = resource.split('?', 1);
-    const entryId = AssetEntry.getEntryId(module);
 
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
 
@@ -507,13 +506,14 @@ class AssetCompiler {
       module._isImportedStyle = true;
 
       // check entryId to avoid adding duplicate loaders after changes in serve mode
-      if (entryId !== false) {
-        // set the correct module type to enable the usage of built-in CSS support together with the bundler plugin
-        if (this.compilation.compiler.options?.experiments?.css && type === 'css') {
-          module.type = 'javascript/auto';
-        }
-        // add the CSS loader for only styles imported in JavaScript
+      // add the CSS loader for only styles imported in JavaScript
+      if (!request.includes(cssLoader)) {
         module.loaders.unshift(cssLoader);
+
+        // set the correct module type to enable the usage of built-in CSS support together with the bundler plugin
+        // if (this.compilation.compiler.options?.experiments?.css && type === 'css') {
+        //   module.type = 'javascript/auto';
+        // }
       }
 
       return;
@@ -536,6 +536,7 @@ class AssetCompiler {
 
   /**
    * Called before a module build has started.
+   * Use this method to modify the module.
    *
    * @param {Object} module
    */
@@ -567,14 +568,13 @@ class AssetCompiler {
 
     const entryId = AssetEntry.getEntryId(module);
 
-    if (entryId !== false) {
+    if (entryId) {
       const entry = AssetEntry.getById(entryId);
 
       if (entry.isTemplate && entry.resource === module.resource) {
         this.beforeProcessTemplate(entryId);
       }
 
-      module._entryId = entryId;
       loaderContext.entryId = entryId;
       loaderContext.entryName = entry.name;
       loaderContext.entryData = AssetEntry.getData(entryId);
@@ -718,7 +718,6 @@ class AssetCompiler {
       // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
         this.currentEntryPoint = entry;
-        module._isTemplate = true;
         assetModule.type = Collection.type.template;
 
         // save the template request with the query, because it can be resolved with different output paths:
@@ -805,7 +804,7 @@ class AssetCompiler {
       let cssHash = '';
 
       // 1. get styles from all nested files imported in the root JS file and sort them
-      const modules = Collection.findImportedModules(this.currentEntryPoint.id, issuer);
+      const modules = Collection.findImportedModules(this.currentEntryPoint.id, issuer, chunk);
 
       // 2. squash styles from all nested files into one file
       modules.forEach((module) => {
@@ -895,16 +894,17 @@ class AssetCompiler {
           })
       );
 
-      // 5.0 store CSS to inline it into HTML
+      // 5.1 store CSS to inline it into HTML
       if (inline) {
         Collection.setDataSource(this.currentEntryPoint, undefined, issuer, cssContent);
         continue;
       }
 
-      // 5.1 add CSS file into compilation
+      // 5.2 add CSS file into compilation
       const fileManifest = {
         render: () => cssContent,
         filename: assetFile,
+        // TODO: check the identifier whether a suffix is needed
         identifier: `${pluginName}.${chunk.id}.import-style`,
         //identifier: `${pluginName}.${chunk.id}`,
         hash,
@@ -949,7 +949,7 @@ class AssetCompiler {
   }
 
   /**
-   * Called after the processAssets hook had finished without error.
+   * Called after the processAssets hook had finished without an error.
    *
    * @note:
    * This stage has the final hashed output js filename.
@@ -1088,7 +1088,7 @@ class AssetCompiler {
         Snapshot.create();
       }
 
-      // TODO: allow to watch for changes (add/remove/rename) of linked/missing scripts for static entry too.
+      // allow watching for changes (add/remove/rename) of linked/missing scripts for static entry too.
       if (Options.isDynamicEntry()) {
         watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
       }

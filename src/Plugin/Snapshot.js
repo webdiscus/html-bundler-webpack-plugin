@@ -40,8 +40,6 @@ class Snapshot {
     const { fs, dirs, includes, excludes } = this;
     const hasPrevFiles = this.prevFiles.length > 0;
 
-    //console.log('>>> create: ', { hasPrevFiles, length: this.prevFiles.length, prevFiles: this.prevFiles });
-
     if (hasPrevFiles) {
       this.prevFiles = [...this.currFiles];
     }

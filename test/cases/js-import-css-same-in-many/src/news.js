@@ -1,5 +1,6 @@
+import './common.css';
 import './news.css';
 
-import './app';
+import './home';
 
 console.log('>> news');

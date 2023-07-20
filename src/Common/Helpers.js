@@ -91,6 +91,55 @@ const parseQuery = (request) => {
 };
 
 /**
+ * Get the query parameter the request.
+ *
+ * @param {string} request
+ * @param {string} name
+ * @return {string}
+ */
+const getQueryParam = (request, name) => {
+  const [, query] = request.split('?', 2);
+  const urlParams = new URLSearchParams(query);
+
+  return urlParams.get(name);
+};
+
+/**
+ * Add to the request a query parameter.
+ *
+ * @param {string} request
+ * @param {string} name
+ * @param {*} value
+ * @return {string}
+ */
+const addQueryParam = (request, name, value) => {
+  const [file, query] = request.split('?', 2);
+  const urlParams = new URLSearchParams(query);
+
+  urlParams.append(name, value);
+
+  return file + '?' + urlParams.toString();
+};
+
+/**
+ * Delete form the request a query parameter.
+ *
+ * @param {string} request
+ * @param {string} name
+ * @return {string}
+ */
+const deleteQueryParam = (request, name) => {
+  const [file, query] = request.split('?', 2);
+  const urlParams = new URLSearchParams(query);
+
+  urlParams.delete(name);
+
+  const newQuery = urlParams.toString();
+
+  return newQuery ? file + '?' + newQuery : file;
+};
+
+/**
  * Returns an indent detected in the content.
  *
  * @param {string} content The template content.
@@ -112,6 +161,9 @@ module.exports = {
   pathToPosix,
   getFileExtension,
   parseQuery,
+  getQueryParam,
+  addQueryParam,
+  deleteQueryParam,
   detectIndent,
   outToConsole,
 };

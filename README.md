@@ -148,6 +148,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
+   - [preprocessor](#option-preprocessor) and [preprocessorOptions](#option-preprocessor) (templating)
    - [postprocess](#option-postprocess)
    - [preload](#option-preload) (inject preload link tags)
    - [minify](#option-minify) (minification of generated HTML)
@@ -757,6 +758,41 @@ If you want to have a different output filename, you can use the `filename` opti
 > 
 > Don't use `style-loader` because the bundler plugin can auto inline CSS.
 
+#### [↑ back to contents](#contents)
+<a id="option-preprocessor" name="option-preprocessor" href="#option-preprocessor"></a>
+### `preprocessor` and `preprocessorOptions`
+
+Since the `v2.2.0`  the location of the `preprocessor` and `preprocessorOptions` options is changed.
+Now it is possible to define these options directly in the plugin options to simplify the config.
+
+The NEW syntax:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    // new location of options
+    preprocessor: 'ejs',
+    preprocessorOptions: {...},
+  }),
+  ```
+
+The old syntax is still valid:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    loaderOptions: {
+      // old location of options under loaderOptions
+      preprocessor: 'ejs',
+      preprocessorOptions: {...},
+    },
+  }),
+  ```
+
+Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader option.
+
 
 #### [↑ back to contents](#contents)
 <a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
@@ -788,7 +824,7 @@ Called after a source of an asset module is rendered, but not yet processed by o
 The `postprocess` have the following arguments:
 
 - `content: string` - a content of processed file
-- `info: ResourceInfo` - an info about current file
+- `info: ResourceInfo` - info about current file
 - `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
 
 The `ResourceInfo` have the following properties:
@@ -1534,6 +1570,25 @@ See the options for the pre-configured preprocessors:
 [handlebars](#loader-option-preprocessorOptions-handlebars),
 [nunjucks](#loader-option-preprocessorOptions-nunjucks).
 
+> **Note**
+>
+> Since the `v2.2.0` is available new syntax, the `preprocessor` and the `preprocessorOptions` can be defined directly in the plugin option:
+>
+> ```js
+> const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+> module.exports = {
+>   plugins: [
+>     new HtmlBundlerPlugin({
+>       entry: {
+>         index: 'src/views/pages/home/index.ejs',
+>       },
+>       preprocessor: 'ejs',
+>       preprocessorOptions: {...}
+>     }),
+>   ],
+> };
+> ```
+
 <a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom" href="#loader-option-preprocessor-custom"></a>
 #### Custom
 
@@ -1605,6 +1660,25 @@ Type: `Object` Default: `{}`
 
 With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars` or `nunjucks`.
 Each preprocessor has its own options, depend on using template engine.
+
+> **Note**
+>
+> Since the `v2.2.0` is available new syntax, the `preprocessor` and the `preprocessorOptions` can be defined directly in the plugin option:
+>
+> ```js
+> const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+> module.exports = {
+>   plugins: [
+>     new HtmlBundlerPlugin({
+>       entry: {
+>         index: 'src/views/pages/home/index.ejs',
+>       },
+>       preprocessor: 'ejs',
+>       preprocessorOptions: {...}
+>     }),
+>   ],
+> };
+> ```
 
 <a id="loader-option-preprocessorOptions-eta" name="loader-option-preprocessorOptions-eta" href="#loader-option-preprocessorOptions-eta"></a>
 #### Options for `preprocessor: 'eta'` (default)

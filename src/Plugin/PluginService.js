@@ -38,10 +38,22 @@ class PluginService {
    * @param {Options} options The plugin options instance.
    */
   static init(options) {
+    const pluginOptions = options.get();
+    const loaderOptions = pluginOptions.loaderOptions || {};
+
+    // add the preprocessor option into the loader option
+    if (pluginOptions.preprocessor) {
+      loaderOptions.preprocessor = pluginOptions.preprocessor;
+
+      if (pluginOptions.preprocessorOptions) {
+        loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
+      }
+    }
+
     this.#used = true;
     this.#watchMode = false;
     this.#options = options;
-    this.#loaderOptions = options.get().loaderOptions || {};
+    this.#loaderOptions = loaderOptions;
     this.#loaderCache.clear();
   }
 

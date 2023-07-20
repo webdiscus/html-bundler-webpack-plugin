@@ -29,6 +29,8 @@ const pitchLoader = function (request) {
   const options = loaderContext.getOptions() || {};
   const callback = loaderContext.async();
 
+  request += (resource.includes('?') ? '&' : '?') + 'HTMLBundlerCSSLoader';
+
   loaderContext.importModule(
     `${resourcePath}.webpack[javascript/auto]!=!!!${request}`,
     {
@@ -53,7 +55,7 @@ const pitchLoader = function (request) {
       module._cssSource = esModule ? exports.default : exports;
       Collection.setImportStyleEsModule(esModule);
 
-      callback(null, '');
+      callback(null, '// extracted by HTMLBundler CSSLoader\nexport {};');
     }
   );
 };

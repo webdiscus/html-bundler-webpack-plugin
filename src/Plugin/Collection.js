@@ -163,58 +163,125 @@ class Collection {
   }
 
   /**
+   * @param {string} resource
+   */
+  static getGraphModule(resource) {
+    const { moduleGraph } = this.compilation;
+    const moduleMap = moduleGraph._moduleMap;
+
+    for (let [module, graphModule] of moduleMap.entries()) {
+      if (module.resource === resource) {
+        return module;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * TODO: Reserved for debug.
+   * @param {string} resource
+   */
+  // static getCompilationModule(resource) {
+  //   const { modules } = this.compilation;
+  //   for (const module of modules) {
+  //     if (module.resource === resource) {
+  //       return module;
+  //     }
+  //   }
+  //   return null;
+  // }
+
+  /**
    * Find styles from all nested JS files imported in the root JS file and sort them.
    *
    * @param {number} entryId The entry id of the template where is the root issuer.
    *  Note: the same issuer can be used in many entries.
    * @param {string} rootIssuer The root JS file loaded in template.
+   * @param {Object} chunk
    * @return {Object[]}
    */
-  static findImportedModules(entryId, rootIssuer) {
-    const { moduleGraph } = this.compilation;
-    const moduleMap = moduleGraph._moduleMap;
-    const moduleMapKeys = Array.from(moduleMap.keys());
-    const moduleMapValues = Array.from(moduleMap.values());
-    const modules = [];
+  static findImportedModules(entryId, rootIssuer, chunk) {
+    const issuerModule = this.getGraphModule(rootIssuer);
+    const modules = this.findDependenciesOfModule(issuerModule);
+    const uniqueModules = [];
 
-    for (let [module, graphMod] of moduleMap.entries()) {
-      if (!module || !module._isImportedStyle || module._entryId !== entryId) continue;
+    // reserved for debug;
+    // the modules are already sorted
+    //modules.sort((a, b) => (a.order < b.order ? -1 : 1));
 
-      if (module.sortOrder == null) module.sortOrder = '';
-
-      if (!module._rootIssuer) {
-        let current = graphMod;
-        let parent;
-
-        while ((parent = moduleMap.get(current.issuer))) {
-          const moduleMapIndex = moduleMapValues.indexOf(current);
-          const { rawRequest, resource } = moduleMapKeys[moduleMapIndex];
-
-          // reserved: alternative way to get the dependency via the module resource
-          //const dep = current.issuer.dependencies.find((item) => moduleGraph.getModule(item).resource === resource);
-          const dep = current.issuer.dependencies.find(({ userRequest }) => userRequest === rawRequest);
-          const index = moduleGraph.getParentBlockIndex(dep);
-
-          if (module.sortOrder !== '') module.sortOrder = '.' + module.sortOrder;
-          module.sortOrder = index + module.sortOrder;
-
-          // if parent is an entry template, then stop
-          if (!parent.issuer || parent.issuer._isTemplate) break;
-
-          current = parent;
-        }
-
-        module._rootIssuer = current.issuer.resource;
-      }
-
-      if (module._rootIssuer === rootIssuer) {
-        modules.push(module);
+    // TODO: research how to unique modules used in the current issuer and in deep nested issuers;
+    //  Currently the prio is for an first exemplar in nested issuers.
+    //  See the test js-import-css-order-dependencies.
+    //  For example:
+    //  0:   a.css
+    //  1.0: common.css // currently, is kept this file (imported in the nested js component)
+    //  3:   b.css
+    //  2:   common.css // perhaps, should be kept this?
+    for (const { module } of modules) {
+      if (!uniqueModules.includes(module)) {
+        uniqueModules.push(module);
       }
     }
 
-    modules.sort((a, b) => (a.sortOrder < b.sortOrder ? -1 : 1));
+    // reserved for debug
+    // console.log(
+    //   '\n### modules:\n',
+    //   modules.map(({ order, module }) => {
+    //     return {
+    //       order,
+    //       resource: path.basename(module.resource),
+    //     };
+    //   })
+    // );
 
-    return modules;
+    return uniqueModules;
+  }
+
+  /**
+   * @param {Module} module The Webpack compilation module.
+   * @returns {Array<{order: string, module: Module}>}
+   */
+  static findDependenciesOfModule(module) {
+    const { moduleGraph } = this.compilation;
+    let order = '';
+    let orderStack = [];
+
+    const walk = (module) => {
+      const deps = module.dependencies;
+      const result = [];
+
+      for (const dependency of deps) {
+        if (!dependency.userRequest) continue;
+
+        const parentIndex = moduleGraph.getParentBlockIndex(dependency);
+        let depModule = moduleGraph.getModule(dependency);
+
+        // use the original NormalModule instead of ConcatenatedModule
+        if (!depModule.resource && depModule.rootModule) {
+          depModule = depModule.rootModule;
+        }
+
+        if (depModule.dependencies.length > 0) {
+          // save current order before recursive walking
+          orderStack.push(order);
+          order += (order ? '.' : '') + parentIndex;
+          result.push(...walk(depModule));
+        } else if (depModule._isImportedStyle) {
+          result.push({
+            order: order + (order ? '.' : '') + parentIndex,
+            module: depModule,
+          });
+        }
+      }
+
+      // recovery order
+      order = orderStack.pop();
+
+      return result;
+    };
+
+    return walk(module);
   }
 
   /**
@@ -901,6 +968,8 @@ class Collection {
    * Called right before an entry template will be processed.
    *
    * This is used to reset cached data before the processing of the entry template.
+   *
+   * @param {Number} entryId
    */
   static beforeProcessTemplate(entryId) {
     // clear cache only if a template is changed, but not a style or others assets,

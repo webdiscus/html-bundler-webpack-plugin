@@ -1,5 +1,35 @@
 # Change log
 
+## 2.2.0 (2023-07-21)
+- feat: change the location of the `preprocessor` and `preprocessorOptions` options in the config.\
+  The NEW syntax:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    // new location of options
+    preprocessor: 'ejs',
+    preprocessorOptions: {...},
+  }),
+  ```
+  The old syntax is still valid:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    loaderOptions: {
+      // old location of options under loaderOptions
+      preprocessor: 'ejs',
+      preprocessorOptions: {...},
+    },
+  }),
+  ```
+- feat: improve performance when used the same style file in many templates
+- fix: correct order of styles when the same style is imported in many nested js files
+- chore: update npm packages
+
 ## 2.1.1 (2023-07-14)
 - chore: fix image path in readme
 

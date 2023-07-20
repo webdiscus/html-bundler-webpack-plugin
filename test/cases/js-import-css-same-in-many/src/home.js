@@ -1,6 +1,6 @@
 import './home.css';
+import './common.css';
 
 import './app';
-//import './main-a';
 
 console.log('>> home');

@@ -48,16 +48,4 @@ module.exports = {
       },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.(png|svg|jpe?g|webp)$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
-        },
-      },
-    ],
-  },
 };

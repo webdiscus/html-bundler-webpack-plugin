@@ -92,6 +92,9 @@ describe('plugin options', () => {
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
+  //
+  test('preprocessor', () => compareFiles('option-preprocessor'));
+
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
@@ -170,6 +173,7 @@ describe('import styles in JavaScript', () => {
   test('js-import-css', () => compareFiles('js-import-css'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));
+  test('import css deep in js', () => compareFiles('js-import-css-deep'));
   test('simple import with images', () => compareFiles('js-import-css-images'));
   test('import scss from node module', () => compareFiles('js-import-css-from-module'));
 
@@ -194,8 +198,10 @@ describe('import styles in JavaScript', () => {
   test('multiple-pages-same-asset', () => compareFiles('js-import-css-multiple-pages-same-asset'));
   test('multiple-pages-same-asset-inline', () => compareFiles('js-import-css-multiple-pages-same-asset-inline'));
 
+  // the same styles can be used in many issuers, and these issuers can be imported in many other js/html files
   test('import same css in many js', () => compareFiles('js-import-css-same-in-many'));
-  test('import css deep in js', () => compareFiles('js-import-css-deep'));
+  test('import same css in many js 2', () => compareFiles('js-import-css-same-in-many2'));
+  test('import same css in many js 3', () => compareFiles('js-import-css-same-in-many3'));
 
   // split chunks
   test('js-import-css-split-chunk-js', () => compareFiles('js-import-css-split-chunk-js'));

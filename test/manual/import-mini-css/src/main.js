@@ -7,6 +7,4 @@ import './nested1b.css';
 
 import './main2'; // test the nested importing of a style
 
-const sum = (a, b) => a + b;
-
-console.log('>> main', sum(3, 5));
+console.log('>> main');

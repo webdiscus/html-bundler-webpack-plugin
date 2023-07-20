@@ -2,10 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const Options = require('./Options');
 const PluginService = require('./PluginService');
-const { isFunction } = require('../Common/Helpers');
+const { isFunction, addQueryParam, deleteQueryParam, getQueryParam } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const { optionEntryPathException } = require('./Messages/Exception');
 const AssetTrash = require('./AssetTrash');
+
+const loader = require.resolve('../Loader');
 
 /** @typedef {import("webpack").Compilation} Compilation */
 /** @typedef {import("webpack").Module} Module */
@@ -19,7 +21,7 @@ const AssetTrash = require('./AssetTrash');
  * @property {number=} id The unique Id of the entry template.
  *   The entries added to compilation have not Id.
  *   Note: the same source file of a template can be defined under many entry names.
- *   In this case the entry.resource is not unique und must be used entry.id, implemented via entry/module layer.
+ *   In this case the entry.resource is not unique und must be used entry.id.
  * @property {string} name The key of webpack entry.
  * @property {string|(function(PathData, AssetInfo): string)} filenameTemplate The filename template or function.
  * @property {string} filename The asset filename.
@@ -45,7 +47,7 @@ const AssetTrash = require('./AssetTrash');
  */
 
 class AssetEntry {
-  static entryIdKey = '__entryId';
+  static entryIdKey = '_entryId';
 
   /** @type {Map<string, AssetEntryOptions>} */
   static entries = new Map();
@@ -255,19 +257,57 @@ class AssetEntry {
   }
 
   /**
-   * @param {{layer}} module The object containing the layer property, e.g., Webpack module, or entry options.
-   * @return {number|boolean} If module is the entry then return an id, otherwise return false.
+   * Resolve the entry id in the request and save it in the Webpack data object.
+   *
+   * @param {Object} resolveData The data object.
+   * @return {string|null}
    */
-  static getEntryId(module) {
-    const { layer } = module;
+  static resolveEntryId(resolveData) {
+    let entryId = getQueryParam(resolveData.request, this.entryIdKey);
 
-    if (layer && typeof layer === 'string' && layer.startsWith(this.entryIdKey)) {
-      const [, entryId] = layer.split('=', 2);
+    if (entryId) {
+      entryId = Number(entryId);
+      resolveData[this.entryIdKey] = entryId;
 
-      return Number(entryId);
+      // delete temporary entry id param form request query of the entry
+      resolveData.request = deleteQueryParam(resolveData.request, this.entryIdKey);
     }
 
-    return false;
+    return entryId || null;
+  }
+
+  /**
+   * @param {Module} module The Webpack module object.
+   * @param {Object} resolveData The data object.
+   */
+  static connectEntryAndModule(module, resolveData) {
+    const entryId = resolveData[this.entryIdKey];
+
+    module[this.entryIdKey] = entryId;
+
+    if (entryId) {
+      // when used the same template file for many pages,
+      // add the unique entry id to the query of the loader url to be sure that module request is unique;
+      // when many Webpack entries have the same module request, then Webpack will not
+      module.request = module.request.replace(loader, loader + `?entryId=${entryId}`);
+    }
+  }
+
+  /**
+   * @param {Module} module The Webpack module object.
+   * @return {number|null} Return an entry id if the module is an entry, otherwise return null.
+   */
+  static getEntryId(module) {
+    return module[this.entryIdKey] || null;
+  }
+
+  /**
+   * @param {Number} id
+   * @param {Object} entry
+   */
+  static setEntryId(id, entry) {
+    // add the entry id as the query parameter
+    entry.import[0] = addQueryParam(entry.import[0], this.entryIdKey, id);
   }
 
   /**
@@ -316,7 +356,7 @@ class AssetEntry {
       const entry = entries[name];
       const importFile = entry.import[0];
       let resource = importFile;
-      let [sourceFile] = importFile.split('?', 1);
+      let [sourceFile] = resource.split('?', 1);
       let options = Options.getEntryOptions(sourceFile);
 
       if (options == null) continue;
@@ -334,9 +374,11 @@ class AssetEntry {
       //   page2: { import: 'src/template.html', data: { title: 'B'} },
       // }
 
-      // Note: the layer id for all entry dependencies must be the same
+      // Note: the id for all entry dependencies must be the same
       let id = this.idIndex++;
-      entry.layer = `${this.entryIdKey}=${id}`;
+
+      this.setEntryId(id, entry);
+      //entry.layer = '1';
 
       if (!entry.library) entry.library = this.entryLibrary;
       if (entry.filename) filenameTemplate = entry.filename;
@@ -345,7 +387,7 @@ class AssetEntry {
       if (!path.isAbsolute(sourceFile)) {
         resource = path.join(sourcePath, resource);
         sourceFile = path.join(sourcePath, sourceFile);
-        entry.import[0] = path.join(sourcePath, importFile);
+        entry.import[0] = path.join(sourcePath, entry.import[0]);
       }
 
       /** @type {AssetEntryOptions} */
@@ -398,7 +440,6 @@ class AssetEntry {
     const entrypoint = { import: [file], filename: '[name].html' };
 
     entries[name] = entrypoint;
-    // note: the `entrypoint.layer` is set in the addEntries() method
     this.addEntries(entries);
     Options.webpackOptions.entry = { ...Options.webpackOptions.entry, ...entries };
 
@@ -408,7 +449,7 @@ class AssetEntry {
     const entryOptions = {
       name,
       runtime: undefined,
-      layer: entrypoint.layer,
+      //layer: '1',
       dependOn: undefined,
       baseUri: undefined,
       publicPath: undefined,
@@ -473,9 +514,7 @@ class AssetEntry {
     const entryOptions = {
       name,
       runtime: undefined,
-      // Note: the layer of JS added to the compilation must be the same as the entry ot its issuer.
-      // TODO: research the case - the same js file can have many issuers with different layer
-      layer: issuerEntry.originalEntry.layer,
+      //layer: '1',
       dependOn: undefined,
       baseUri: undefined,
       publicPath: undefined,
@@ -506,6 +545,8 @@ class AssetEntry {
     const compilation = this.compilation;
     const compiler = compilation.compiler;
     const { EntryPlugin } = compiler.webpack;
+
+    // TODO: add entry id as query in importFile
     const entryDependency = EntryPlugin.createDependency(importFile, { name });
 
     compilation.addEntry(context, entryDependency, entryOptions, (err, module) => {
