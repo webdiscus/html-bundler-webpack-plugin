@@ -48,7 +48,9 @@ module.exports = {
             use: {
               loader: 'responsive-loader',
               options: {
-                name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
+                // note: on GitHub is generated wrong hash for images
+                // name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
+                name: 'assets/img/[name]-[width]w.[ext]',
               },
             },
           },
@@ -59,7 +61,7 @@ module.exports = {
               loader: 'responsive-loader',
               options: {
                 // note: on GitHub is generated wrong hash for images
-                //name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
+                // name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
                 name: 'assets/img/[name]-[width]w.[ext]',
               },
             },

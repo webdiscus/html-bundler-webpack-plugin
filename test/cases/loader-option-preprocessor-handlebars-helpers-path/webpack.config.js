@@ -23,8 +23,11 @@ module.exports = {
       loaderOptions: {
         preprocessor: 'handlebars',
         preprocessorOptions: {
-          // helper paths
-          helpers: ['src/views/helpers/', 'src/views/helpers2/'],
+          helpers: [
+            // helper paths
+            'src/views/helpers/',
+            'src/views/helpers2/',
+          ],
         },
       },
     }),

@@ -6,6 +6,7 @@ const { isWin, pathToPosix } = require('../../../Common/Helpers');
 const preprocessor = ({ fs, rootContext, options }) => {
   const Handlebars = loadModule('handlebars');
   const extensions = ['.html', '.hbs', '.handlebars'];
+  const includeFiles = [/\.(html|hbs|handlebars)$/i];
   const root = options?.root || rootContext;
   let views = options?.views || rootContext;
   let helpers = {};
@@ -14,16 +15,20 @@ const preprocessor = ({ fs, rootContext, options }) => {
   /**
    * Read partial files in the directories.
    *
-   * @param {Array<string>} dirs
+   * @param {Array<string>} dirs The directories in which to read the list of files.
+   * @param {Array<RegExp>|undefined} includes The filter to include only files matching RegExps.
+   *  If the value is undefined, ignore the filter.
    * @return {{}}
    */
-  const getEntries = (dirs) => {
+  const getEntries = (dirs, includes = undefined) => {
     const result = {};
+
     for (let dir of dirs) {
       if (!path.isAbsolute(dir)) {
         dir = path.join(rootContext, dir);
       }
-      const files = readDirRecursiveSync(dir, { fs });
+      const files = readDirRecursiveSync(dir, { fs, includes });
+
       files.forEach((file) => {
         const relativeFile = path.relative(dir, file);
         let id = relativeFile.slice(0, relativeFile.lastIndexOf('.'));
@@ -44,7 +49,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
   const getPartials = (partialsOption) => {
     return Array.isArray(partialsOption)
       ? // read partial files
-        getEntries(partialsOption)
+        getEntries(partialsOption, includeFiles)
       : // object of partial name => absolute path to partial file
         partialsOption;
   };
@@ -59,7 +64,6 @@ const preprocessor = ({ fs, rootContext, options }) => {
     const oldNames = Object.keys(partials);
     const newNames = Object.keys(actualPartials);
     const outdatedPartialsNames = oldNames.filter((name) => !newNames.includes(name));
-    // const newPartialsNames = newNames.filter((name) => !oldNames.includes(name));
 
     // remove deleted/renamed partials
     outdatedPartialsNames.forEach((name) => {

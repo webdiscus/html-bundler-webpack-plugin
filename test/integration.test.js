@@ -239,6 +239,7 @@ describe('special cases', () => {
   test('resolve manifest.json', () => compareFiles('resolve-manifest.json'));
   test('Template with CRLF line separator', () => compareFiles('template-clrf'));
   test('encode / decode reserved HTML chars', () => compareFiles('decode-chars'));
+  test('preprocessor hbs load partials', () => compareFiles('preprocessor-hbs-partials'));
   test('preprocessor for output php template', () => compareFiles('preprocessor-php'));
   test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
   test('preload, no head', () => compareFiles('preload-no-head'));

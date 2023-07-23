@@ -151,8 +151,7 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [preprocessor](#option-preprocessor) and [preprocessorOptions](#option-preprocessor) (templating)
    - [postprocess](#option-postprocess)
    - [preload](#option-preload) (inject preload link tags)
-   - [minify](#option-minify) (minification of generated HTML)
-   - [minifyOptions](#option-minifyOptions) (minification options for auto minify)
+   - [minify](#option-minify) and [minifyOptions](#option-minifyOptions) (minification of generated HTML)
    - [extractComments](#option-extractComments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watchFiles)
@@ -160,13 +159,12 @@ See the [complete Webpack configuration](#simple-webpack-config).
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [root](#loader-option-root) (allow to resolve root path in attributes)
-   - [preprocessor](#loader-option-preprocessor) (templating)
+   - [preprocessor](#loader-option-preprocessor) and [preprocessorOptions](#loader-option-preprocessorOptions) (templating)
      - [eta](#loader-option-preprocessorOptions-eta)
      - [ejs](#loader-option-preprocessorOptions-ejs)
      - [handlebars](#loader-option-preprocessorOptions-handlebars)
      - [nunjucks](#loader-option-preprocessorOptions-nunjucks)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
-   - [preprocessorOptions](#loader-option-preprocessorOptions) (templating options)
    - [data](#loader-option-data) (pass data into templates)
 1. [Using template engines](#recipe-template-engine)
    - [Eta](#using-template-eta)
@@ -762,29 +760,31 @@ If you want to have a different output filename, you can use the `filename` opti
 <a id="option-preprocessor" name="option-preprocessor" href="#option-preprocessor"></a>
 ### `preprocessor` and `preprocessorOptions`
 
-Since the `v2.2.0`  the location of the `preprocessor` and `preprocessorOptions` options is changed.
+
+Since the `v2.2.0`, the `preprocessor` and `preprocessorOptions` plugin options are references to [loaderOptions.preprocessor](#loader-option-preprocessor) and [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions).
+
 Now it is possible to define these options directly in the plugin options to simplify the config.
 
-The NEW syntax:
+The NEW syntax "sugar":
   ```js
   new HtmlBundlerPlugin({
     entry: {
       index: './src/views/home.ejs',
     },
-    // new location of options
+    // new references to options in the loaderOptions
     preprocessor: 'ejs',
     preprocessorOptions: {...},
   }),
   ```
 
-The old syntax is still valid:
+The old syntax is still valid and will never be deprecated:
   ```js
   new HtmlBundlerPlugin({
     entry: {
       index: './src/views/home.ejs',
     },
     loaderOptions: {
-      // old location of options under loaderOptions
+      // original options under loaderOptions
       preprocessor: 'ejs',
       preprocessorOptions: {...},
     },

@@ -1,5 +1,8 @@
 # Change log
 
+## 2.2.1 (2023-07-23)
+- fix: load the handlebars's partials with allowed extensions only, #24
+
 ## 2.2.0 (2023-07-21)
 - feat: change the location of the `preprocessor` and `preprocessorOptions` options in the config.\
   The NEW syntax:
