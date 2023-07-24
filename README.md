@@ -137,33 +137,33 @@ See the [complete Webpack configuration](#simple-webpack-config).
 1. [Webpack options](#webpack-options)
    - [output](#webpack-option-output)
      - [path](#webpack-option-output-path)
-     - [publicPath](#webpack-option-output-publicPath)
+     - [publicPath](#webpack-option-output-publicpath)
      - [filename](#webpack-option-output-filename)
    - [entry](#webpack-option-entry)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (RegEx to handle matching templates)
    - [entry](#option-entry) (entry as a list of template files)
    - [entry dynamic](#option-entry-path) (entry as a path to template files)
-   - [outputPath](#option-outputPath) (output path of HTML file)
+   - [outputPath](#option-outputpath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
    - [preprocessor](#option-preprocessor) and [preprocessorOptions](#option-preprocessor) (templating)
    - [postprocess](#option-postprocess)
    - [preload](#option-preload) (inject preload link tags)
-   - [minify](#option-minify) and [minifyOptions](#option-minifyOptions) (minification of generated HTML)
-   - [extractComments](#option-extractComments)
+   - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
+   - [extractComments](#option-extract-comments)
    - [verbose](#option-verbose)
-   - [watchFiles](#option-watchFiles)
-   - [loaderOptions](#option-loaderOptions) (simplify access to loader options)
+   - [watchFiles](#option-watch-files)
+   - [loaderOptions](#option-loader-options) (simplify access to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [root](#loader-option-root) (allow to resolve root path in attributes)
    - [preprocessor](#loader-option-preprocessor) and [preprocessorOptions](#loader-option-preprocessorOptions) (templating)
-     - [eta](#loader-option-preprocessorOptions-eta)
-     - [ejs](#loader-option-preprocessorOptions-ejs)
-     - [handlebars](#loader-option-preprocessorOptions-handlebars)
-     - [nunjucks](#loader-option-preprocessorOptions-nunjucks)
+     - [eta](#loader-option-preprocessor-options-eta)
+     - [ejs](#loader-option-preprocessor-options-ejs)
+     - [handlebars](#loader-option-preprocessor-options-handlebars)
+     - [nunjucks](#loader-option-preprocessor-options-nunjucks)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
    - [data](#loader-option-data) (pass data into templates)
 1. [Using template engines](#recipe-template-engine)
@@ -226,20 +226,21 @@ See the [complete Webpack configuration](#simple-webpack-config).
 
 Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
-| Package                                                                                                  | Features                                                            | 
-|----------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                   | creates HTML and inject `script` tag for compiled JS file into HTML |
-| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                    | injects `link` tag for processed CSS file into HTML                 |
-| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)                | removes generated empty JS files                                    |
-| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)            | inject preload link tags                                            |
-| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                                | inject preload link tags                                            |
-| [html-loader](https://github.com/webpack-contrib/html-loader)                                            | exports HTML                                                        |
-| [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin)  | inline JS and CSS into HTML from sources                            |
-| [style-loader](https://github.com/webpack-contrib/style-loader)                                          | injects an inline CSS into HTML                                     |
-| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                              | injects an inline SVG icon into HTML                                |
-| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                    | resolves a relative URL in CSS                                      |
-| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                           | encodes a SVG data-URL as utf8                                      |
-| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                         | renders handlebars templates                                        |
+| Package                                                                                                 | Features                                                            | 
+|---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
+| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
+| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
+| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)           | inject preload link tags                                            |
+| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                               | inject preload link tags                                            |
+| [html-loader](https://github.com/webpack-contrib/html-loader)                                           | exports HTML                                                        |
+| [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin) | inline JS and CSS into HTML                                         |
+| [html-inline-css-webpack-plugin](https://github.com/runjuu/html-inline-css-webpack-plugin)              | inline CSS into HTML                                                |
+| [style-loader](https://github.com/webpack-contrib/style-loader)                                         | injects an inline CSS into HTML                                     |
+| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                             | injects an inline SVG icon into HTML                                |
+| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
+| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
+| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
 
 
 <a id="install" name="install" href="#install"></a>
@@ -348,7 +349,7 @@ Type: `string` Default: `path.join(process.cwd(), 'dist')`
 The root output directory for all processed files, as an absolute path.\
 You can omit this option, then all generated files will be saved under `dist/` in your project directory.
 
-<a id="webpack-option-output-publicPath" name="webpack-options-output-publicPath" href="#webpack-options-output-publicPath"></a>
+<a id="webpack-option-output-publicpath" name="webpack-options-output-publicpath" href="#webpack-options-output-publicpath"></a>
 ### `output.publicPath`
 Type: `string|function` Default: `auto`
 
@@ -444,7 +445,7 @@ The plugin automatically extracts JS and CSS whose source files are specified in
 
 #### Simple syntax
 
-The key of an entry object is the `output file` w/o extension, relative by the [`outputPath`](#option-outputPath) option.\
+The key of an entry object is the `output file` w/o extension, relative by the [`outputPath`](#option-outputpath) option.\
 The value is the `source file`, absolute or relative by the Webpack config file.
 
 ```js
@@ -577,7 +578,7 @@ new HtmlBundlerPlugin({
 > In serve/watch mode you can add/delete/rename a template file in the entry path without restarting Webpack.
 
 #### [↑ back to contents](#contents)
-<a id="option-outputPath" name="option-outputPath" href="#option-outputPath"></a>
+<a id="option-outputpath" name="option-outputpath" href="#option-outputpath"></a>
 ### `outputPath`
 Type: `string` Default: `webpack.options.output.path`
 
@@ -588,7 +589,7 @@ The output directory for processed file. This directory can be relative by `webp
 ### `filename`
 Type: `string | Function` Default: `[name].html`
 
-The HTML output filename relative by the [`outputPath`](#option-outputPath) option.
+The HTML output filename relative by the [`outputPath`](#option-outputpath) option.
 
 If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
 - `[id]` The ID of the chunk.
@@ -619,7 +620,7 @@ Default properties:
 
 - `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).
 - `chunkFilename` - an output filename of non-initial chunk files. Details see by [chunkFilename](https://webpack.js.org/configuration/output/#outputchunkfilename).
-- `outputPath` - an output path of extracted JS. Details see by [outputPath option](#option-outputPath).
+- `outputPath` - an output path of extracted JS. Details see by [outputPath option](#option-outputpath).
 - `inline` - globally inline all extracted JS into HTML, available values:
   - `false` - extract processed JS in an output file, defaults
   - `true` - inline processed JS into HTML
@@ -712,7 +713,7 @@ Default properties:
 
 - `test` - an RegEpx to process all source styles that pass test assertion
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
-- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputPath).
+- `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
 - `inline` - globally inline all extracted CSS into HTML, available values:
   - `false` - extract processed CSS in an output file, defaults
   - `true` - inline processed CSS into HTML via `style` tag
@@ -1066,12 +1067,12 @@ Possible values:
 - `false` - disable minification
 - `true` - enable minification with default options
 - `auto` - in `development` mode disable minification, in `production` mode enable minification with default options,
-  use [minifyOptions](#option-minifyOptions) to customize options
+  use [minifyOptions](#option-minify-options) to customize options
 - `{}` - enable minification with custom options, this object are merged with `default options`\
   see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
 
 
-<a id="option-minifyOptions" name="option-minifyOptions" href="#option-minifyOptions"></a>
+<a id="option-minify-options" name="option-minify-options" href="#option-minify-options"></a>
 ### `minifyOptions`
 Type: `Object` Default: `null`
 
@@ -1079,7 +1080,7 @@ When the [minify](#option-minify) option is set to `auto`, you can configure min
 
 
 #### [↑ back to contents](#contents)
-<a id="option-extractComments" name="option-extractComments" href="#option-extractComments"></a>
+<a id="option-extract-comments" name="option-extract-comments" href="#option-extract-comments"></a>
 ### `extractComments`
 Type: `boolean` Default: `false`
 
@@ -1109,7 +1110,7 @@ Possible values:
 
 
 #### [↑ back to contents](#contents)
-<a id="option-watchFiles" name="option-watchFiles" href="#option-watchFiles"></a>
+<a id="option-watch-files" name="option-watch-files" href="#option-watch-files"></a>
 ### `watchFiles`
 Type:
 ```ts
@@ -1184,7 +1185,7 @@ This option has the prio over paths and files.
 
 
 #### [↑ back to contents](#contents)
-<a id="option-loaderOptions" name="option-loaderOptions" href="#option-loaderOptions"></a>
+<a id="option-loader-options" name="option-loader-options" href="#option-loader-options"></a>
 ### `loaderOptions`
 
 This is the reference to the [loader options](#loader-options).
@@ -1270,7 +1271,7 @@ The default loader handels HTML files and `EJS`-like templates.
 
 > **Note**
 >
-> It is recommended to define all loader options in the [`loaderOptions`](#option-loaderOptions) by the plugin options
+> It is recommended to define all loader options in the [`loaderOptions`](#option-loader-options) by the plugin options
 > to keep the webpack config clean and smaller.
 
 
@@ -1565,10 +1566,10 @@ module.exports = {
 ```
 
 See the options for the pre-configured preprocessors:
-[eta](#loader-option-preprocessorOptions-eta),
-[ejs](#loader-option-preprocessorOptions-ejs),
-[handlebars](#loader-option-preprocessorOptions-handlebars),
-[nunjucks](#loader-option-preprocessorOptions-nunjucks).
+[eta](#loader-option-preprocessor-options-eta),
+[ejs](#loader-option-preprocessor-options-ejs),
+[handlebars](#loader-option-preprocessor-options-handlebars),
+[nunjucks](#loader-option-preprocessor-options-nunjucks).
 
 > **Note**
 >
@@ -1680,7 +1681,7 @@ Each preprocessor has its own options, depend on using template engine.
 > };
 > ```
 
-<a id="loader-option-preprocessorOptions-eta" name="loader-option-preprocessorOptions-eta" href="#loader-option-preprocessorOptions-eta"></a>
+<a id="loader-option-preprocessor-options-eta" name="loader-option-preprocessor-options-eta" href="#loader-option-preprocessor-options-eta"></a>
 #### Options for `preprocessor: 'eta'` (default)
 ```js
 loaderOptions: {
@@ -1716,7 +1717,7 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 If partials have `.eta` extensions, then the extension can be omitted in the include argument.
 
-<a id="loader-option-preprocessorOptions-ejs" name="loader-option-preprocessorOptions-ejs" href="#loader-option-preprocessorOptions-ejs"></a>
+<a id="loader-option-preprocessor-options-ejs" name="loader-option-preprocessor-options-ejs" href="#loader-option-preprocessor-options-ejs"></a>
 #### Options for `preprocessor: 'ejs'`
 ```js
 loaderOptions: {
@@ -1759,7 +1760,7 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 ```
 If you have partials with `.ejs` extensions, then the extension can be omitted.
 
-<a id="loader-option-preprocessorOptions-handlebars" name="loader-option-preprocessorOptions-handlebars" href="#loader-option-preprocessorOptions-handlebars"></a>
+<a id="loader-option-preprocessor-options-handlebars" name="loader-option-preprocessor-options-handlebars" href="#loader-option-preprocessor-options-handlebars"></a>
 #### Options for `preprocessor: 'handlebars'`
 
 The `preprocessor` has built-in `include` helper, to load a partial file directly in a template without registration of partials.
@@ -1916,7 +1917,7 @@ loaderOptions: {
 For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
 
-<a id="loader-option-preprocessorOptions-nunjucks" name="loader-option-preprocessorOptions-nunjucks" href="#loader-option-preprocessorOptions-nunjucks"></a>
+<a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks" href="#loader-option-preprocessor-options-nunjucks"></a>
 #### Options for `preprocessor: 'nunjucks'`
 
 ```js
@@ -2114,7 +2115,7 @@ new HtmlBundlerPlugin({
 })
 ```
 
-For the `eta` preprocessor options see [here](#loader-option-preprocessorOptions-eta).
+For the `eta` preprocessor options see [here](#loader-option-preprocessor-options-eta).
 
 <a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
 > **Warning**
@@ -2172,7 +2173,7 @@ module.exports = {
 };
 ```
 
-For the `ejs` preprocessor options see [here](#loader-option-preprocessorOptions-ejs).
+For the `ejs` preprocessor options see [here](#loader-option-preprocessor-options-ejs).
 
 #### [↑ back to contents](#contents)
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
@@ -2224,7 +2225,7 @@ module.exports = {
 };
 ```
 
-For the `handlebars` preprocessor options see [here](#loader-option-preprocessorOptions-handlebars).
+For the `handlebars` preprocessor options see [here](#loader-option-preprocessor-options-handlebars).
 
 
 #### [↑ back to contents](#contents)
@@ -2308,7 +2309,6 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|njk)$/, // add the test option to match *.njk files in entry
       entry: {
         index: {
           import: './src/views/page/index.njk',
@@ -2327,7 +2327,7 @@ module.exports = {
 };
 ```
 
-For the `nunjucks` preprocessor options see [here](#loader-option-preprocessorOptions-nunjucks).
+For the `nunjucks` preprocessor options see [here](#loader-option-preprocessor-options-nunjucks).
 
 #### [↑ back to contents](#contents)
 <a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>

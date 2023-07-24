@@ -48,7 +48,7 @@ module.exports = {
           data: entryData.home,
         },
         about: {
-          import: 'src/views/pages/about/index.html',
+          import: 'src/views/pages/about/index.njk', // test .njk extension
           data: entryData.about,
         },
       },
