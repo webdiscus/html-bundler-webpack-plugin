@@ -170,6 +170,9 @@ describe('inline styles & scripts', () => {
 });
 
 describe('import styles in JavaScript', () => {
+  // TODO: test in watch => err: SyntaxError: Unexpected token 'export'
+  test('js-import-scss', () => compareFiles('js-import-scss'));
+
   test('js-import-css', () => compareFiles('js-import-css'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));

@@ -23,12 +23,13 @@ const loader = function (content) {
  * @this {import("webpack").LoaderContext<LoaderOptions>}
  * @param {string} request
  */
-const pitchLoader = function (request) {
+const pitchLoader2 = function (request) {
   const loaderContext = this;
   const { context, resource, resourcePath, entryName, entryId, entryData, _module: module } = loaderContext;
   const options = loaderContext.getOptions() || {};
   const callback = loaderContext.async();
 
+  // create a unique request different from the original to avoid cyclic loading of the same style file
   request += (resource.includes('?') ? '&' : '?') + 'HTMLBundlerCSSLoader';
 
   loaderContext.importModule(
@@ -55,9 +56,32 @@ const pitchLoader = function (request) {
       module._cssSource = esModule ? exports.default : exports;
       Collection.setImportStyleEsModule(esModule);
 
-      callback(null, '// extracted by HTMLBundler CSSLoader\nexport {};');
+      callback(null, '/* extracted by HTMLBundler CSSLoader */ export {};');
     }
   );
+};
+
+const pitchLoader = async function (remaining) {
+  const { resource, resourcePath, _module: module } = this;
+  const options = this.getOptions() || {};
+
+  remaining += resource.includes('?') ? '&' : '?';
+
+  // create a unique request different from the original to avoid cyclic loading of the same style file
+  const request = `${resourcePath}.webpack[javascript/auto]!=!!!${remaining}HTMLBundlerCSSLoader`;
+  const result = await this.importModule(request, {
+    layer: options.layer,
+    publicPath: urlPathPrefix,
+    baseUri,
+  });
+
+  // defaults, the css-loader option `esModule` is `true`
+  const esModule = result.default != null;
+
+  module._cssSource = esModule ? result.default : result;
+  Collection.setImportStyleEsModule(esModule);
+
+  return '/* extracted by HTMLBundler CSSLoader */ export {};';
 };
 
 module.exports = loader;

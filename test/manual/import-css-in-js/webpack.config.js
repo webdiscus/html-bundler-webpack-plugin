@@ -25,12 +25,12 @@ module.exports = {
       },
 
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
-        //filename: 'assets/js/[name].js',
+        filename: 'js/[name].[contenthash:8].js',
+        //filename: 'js/[name].js',
       },
 
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
 
       //verbose: true,
@@ -41,15 +41,15 @@ module.exports = {
     rules: [
       {
         test: /\.(css|scss)/,
-        //use: ['css-loader', 'sass-loader'],
         use: ['css-loader'],
+        //use: ['css-loader', 'sass-loader'],
       },
 
       {
         test: /\.(png|jpe?g|ico|svg)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
+          filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],

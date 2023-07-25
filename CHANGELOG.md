@@ -1,5 +1,8 @@
 # Change log
 
+## 2.2.3 (2023-07-25)
+- fix: correct importing styles in JS when used serve mode
+
 ## 2.2.2 (2023-07-25)
 - fix: importing the raw content of the html file in js
 

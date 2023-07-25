@@ -506,8 +506,8 @@ class AssetCompiler {
     if (issuer && !Options.isStyle(issuer) && !Options.isEntry(issuer) && Options.isStyle(file)) {
       const rootIssuer = Collection.findRootIssuer(issuer);
 
-      Collection.importStyleRootIssuers.add(rootIssuer || issuer);
       module._isImportedStyle = true;
+      Collection.importStyleRootIssuers.add(rootIssuer || issuer);
 
       // check entryId to avoid adding duplicate loaders after changes in serve mode
       // add the CSS loader for only styles imported in JavaScript
@@ -623,9 +623,15 @@ class AssetCompiler {
     Collection.setEntryDependencies(entry);
 
     for (const module of chunkModules) {
-      const { resource, resourceResolveData, _isScript } = module;
+      const { _isScript, _isImportedStyle, resource, resourceResolveData } = module;
 
-      if (_isScript || !resource || !resourceResolveData?.context || AssetInline.isDataUrl(resource)) {
+      if (
+        _isScript ||
+        _isImportedStyle ||
+        !resource ||
+        !resourceResolveData?.context ||
+        AssetInline.isDataUrl(resource)
+      ) {
         // do nothing for scripts because webpack itself compiles and extracts JS files from scripts
         continue;
       }
@@ -639,28 +645,34 @@ class AssetCompiler {
         issuer = entry.resource;
       }
 
-      if (module.type === 'javascript/auto') {
-        const assetModule = this.createAssetModule(entry, chunk, module);
+      switch (module.type) {
+        case 'javascript/auto':
+          const assetModule = this.createAssetModule(entry, chunk, module);
 
-        if (assetModule === false) return;
-        if (assetModule == null) continue;
+          if (assetModule == null) continue;
+          if (assetModule === false) return;
 
-        assetModules.add(assetModule);
-      } else if (module.type === 'asset/resource') {
-        // resource required in the template or in the CSS via url()
-        AssetResource.saveData(module);
-      } else if (module.type === 'asset/inline') {
-        AssetInline.saveData(entry, chunk, module, codeGenerationResults);
-      } else if (module.type === 'asset/source') {
-        // support the source type for SVG only
-        if (AssetInline.isSvgFile(resource)) {
+          assetModules.add(assetModule);
+          break;
+        case 'asset/resource':
+          // resource required in the template or in the CSS via url()
+          AssetResource.saveData(module);
+          break;
+        case 'asset/inline':
           AssetInline.saveData(entry, chunk, module, codeGenerationResults);
-        }
+          break;
+        case 'asset/source':
+          // support the source type for SVG only
+          if (AssetInline.isSvgFile(resource)) {
+            AssetInline.saveData(entry, chunk, module, codeGenerationResults);
+          }
+          break;
+        default:
+        // do nothing
       }
     }
 
     // 1. render entries and styles specified in HTML
-
     for (const module of assetModules) {
       const { fileManifest } = module;
       const content = this.renderModule(module);
@@ -1036,6 +1048,7 @@ class AssetCompiler {
     switch (type) {
       case 'style':
         result = CssExtractModule.apply(this.compilation, { data: result, assetFile, inline });
+
         if (inline) {
           Collection.setDataSource(this.currentEntryPoint, sourceRequest, undefined, result);
           return null;
