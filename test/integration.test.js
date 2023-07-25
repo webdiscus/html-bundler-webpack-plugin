@@ -246,6 +246,7 @@ describe('special cases', () => {
   test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));
   test('ignore files defined in webpack entry', () => compareFiles('ignore-webpack-entry'));
   test('issue if copy plugin copies a html file', () => compareFiles('issue-copy-plugin'));
+  test('import raw content of a file', () => compareFiles('import-raw-html'));
 
   // for debugging
   // test('resolve hmr file', () => watchCompareFileListAndContent(PATHS, 'resolve-hmr-file'));

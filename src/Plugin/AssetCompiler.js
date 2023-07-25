@@ -308,11 +308,11 @@ class AssetCompiler {
     const { actionType, newFileName, oldFileName } = Snapshot.detectFileChange();
     const isScript = Options.isScript(fileName);
     const inCollection = Collection.hasScript(fileName);
-    const isEntry = (file) => file && file.startsWith(entryDir) && Options.isEntry(file);
+    const isEntryFile = (file) => file && file.startsWith(entryDir) && Options.isEntry(file);
 
     // 1. Invalidate entry file
 
-    if (Options.isDynamicEntry() && (isEntry(fileName) || isEntry(oldFileName) || isEntry(newFileName))) {
+    if (Options.isDynamicEntry() && (isEntryFile(fileName) || isEntryFile(oldFileName) || isEntryFile(newFileName))) {
       switch (actionType) {
         case 'modify':
           Collection.disconnectEntry(fileName);
@@ -400,9 +400,13 @@ class AssetCompiler {
    *
    * @param {Array<{}>} requests
    * @param {{}} options
-   * @return {Array} Returns only alternative requests not related to entry files.
+   * @return {Array|undefined} Returns only alternative requests not related to entry files.
    */
   filterAlternativeRequests(requests, options) {
+    // skip the request required as 'asset/source' with the '?raw' resourceQuery
+    // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
+    if (/\?raw/.test(options.resourceQuery)) return;
+
     return requests.filter((item) => !Options.isEntry(item.request));
   }
 

@@ -378,7 +378,6 @@ class AssetEntry {
       let id = this.idIndex++;
 
       this.setEntryId(id, entry);
-      //entry.layer = '1';
 
       if (!entry.library) entry.library = this.entryLibrary;
       if (entry.filename) filenameTemplate = entry.filename;
@@ -449,7 +448,6 @@ class AssetEntry {
     const entryOptions = {
       name,
       runtime: undefined,
-      //layer: '1',
       dependOn: undefined,
       baseUri: undefined,
       publicPath: undefined,
@@ -509,12 +507,10 @@ class AssetEntry {
     }
 
     let [sourceFile] = importFile.split('?', 1);
-    const issuerEntry = [...this.entries.values()].find(({ resource }) => resource === issuer);
 
     const entryOptions = {
       name,
       runtime: undefined,
-      //layer: '1',
       dependOn: undefined,
       baseUri: undefined,
       publicPath: undefined,
@@ -545,8 +541,6 @@ class AssetEntry {
     const compilation = this.compilation;
     const compiler = compilation.compiler;
     const { EntryPlugin } = compiler.webpack;
-
-    // TODO: add entry id as query in importFile
     const entryDependency = EntryPlugin.createDependency(importFile, { name });
 
     compilation.addEntry(context, entryDependency, entryOptions, (err, module) => {

@@ -290,6 +290,7 @@ class Options {
     if (resource == null) return false;
 
     const [file] = resource.split('?', 1);
+
     return this.options.test.test(file);
   }
 

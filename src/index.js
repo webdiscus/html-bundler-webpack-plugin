@@ -47,6 +47,9 @@ class Plugin extends AssetCompiler {
     // Note: the default templating engine is Eta.
     const defaultLoader = {
       test: Options.get().test,
+      // ignore 'asset/source' with the '?raw' query
+      // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
+      resourceQuery: { not: [/raw/] },
       loader,
     };
 
@@ -112,7 +115,7 @@ class Plugin extends AssetCompiler {
   }
 
   /**
-   * Called after the processAssets hook had finished without error.
+   * Called after the processAssets hook had finished without an error.
    * Override abstract method.
    *
    * Reserved for the future.

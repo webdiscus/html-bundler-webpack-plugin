@@ -1940,7 +1940,7 @@ loaderOptions: {
 },
 ```
 
-For the complete list of Nunjucks options see [here](https://mozilla.github.io/nunjucks/api.html#configure).
+For all available options, see the [Nunjucks API configure](https://mozilla.github.io/nunjucks/api.html#configure).
 
 ---
 
@@ -2109,7 +2109,7 @@ The default preprocessor is `eta`, you can omit it:
 ```js
 new HtmlBundlerPlugin({
   loaderOptions: {
-    preprocessor: 'eta',
+    preprocessor: 'eta', // use Eta templating engine
     // preprocessorOptions: {...},
   },
 })
@@ -2165,7 +2165,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: 'ejs', // enable EJS compiler
+        preprocessor: 'ejs', // use EJS templating engine
         // preprocessorOptions: {...},
       },
     }),
@@ -2217,7 +2217,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: 'handlebars', // enable Handlebars compiler
+        preprocessor: 'handlebars', // use Handlebars templating engine
         // preprocessorOptions: {...},
       },
     }),
@@ -2319,7 +2319,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        preprocessor: 'nunjucks', // enable Nunjucks compiler
+        preprocessor: 'nunjucks', // use Nunjucks templating engine
         // preprocessorOptions: {...},
       },
     }),

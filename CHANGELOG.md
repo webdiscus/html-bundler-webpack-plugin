@@ -1,5 +1,8 @@
 # Change log
 
+## 2.2.2 (2023-07-25)
+- fix: importing the raw content of the html file in js
+
 ## 2.2.1 (2023-07-23)
 - fix: load the handlebars's partials with allowed extensions only, #24
 
