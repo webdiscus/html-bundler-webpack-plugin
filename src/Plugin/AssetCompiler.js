@@ -32,6 +32,7 @@ const cssLoader = {
   ident: undefined,
 };
 
+/** @typedef {import('webpack/declarations/WebpackOptions').Output} WebpackOutputOptions */
 /** @typedef {import('webpack').Compiler} Compiler */
 /** @typedef {import('webpack').Compilation} Compilation */
 /** @typedef {import('webpack').ChunkGraph} ChunkGraph */
@@ -143,7 +144,7 @@ class AssetCompiler {
   afterRenderModules(compilation) {}
 
   /**
-   * Called after the processAssets hook had finished without error.
+   * Called after the processAssets hook had finished without an error.
    * Abstract method should be overridden in child class.
    *
    * @param {Compilation} compilation The instance of the webpack compilation.
@@ -170,7 +171,6 @@ class AssetCompiler {
     HotUpdateChunk = webpack.HotUpdateChunk;
 
     Options.initWebpack(compiler.options);
-    Options.setDefaultCssOptions(CssExtractModule.getOptions());
     Options.enableLibraryType(this.entryLibrary.type);
     AssetResource.init(compiler);
 

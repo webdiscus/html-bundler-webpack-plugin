@@ -1,5 +1,9 @@
 # Change log
 
+## 2.3.0 (2023-07-27)
+- feat: add support for TS
+- docs: update README
+
 ## 2.2.3 (2023-07-25)
 - fix: correct importing styles in JS when used serve mode
 

@@ -14,13 +14,13 @@ module.exports = {
         index: './src/views/home/index.html',
       },
       js: {
-        filename: '[name].bundle.js',
-        // test the path relative by output.path
+        // test: filename as function and relative outputPath
+        filename: () => '[name].bundle.js',
         outputPath: 'assets/js/',
       },
       css: {
-        filename: '[name].bundle.css',
-        // test the path relative by output.path
+        // test: filename as function and relative outputPath
+        filename: () => '[name].bundle.css',
         outputPath: 'assets/css/',
       },
     }),

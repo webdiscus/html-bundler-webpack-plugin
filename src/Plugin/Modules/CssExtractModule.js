@@ -4,27 +4,11 @@ const AssetTrash = require('../AssetTrash');
 /**
  * The plugin module to extract the CSS and source map from asset.
  *
- * @note If webpack mode is `production` then `scss-loader` minify the CSS self,
- *   if webpack is in `development` mode then CSS is pretty formatted.
+ * @note If webpack mode is `production`, then `scss-loader` minifies the CSS self.
+ *  If webpack is in `development` mode, then CSS is pretty formatted.
  */
 
 class CssExtractModule {
-  /**
-   * Default options.
-   */
-  static #options = {
-    test: /\.(css|scss|sass|less|styl)$/,
-    enabled: true,
-    sourcePath: null,
-    outputPath: null,
-    filename: '[name].css',
-    inline: false,
-  };
-
-  static getOptions() {
-    return this.#options;
-  }
-
   /**
    * Extract CSS and source map from the result of the css-loader.
    *

@@ -434,7 +434,9 @@ This plugin can completely replace the functionality of mini-css-extract-plugin 
 
 <a id="option-entry" name="option-entry" href="#option-entry"></a>
 ### `entry`
-Type: `object` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
+Type: `EntryObject | string`.
+
+The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property to pass custom variables into the HTML template.
 
 Define all your HTML templates in the `entry` option.
@@ -443,15 +445,22 @@ An HTML template is a starting point for collecting all the dependencies used in
 Specify source scripts (JS, TS) and styles (CSS, SCSS, LESS, etc.) directly in HTML.
 The plugin automatically extracts JS and CSS whose source files are specified in an HTML template.
 
+```ts
+type EntryObject = {
+  [key: string]: EntryDescription | string;
+}
+```
+The key of the `EntryObject` is the `output filename` w/o extension, relative to the [`outputPath`](#option-outputpath) option.
+
+
 #### Simple syntax
 
-The key of an entry object is the `output file` w/o extension, relative by the [`outputPath`](#option-outputpath) option.\
-The value is the `source file`, absolute or relative by the Webpack config file.
-
+When the entry point value is a `string`, it must be an absolute or relative template file.
+For example:
 ```js
 {
   entry: {
-    index: 'src/views/home/index.html', // => dist/index.html
+    index: path.join(__dirname, 'src/views/home/index.html'), // => dist/index.html
     'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
   },
 }
@@ -459,53 +468,132 @@ The value is the `source file`, absolute or relative by the Webpack config file.
 
 #### Advanced syntax
 
-The entry value might be an object:
+If you need to pass data to a template or want to dynamically generate an output filename regardless of the entry key,
+you can define the value of an entry as an `EntryDescription` object.
+
 
 ```ts
-type entryValue = {
-  import: string,
-  filename: string
-  data: object|string,
-}
+type EntryDescription = {
+  /**
+   * Template file, relative of context or absolute.
+   */
+  import: string;
+  /**
+   * Specifies the filename of the output file.
+   */
+  filename?: FilenameTemplate;
+  /**
+   * The template data.
+   */
+  data?: { [k: string]: any } | string;
+};
+
+type FilenameTemplate =
+  | string
+  | ((
+  pathData: import('webpack/Compilation').PathData,
+  assetInfo?: import('webpack/Compilation').AssetInfo
+) => string);
 ```
 
-- `import` - a source file, absolute or relative by the Webpack config file
-- `filename` - an output file, relative by the 'outputPath' option
-- `data` - a data passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
-     - type `object` - a data object is loaded once with Webpack start
-     - type `string` - an absolute or relative filename of the JSON or JS file. The JS file must export an object. The data file will be reloaded after changes.
+##### `import`
 
-To pass global variables in all templates use the [data](#loader-option-data) loader option.
+The `import` is a path to a template file, absolute or relative to the Webpack `context` option.
 
-Usage example:
+##### `filename`
+
+When the `filename` is defined as a `string`, it will be used as the output html filename. 
+In this case, the entry key can be any unique string.
+
+For example:
 
 ```js
 {
   entry: {
-    // output ./dist/news/sport.html
-    'news/sport': { // the key is the output file name without '.html'
-      import: 'src/views/news/sport.html',
-      data: {
-        title: 'Sport', // pass data as an object
-      }
-    },
-
-    // output ./dist/about/index.html
-    about: {
-      import: 'src/views/about.html',
-      filename: 'about/index.html', // define custom output filename
-      data: 'src/data/about.json', // load data from JSON file
+    page01: {
+      import: 'src/views/news/sport/index.html', // <= source template
+      filename: 'news/sport.html', // => output ./dist/news/sport.html
     },
   },
 }
 ```
 
-The data file _src/data/about.json_:
-```json
+When the `filename` is defined as a [template string](https://webpack.js.org/configuration/output/#template-strings), 
+then the entry key will be used as the `[name]` in the `template string`. Defaults, the [filename](#option-filename) is the `[name].html` template string.
+
+For example:
+
+```js
 {
-  "title": "About"
+  entry: {
+    'news/sport': {
+      import: 'src/views/news/sport/index.html', // <= source template
+      filename: '[name].html', // => output ./dist/news/sport.html
+    },
+  },
 }
 ```
+
+The example above is equivalent to the simple syntax:
+
+```js
+{
+  entry: {
+    'news/sport': 'src/views/news/sport/index.html',
+  },
+}
+```
+
+##### `data`
+
+The `data` is passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
+
+When the `data` is an `object`, it will be loaded once with Webpack start.
+After changing the data, you **need to restart Webpack**.
+
+For example:
+
+```js
+{
+  entry: {
+    index: {
+      import: 'src/views/index.html',
+      // pass data as an object
+      data: {
+        title: 'Home',
+      }
+    },
+}
+```
+
+When the `data` is a `string`, it must be an absolute or relative path to a file.
+The file can be a `JSON` file or a `JS` file that exports the data as an object.
+Use the `data` as a file if you want to get dynamic data in a template.
+The data file will be reloaded after changes, **without restarting Webpack**.
+
+For example:
+
+```js
+{
+  entry: {
+    index: {
+      import: 'src/views/index.html',
+      // load data from JSON file
+      data: 'src/data/home.json',
+    },
+  },
+}
+```
+
+The data file _src/data/home.json_:
+
+```json
+{
+  "title": "Home"
+}
+```
+
+To pass global variables in all templates use the [data](#loader-option-data) loader option.
 
 > **Note**
 >
@@ -515,8 +603,6 @@ The data file _src/data/about.json_:
 
 <a id="option-entry-path" name="option-entry-path" href="#option-entry-path"></a>
 #### Entry as a path to templates
-
-Type: `string`
 
 You can define the entry as a path to recursively detect all templates from that directory.
 
@@ -582,14 +668,14 @@ new HtmlBundlerPlugin({
 ### `outputPath`
 Type: `string` Default: `webpack.options.output.path`
 
-The output directory for processed file. This directory can be relative by `webpack.options.output.path` or absolute.
+The output directory for processed file. This directory can be absolute or relative to `webpack.options.output.path`.
 
 
 <a id="option-filename" name="option-filename" href="#option-filename"></a>
 ### `filename`
 Type: `string | Function` Default: `[name].html`
 
-The HTML output filename relative by the [`outputPath`](#option-outputpath) option.
+The HTML output filename relative to the [`outputPath`](#option-outputpath) option.
 
 If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
 - `[id]` The ID of the chunk.
@@ -607,7 +693,17 @@ If type is `Function` then following arguments are available in the function:
 #### [↑ back to contents](#contents)
 <a id="option-js" name="option-js" href="#option-js"></a>
 ### `js`
-Type: `Object`\
+
+Type:
+```ts
+type JsOptions = {
+  filename?: FilenameTemplate;
+  chunkFilename?: FilenameTemplate;
+  outputPath?: string;
+  inline?: 'auto' | boolean;
+};
+```
+
 Default properties:
 ```js
 {
@@ -631,9 +727,10 @@ Default properties:
 > The `filename` and `chunkFilename` options are the same as in Webpack `output` options, just defined in one place along with other relevant plugin options.
 > You don't need to define them in the in Webpack `output` options anymore. Keep the config clean & clear.
 
-The `test` property absent because all JS files specified in `<script>` tag are automatically detected.
+All source script files specified in `<script src="...">` are automatically resolved,  
+and JS will be extracted to output file. The source filename will be replaced with the output filename.
 
-This is the option to extract JS from a script source file specified in the HTML tag:
+For example:
 ```html
 <script src="./main.js"></script>
 ```
@@ -700,7 +797,17 @@ Also see [How to keep package name for split chunks from **node_modules**](#reci
 #### [↑ back to contents](#contents)
 <a id="option-css" name="option-css" href="#option-css"></a>
 ### `css`
-Type: `Object`\
+
+Type:
+```ts
+type CssOptions = {
+  test?: RegExp;
+  filename?: FilenameTemplate;
+  outputPath?: string;
+  inline?: 'auto' | boolean;
+};
+```
+
 Default properties:
 ```js
 {
@@ -719,15 +826,18 @@ Default properties:
   - `true` - inline processed CSS into HTML via `style` tag
   - `'auto'` - in `development` mode - inline CSS, in `production` mode - extract in a file
 
-This is the option to extract CSS from a style source file specified in the HTML tag:
+All source style files specified in `<link href="..." rel="stylesheet">` are automatically resolved,  
+and CSS will be extracted to output file. The source filename will be replaced with the output filename.
+
+For example:
 ```html
 <link href="./style.scss" rel="stylesheet">
 ```
 
 > **Warning**
 >
-> Don't import source styles in JavaScript! Styles must be specified directly in HTML.
-> Don't define source JS files in Webpack entry! Scripts must be specified directly in HTML.
+> Don't import source styles in JavaScript. Styles must be specified directly in HTML.\
+> Don't define source JS files in Webpack entry. Scripts must be specified directly in HTML.
 
 The default CSS output filename is `[name].css`.
 You can specify your own filename using [webpack filename substitutions](https://webpack.js.org/configuration/output/#outputfilename):
@@ -766,7 +876,7 @@ Since the `v2.2.0`, the `preprocessor` and `preprocessorOptions` plugin options 
 
 Now it is possible to define these options directly in the plugin options to simplify the config.
 
-The NEW syntax "sugar":
+The NEW syntactic "sugar":
   ```js
   new HtmlBundlerPlugin({
     entry: {
@@ -804,17 +914,17 @@ type postprocess = (
   content: string,
   info: ResourceInfo,
   compilation: Compilation,
-) => string|null;
+) => string | null;
 
 type ResourceInfo = {
-  verbose: boolean,
-  isEntry: boolean,
-  filename:
-    | string
-    | ((pathData: PathData) => string),
-  outputPath: string,
-  sourceFile: string,
-  assetFile: string,
+  verbose: boolean;
+  isEntry: boolean;
+  filename: 
+    | string 
+    | ((pathData: PathData) => string);
+  outputPath: string;
+  sourceFile: string;
+  assetFile: string;
 };
 ```
 
@@ -835,7 +945,7 @@ The `ResourceInfo` have the following properties:
 - `filename: string|function` - a filename of the resource, see [filename](https://webpack.js.org/configuration/output/#outputfilename)
 - `outputPath: string` - a full path of the output directory
 - `sourceFile: string` - a full path of the source file, without URL query
-- `assetFile: string` - an output asset file relative by outputPath
+- `assetFile: string` - an output asset file relative to the `outputPath`
 
 Return new content as a `string`.
 If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
@@ -844,15 +954,16 @@ If return `null`, the result processed via Webpack plugin is ignored and will be
 #### [↑ back to contents](#contents)
 <a id="option-preload" name="option-preload" href="#option-preload"></a>
 ### `preload`
-Type: `Array<preload>` Default: `null`
+
+Type: `Preload` Default: `null`
 ```ts
-type preload = {
-  test: RegExp,
-  as: string,
-  rel?: string,
-  type?: string,
-  attributes?: {},
-};
+type Preload = Array<{
+  test: RegExp;
+  as?: string;
+  rel?: string;
+  type?: string;
+  attributes?: {};
+}>;
 ```
 
 Generates and injects preload tags `<link rel="preload">` in the head before all `link` or `script` tags for all matching source assets resolved in templates and styles.
@@ -1092,29 +1203,12 @@ By default, the plugin don't create such unwanted text files.
 But if you want to extract files like `*.LICENSE.txt`, set this option to `true`.
 
 
-<a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
-### `verbose`
-Type: `string|boolean` Default: `false`
-
-The verbose option allows to display in console the processing information about extracted resources.
-All resources are grouped by their issuers.
-
-Possible values:
-- `false` - do not display information
-- `true` - display information
-- `auto` - in `development` mode enable verbose, in `production` mode disable verbose
-
-> **Note**
->
-> If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
-
-
 #### [↑ back to contents](#contents)
 <a id="option-watch-files" name="option-watch-files" href="#option-watch-files"></a>
 ### `watchFiles`
 Type:
 ```ts
-type watchFiles = {
+type WatchFiles = {
   paths?: Array<string>;
   files?: Array<RegExp>;
   ignore?: Array<RegExp>;
@@ -1182,6 +1276,23 @@ This option has the prio over paths and files.
 > **Note**
 >
 > To display all watched files, enable the [`verbose`](#option-verbose) option.
+
+
+<a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
+### `verbose`
+Type: `string|boolean` Default: `false`
+
+The verbose option allows to display in console the processing information about extracted resources.
+All resources are grouped by their issuers.
+
+Possible values:
+- `false` - do not display information
+- `true` - display information
+- `auto` - in `development` mode enable verbose, in `production` mode disable verbose
+
+> **Note**
+>
+> If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
 
 
 #### [↑ back to contents](#contents)
@@ -1286,18 +1397,18 @@ The default loader handels HTML files and `EJS`-like templates.
 ### `sources`
 Type:
 ```ts
-type sources =
+type Sources =
   | boolean
   | Array<{
       tag?: string;
       attributes?: Array<string>;
-      filter?: ({
-        tag: string,
-        attribute: string,
-        value: string,
-        attributes: string,
-        resourcePath: string
-      }) => boolean|undefined;
+      filter?: (props: {
+        tag: string;
+        attribute: string;
+        value: string;
+        attributes: string;
+        resourcePath: string;
+      }) => boolean | undefined;
     }>;
 ```
 
@@ -1523,23 +1634,40 @@ Now you can use the `/` root path for the source assets:
 #### [↑ back to contents](#contents)
 <a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
 ### `preprocessor`
-
-You can use a pre-configured preprocessor for a template engine, or you can define your own preprocessor as a function.
-
-#### Pre-configured
-
-For most popular templating engines, preprocessors are already pre-configured.
-
+Type:
 ```ts
-type preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks';
+type Preprocessor =
+  | false
+  | 'eta'
+  | 'ejs'
+  | 'handlebars'
+  | 'nunjucks'
+  | ((
+      template: string,
+      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+    ) => null | string | Promise<any>);
 ```
 
-The default value is `'eta'`, see [Eta](https://eta.js.org) templating engine. 
+Default: `eta`
+
+You can use the preprocessor as a `string` for supported template engines, 
+or define your own preprocessor as a function to use any template engine.
+
+#### Supported templating engines "out of the box"
+
+```ts
+type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks';
+```
+
+The preprocessor is already ready to use the most popular templating engines:
+[Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks).
+
+
+Defaults used the [Eta](https://eta.js.org) templating engine, 
+because `Eta` has the `EJS`-like syntax, is only `2KB` gzipped and is much fasted than EJS.
 The npm package `eta` is already installed with this plugin.
 
-> The `Eta` has the EJS-like syntax, is only 2KB gzipped and is much fasted than EJS.
-
-You can pass a custom options of the template engine using the [preprocessorOptions](#loader-option-preprocessorOptions).
+You can pass a custom options of the templating engine using the [preprocessorOptions](#loader-option-preprocessorOptions).
 
 For example, if you have `EJS` templates:
 
@@ -1548,7 +1676,7 @@ install npm package `ejs`
 npm i -D ejs
 ```
 
-define the `preprocessor` as `'ejs'` string
+define the `preprocessor` as the `'ejs'` string
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
@@ -1565,15 +1693,11 @@ module.exports = {
 };
 ```
 
-See the options for the pre-configured preprocessors:
-[eta](#loader-option-preprocessor-options-eta),
-[ejs](#loader-option-preprocessor-options-ejs),
-[handlebars](#loader-option-preprocessor-options-handlebars),
-[nunjucks](#loader-option-preprocessor-options-nunjucks).
-
 > **Note**
 >
-> Since the `v2.2.0` is available new syntax, the `preprocessor` and the `preprocessorOptions` can be defined directly in the plugin option:
+> Since the `v2.2.0` is available new syntax, the [preprocessor](#option-preprocessor)
+> and the [preprocessorOptions](#option-preprocessor) can be defined directly in the plugin option
+> to simplify the config:
 >
 > ```js
 > const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -1590,16 +1714,17 @@ See the options for the pre-configured preprocessors:
 > };
 > ```
 
-<a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom" href="#loader-option-preprocessor-custom"></a>
-#### Custom
 
-To use any templating engine you can define the `preprocessor` as a function.
+<a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom" href="#loader-option-preprocessor-custom"></a>
+#### Custom templating engine
+
+To use any templating engine, you can define the `preprocessor` as a function.
 
 ```ts
-type preprocessor = (
+type Preprocessor = ((
   template: string,
-  loaderContext: LoaderContext
-) => string|Promise;
+  loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+) => null | string | Promise<any>);
 ```
 
 The default `preprocessor` is pre-configured as the following function:
@@ -1628,6 +1753,7 @@ The function can be used to compile the template with any template engine,
 such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Mustache](https://github.com/janl/mustache.js), [Nunjucks](https://mozilla.github.io/nunjucks), [LiquidJS](https://github.com/harttle/liquidjs), etc.
 
 The function returns new content as a `string` for sync or `Promise` for async processing.
+When the function returns `null`, the contents of the template will not change.
 
 The example for your own `sync` render function:
 
@@ -1654,6 +1780,22 @@ The example of using `Promise` for your own `async` render function:
 > The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
 
 
+<a id="loader-option-preprocessor-disable" name="loader-option-preprocessor-disable" href="#loader-option-preprocessor-disable"></a>
+#### Disable templating engine
+
+You can use this plugin to resolve all source asset files in any `HTML`-like template used by server-side rendering.
+In this case, disable the preprocessor.
+The plugin resolves all source files and replaces them with the output filenames.
+The original template remains unchanged except for the filenames being replaced.
+
+```js
+{
+  preprocessor: false,
+}
+```
+
+See [How to process a PHP template](#recipe-preprocessor-php).
+
 #### [↑ back to contents](#contents)
 <a id="loader-option-preprocessorOptions" name="loader-option-preprocessorOptions" href="#loader-option-preprocessorOptions"></a>
 ### `preprocessorOptions`
@@ -1662,24 +1804,8 @@ Type: `Object` Default: `{}`
 With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars` or `nunjucks`.
 Each preprocessor has its own options, depend on using template engine.
 
-> **Note**
->
-> Since the `v2.2.0` is available new syntax, the `preprocessor` and the `preprocessorOptions` can be defined directly in the plugin option:
->
-> ```js
-> const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-> module.exports = {
->   plugins: [
->     new HtmlBundlerPlugin({
->       entry: {
->         index: 'src/views/pages/home/index.ejs',
->       },
->       preprocessor: 'ejs',
->       preprocessorOptions: {...}
->     }),
->   ],
-> };
-> ```
+> This loader option is referenced as the [preprocessorOptions](#option-preprocessor) plugin option to simplify the config.
+
 
 <a id="loader-option-preprocessor-options-eta" name="loader-option-preprocessor-options-eta" href="#loader-option-preprocessor-options-eta"></a>
 #### Options for `preprocessor: 'eta'` (default)
@@ -3007,9 +3133,7 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
-      loaderOptions: {
-        preprocessor: false, // disable template compilation to HTML
-      },
+      preprocessor: false, // disable template compilation to HTML
     }),
   ],
 };
@@ -3164,13 +3288,10 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
-      loaderOptions: {
-        // preconfigured compiler for Nunjucks template engine
-        preprocessor: 'nunjucks',
-        // -OR- use as the function for full controll
-        // preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
-        
-      },
+      // the Nunjucks template engine is supported "out of the box"
+      preprocessor: 'nunjucks',
+      // -OR- use as the function for full controll
+      // preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
     }),
   ],
   module: {

@@ -57,6 +57,18 @@ class Options {
   static rootContext = '';
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
+    enabled: true,
+    filename: '[name].js',
+    chunkFilename: '[id].js',
+    outputPath: null,
+    inline: false,
+  };
+  static css = {
+    test: /\.(css|scss|sass|less|styl)$/,
+    enabled: true,
+    filename: '[name].css',
+    outputPath: null,
+    inline: false,
   };
 
   /**
@@ -69,10 +81,11 @@ class Options {
   static init(options, { AssetEntry }) {
     this.options = options;
     this.AssetEntry = AssetEntry;
+    this.options.css = { ...this.css, ...this.options.css };
+    this.options.js = { ...this.js, ...this.options.js };
     this.options.afterProcess = isFunction(options.afterProcess) ? options.afterProcess : null;
     this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
 
-    if (!options.js) this.options.js = {};
     if (!options.watchFiles) this.options.watchFiles = {};
   }
 
@@ -82,28 +95,17 @@ class Options {
    * @param {Object} options The Webpack compiler options.
    */
   static initWebpack(options) {
-    const webpackOutput = options.output;
     const { entry, js, css } = this.options;
 
-    this.dynamicEntry = typeof entry === 'string';
+    this.#initWebpackOutput(options.output);
+
     this.webpackOptions = options;
-
-    // TODO: remove in next release
-    // Note: since v2.2.0 the layer is not used to provide the entry id in a module,
-    // instead of that is used the query parameter,
-    // because the same css file used in many templates is compiled for every template with different layer.
-    // The 'layer' entry property is only allowed when 'experiments.layers' is enabled.
-    //this.webpackOptions.experiments.layers = true;
-
     this.rootContext = options.context;
     this.productionMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
-    js.inline = this.toBool(js.inline, false, false);
-    css.inline = this.toBool(css.inline, false, false);
-
-    this.#initWebpackOutput(webpackOutput);
 
     // set the absolute path for dynamic entry
+    this.dynamicEntry = typeof entry === 'string';
     if (this.dynamicEntry && !path.isAbsolute(entry)) {
       this.options.entry = path.join(this.rootContext, entry);
     }
@@ -113,16 +115,23 @@ class Options {
       this.webpackOptions.entry = {};
     }
 
+    css.enabled = this.toBool(css.enabled, true, this.css.enabled);
+    css.inline = this.toBool(css.inline, false, this.css.inline);
+    if (!css.outputPath) css.outputPath = options.output.path;
+
+    js.enabled = this.toBool(js.enabled, true, this.js.enabled);
+    js.inline = this.toBool(js.inline, false, this.js.inline);
+
     if (js.filename) {
-      webpackOutput.filename = js.filename;
+      options.output.filename = js.filename;
     } else {
-      js.filename = webpackOutput.filename;
+      js.filename = options.output.filename;
     }
 
     if (js.chunkFilename) {
-      webpackOutput.chunkFilename = js.chunkFilename;
+      options.output.chunkFilename = js.chunkFilename;
     } else {
-      js.chunkFilename = webpackOutput.chunkFilename || '[id].js';
+      js.chunkFilename = options.output.chunkFilename;
     }
 
     // resolve js filename by outputPath
@@ -137,14 +146,14 @@ class Options {
         ? (pathData, assetInfo) => this.resolveOutputFilename(chunkFilename(pathData, assetInfo), js.outputPath)
         : this.resolveOutputFilename(js.chunkFilename, js.outputPath);
 
-      webpackOutput.filename = js.filename;
-      webpackOutput.chunkFilename = js.chunkFilename;
+      options.output.filename = js.filename;
+      options.output.chunkFilename = js.chunkFilename;
     } else {
-      js.outputPath = webpackOutput.path;
+      js.outputPath = options.output.path;
     }
 
     if (!this.options.sourcePath) this.options.sourcePath = this.rootContext;
-    if (!this.options.outputPath) this.options.outputPath = webpackOutput.path;
+    if (!this.options.outputPath) this.options.outputPath = options.output.path;
 
     // normalize minify options
     if (this.options.minify != null && typeof this.options.minify === 'object') {
@@ -158,16 +167,6 @@ class Options {
     }
   }
 
-  /**
-   * Set default CSS options.
-   *
-   * @param {Object} options The default options.
-   */
-  static setDefaultCssOptions(options) {
-    this.options.css = { ...options, ...this.options.css };
-    if (!this.options.css.outputPath) this.options.css.outputPath = this.options.outputPath;
-  }
-
   static initWatchMode() {
     const { publicPath } = this.webpackOptions.output;
     if (publicPath == null || publicPath === 'auto') {
@@ -177,13 +176,20 @@ class Options {
     }
   }
 
+  /**
+   * @param {WebpackOutputOptions} output
+   */
   static #initWebpackOutput(output) {
     let { publicPath } = output;
     if (!output.path) output.path = path.join(this.context, 'dist');
 
     // define js output filename
     if (!output.filename) {
-      output.filename = '[name].js';
+      output.filename = this.js.filename;
+    }
+
+    if (!output.chunkFilename) {
+      output.chunkFilename = this.js.chunkFilename;
     }
 
     if (typeof publicPath === 'function') {
@@ -239,7 +245,7 @@ class Options {
 
   static isScript(resource) {
     const [file] = resource.split('?', 1);
-    return this.js.test.test(file);
+    return this.options.js.enabled && this.options.js.test.test(file);
   }
 
   static isRealContentHash() {

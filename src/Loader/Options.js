@@ -1,7 +1,7 @@
 const path = require('path');
 const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
-const { isWin, pathToPosix, parseQuery } = require('../Common/Helpers');
+const { parseQuery } = require('../Common/Helpers');
 const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
 const { watchPathsException, dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
 
