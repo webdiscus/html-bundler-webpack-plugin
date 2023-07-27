@@ -1,5 +1,8 @@
 # Change log
 
+## 2.3.1 (2023-07-27)
+- fix: add the missing types.d.ts file to npm package
+
 ## 2.3.0 (2023-07-27)
 - feat: add support for TS
 - docs: update README
