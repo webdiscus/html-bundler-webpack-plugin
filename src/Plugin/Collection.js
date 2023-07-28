@@ -32,7 +32,6 @@ class Collection {
 
   // resource files
   static files = new Map();
-  static uniqueFiles = new Set();
 
   // entries data
   static data = new Map();
@@ -88,28 +87,9 @@ class Collection {
     return uniqueName;
   }
 
-  // /**
-  //  * Reserved method for debugging.
-  //  *
-  //  * @param {string} resource
-  //  * @return {Array<string>}
-  //  */
-  // static getResourceIssuers(resource) {
-  //   const item = this.files.get(resource);
-  //
-  //   if (!item) return [];
-  //
-  //   const issuers = Array.from(item.entries.keys());
-  //
-  //   // extract from all issuer's request only filename, w/o a query
-  //   issuers.forEach((request, index) => {
-  //     let [file] = request.split('?', 1);
-  //     issuers[index] = file;
-  //   });
-  //
-  //   return issuers;
-  // }
-
+  /**
+   * @param {AssetEntryOptions} entry
+   */
   static addEntry(entry) {
     const entryPoint = this.data.get(entry.filename);
     if (entryPoint) {
@@ -154,10 +134,16 @@ class Collection {
     return this.files.get(resource)?.type === this.type.style;
   }
 
+  /**
+   * @param {boolean} state Whether the style is imported as ESM.
+   */
   static setImportStyleEsModule(state) {
     this.importStyleEsModule = state === true;
   }
 
+  /**
+   * @returns {boolean}
+   */
   static isImportStyleEsModule() {
     return this.importStyleEsModule;
   }
@@ -169,7 +155,7 @@ class Collection {
     const { moduleGraph } = this.compilation;
     const moduleMap = moduleGraph._moduleMap;
 
-    for (let [module, graphModule] of moduleMap.entries()) {
+    for (let [module] of moduleMap.entries()) {
       if (module.resource === resource) {
         return module;
       }
@@ -177,20 +163,6 @@ class Collection {
 
     return null;
   }
-
-  /**
-   * TODO: Reserved for debug.
-   * @param {string} resource
-   */
-  // static getCompilationModule(resource) {
-  //   const { modules } = this.compilation;
-  //   for (const module of modules) {
-  //     if (module.resource === resource) {
-  //       return module;
-  //     }
-  //   }
-  //   return null;
-  // }
 
   /**
    * Find styles from all nested JS files imported in the root JS file and sort them.
@@ -316,24 +288,6 @@ class Collection {
 
     return current && current.resource !== resource ? current.resource : undefined;
   }
-
-  // Reserved for the future.
-  // Enable when will be used the AssetCompiler.beforeBuildModule.
-  // /**
-  //  * @param {{__isStyle?:boolean|undefined, resource:string}} module The Webpack chunk module.
-  //  * Properties:<br>
-  //  *   __isStyle {boolean} The cached state whether the Webpack module was resolved as style.<br>
-  //  *   resource {string} The source file of Webpack module.<br>
-  //  *
-  //  * @return {boolean}
-  //  */
-  // static isModuleStyle(module) {
-  //   if (module.__isStyle == null) {
-  //     module.__isStyle = this.hasStyle(module.resource);
-  //   }
-  //
-  //   return module.__isStyle;
-  // }
 
   /**
    * Whether resource is an inlined style.
@@ -581,31 +535,6 @@ class Collection {
   }
 
   /**
-   * Set source code for inlined asset.
-   *
-   * @param {AssetEntryOptions} entry The entry where is defined the asset.
-   * @param {string|undefined} resource The resource file, including a query.
-   *  This is used for styles specified in a template.
-   * @param {string|undefined} issuer The issuer of the resource file.
-   *  This is used for styles imported in JS.
-   * @param {string} source The source content of asset.
-   */
-  static setDataSource(entry, resource, issuer, source) {
-    const { resources } = Collection.data.get(entry.filename);
-    let asset;
-
-    if (resource) {
-      asset = resources.find((item) => item.resource === resource);
-    } else if (issuer) {
-      asset = resources.find((item) => item.imports && item.issuer?.resource === issuer);
-    }
-
-    if (asset) {
-      asset.source = source;
-    }
-  }
-
-  /**
    * Render all resolved assets in contents.
    * Inline JS, CSS, substitute output JS filenames.
    *
@@ -643,17 +572,17 @@ class Collection {
             if (imports) {
               importedStyles.push(asset);
             } else if (inline) {
-              content = this.#inlineStyle(content, resource, asset, LF) || content;
+              content = this.#inlineStyle(content, resource, asset, compilation.assets, LF) || content;
             }
             break;
           case this.type.script:
-            content = this.#inlineAndReplaceJS(content, resource, asset, compilation.assets, LF) || content;
+            content = this.#inlineOrReplaceJS(content, resource, asset, compilation.assets, LF) || content;
             break;
         }
       }
 
       if (importedStyles.length > 0) {
-        content = this.#inlineImportedStyles(content, importedStyles, LF) || content;
+        content = this.#inlineOrReplaceImportedStyles(content, importedStyles, compilation.assets, LF) || content;
       }
 
       if (hasInlineSvg) {
@@ -673,14 +602,15 @@ class Collection {
   }
 
   /**
-   * Insert imported styles in the HTML head.
+   * Inline CSS or replace output filename for imported styles.
    *
-   * @param {string} content
+   * @param {string} content The content of the template.
    * @param {Array<Object>} styles
-   * @param {string} LF
+   * @param {Object} sources The compilation assets containing the compiled source.
+   * @param {string} LF The new line feed in depends on the minification option.
    * @return {string|undefined}
    */
-  static #inlineImportedStyles(content, styles, LF) {
+  static #inlineOrReplaceImportedStyles(content, styles, sources, LF) {
     const insertPos = this.#findStyleInsertPos(content);
     if (insertPos < 0) {
       // TODO: show warning - the template must contain the <head></head> tag to inject styles.
@@ -692,19 +622,15 @@ class Collection {
 
     for (const asset of styles) {
       if (asset.inline) {
-        let source;
+        const assetMapFile = asset.assetFile + '.map';
+        const mapFilename = path.basename(assetMapFile);
+        const sourceMap = sources[assetMapFile]?.source();
+        let source = sources[asset.assetFile].source();
 
-        // note: the source can be a string or RawSource
-        if (asset.source.source) {
-          let sourceMap = asset.source.map();
-          source = asset.source.source();
-
-          if (sourceMap) {
-            const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
-            source += '\n/*# sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64 + ' */';
-          }
-        } else {
-          source = asset.source;
+        if (sourceMap) {
+          const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
+          const inlineSourceMap = 'data:application/json;charset=utf-8;base64,' + base64;
+          source = source.replace(mapFilename, inlineSourceMap);
         }
 
         // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
@@ -723,14 +649,16 @@ class Collection {
    * @param {string} content The content of the template.
    * @param {string} search The original request of a style in the content.
    * @param {Object} asset The object of the style.
+   * @param {Object} sources The compilation assets containing the compiled source.
    * @param {string} LF The new line feed in depends on the minification option.
    * @return {string|boolean} Return content with inlined CSS or false if the content was not modified.
    */
-  static #inlineStyle(content, search, asset, LF) {
+  static #inlineStyle(content, search, asset, sources, LF) {
     const pos = content.indexOf(search);
 
     if (pos < 0) return false;
 
+    const source = sources[asset.assetFile].source();
     const tagEnd = '>';
     const openTag = '<style>';
     let closeTag = '</style>';
@@ -744,7 +672,7 @@ class Collection {
     if ('\n\r'.indexOf(content[tagEndPos]) < 0) closeTag += LF;
 
     // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
-    return content.slice(0, tagStartPos) + openTag + asset.source + closeTag + content.slice(tagEndPos);
+    return content.slice(0, tagStartPos) + openTag + source + closeTag + content.slice(tagEndPos);
   }
 
   /**
@@ -781,7 +709,17 @@ class Collection {
     return startPos;
   }
 
-  static #inlineAndReplaceJS(content, search, asset, sources, LF) {
+  /**
+   * Inline JS file specified in a template.
+   *
+   * @param {string} content The content of the template.
+   * @param {string} search The original request of a script in the content.
+   * @param {Object} asset The object of the script.
+   * @param {Object} sources The compilation assets containing the compiled source.
+   * @param {string} LF The new line feed in depends on the minification option.
+   * @return {string|boolean} Return content with inlined JS or false if the content was not modified.
+   */
+  static #inlineOrReplaceJS(content, search, asset, sources, LF) {
     const pos = content.indexOf(search);
     if (pos < 0) return false;
 
@@ -976,6 +914,38 @@ class Collection {
     // when changing the style, the data must be got from the cache
     this.orderedResources.get(entryId)?.clear();
   }
+
+  /**
+   * TODO: Reserved for debug.
+   */
+  // static getResourceIssuers(resource) {
+  //   const item = this.files.get(resource);
+  //
+  //   if (!item) return [];
+  //
+  //   const issuers = Array.from(item.entries.keys());
+  //
+  //   // extract from all issuer's request only filename, w/o a query
+  //   issuers.forEach((request, index) => {
+  //     let [file] = request.split('?', 1);
+  //     issuers[index] = file;
+  //   });
+  //
+  //   return issuers;
+  // }
+
+  /**
+   * TODO: Reserved for debug.
+   */
+  // static getCompilationModule(resource) {
+  //   const { modules } = this.compilation;
+  //   for (const module of modules) {
+  //     if (module.resource === resource) {
+  //       return module;
+  //     }
+  //   }
+  //   return null;
+  // }
 }
 
 module.exports = Collection;

@@ -1,5 +1,9 @@
 # Change log
 
+## 2.4.0 (2023-07-28)
+- feat: add support for Webpack CSS optimization
+- fix: resolving the same resources used in imported styles on different pages
+
 ## 2.3.1 (2023-07-27)
 - fix: add the missing types.d.ts file to npm package
 

@@ -6,7 +6,7 @@
     "build": "webpack --mode=production --progress"
   },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "2.3.0",
+    "html-bundler-webpack-plugin": "2.4.0",
     "postcss": "^8.4.27",
     "postcss-loader": "^7.3.3",
     "postcss-preset-env": "^9.1.0",

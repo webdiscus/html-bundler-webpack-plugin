@@ -18,10 +18,10 @@ const loader = require.resolve('../Loader');
 
 /**
  * @typedef {Object} AssetEntryOptions
- * @property {number=} id The unique Id of the entry template.
- *   The entries added to compilation have not Id.
+ * @property {number=} id The unique ID of the entry template.
+ *   The entries added to compilation have not ID.
  *   Note: the same source file of a template can be defined under many entry names.
- *   In this case the entry.resource is not unique und must be used entry.id.
+ *   In this case, the 'entry.resource' is not unique und must be used entry.id.
  * @property {string} name The key of webpack entry.
  * @property {string|(function(PathData, AssetInfo): string)} filenameTemplate The filename template or function.
  * @property {string} filename The asset filename.
@@ -29,12 +29,12 @@ const loader = require.resolve('../Loader');
  *  [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
  *  See https://webpack.js.org/configuration/output/#outputfilename
  *
- * @property {string=} assetFile The output asset file with relative path by webpack output path.
- *   Note: the method compilation.emitAsset() use this file as key of assets object
+ * @property {string=} assetFile The output asset file with the relative path by webpack output path.
+ *   Note: the method compilation.emitAsset() use this file as the key of an asset object
  *   and save the file relative by output path, defined in webpack.options.output.path.
- * @property {string} resource The absolute import file with query.
+ * @property {string} resource The absolute import file with a query.
  * @property {string} importFile The original import entry file.
- * @property {string} sourceFile The absolute import file only w/o query.
+ * @property {string} sourceFile The absolute import file only w/o a query.
  * @property {string} sourcePath The path where are source files.
  * @property {string} outputPath The absolute output path.
  * @property {string} publicPath The public path relative to outputPath.
@@ -51,6 +51,7 @@ class AssetEntry {
 
   /** @type {Map<string, AssetEntryOptions>} */
   static entries = new Map();
+  /** @type {Map<Number, AssetEntryOptions>} */
   static entriesById = new Map();
   static compilationEntryNames = new Set();
   static entryFilenames = new Set();
@@ -224,6 +225,10 @@ class AssetEntry {
     return entry;
   }
 
+  /**
+   * @param {string|number} id
+   * @returns {AssetEntryOptions}
+   */
   static getById(id) {
     return this.entriesById.get(Number(id));
   }

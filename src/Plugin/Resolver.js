@@ -209,7 +209,7 @@ class Resolver {
    * @throws {Error}
    */
   static require(rawRequest) {
-    const { fs, issuer, issuerFile } = this;
+    const { issuer, issuerFile } = this;
 
     // @import CSS rule is not supported
     if (rawRequest.indexOf('??ruleSet') > 0) {

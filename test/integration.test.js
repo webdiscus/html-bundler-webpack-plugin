@@ -44,10 +44,6 @@ describe('resolve styles', () => {
   test('resolve styles with same name', () => compareFiles('resolve-styles-with-same-name'));
 });
 
-describe('real content hash', () => {
-  test('real-contenthash-js', () => compareFiles('real-contenthash-js'));
-});
-
 describe('resolve url() in style', () => {
   test('url(image) in CSS', () => compareFiles('resolve-url-in-css'));
   test('CSS imported in module with .css', () => compareFiles('import-css-from-module-with-ext'));
@@ -170,10 +166,8 @@ describe('inline styles & scripts', () => {
 });
 
 describe('import styles in JavaScript', () => {
-  // TODO: test in watch => err: SyntaxError: Unexpected token 'export'
-  test('js-import-scss', () => compareFiles('js-import-scss'));
-
   test('js-import-css', () => compareFiles('js-import-css'));
+  test('js-import-scss', () => compareFiles('js-import-scss'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));
   test('import css deep in js', () => compareFiles('js-import-css-deep'));
@@ -188,6 +182,9 @@ describe('import styles in JavaScript', () => {
 
   test('inline images in CSS', () => compareFiles('js-import-css-inline-img-in-css'));
   test('inline images in inlined CSS', () => compareFiles('js-import-css-inline-img-in-inlined-css'));
+
+  test('CSS used in many pages', () => compareFiles('js-import-css-multiple-pages'));
+  test('inlined CSS, images, many pages', () => compareFiles('js-import-css-multiple-pages_inline-css'));
 
   // source map
   test('nested, inline-source-map', () => compareFiles('js-import-css-nested-inline-source-map'));
@@ -232,6 +229,20 @@ describe('split chunks', () => {
   // ATTENTION: this test doesn't work and never will be works.
   // This is just to demonstrate how a split of CSS files cannot be used. CSS files cannot be split.
   // test('extract css from split chunks ', () => compareFiles('split-chunk-css');
+});
+
+describe('real content hash', () => {
+  test('real-contenthash-js', () => compareFiles('real-contenthash-js'));
+});
+
+describe('optimization', () => {
+  test('css', () => compareFiles('optimization-css'));
+  test('inline css', () => compareFiles('optimization-inline-css'));
+  test('inline css, source-map', () => compareFiles('optimization-inline-css-source-map'));
+  test('imported css, inline-source-map', () => compareFiles('optimization-imported-css-inline-source-map'));
+  test('inline imported css, source-map', () => compareFiles('optimization-inline-imported-css-source-map'));
+  test('inline imported css, inline-source-map', () =>
+    compareFiles('optimization-inline-imported-css-inline-source-map'));
 });
 
 describe('special cases', () => {

@@ -550,7 +550,7 @@ class AssetCompiler {
     // if (module._isLoaderImport) return;
     // if (
     //   module.type === 'asset/resource' &&
-    //   (Collection.isModuleScript(module) || (module._isDependencyUrl === true && Collection.isModuleStyle(module)))
+    //   (module._isScript || (module._isDependencyUrl === true && module._isStyle))
     // ) {
     //   // set correct module type for scripts and styles when used the `html` mode of a loader
     //   module.type = 'javascript/auto';
@@ -763,12 +763,13 @@ class AssetCompiler {
     const inline = Collection.isInlineStyle(resource);
     const { name } = path.parse(sourceFile);
     const hash = buildInfo.assetInfo?.contenthash || buildInfo.hash;
-    const { isCached, filename: assetFile } = this.getStyleAsseFile({
+    const { isCached, filename } = this.getStyleAsseFile({
       name,
       chunkId: chunk.id,
       hash,
       resource: sourceFile,
     });
+    const assetFile = inline ? this.getInlineStyleAsseFile(filename, this.currentEntryPoint.filename) : filename;
     const data = {
       type: Collection.type.style,
       inline,
@@ -808,6 +809,7 @@ class AssetCompiler {
     const inline = Options.getCss().inline;
     const esModule = Collection.isImportStyleEsModule();
     const urlRegex = new RegExp(`${esModule ? baseUri : ''}${urlPathPrefix}(.+?)(?=\\))`, 'g');
+    const entryFilename = this.currentEntryPoint.filename;
 
     const orderedRootIssuers = Collection.orderedResources.get(this.currentEntryPoint.id);
 
@@ -846,15 +848,14 @@ class AssetCompiler {
 
       //const hash = this.webpack.util.createHash('md4').update(sources.toString()).digest('hex');
       const hash = createHash('md4').update(cssHash).digest('hex');
-      const { isCached, filename: assetFile } = this.getStyleAsseFile({
+      const { isCached, filename } = this.getStyleAsseFile({
         name: issuerEntry.name,
         chunkId: chunk.id,
         hash,
         resource: issuer,
       });
-
-      const outputFilename = Options.getAssetOutputFile(assetFile, this.currentEntryPoint.filename);
-      const existsAsset = outputFilename in this.compilation.assets;
+      const assetFile = inline ? this.getInlineStyleAsseFile(filename, entryFilename) : filename;
+      const outputFilename = inline ? assetFile : Options.getAssetOutputFile(assetFile, entryFilename);
 
       Collection.setData(
         this.currentEntryPoint,
@@ -869,10 +870,13 @@ class AssetCompiler {
         }
       );
 
-      // avoid double processing when the same JS file with included styles used in many pages
-      if (existsAsset) continue;
+      // skip already processed styles except inlined
+      if (isCached && !inline) {
+        continue;
+      }
 
       // 4. extract CSS content from squashed sources
+      const issuerFilename = inline ? entryFilename : assetFile;
       const cssContent = CssExtractModule.applyForImportedStyle(
         this.compilation,
         {
@@ -883,7 +887,7 @@ class AssetCompiler {
         (content) =>
           content.replace(urlRegex, (match, file) => {
             const outputFilename = isAutoPublicPath
-              ? Options.getAssetOutputFile(file, assetFile)
+              ? Options.getAssetOutputFile(file, issuerFilename)
               : path.posix.join(publicPath, file);
 
             // note: Webpack itself embeds the asset/inline resources,
@@ -910,19 +914,11 @@ class AssetCompiler {
           })
       );
 
-      // 5.1 store CSS to inline it into HTML
-      if (inline) {
-        Collection.setDataSource(this.currentEntryPoint, undefined, issuer, cssContent);
-        continue;
-      }
-
-      // 5.2 add CSS file into compilation
+      // 5. add CSS file into compilation
       const fileManifest = {
         render: () => cssContent,
         filename: assetFile,
-        // TODO: check the identifier whether a suffix is needed
-        identifier: `${pluginName}.${chunk.id}.import-style`,
-        //identifier: `${pluginName}.${chunk.id}`,
+        identifier: `${pluginName}.${chunk.id}`,
         hash,
       };
 
@@ -962,6 +958,21 @@ class AssetCompiler {
     // this occurs when filename template not contains a hash subsituation,
     // then the output name of css and its issuer is the same
     return Asset.getUniqueFilename(sourceFile, outputFilename);
+  }
+
+  /**
+   * Get temporary unique output filename for inline css.
+   *
+   * The same compiled CSS file must have a unique output filename by the entry.
+   * After inlining of the compiled asset, this temporary file will be removed from compilation,
+   * to avoid creating needles files.
+   *
+   * @param {string} assetFile
+   * @param {string} issuerFile
+   * @returns {string}
+   */
+  getInlineStyleAsseFile(assetFile, issuerFile) {
+    return `${issuerFile}_${assetFile}`.replace(/\//g, '-');
   }
 
   /**
@@ -1048,11 +1059,6 @@ class AssetCompiler {
     switch (type) {
       case 'style':
         result = CssExtractModule.apply(this.compilation, { data: result, assetFile, inline });
-
-        if (inline) {
-          Collection.setDataSource(this.currentEntryPoint, sourceRequest, undefined, result);
-          return null;
-        }
         break;
       case 'template':
         if (Options.hasPostprocess()) {
