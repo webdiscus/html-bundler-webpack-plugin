@@ -4,7 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>The plugin renders HTML templates with referenced resources of styles, scripts, images</div>
+    <div>The plugin renders HTML templates with referenced source files of styles, scripts, images</div>
 </div>
 
 ---
@@ -15,12 +15,14 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-## HTML as entrypoint
+## HTML template as entrypoint
 
-The plugin supports HTML templates as entrypoints.\
-In HTML templates can be referenced any resources such as JS, SCSS, images and other assets, similar to how it works in Vite.\
+The plugin allows you to use any template as entrypoint.
+You can use templates such as HTML, phtm, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
+
+In template can be referenced any source assets such as JS, SCSS, images and others, similar to how it works in Vite.\
 For example: 
-- `<link href="@images/favicon.png" type="image/png" rel=icon />`
+- `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
 - `<link href="./style.scss" rel="stylesheet">`
 - `<script src="./App.tsx" defer="defer"></script>`
 - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
@@ -28,15 +30,16 @@ For example:
 Note: `@images` is the Webpack alias to a source images directory.
 
 
-The plugin detects all source files referenced in HTML and extracts processed assets to the output directory.
+The plugin detects all source files referenced in a template and extracts processed assets to the output directory.
+Compiled JS and CSS can be inlined into generated HTML using the `inline` plugin option.
 In the generated HTML and CSS, the plugin substitutes the source filenames with the output filenames.
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
 ### 💡 Highlights
 
-- An [entry point](#option-entry) is an HTML template.
-- Binding the source **script/style** filenames directly in HTML using `<script>` and `<link>`.
+- An [entry point](#option-entry) is any template.
+- Binding source **script** and **style** files directly in HTML using `<script>` and `<link>`.
 - Resolving [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
 - Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
