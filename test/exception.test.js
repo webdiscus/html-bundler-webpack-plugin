@@ -150,6 +150,11 @@ describe('plugin exceptions', () => {
     const containString = 'After process failed';
     return exceptionContain('msg-exception-plugin-option-afterProcess', containString);
   });
+
+  test('inject css in HTML w/o head', () => {
+    const containString = "The imported style can't be injected in HTML";
+    return exceptionContain('msg-exception-import-css-wo-head', containString);
+  });
 });
 
 describe('css loader exceptions', () => {

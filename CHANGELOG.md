@@ -1,5 +1,33 @@
 # Change log
 
+## 2.5.0 (2023-07-30)
+- feat: add the reference for `data` in the plugin options.\
+  The NEW syntactic "sugar":
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    // new reference to the loaderOptions.data
+    data: {...},
+  }),
+  ```
+  The old syntax is still valid:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    loaderOptions: {
+      // original option is under loaderOptions
+      data: {...},
+    },
+  }),
+  ```
+- refactor: code refactoring
+- test: add more tests
+- docs: update README
+
 ## 2.4.0 (2023-07-28)
 - feat: add support for Webpack CSS optimization
 - fix: resolving the same resources used in imported styles on different pages
@@ -21,14 +49,14 @@
 - fix: load the handlebars's partials with allowed extensions only, #24
 
 ## 2.2.0 (2023-07-21)
-- feat: change the location of the `preprocessor` and `preprocessorOptions` options in the config.\
-  The NEW syntax:
+- feat: add the references for `preprocessor` and `preprocessorOptions` in the plugin options.\
+  The NEW syntactic "sugar":
   ```js
   new HtmlBundlerPlugin({
     entry: {
       index: './src/views/home.ejs',
     },
-    // new location of options
+    // new references to options in the loaderOptions
     preprocessor: 'ejs',
     preprocessorOptions: {...},
   }),
@@ -40,7 +68,7 @@
       index: './src/views/home.ejs',
     },
     loaderOptions: {
-      // old location of options under loaderOptions
+      // original options are under loaderOptions
       preprocessor: 'ejs',
       preprocessorOptions: {...},
     },

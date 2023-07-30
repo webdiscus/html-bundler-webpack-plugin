@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parseQuery, getFileExtension } from '../src/Common/Helpers';
+import { parseQuery, getFileExtension, replaceAll } from '../src/Common/Helpers';
 import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
@@ -7,6 +7,7 @@ import Snapshot from '../src/Plugin/Snapshot';
 import Template from '../src/Loader/Template';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
+import Collection from '../src/Plugin/Collection';
 
 beforeAll(() => {
   // important: the environment constant is used in code
@@ -412,6 +413,40 @@ describe('plugin options unit tests', () => {
     const received = Options.toBool('auto', false, false);
     return expect(received).toEqual(true);
   });
+
+  test('isProduction true', () => {
+    Options.productionMode = true;
+    const received = Options.isProduction();
+    return expect(received).toEqual(true);
+  });
+
+  test('isRealContentHash true', () => {
+    Options.webpackOptions.optimization = {
+      realContentHash: true,
+    };
+    const received = Options.isRealContentHash();
+    return expect(received).toEqual(true);
+  });
+
+  test('isScript true', () => {
+    Options.options = {
+      js: {
+        enabled: true,
+        test: Options.js.test,
+      },
+    };
+
+    const received = Options.isScript('test.js?v=123');
+    return expect(received).toEqual(true);
+  });
+
+  test('getEntryPath', () => {
+    Options.dynamicEntry = 'src/views/';
+    Options.options.entry = Options.dynamicEntry;
+
+    const received = Options.getEntryPath();
+    return expect(received).toEqual(Options.dynamicEntry);
+  });
 });
 
 describe('FileUtils', () => {
@@ -595,9 +630,41 @@ describe('misc tests', () => {
 
     const received = data.flat(); // OK
     //const received = [...data]; // empty slots
-
     const expected = ['a', 'b', 'c'];
-
     return expect(received).toStrictEqual(expected);
+  });
+
+  test('replaceAll', () => {
+    const received = replaceAll('begin replace_me and replace_me and', 'replace_me', 'A');
+    const expected = 'begin A and A and';
+    return expect(received).toEqual(expected);
+  });
+
+  test('Collection.findStyleInsertPos OK', () => {
+    const content = `<html><head></head><body></body></html>`;
+    const received = Collection.findStyleInsertPos(content);
+    const expected = 12;
+    return expect(received).toEqual(expected);
+  });
+
+  test('Collection.findStyleInsertPos OK before script', () => {
+    const content = `<html><head><link><script></script></head><body></body></html>`;
+    const received = Collection.findStyleInsertPos(content);
+    const expected = 18;
+    return expect(received).toEqual(expected);
+  });
+
+  test('Collection.findStyleInsertPos no open head', () => {
+    const content = `<html></head><body></body></html>`;
+    const received = Collection.findStyleInsertPos(content);
+    const expected = -1;
+    return expect(received).toEqual(expected);
+  });
+
+  test('Collection.findStyleInsertPos no close head', () => {
+    const content = `<html><head><body></body></html>`;
+    const received = Collection.findStyleInsertPos(content);
+    const expected = -1;
+    return expect(received).toEqual(expected);
   });
 });

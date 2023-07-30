@@ -51,17 +51,6 @@ class RenderMode {
   }
 
   /**
-   * Require the same script only once to avoid double processing.
-   * Reserved.
-   *
-   * @param {string} file
-   * @return {string}
-   */
-  // encodeRequireOnce(file) {
-  //   return Collection.existsResource(file) ? this.encodeFile(file) : this.encodeRequire(file);
-  // }
-
-  /**
    * Resolve resource file after compilation of source code.
    * The filename is interpolated in VM at this stage.
    *

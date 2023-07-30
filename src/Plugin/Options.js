@@ -58,8 +58,8 @@ class Options {
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
     enabled: true,
-    filename: '[name].js',
-    chunkFilename: '[id].js',
+    filename: undefined, // used output.filename
+    chunkFilename: undefined, // used output.chunkFilename
     outputPath: null,
     inline: false,
   };
@@ -83,6 +83,7 @@ class Options {
     this.AssetEntry = AssetEntry;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
+
     this.options.afterProcess = isFunction(options.afterProcess) ? options.afterProcess : null;
     this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
 
@@ -185,11 +186,11 @@ class Options {
 
     // define js output filename
     if (!output.filename) {
-      output.filename = this.js.filename;
+      output.filename = '[name].js';
     }
 
     if (!output.chunkFilename) {
-      output.chunkFilename = this.js.chunkFilename;
+      output.chunkFilename = '[id].js';
     }
 
     if (typeof publicPath === 'function') {

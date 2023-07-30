@@ -1,10 +1,12 @@
 const path = require('path');
+const { replaceAll } = require('../Common/Helpers');
 const Options = require('./Options');
 const AssetEntry = require('./AssetEntry');
 const AssetInline = require('./AssetInline');
 const AssetTrash = require('./AssetTrash');
 const Preload = require('./Preload');
 const Dependency = require('../Loader/Dependency');
+const { noHeadException } = require('./Messages/Exception');
 
 /**
  * @typedef {Object} CollectionData
@@ -19,9 +21,6 @@ const Dependency = require('../Loader/Dependency');
 
 // TODO: remove polyfill when support for node.js 14 is dropped
 const hasReplaceAll = !!String.prototype.replaceAll;
-const replaceAll = (str, search, replace) => {
-  return str.replace(new RegExp(search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
-};
 
 /**
  * Collection of script and style files parsed in a template.
@@ -302,14 +301,6 @@ class Collection {
   }
 
   /**
-   * @param {string} resource
-   * @return {boolean}
-   */
-  static existsResource(resource) {
-    return this.files.has(resource);
-  }
-
-  /**
    * @param {string} entryId The entry id where can be used imported styles.
    * @return {boolean}
    */
@@ -582,7 +573,8 @@ class Collection {
       }
 
       if (importedStyles.length > 0) {
-        content = this.#inlineOrReplaceImportedStyles(content, importedStyles, compilation.assets, LF) || content;
+        content =
+          this.#inlineOrReplaceImportedStyles(content, entry, importedStyles, compilation.assets, LF) || content;
       }
 
       if (hasInlineSvg) {
@@ -605,16 +597,16 @@ class Collection {
    * Inline CSS or replace output filename for imported styles.
    *
    * @param {string} content The content of the template.
+   * @param {AssetEntryOptions} entry
    * @param {Array<Object>} styles
    * @param {Object} sources The compilation assets containing the compiled source.
    * @param {string} LF The new line feed in depends on the minification option.
    * @return {string|undefined}
    */
-  static #inlineOrReplaceImportedStyles(content, styles, sources, LF) {
-    const insertPos = this.#findStyleInsertPos(content);
+  static #inlineOrReplaceImportedStyles(content, entry, styles, sources, LF) {
+    const insertPos = this.findStyleInsertPos(content);
     if (insertPos < 0) {
-      // TODO: show warning - the template must contain the <head></head> tag to inject styles.
-      return;
+      noHeadException(entry.resource);
     }
 
     let linkTags = '';
@@ -622,16 +614,7 @@ class Collection {
 
     for (const asset of styles) {
       if (asset.inline) {
-        const assetMapFile = asset.assetFile + '.map';
-        const mapFilename = path.basename(assetMapFile);
-        const sourceMap = sources[assetMapFile]?.source();
-        let source = sources[asset.assetFile].source();
-
-        if (sourceMap) {
-          const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
-          const inlineSourceMap = 'data:application/json;charset=utf-8;base64,' + base64;
-          source = source.replace(mapFilename, inlineSourceMap);
-        }
+        const source = this.#getInlineSource(sources, asset.assetFile);
 
         // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
         styleTags += `<style>` + source + `</style>${LF}`;
@@ -658,7 +641,7 @@ class Collection {
 
     if (pos < 0) return false;
 
-    const source = sources[asset.assetFile].source();
+    const source = this.#getInlineSource(sources, asset.assetFile);
     const tagEnd = '>';
     const openTag = '<style>';
     let closeTag = '</style>';
@@ -676,6 +659,26 @@ class Collection {
   }
 
   /**
+   * @param {Object} sources The compilation assets containing the compiled source.
+   * @param {string} assetFile The asset filename.
+   * @returns {string}
+   */
+  static #getInlineSource(sources, assetFile) {
+    const assetMapFile = assetFile + '.map';
+    const mapFilename = path.basename(assetMapFile);
+    const sourceMap = sources[assetMapFile]?.source();
+    let source = sources[assetFile].source();
+
+    if (sourceMap) {
+      const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
+      const inlineSourceMap = 'data:application/json;charset=utf-8;base64,' + base64;
+      source = source.replace(mapFilename, inlineSourceMap);
+    }
+
+    return source;
+  }
+
+  /**
    * Find insert position for styles in the HTML head.
    *
    * <head>
@@ -690,7 +693,7 @@ class Collection {
    * @param {string} content
    * @return {number}
    */
-  static #findStyleInsertPos(content) {
+  static findStyleInsertPos(content) {
     let headStartPos = content.indexOf('<head');
     if (headStartPos < 0) {
       return -1;

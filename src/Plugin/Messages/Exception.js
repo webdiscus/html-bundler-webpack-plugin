@@ -1,17 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {
-  reset,
-  green,
-  cyan,
-  cyanBright,
-  yellow,
-  white,
-  whiteBright,
-  magenta,
-  magentaBright,
-  redBright,
-} = require('ansis/colors');
+const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis/colors');
 const { pluginName } = require('../../config');
 
 class PluginException extends Error {
@@ -101,7 +90,7 @@ const resolveException = (file, issuer, rootContext) => {
       `\nThe handling of ${yellow`@import at-rules in CSS`} is not supported. Disable the 'import' option in 'css-loader':\n` +
       white`
 {
-  test: /\.(css|scss)$/i,
+  test: /\.css$/i,
   use: [
     {
       loader: 'css-loader',
@@ -109,7 +98,6 @@ const resolveException = (file, issuer, rootContext) => {
         import: false, // disable @import at-rules handling
       },
     },
-    'sass-loader',
   ],
 },`;
   }
@@ -150,6 +138,18 @@ const afterProcessException = (error, file) => {
   throw new PluginException(message, error);
 };
 
+/**
+ * @param {string} sourceFile
+ * @throws {Error}
+ */
+const noHeadException = (sourceFile) => {
+  const message =
+    `The imported style can't be injected in HTML. The template not contains ${yellow`<head>`} tag.\n` +
+    `The template: ${cyan(sourceFile)}`;
+
+  throw new PluginException(message, null);
+};
+
 module.exports = {
   PluginException,
   optionEntryPathException,
@@ -158,4 +158,5 @@ module.exports = {
   executeFunctionException,
   postprocessException,
   afterProcessException,
+  noHeadException,
 };

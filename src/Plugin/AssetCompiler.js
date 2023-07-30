@@ -87,7 +87,7 @@ class AssetCompiler {
   };
 
   /** @type AssetEntryOptions The current entry point during dependency compilation. */
-  currentEntryPoint = null;
+  currentEntryPoint;
 
   /** @type Set<Error> Buffered exceptions thrown in hooks. */
   exceptions = new Set();
@@ -680,7 +680,8 @@ class AssetCompiler {
       if (content == null) continue;
 
       fileManifest.filename = module.assetFile;
-      fileManifest.render = () => new RawSource(content);
+      //fileManifest.render = () => new RawSource(content);
+      fileManifest.render = () => (typeof content === 'string' ? new RawSource(content) : content);
       result.push(fileManifest);
     }
 
@@ -809,9 +810,9 @@ class AssetCompiler {
     const inline = Options.getCss().inline;
     const esModule = Collection.isImportStyleEsModule();
     const urlRegex = new RegExp(`${esModule ? baseUri : ''}${urlPathPrefix}(.+?)(?=\\))`, 'g');
-    const entryFilename = this.currentEntryPoint.filename;
-
-    const orderedRootIssuers = Collection.orderedResources.get(this.currentEntryPoint.id);
+    const entry = this.currentEntryPoint;
+    const entryFilename = entry.filename;
+    const orderedRootIssuers = Collection.orderedResources.get(entry.id);
 
     for (const issuer of orderedRootIssuers) {
       if (!Collection.importStyleRootIssuers.has(issuer)) continue;
@@ -822,7 +823,7 @@ class AssetCompiler {
       let cssHash = '';
 
       // 1. get styles from all nested files imported in the root JS file and sort them
-      const modules = Collection.findImportedModules(this.currentEntryPoint.id, issuer, chunk);
+      const modules = Collection.findImportedModules(entry.id, issuer, chunk);
 
       // 2. squash styles from all nested files into one file
       modules.forEach((module) => {
@@ -858,7 +859,7 @@ class AssetCompiler {
       const outputFilename = inline ? assetFile : Options.getAssetOutputFile(assetFile, entryFilename);
 
       Collection.setData(
-        this.currentEntryPoint,
+        entry,
         { resource: issuer },
         {
           type: Collection.type.style,
@@ -877,44 +878,46 @@ class AssetCompiler {
 
       // 4. extract CSS content from squashed sources
       const issuerFilename = inline ? entryFilename : assetFile;
-      const cssContent = CssExtractModule.applyForImportedStyle(
+
+      const resolveAssetFiles = (match, file) => {
+        const outputFilename = isAutoPublicPath
+          ? Options.getAssetOutputFile(file, issuerFilename)
+          : path.posix.join(publicPath, file);
+
+        // note: Webpack itself embeds the asset/inline resources,
+        // here will be processed asset/resource only
+
+        for (const module of modules) {
+          const assetsInfo = module.buildInfo.assetsInfo?.get(file);
+
+          if (!assetsInfo) continue;
+
+          Collection.setData(
+            entry,
+            { resource: module.resource },
+            {
+              type: Collection.type.resource,
+              inline: undefined,
+              resource: assetsInfo.sourceFilename,
+              assetFile: outputFilename,
+            }
+          );
+        }
+
+        return outputFilename;
+      };
+
+      const cssContent = CssExtractModule.apply(
         this.compilation,
         {
           data: sources,
           assetFile,
           inline,
         },
-        (content) =>
-          content.replace(urlRegex, (match, file) => {
-            const outputFilename = isAutoPublicPath
-              ? Options.getAssetOutputFile(file, issuerFilename)
-              : path.posix.join(publicPath, file);
-
-            // note: Webpack itself embeds the asset/inline resources,
-            // here will be processed asset/resource only
-
-            for (const styleModule of modules) {
-              const assetsInfo = styleModule.buildInfo.assetsInfo?.get(file);
-
-              if (!assetsInfo) continue;
-
-              Collection.setData(
-                this.currentEntryPoint,
-                { resource: styleModule.resource },
-                {
-                  type: Collection.type.resource,
-                  inline: undefined,
-                  resource: assetsInfo.sourceFilename,
-                  assetFile: outputFilename,
-                }
-              );
-            }
-
-            return outputFilename;
-          })
+        (content) => content.replace(urlRegex, resolveAssetFiles)
       );
 
-      // 5. add CSS file into compilation
+      // 5. add extracted CSS file into compilation
       const fileManifest = {
         render: () => cssContent,
         filename: assetFile,

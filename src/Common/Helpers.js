@@ -155,6 +155,18 @@ const detectIndent = (content, startPos) => {
   return pos < startPos ? content.slice(pos + 1, startPos + 1) : '';
 };
 
+/**
+ * The polyfill for node < 15.
+ *
+ * @param {string} str
+ * @param {string} search
+ * @param {string} replace
+ * @returns {string}
+ */
+const replaceAll = (str, search, replace) => {
+  return str.replace(new RegExp(search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
+};
+
 module.exports = {
   isWin,
   isFunction,
@@ -165,5 +177,6 @@ module.exports = {
   addQueryParam,
   deleteQueryParam,
   detectIndent,
+  replaceAll,
   outToConsole,
 };

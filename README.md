@@ -151,14 +151,16 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
-   - [preprocessor](#option-preprocessor) and [preprocessorOptions](#option-preprocessor) (templating)
+   - [preprocessor](#option-preprocessor) (🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
+   - [preprocessorOptions](#option-preprocessor) (🔗reference to [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions))
+   - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
    - [postprocess](#option-postprocess)
    - [preload](#option-preload) (inject preload link tags)
    - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
    - [extractComments](#option-extract-comments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watch-files)
-   - [loaderOptions](#option-loader-options) (simplify access to loader options)
+   - [loaderOptions](#option-loader-options) (reference to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [root](#loader-option-root) (allow to resolve root path in attributes)
@@ -469,6 +471,7 @@ For example:
 }
 ```
 
+<a id="option-entry-advanced" name="option-entry-advanced" href="#option-entry-advanced"></a>
 #### Advanced syntax
 
 If you need to pass data to a template or want to dynamically generate an output filename regardless of the entry key,
@@ -547,9 +550,10 @@ The example above is equivalent to the simple syntax:
 }
 ```
 
+<a id="option-entry-data" name="option-entry-data" href="#option-entry-data"></a>
 ##### `data`
 
-The `data` is passed into [`preprocessor`](#loader-option-preprocessor) to render a template with variables
+The `data` is passed into [`preprocessor`](#loader-option-preprocessor) to render the template with variables.
 
 When the `data` is an `object`, it will be loaded once with Webpack start.
 After changing the data, you **need to restart Webpack**.
@@ -898,14 +902,49 @@ The old syntax is still valid and will never be deprecated:
       index: './src/views/home.ejs',
     },
     loaderOptions: {
-      // original options under loaderOptions
+      // original options are under loaderOptions
       preprocessor: 'ejs',
       preprocessorOptions: {...},
     },
   }),
   ```
 
-Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader option.
+Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader options.
+
+
+#### [↑ back to contents](#contents)
+<a id="option-data" name="option-data" href="#option-data"></a>
+### `data`
+
+Since the `v2.5.0`, the `data` plugin option is the reference to [loaderOptions.data](#loader-option-data).
+
+Now it is possible to define the `data` option directly in the plugin options to simplify the config.
+
+The NEW syntactic "sugar":
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    // new reference to the loaderOptions.data
+    data: {...},
+  }),
+  ```
+
+The old syntax is still valid and will never be deprecated:
+  ```js
+  new HtmlBundlerPlugin({
+    entry: {
+      index: './src/views/home.ejs',
+    },
+    loaderOptions: {
+      // original option is under loaderOptions
+      data: {...},
+    },
+  }),
+  ```
+
+Please see the details below under the [data](#loader-option-data) loader options.
 
 
 #### [↑ back to contents](#contents)
@@ -2079,6 +2118,12 @@ For all available options, see the [Nunjucks API configure](https://mozilla.gith
 ### `data`
 Type: `Object|string` Default: `{}`
 
+> Since `v2.5.0` the `data` option is referenced in the [plugin options](#option-data).
+
+The properties of the `data` option are available as global variables in all templates.
+To pass variables to a specific template, use the [entry.{name}.data](#option-entry-data) option.
+
+
 #### Data as an object
 Type: `Object`
 
@@ -2088,17 +2133,15 @@ The data defined as an object are loaded once with Webpack start.
 Type: `string`
 
 The string value is an absolute or relative filename of a JSON or JS file. The JS file must export an object.
-The data file will be reloaded after changes. So you can use it to dynamically update variables in a template.
-
-
-The properties defined in the `data` loader option are available as variables in all templates defined in the `entry` option.
-Use this option to pass global variables into all templates.
-
-To pass page variables to a specific template, use the `data` property of the [entry](#webpack-option-entry) option.
+The data file will be reloaded after changes. 
 
 > **Note**
+>
+> Use the `data` as a path to dynamically update variables in a template **without restarting Webpack**.
+
+> **Warning**
 > 
-> The `entry` data property overrides the same property of loader `data`.
+> The [entry.{name}.data](#option-entry-data) property overrides the same property defined in the loader `data`.
 
 For example, there are variables defined in both the `entry` property and the loader option:
 

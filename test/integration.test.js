@@ -65,7 +65,10 @@ describe('plugin options', () => {
   test('sourcePath and outputPath', () => compareFiles('option-custom-path'));
   test('filename as function', () => compareFiles('option-filename-function'));
   test('js.filename', () => compareFiles('option-js-filename'));
+  test('js.filename undefined', () => compareFiles('option-js-filename-undefined'));
+  test('js.filename notset', () => compareFiles('option-js-filename-notset'));
   test('js.chunkFilename', () => compareFiles('option-js-chunkFilename'));
+  test('js.chunkFilename notset', () => compareFiles('option-js-chunkFilename-notset'));
   test('js.chunkFilename as function', () => compareFiles('option-js-chunkFilename-function'));
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
@@ -88,8 +91,8 @@ describe('plugin options', () => {
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
-  //
   test('preprocessor', () => compareFiles('option-preprocessor'));
+  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
 
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
