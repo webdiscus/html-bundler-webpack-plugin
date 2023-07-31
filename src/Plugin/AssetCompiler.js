@@ -210,6 +210,8 @@ class AssetCompiler {
       this.compilation = compilation;
 
       AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, Collection });
+      CssExtractModule.init(compilation);
+      Collection.init(compilation);
 
       Resolver.init({
         fs,
@@ -220,8 +222,6 @@ class AssetCompiler {
         fs,
         moduleGraph: compilation.moduleGraph,
       });
-
-      Collection.setCompilation(compilation);
 
       // resolve modules
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
@@ -907,15 +907,7 @@ class AssetCompiler {
         return outputFilename;
       };
 
-      const cssContent = CssExtractModule.apply(
-        this.compilation,
-        {
-          data: sources,
-          assetFile,
-          inline,
-        },
-        (content) => content.replace(urlRegex, resolveAssetFiles)
-      );
+      const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFiles));
 
       // 5. add extracted CSS file into compilation
       const fileManifest = {
@@ -1015,7 +1007,7 @@ class AssetCompiler {
       return Options.afterProcess(content, { sourceFile: entry.resource, assetFile: entry.filename }) || content;
     };
 
-    Collection.render(compilation, callback);
+    Collection.render(callback);
 
     // if (Options.isRealContentHash()) {
     //   // TODO: calc real content hash for js and css
@@ -1061,7 +1053,7 @@ class AssetCompiler {
 
     switch (type) {
       case 'style':
-        result = CssExtractModule.apply(this.compilation, { data: result, assetFile, inline });
+        result = CssExtractModule.apply(result);
         break;
       case 'template':
         if (Options.hasPostprocess()) {

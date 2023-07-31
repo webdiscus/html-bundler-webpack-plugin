@@ -2,11 +2,14 @@ const path = require('path');
 const { replaceAll } = require('../Common/Helpers');
 const Options = require('./Options');
 const AssetEntry = require('./AssetEntry');
+const CssExtractModule = require('./Modules/CssExtractModule');
 const AssetInline = require('./AssetInline');
 const AssetTrash = require('./AssetTrash');
 const Preload = require('./Preload');
 const Dependency = require('../Loader/Dependency');
 const { noHeadException } = require('./Messages/Exception');
+
+/** @typedef {import('webpack').Compilation} Compilation */
 
 /**
  * @typedef {Object} CollectionData
@@ -27,7 +30,8 @@ const hasReplaceAll = !!String.prototype.replaceAll;
  */
 
 class Collection {
-  static compilation = null;
+  /** @type {Compilation} */
+  static compilation;
 
   // resource files
   static files = new Map();
@@ -62,7 +66,10 @@ class Collection {
 
   static ScriptOrStyleType = new Set(['script', 'style']);
 
-  static setCompilation(compilation) {
+  /**
+   * @param {Compilation} compilation
+   */
+  static init(compilation) {
     this.compilation = compilation;
   }
 
@@ -526,159 +533,6 @@ class Collection {
   }
 
   /**
-   * Render all resolved assets in contents.
-   * Inline JS, CSS, substitute output JS filenames.
-   *
-   * @param {Compilation} compilation The instance of the webpack compilation.
-   * @param {Function} callback A callback that allows content to be modified using an external function.
-   */
-  static render(compilation, callback = null) {
-    const { RawSource } = compilation.compiler.webpack.sources;
-    const LF = Options.getLF();
-    const hasCallback = typeof callback === 'function';
-
-    this.#prepareScriptData(compilation);
-
-    // TODO: update this.data.resources[].asset.resource after change the filename in a template
-    //  - e.g. src="./main.js?v=1" => ./main.js?v=123 => WRONG filename is replaced
-    for (const [entryFilename, { entry, resources }] of this.data) {
-      const rawSource = compilation.assets[entryFilename];
-
-      if (!rawSource) return;
-
-      const importedStyles = [];
-      let hasInlineSvg = false;
-      let content = rawSource.source();
-
-      for (const asset of resources) {
-        const { type, inline, imports, resource } = asset;
-
-        if (inline && type === this.type.inlineSvg) {
-          hasInlineSvg = true;
-          continue;
-        }
-
-        switch (type) {
-          case this.type.style:
-            if (imports) {
-              importedStyles.push(asset);
-            } else if (inline) {
-              content = this.#inlineStyle(content, resource, asset, compilation.assets, LF) || content;
-            }
-            break;
-          case this.type.script:
-            content = this.#inlineOrReplaceJS(content, resource, asset, compilation.assets, LF) || content;
-            break;
-        }
-      }
-
-      if (importedStyles.length > 0) {
-        content =
-          this.#inlineOrReplaceImportedStyles(content, entry, importedStyles, compilation.assets, LF) || content;
-      }
-
-      if (hasInlineSvg) {
-        content = AssetInline.inlineSvg(content, entryFilename);
-      }
-
-      if (Options.isPreload()) {
-        content = Preload.insertPreloadAssets(content, entry.filename, this.data) || content;
-      }
-
-      if (hasCallback) {
-        content = callback(content, entry) || content;
-      }
-
-      compilation.assets[entryFilename] = new RawSource(content);
-    }
-  }
-
-  /**
-   * Inline CSS or replace output filename for imported styles.
-   *
-   * @param {string} content The content of the template.
-   * @param {AssetEntryOptions} entry
-   * @param {Array<Object>} styles
-   * @param {Object} sources The compilation assets containing the compiled source.
-   * @param {string} LF The new line feed in depends on the minification option.
-   * @return {string|undefined}
-   */
-  static #inlineOrReplaceImportedStyles(content, entry, styles, sources, LF) {
-    const insertPos = this.findStyleInsertPos(content);
-    if (insertPos < 0) {
-      noHeadException(entry.resource);
-    }
-
-    let linkTags = '';
-    let styleTags = '';
-
-    for (const asset of styles) {
-      if (asset.inline) {
-        const source = this.#getInlineSource(sources, asset.assetFile);
-
-        // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
-        styleTags += `<style>` + source + `</style>${LF}`;
-      } else {
-        linkTags += `<link href="${asset.assetFile}" rel="stylesheet">${LF}`;
-      }
-    }
-
-    return content.slice(0, insertPos) + linkTags + styleTags + content.slice(insertPos);
-  }
-
-  /**
-   * Inline CSS from a style file specified in a template.
-   *
-   * @param {string} content The content of the template.
-   * @param {string} search The original request of a style in the content.
-   * @param {Object} asset The object of the style.
-   * @param {Object} sources The compilation assets containing the compiled source.
-   * @param {string} LF The new line feed in depends on the minification option.
-   * @return {string|boolean} Return content with inlined CSS or false if the content was not modified.
-   */
-  static #inlineStyle(content, search, asset, sources, LF) {
-    const pos = content.indexOf(search);
-
-    if (pos < 0) return false;
-
-    const source = this.#getInlineSource(sources, asset.assetFile);
-    const tagEnd = '>';
-    const openTag = '<style>';
-    let closeTag = '</style>';
-    let tagStartPos = pos;
-    let tagEndPos = pos + search.length;
-
-    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
-    tagEndPos = content.indexOf(tagEnd, tagEndPos) + tagEnd.length;
-
-    // add LF after injected scripts when next char is not a new line
-    if ('\n\r'.indexOf(content[tagEndPos]) < 0) closeTag += LF;
-
-    // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
-    return content.slice(0, tagStartPos) + openTag + source + closeTag + content.slice(tagEndPos);
-  }
-
-  /**
-   * @param {Object} sources The compilation assets containing the compiled source.
-   * @param {string} assetFile The asset filename.
-   * @returns {string}
-   */
-  static #getInlineSource(sources, assetFile) {
-    const assetMapFile = assetFile + '.map';
-    const mapFilename = path.basename(assetMapFile);
-    const sourceMap = sources[assetMapFile]?.source();
-    let source = sources[assetFile].source();
-
-    if (sourceMap) {
-      const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
-      const inlineSourceMap = 'data:application/json;charset=utf-8;base64,' + base64;
-      source = source.replace(mapFilename, inlineSourceMap);
-    }
-
-    return source;
-  }
-
-  /**
    * Find insert position for styles in the HTML head.
    *
    * <head>
@@ -713,19 +567,153 @@ class Collection {
   }
 
   /**
-   * Inline JS file specified in a template.
+   * Render all resolved assets in contents.
+   * Inline JS, CSS, substitute output JS filenames.
+   *
+   * @param {Function} callback A callback that allows content to be modified using an external function.
+   */
+  static render(callback) {
+    const compilation = this.compilation;
+    const { RawSource } = compilation.compiler.webpack.sources;
+    const LF = Options.getLF();
+    const hasCallback = typeof callback === 'function';
+
+    this.#prepareScriptData();
+
+    // TODO: update this.data.resources[].asset.resource after change the filename in a template
+    //  - e.g. src="./main.js?v=1" => ./main.js?v=123 => WRONG filename is replaced
+    for (const [entryFilename, { entry, resources }] of this.data) {
+      const rawSource = compilation.assets[entryFilename];
+
+      if (!rawSource) return;
+
+      const importedStyles = [];
+      let hasInlineSvg = false;
+      let content = rawSource.source();
+
+      for (const asset of resources) {
+        const { type, inline, imports, resource } = asset;
+
+        if (inline && type === this.type.inlineSvg) {
+          hasInlineSvg = true;
+          continue;
+        }
+
+        switch (type) {
+          case this.type.style:
+            if (imports) {
+              importedStyles.push(asset);
+            } else if (inline) {
+              content = this.#inlineStyle(content, resource, asset, LF) || content;
+            }
+            break;
+          case this.type.script:
+            content = this.#bindScript(content, resource, asset, LF) || content;
+            break;
+        }
+      }
+
+      if (importedStyles.length > 0) {
+        content = this.#bindImportedStyles(content, entry, importedStyles, LF) || content;
+      }
+
+      if (hasInlineSvg) {
+        content = AssetInline.inlineSvg(content, entryFilename);
+      }
+
+      if (Options.isPreload()) {
+        content = Preload.insertPreloadAssets(content, entry.filename, this.data) || content;
+      }
+
+      if (hasCallback) {
+        content = callback(content, entry) || content;
+      }
+
+      compilation.assets[entryFilename] = new RawSource(content);
+    }
+  }
+
+  /**
+   * Binding of compiled styles imported in JavaScript to generated HTML.
+   *
+   * The CSS will be inlined or an output filename will be injected in content.
+   *
+   * @param {string} content The content of the template.
+   * @param {AssetEntryOptions} entry
+   * @param {Array<Object>} styles
+   * @param {string} LF The new line feed in depends on the minification option.
+   * @return {string|undefined}
+   */
+  static #bindImportedStyles(content, entry, styles, LF) {
+    const insertPos = this.findStyleInsertPos(content);
+    if (insertPos < 0) {
+      noHeadException(entry.resource);
+    }
+
+    let linkTags = '';
+    let styleTags = '';
+
+    for (const asset of styles) {
+      if (asset.inline) {
+        const source = CssExtractModule.getInlineSource(asset.assetFile);
+
+        // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
+        styleTags += `<style>` + source + `</style>${LF}`;
+      } else {
+        linkTags += `<link href="${asset.assetFile}" rel="stylesheet">${LF}`;
+      }
+    }
+
+    return content.slice(0, insertPos) + linkTags + styleTags + content.slice(insertPos);
+  }
+
+  /**
+   * Inline CSS from a style file specified in a template.
+   *
+   * @param {string} content The content of the template.
+   * @param {string} search The original request of a style in the content.
+   * @param {Object} asset The object of the style.
+   * @param {string} LF The new line feed in depends on the minification option.
+   * @return {string|boolean} Return content with inlined CSS or false if the content was not modified.
+   */
+  static #inlineStyle(content, search, asset, LF) {
+    const pos = content.indexOf(search);
+
+    if (pos < 0) return false;
+
+    const source = CssExtractModule.getInlineSource(asset.assetFile);
+    const tagEnd = '>';
+    const openTag = '<style>';
+    let closeTag = '</style>';
+    let tagStartPos = pos;
+    let tagEndPos = pos + search.length;
+
+    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
+    tagEndPos = content.indexOf(tagEnd, tagEndPos) + tagEnd.length;
+
+    // add LF after injected scripts when next char is not a new line
+    if (LF && '\n\r'.indexOf(content[tagEndPos]) < 0) closeTag += LF;
+
+    // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
+    return content.slice(0, tagStartPos) + openTag + source + closeTag + content.slice(tagEndPos);
+  }
+
+  /**
+   * Binding of compiled JavaScript to generated HTML.
+   *
+   * The JS will be inlined or source script file will be replaced with output filename in content.
    *
    * @param {string} content The content of the template.
    * @param {string} search The original request of a script in the content.
    * @param {Object} asset The object of the script.
-   * @param {Object} sources The compilation assets containing the compiled source.
    * @param {string} LF The new line feed in depends on the minification option.
    * @return {string|boolean} Return content with inlined JS or false if the content was not modified.
    */
-  static #inlineOrReplaceJS(content, search, asset, sources, LF) {
+  static #bindScript(content, search, asset, LF) {
     const pos = content.indexOf(search);
     if (pos < 0) return false;
 
+    const sources = this.compilation.assets;
     const { inline, chunks } = asset;
     const tagEnd = '</script>';
     let beginStr = '<script>';
@@ -754,20 +742,21 @@ class Collection {
     for (let { chunkFile, assetFile } of chunks) {
       const str = inline ? sources[chunkFile].source() : assetFile;
 
-      if (replacement) replacement += LF;
+      if (LF && replacement) replacement += LF;
       replacement += beginStr + str + endStr;
     }
 
     // add LF after injected scripts when next char is not a new line
-    if ('\n\r'.indexOf(content[tagEndPos]) < 0) replacement += LF;
+    if (LF && '\n\r'.indexOf(content[tagEndPos]) < 0) replacement += LF;
 
     return content.slice(0, tagStartPos) + replacement + content.slice(tagEndPos);
   }
 
   /**
-   * @param {Compilation} compilation The instance of the webpack compilation.
+   * Prepare data for script rendering.
    */
-  static #prepareScriptData(compilation) {
+  static #prepareScriptData() {
+    const compilation = this.compilation;
     const { assets, assetsInfo, chunks, chunkGraph, namedChunkGroups } = compilation;
     const splitChunkFiles = new Set();
     const splitChunkIds = new Set();
@@ -847,7 +836,10 @@ class Collection {
 
     // remove generated unused split chunks
     for (let { ids, files, chunkReason } of chunks) {
-      if (ids.length === 0 || !this.isSplitChunk(chunkReason)) continue;
+      const isSplitChunk = chunkReason != null && chunkReason.indexOf('split') > -1;
+
+      if (ids.length === 0 || !isSplitChunk) continue;
+
       for (let file of files) {
         if (splitChunkFiles.has(file)) continue;
 
@@ -856,10 +848,6 @@ class Collection {
         }
       }
     }
-  }
-
-  static isSplitChunk(reason) {
-    return reason != null && reason.indexOf('split') > -1;
   }
 
   /**

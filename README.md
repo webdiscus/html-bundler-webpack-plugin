@@ -15,12 +15,12 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-## HTML template as entrypoint
+## HTML template as entry point
 
-The plugin allows you to use any template as entrypoint.
-You can use templates such as HTML, phtm, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
+The plugin allows to specify template files as entry points in the `entry` option.
+You can use templates such as HTML, PHTML, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
 
-In template can be referenced any source assets such as JS, SCSS, images and others, similar to how it works in Vite.\
+In a template can be referenced any source assets such as JS, TS, CSS, SCSS, images and others, similar to how it works in Vite.\
 For example: 
 - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
 - `<link href="./style.scss" rel="stylesheet">`
@@ -39,12 +39,14 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
-- Binding source **script** and **style** files directly in HTML using `<script>` and `<link>`.
-- Resolving [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
+- Reference to source **scripts** and **styles** in HTML using `<script src="...">` and `<link href="...">`.
+- Resolves [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
 - Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
-- Dynamically loading template variables after changes using the [data](#loader-option-data) option.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
+- Dynamically add/remove/delete template pages using [entry path](#option-entry-path), w/o restarting.
+- Dynamically loading template variables using the [data](#loader-option-data) option, w/o restarting.
+- Support for React.
 
 
 ### ✅ Profit
@@ -444,7 +446,7 @@ Type: `EntryObject | string`.
 The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property to pass custom variables into the HTML template.
 
-Define all your HTML templates in the `entry` option.
+Specify template files as entry points in the `entry` option.
 
 An HTML template is a starting point for collecting all the dependencies used in your web application.
 Specify source scripts (JS, TS) and styles (CSS, SCSS, LESS, etc.) directly in HTML.
@@ -1241,7 +1243,7 @@ Enable/disable extracting comments from source scripts to the `*.LICENSE.txt` fi
 
 When using `splitChunks` optimization for node modules containing comments,
 Webpack extracts those comments into a separate text file.
-By default, the plugin don't create such unwanted text files.
+By default, the plugin doesn't create such unwanted text files.
 But if you want to extract files like `*.LICENSE.txt`, set this option to `true`.
 
 
@@ -1272,7 +1274,7 @@ watchFiles: {
 }
 ```
 
-Allow to configure paths and files to watch file changes for rebuild in `watch` or `serv` mode.
+Allows to configure paths and files to watch file changes for rebuild in `watch` or `serv` mode.
 
 > **Note**
 >
