@@ -183,7 +183,8 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [Pug](https://github.com/webdiscus/pug-plugin)
 1. [Setup HMR (Live Reload)](#setup-hmr)
 1. [Recipes](#recipes)
-   - [How to keep source folder structure in output directory](#recipe-entry-keep-folder-structure)
+   - [How to keep source directory structure for HTML](#recipe-keep-folder-structure-html)
+   - [How to keep source directory structure for assets (fonts, images, etc.)](#recipe-keep-folder-structure-assets)
    - [How to use source images in HTML](#recipe-use-images-in-html)
    - [How to resize and generate responsive images](#recipe-responsive-images)
    - [How to preload fonts](#recipe-preload-fonts)
@@ -2585,12 +2586,75 @@ module.exports = {
 
 
 #### [↑ back to contents](#contents)
-<a id="recipe-entry-keep-folder-structure" name="recipe-entry-keep-folder-structure" href="#recipe-entry-keep-folder-structure"></a>
-## How to keep source folder structure in output directory
+<a id="recipe-keep-folder-structure-html" name="recipe-keep-folder-structure-html" href="#recipe-keep-folder-structure-html"></a>
+## How to keep source directory structure for HTML
+
+Define the `entry` option as a path to templates. The output path will have the same directory structure.
+For details, see the [entry path](#option-entry-path).
 
 
-Define the `entry` option as a path to templates. For details see the [entry path](#option-entry-path).
+#### [↑ back to contents](#contents)
+<a id="recipe-keep-folder-structure-assets" name="recipe-keep-folder-structure-assets" href="#recipe-keep-folder-structure-assets"></a>
+## How to keep source directory structure for assets
 
+Define the `filename` as a function.
+
+For example, we want to keep original directory structure for fonts, which can be in the source or in the `node_modules` directory:
+
+```
+node_modules/material-icons/iconfont/material-icons-sharp.woff2
+node_modules/material-symbols/material-symbols-sharp.woff2
+src/assets/fonts/Roboto/Roboto-Regular.woff2
+```
+
+Use the following function:
+```js
+{
+  test: /[\\/]fonts|node_modules[\\/].+(woff(2)?|ttf|otf|eot|svg)$/i,
+    type: 'asset/resource',
+    generator: {
+    // keep original directory structure
+    filename: ({ filename }) => {
+      const srcPath = 'src/assets/fonts';
+      const regExp = new RegExp(`[\\\\/]?(?:${path.normalize(srcPath)}|node_modules)[\\\\/](.+?)$`);
+      const assetPath = path.dirname(regExp.exec(filename)[1].replace('@', '').replace(/\\/g, '/'));
+      
+      return `fonts/${assetPath}/[name][ext][query]`;
+    },
+  },
+},
+```
+The destructed `filename` argument of the function is a source file. It can be absolute or relative.
+
+The output directory `dist/` will have the same structure:
+```
+dist/fonts/material-icons/iconfont/material-icons-sharp.woff2
+dist/fonts/material-symbols/material-symbols-sharp.woff2
+dist/fonts/Roboto/Roboto-Regular.woff2
+```
+
+The example to keep original directory structure for images:
+
+```js
+{
+  test: /[\\/]images|node_modules[\\/].+(png|jpe?g|webp|ico|svg)$/i,
+    type: 'asset/resource',
+    generator: {
+    // keep original directory structure
+    filename: ({ filename }) => {
+      const srcPath = 'src/assets/images';
+      const regExp = new RegExp(`[\\\\/]?(?:${path.normalize(srcPath)}|node_modules)[\\\\/](.+?)$`);
+      const assetPath = path.dirname(regExp.exec(filename)[1].replace('@', '').replace(/\\/g, '/'));
+
+      return `images/${assetPath}/[name].[hash:8][ext]`;
+    },
+  },
+},
+```
+
+> **Note**
+> 
+> For images, it is recommended to use the hashed output filename.
 
 #### [↑ back to contents](#contents)
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
