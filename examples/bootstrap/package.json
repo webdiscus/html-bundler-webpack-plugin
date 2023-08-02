@@ -1,0 +1,31 @@
+{
+  "name": "webpack",
+  "description": "Include Bootstrap's source Sass and individual JavaScript plugins with HTML Builder Plugin for Webpack.",
+  "version": "0.0.0",
+  "private": true,
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production",
+    "test": "npm run build"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.14",
+    "css-loader": "^6.8.1",
+    "html-bundler-webpack-plugin": "^2.5.0",
+    "postcss-loader": "^7.3.3",
+    "sass": "^1.64.2",
+    "sass-loader": "^13.3.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}

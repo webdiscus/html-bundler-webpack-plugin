@@ -270,6 +270,7 @@ For example, there is a template _./src/views/home/index.html_:
 <html>
 <head>
   <title><%= title %></title>
+  <link href="./favicon.ico" rel="icon">
   <link href="./style.scss" rel="stylesheet">
   <script src="./main.js" defer="defer"></script>
 </head>
@@ -298,11 +299,11 @@ module.exports = {
         'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
       },
       js: {
-        // output filename of JS extracted from source script specified in `<script>`
+        // output filename of extracted JavaScript
         filename: 'assets/js/[name].[contenthash:8].js',
       },
       css: {
-        // output filename of CSS extracted from source file specified in `<link>`
+        // output filename of extracted CSS
         filename: 'assets/css/[name].[contenthash:8].css',
       },
     }),
@@ -724,13 +725,13 @@ Default properties:
 }
 ```
 
-- `filename` - an output filename of extracted JS. Details see by [filename option](#option-filename).
+- `filename` - an output filename of JavaScript. Details see by [filename option](#option-filename).
 - `chunkFilename` - an output filename of non-initial chunk files. Details see by [chunkFilename](https://webpack.js.org/configuration/output/#outputchunkfilename).
-- `outputPath` - an output path of extracted JS. Details see by [outputPath option](#option-outputpath).
-- `inline` - globally inline all extracted JS into HTML, available values:
-  - `false` - extract processed JS in an output file, defaults
-  - `true` - inline processed JS into HTML
-  - `'auto'` - in `development` mode - inline JS, in `production` mode - extract in a file
+- `outputPath` - an output path of JavaScript. Details see by [outputPath option](#option-outputpath).
+- `inline` - inline compiled JavaScript into HTML, available values:
+  - `false` - stores JavaScript in an output file (**defaults**)
+  - `true` - adds JavaScript to the DOM by injecting a `<script>` tag
+  - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
 
 > **Note**
 > 
@@ -831,10 +832,10 @@ Default properties:
 - `test` - an RegEpx to process all source styles that pass test assertion
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
-- `inline` - globally inline all extracted CSS into HTML, available values:
-  - `false` - extract processed CSS in an output file, defaults
-  - `true` - inline processed CSS into HTML via `style` tag
-  - `'auto'` - in `development` mode - inline CSS, in `production` mode - extract in a file
+- `inline` - inline extracted CSS into HTML, available values:
+  - `false` - stores CSS in an output file (**defaults**)
+  - `true` - adds CSS to the DOM by injecting a `<style>` tag
+  - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
 
 All source style files specified in `<link href="..." rel="stylesheet">` are automatically resolved,  
 and CSS will be extracted to output file. The source filename will be replaced with the output filename.
@@ -2569,9 +2570,7 @@ To enable live reload after changes add in the Webpack config the `devServer` op
 module.exports = {
   // enable HMR with live reload
   devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist'),
-    },
+    static: path.join(__dirname, 'dist'),
     watchFiles: {
       paths: ['src/**/*.*'],
       options: {
@@ -2961,7 +2960,8 @@ module.exports = {
         index: 'src/views/index.html',
       },
       css: {
-        inline: true, // <= all style files will be inlined into HTML
+        // Adds CSS to the DOM by injecting a `<style>` tag
+        inline: true,
         filename: 'css/[name].[contenthash:8].css',
       },
     }),
@@ -3030,7 +3030,7 @@ The generated HTML contains inline CSS already processed via Webpack:
 
 > **Note**
 >
-> To enable source map in inline CSS set the Webpack option [`devtool`](https://webpack.js.org/configuration/devtool/#devtool).
+> To enable the source map in inline CSS set the Webpack option [`devtool`](https://webpack.js.org/configuration/devtool/#devtool).
 
 ---
 
@@ -3090,7 +3090,8 @@ module.exports = {
         index: 'src/views/index.html',
       },
       js: {
-        inline: true, // <= all script files will be inlined into HTML
+        // Adds JavaScript to the DOM by injecting a `<script>` tag
+        inline: true,
         filename: 'js/[name].[contenthash:8].js',
       },
     }),
@@ -3155,7 +3156,7 @@ The generated HTML contains inline JS already compiled via Webpack:
 > the inlined JS code will contain additional HMR code.
 > Don't worry it is ok, so works Webpack `live reload`.
 >
-> To enable source map in inline JS set the Webpack option `devtool`.
+> To enable the source map in inline JS set the Webpack option `devtool`.
 
 ---
 
