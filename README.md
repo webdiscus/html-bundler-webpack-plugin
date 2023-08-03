@@ -197,13 +197,14 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split CSS files](#recipe-split-css)
    - [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name)
-1. Demo examples
+1. Demo
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
-1. Code examples
-   - How to use the tailwindcss [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+1. Examples
+   - Bootstrap with Webpack [Open in StackBlitz](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
+   - Tailwind CSS with Webpack [Open in StackBlitz](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
 
 <a id="features" name="features" href="#features"></a>
 ## Features

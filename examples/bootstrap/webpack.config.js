@@ -7,16 +7,7 @@ module.exports = {
 
   output: {
     path: path.resolve(__dirname, 'dist'),
-  },
-
-  devServer: {
-    static: path.resolve(__dirname, 'dist'),
-    watchFiles: {
-      paths: ['src/**/*.*'],
-      options: {
-        usePolling: true,
-      },
-    },
+    clean: true,
   },
 
   plugins: [
@@ -64,12 +55,23 @@ module.exports = {
         ],
       },
       {
-        test: /\.(ico|png|jp?g|svg)$/,
+        test: /\.(ico|png|jp?g|svg)/,
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],
+  },
+
+  // enable HMR with live reload
+  devServer: {
+    static: path.resolve(__dirname, 'dist'),
+    watchFiles: {
+      paths: ['src/**/*.*'],
+      options: {
+        usePolling: true,
+      },
+    },
   },
 };

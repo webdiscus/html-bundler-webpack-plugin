@@ -1,12 +1,19 @@
 {
-  "description": "Example how to use the tailwindcss",
+  "name": "tailwindcss",
+  "description": "Tailwindcss / Webpack",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
   "scripts": {
-    "start": "webpack serve --mode development",
-    "watch": "webpack watch --mode development",
+    "start": "webpack serve",
     "build": "webpack --mode=production --progress"
   },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "2.4.0",
+    "css-loader": "^6.8.1",
+    "html-bundler-webpack-plugin": "2.5.0",
     "postcss": "^8.4.27",
     "postcss-loader": "^7.3.3",
     "postcss-preset-env": "^9.1.0",

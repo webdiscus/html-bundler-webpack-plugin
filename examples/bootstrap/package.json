@@ -1,8 +1,7 @@
 {
   "name": "webpack",
-  "description": "Include Bootstrap's source Sass and individual JavaScript plugins with HTML Builder Plugin for Webpack.",
-  "version": "0.0.0",
-  "private": true,
+  "description": "Bootstrap / Sass / JavaScript / Webpack",
+  "version": "0.0.1",
   "repository": "webdiscus/html-bundler-webpack-plugin",
   "license": "ISC",
   "stackblitz": {

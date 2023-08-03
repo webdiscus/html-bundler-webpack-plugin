@@ -3,9 +3,9 @@
 Use [HTML Builder Plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) for Webpack
 to compile and bundle [Bootstrap](https://getbootstrap.com)'s source Sass and JavaScript in HTML.
 
-## Edit in browser
+## View and edit in browser
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/web-platform-sf3gye?file=index.html)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js)
 
 ## How to use
 
