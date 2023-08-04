@@ -80,30 +80,29 @@ Add source scripts and styles directly to HTML:
 <html>
 <head>
   <!-- specify source style files -->
-  <link href="./style.scss" rel="stylesheet">
+  <link href="./styles.scss" rel="stylesheet">
   <!-- specify source script files here and/or in body -->
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
   <!-- specify source image files -->
-  <img src="./map.png">
+  <img src="./picture.png">
 </body>
 </html>
 ```
 
-The generated HTML contains the output filenames of the processed source files,
-while the `script` and `link` tags remain in place:
+The generated HTML contains the output filenames of the processed files:
 
 ```html
 <html>
 <head>
-  <link href="assets/css/style.05e4dd86.css" rel="stylesheet">
-  <script src="assets/js/main.f4b855d8.js" defer="defer"></script>
+  <link href="css/style.05e4dd86.css" rel="stylesheet">
+  <script src="js/main.f4b855d8.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
-  <img src="assets/img/map.58b43bd8.png">
+  <img src="img/picture.58b43bd8.png">
 </body>
 </html>
 ```
@@ -116,7 +115,7 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      // define a relative or absolute path to template pages
+      // define a relative or absolute path to entry templates
       entry: 'src/views/',
       // OR define templates manually
       entry: {
@@ -129,7 +128,8 @@ module.exports = {
 };
 ```
 
-See the [complete Webpack configuration](#simple-webpack-config).
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
+
 
 > How to create multiple HTML pages with html-bundler-webpack-plugin, see the [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate).
 
@@ -203,8 +203,9 @@ See the [complete Webpack configuration](#simple-webpack-config).
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 1. Examples
-   - Bootstrap with Webpack [Open in StackBlitz](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
-   - Tailwind CSS with Webpack [Open in StackBlitz](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+   - Simple example "Hello World!" [Try it!](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
+   - Bootstrap with Webpack [Try it!](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
+   - Tailwind CSS with Webpack [Try it!](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
@@ -277,7 +278,7 @@ For example, there is a template _./src/views/home/index.html_:
 </head>
 <body>
   <h1>Hello <%= name %>!</h1>
-  <img src="./map.png">
+  <img src="./picture.png">
 </body>
 </html>
 ```
@@ -833,7 +834,10 @@ Default properties:
 - `test` - an RegEpx to process all source styles that pass test assertion
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
-- `inline` - inline extracted CSS into HTML, available values:
+- `inline` - inline extracted CSS into HTML, available values:[package.json](examples%2Fhello-world%2Fpackage.json)
+[package-lock.json](examples%2Fhello-world%2Fpackage-lock.json)
+[README.md](examples%2Fhello-world%2FREADME.md)
+[webpack.config.js](examples%2Fhello-world%2Fwebpack.config.js)
   - `false` - stores CSS in an output file (**defaults**)
   - `true` - adds CSS to the DOM by injecting a `<style>` tag
   - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
@@ -1022,9 +1026,9 @@ The descriptions of the properties:
 - `rel` - a value indicates how to load a resource, one of `preload` `prefetch` , defaults `preload`
 - `type` - a [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) of the content.\
   Defaults the type is detected automatically, for example: 
-  - `map.png` as `image/png`
-  - `map.jpg` as `image/jpeg`
-  - `map.svg` as `image/svg+xml`
+  - `picture.png` as `image/png`
+  - `picture.jpg` as `image/jpeg`
+  - `picture.svg` as `image/svg+xml`
   - `film.mp4` as `video/mp4`
   - `film.ogv` as `video/ogg`
   - `film.webm` as `video/webm`
@@ -3359,7 +3363,7 @@ const entryData = {
     title: 'Home',
     filmTitle: 'Breaking Bad',
     location: 'Albuquerque, New Mexico',
-    imageFile: 'map.png',
+    imageFile: 'picture.png',
   },
   // variables for about page
   about: {
@@ -3443,7 +3447,7 @@ The generated _dist/index.html_
     <h1>Breaking Bad</h1>
     <p>Breaking Bad is an American crime drama</p>
     <p>Location: Albuquerque, New Mexico</p>
-    <img src="assets/img/map.697ef306.png" alt="location" />
+    <img src="assets/img/picture.697ef306.png" alt="location" />
   </main>
 </body>
 </html>
