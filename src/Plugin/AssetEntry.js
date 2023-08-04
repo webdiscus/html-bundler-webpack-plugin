@@ -47,32 +47,34 @@ const loader = require.resolve('../Loader');
  */
 
 class AssetEntry {
-  static entryIdKey = '_entryId';
-
   /** @type {Map<string, AssetEntryOptions>} */
   static entries = new Map();
+
   /** @type {Map<Number, AssetEntryOptions>} */
   static entriesById = new Map();
+
   static compilationEntryNames = new Set();
   static entryFilenames = new Set();
+  static removedEntries = new Set();
+
+  /** @type {FileSystem} */
+  static fs;
 
   /** @type {Compilation} */
-  static compilation = null;
+  static compilation;
 
   /** @type {Collection} */
-  static Collection = null;
-
-  static fs = null;
+  static Collection;
 
   /** @type {Object} */
-  static entryLibrary = null;
+  static entryLibrary;
+
+  /** @type {Map<any, any>} The data passed to the entry template. */
+  static data = new Map();
 
   // the id to bind loader with data passed into template via entry.data
   static idIndex = 1;
-  static data = new Map();
-
-  // TODO:
-  static removedEntries = new Set();
+  static entryIdKey = '_entryId';
 
   /**
    * Inject dependencies.
@@ -120,7 +122,7 @@ class AssetEntry {
    * @throws
    */
   static getDynamicEntry() {
-    //const { fs } = this; // TODO: fix error
+    //const { fs } = this; // TODO: fix error with injected fs
     const dir = Options.options.entry;
 
     try {
@@ -215,8 +217,9 @@ class AssetEntry {
   static get(name) {
     const entry = this.entries.get(name);
 
-    if (entry && PluginService.isWatchMode() && Options.isDynamicEntry() && this.isDeletedEntryFile(entry.resource)) {
-      // delete artifacts from compilation
+    if (entry && PluginService.isWatchMode() && Options.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
+      // delete artifacts from compilation in serve/watch mode
+      // TODO: reproduce the use case
       AssetTrash.add(entry.filename);
       AssetTrash.add(`${entry.name}.js`);
       return null;
@@ -466,7 +469,8 @@ class AssetEntry {
     const compiler = compilation.compiler;
     const { EntryPlugin } = compiler.webpack;
 
-    new EntryPlugin(context, file, entryOptions).apply(compiler);
+    // the entry request is generated as the `entrypoint.import` property after call the addEntries()
+    new EntryPlugin(context, entrypoint.import[0], entryOptions).apply(compiler);
   }
 
   /**

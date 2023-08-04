@@ -45,6 +45,15 @@ const cssLoader = {
 /** @typedef {import('webpack').AssetInfo} AssetInfo */
 
 /**
+ * @typedef {Module} PluginModule
+ * @property {boolean} _isTemplate
+ * @property {boolean} _isScript
+ * @property {boolean} _isStyle
+ * @property {boolean} _isDependencyUrl
+ * @property {boolean} _isLoaderImport
+ */
+
+/**
  * @typedef {Object} ModuleOptions
  * @property {RegExp} test RegEx to match templates as entry points.
  * @property {boolean} [enabled = true] Enable/disable the plugin.
@@ -310,7 +319,7 @@ class AssetCompiler {
     const inCollection = Collection.hasScript(fileName);
     const isEntryFile = (file) => file && file.startsWith(entryDir) && Options.isEntry(file);
 
-    // 1. Invalidate entry file
+    // 1. Invalidate an entry template.
 
     if (Options.isDynamicEntry() && (isEntryFile(fileName) || isEntryFile(oldFileName) || isEntryFile(newFileName))) {
       switch (actionType) {
@@ -425,13 +434,14 @@ class AssetCompiler {
     AssetEntry.resolveEntryId(resolveData);
 
     // prevent compilation of renamed or deleted entry point in serve/watch mode
-    if (Options.isDynamicEntry() && AssetEntry.isDeletedEntryFile(request)) {
+    if (Options.isDynamicEntry() && AssetEntry.isDeletedEntryFile(file)) {
       for (const [entryName, entry] of this.compilation.entries) {
         if (entry.dependencies[0]?.request === request) {
           // delete the entry from compilation to prevent creation unused chunks
           this.compilation.entries.delete(entryName);
         }
       }
+
       return false;
     }
 
@@ -476,7 +486,7 @@ class AssetCompiler {
   /**
    * Called after a module instance is created.
    *
-   * @param {Object} module
+   * @param {PluginModule} module The extended Webpack module.
    * @param {Object} createData
    * @param {Object} resolveData
    */
@@ -542,7 +552,7 @@ class AssetCompiler {
    * Called before a module build has started.
    * Use this method to modify the module.
    *
-   * @param {Object} module
+   * @param {PluginModule} module The extended Webpack module.
    */
   beforeBuildModule(module) {
     // reserved code for future
@@ -564,7 +574,7 @@ class AssetCompiler {
    * Called after the build module but right before the execution of a loader.
    *
    * @param {Object} loaderContext The Webpack loader context.
-   * @param {Object} module The Webpack module.
+   * @param {PluginModule} module The extended Webpack module.
    */
   beforeLoader(loaderContext, module) {
     // skip the module loaded via importModule
@@ -1104,14 +1114,14 @@ class AssetCompiler {
 
         // create initial snapshot of watching files, before any changes
         Snapshot.create();
+
+        this.isSnapshotInitialized = true;
       }
 
       // allow watching for changes (add/remove/rename) of linked/missing scripts for static entry too.
       if (Options.isDynamicEntry()) {
         watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
       }
-
-      this.isSnapshotInitialized = true;
     }
 
     if (this.exceptions.size > 0) {

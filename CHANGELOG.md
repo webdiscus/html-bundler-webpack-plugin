@@ -1,5 +1,11 @@
 # Change log
 
+## 2.5.1 (2023-08-04)
+- fix: missing output html file after renaming template file in watch mode when using entry as a path
+- chore: add example for bootstrap
+- chore: update npm packages
+- docs: update README
+
 ## 2.5.0 (2023-07-30)
 - feat: add the reference for `data` in the plugin options.\
   The NEW syntactic "sugar":

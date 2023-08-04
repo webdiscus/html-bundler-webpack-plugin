@@ -300,7 +300,7 @@ module.exports = {
         'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
       },
       js: {
-        // output filename of extracted JavaScript
+        // output filename of compiled JavaScript
         filename: 'assets/js/[name].[contenthash:8].js',
       },
       css: {
