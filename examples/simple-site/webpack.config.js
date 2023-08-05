@@ -9,12 +9,18 @@ module.exports = {
     clean: true,
   },
 
+  resolve: {
+    alias: {
+      '@scripts': path.join(__dirname, 'src/js'),
+      '@styles': path.join(__dirname, 'src/scss'),
+      '@images': path.join(__dirname, 'src/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
-      entry: {
-        // define templates here
-        index: 'src/index.html',
-      },
+      // path to templates
+      entry: 'src/views/',
       js: {
         // output filename of compiled JavaScript
         filename: 'js/[name].[contenthash:8].js',
@@ -34,9 +40,14 @@ module.exports = {
       },
       {
         test: /\.(ico|png|jp?g|svg)/,
-        type: 'asset/resource',
+        type: 'asset',
         generator: {
-          filename: 'img/[name].[hash:8][ext]',
+          filename: 'img/[name].[hash:8][ext]', // save to file images >= 2 KB
+        },
+        parser: {
+          dataUrlCondition: {
+            maxSize: 2 * 1024, // inline images < 2 KB
+          },
         },
       },
     ],

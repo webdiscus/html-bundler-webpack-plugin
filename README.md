@@ -23,7 +23,7 @@ You can use templates such as HTML, PHTML, EJS, Eta, Handlebars, Nunjucks and ot
 In a template can be referenced any source assets such as JS, TS, CSS, SCSS, images and others, similar to how it works in Vite.\
 For example: 
 - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
-- `<link href="./style.scss" rel="stylesheet">`
+- `<link href="./styles.scss" rel="stylesheet">`
 - `<script src="./App.tsx" defer="defer"></script>`
 - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
    
@@ -44,8 +44,8 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 - Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
-- Dynamically add/remove/delete template pages using [entry path](#option-entry-path), w/o restarting.
-- Dynamically loading template variables using the [data](#loader-option-data) option, w/o restarting.
+- Automatically processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
+- Dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting.
 - Support for React.
 
 
@@ -65,7 +65,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
   **Note:** this feature was added for compatibility with `React` projects.\
   The importing styles in JavaScript is the `bad practice`. This is the `wrong way`.\
   In new projects you should specify style source files directly in HTML. This the `right way`.
-- **BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
+- **POTENTIAL BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
   If you use the `Eta` syntax, may be you need to update templates.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
@@ -97,7 +97,7 @@ The generated HTML contains the output filenames of the processed files:
 ```html
 <html>
 <head>
-  <link href="css/style.05e4dd86.css" rel="stylesheet">
+  <link href="css/styles.05e4dd86.css" rel="stylesheet">
   <script src="js/main.f4b855d8.js" defer="defer"></script>
 </head>
 <body>
@@ -117,7 +117,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       // define a relative or absolute path to entry templates
       entry: 'src/views/',
-      // OR define templates manually
+      // OR define many templates manually
       entry: {
         index: 'src/views/home.html', // => dist/index.html
         'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
@@ -127,6 +127,11 @@ module.exports = {
   // ... loaders for styles, images, etc.
 };
 ```
+
+If the `entry` option is a path, the plugin finds all templates automatically 
+and keep the same directory structure in the output directory.
+
+If the `entry` option is an object, the key is an output filename without `.html` extension and the value is a template file.
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
 
@@ -274,7 +279,7 @@ For example, there is a template _./src/views/home/index.html_:
 <head>
   <title><%= title %></title>
   <link href="./favicon.ico" rel="icon">
-  <link href="./style.scss" rel="stylesheet">
+  <link href="./styles.scss" rel="stylesheet">
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
@@ -299,7 +304,6 @@ module.exports = {
           import: 'src/views/home.html', // template file
           data: { title: 'Homepage', name: 'Heisenberg' } // pass variables into template
         },
-        'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
       },
       js: {
         // output filename of compiled JavaScript
@@ -318,7 +322,7 @@ module.exports = {
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(ico|png|jp?g|svg)$/,
+        test: /\.(ico|png|jp?g|webp|svg)$/,
         type: 'asset/resource',
         generator: {
           filename: 'assets/img/[name].[hash:8][ext][query]',
@@ -462,7 +466,7 @@ type EntryObject = {
   [key: string]: EntryDescription | string;
 }
 ```
-The key of the `EntryObject` is the `output filename` w/o extension, relative to the [`outputPath`](#option-outputpath) option.
+The key of the `EntryObject` is the `output filename` without an extension, relative to the [`outputPath`](#option-outputpath) option.
 
 
 #### Simple syntax
@@ -630,7 +634,7 @@ For example, there are files in the template directory `./src/views/`
 ./src/views/about/index.html
 ./src/views/news/sport/index.html
 ./src/views/news/sport/script.js
-./src/views/news/sport/style.scss
+./src/views/news/sport/styles.scss
 ...
 ```
 
@@ -848,7 +852,7 @@ and CSS will be extracted to output file. The source filename will be replaced w
 
 For example:
 ```html
-<link href="./style.scss" rel="stylesheet">
+<link href="./styles.scss" rel="stylesheet">
 ```
 
 > **Warning**
@@ -873,7 +877,7 @@ module.exports = {
 ```
 
 The `[name]` is the base filename of a loaded style.
-For example, if source file is `style.scss`, then output filename will be `assets/css/style.1234abcd.css`.\
+For example, if source file is `styles.scss`, then output filename will be `assets/css/styles.1234abcd.css`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
 > **Warning**
@@ -1064,7 +1068,7 @@ preload: [
 
 The generated preload tag like following:
 ```html
-<link rel="preload" href="css/style.1f4faaff.css" as="style">
+<link rel="preload" href="css/styles.1f4faaff.css" as="style">
 ```
 
 #### Preload scripts
@@ -1149,7 +1153,7 @@ For example, there is an HTML template with specified source assets:
 <html>
 <head>
   <script src="./main.js" defer></script>
-  <link href="./style.scss" rel="stylesheet" />
+  <link href="./styles.scss" rel="stylesheet" />
 </head>
 <body>
   <img src="./apple.png" alt="apple">
@@ -1189,13 +1193,13 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
   <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
   <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
   <!-- 2. preload styles -->
-  <link rel="preload" href="css/style.1f4faaff.css" as="style">
+  <link rel="preload" href="css/styles.1f4faaff.css" as="style">
   <!-- 3. preload scripts -->
   <link rel="preload" href="js/main.c608b1cd.js" as="script">
   <link rel="preload" href="js/app.2c8d13ac.js" as="script">
   
   <script src="js/main.c608b1cd.js" defer></script>
-  <link href="css/style.1f4faaff.css" rel="stylesheet" />
+  <link href="css/styles.1f4faaff.css" rel="stylesheet" />
 </head>
 <body>
   <img src="img/apple.697ef306.png" alt="apple">
@@ -1650,7 +1654,7 @@ Define the `root` option as the absolute path to the source directory to enable 
 For example, there are project files:
 ```
 ./src/views/index.html
-./src/styles/style.scss
+./src/styles/styles.scss
 ./src/scripts/main.js
 ./src/images/apple.png
 ```
@@ -1672,7 +1676,7 @@ Now you can use the `/` root path for the source assets:
 ```html
 <html>
 <head>
-  <link href="/styles/style.scss" rel="stylesheet">
+  <link href="/styles/styles.scss" rel="stylesheet">
   <script src="/scripts/main.js" defer="defer"></script>
 </head>
 <body>
@@ -2591,7 +2595,8 @@ module.exports = {
 <a id="setup-hmr" name="setup-hmr" href="#setup-hmr"></a>
 ## Setup HMR (Live Reload)
 
-To enable live reload after changes add in the Webpack config the `devServer` option:
+To enable reloading of the browser after changes, add the `devServer` option to the Webpack config:
+
 ```js
 module.exports = {
   // enable HMR with live reload
@@ -2815,7 +2820,7 @@ To preload resources such as fonts, use the [preload](#option-preload) plugin op
 
 For example, there is the style used a font that should be preloaded:
 
-_style.scss_
+_styles.scss_
 
 ```scss
 @font-face {
@@ -2838,7 +2843,7 @@ The template _index.html_ where is loaded the source style:
 <head>
   <title>Demo</title>
   <!-- load source style -->
-  <link href="./style.scss" rel="stylesheet" />
+  <link href="./styles.scss" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -2909,7 +2914,7 @@ The generated HTML contains the preload tag with the font:
   <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true">
   <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true">
   <!-- compiled style -->
-  <link href="css/style.1f4faaff.css" rel="stylesheet" />
+  <link href="css/styles.1f4faaff.css" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -2953,7 +2958,7 @@ body {
 }
 ```
 
-_style.scss_:
+_styles.scss_:
 ```scss
 $color: red;
 h1 {
@@ -2967,7 +2972,7 @@ There is the _./src/views/index.html_ with both style files:
 <html>
 <head>
   <link href="./main.scss" rel="stylesheet" />
-  <link href="./style.scss" rel="stylesheet" />
+  <link href="./styles.scss" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -3028,7 +3033,7 @@ To inline a single CSS, add the `?inline` query to a style file which you want t
   <!-- file CSS -->
   <link href="./main.scss" rel="stylesheet" />
   <!-- inline CSS -->
-  <link href="./style.scss?inline" rel="stylesheet" />
+  <link href="./styles.scss?inline" rel="stylesheet" />
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -3242,7 +3247,7 @@ For example, there is the PHP template _src/views/index.phtml_:
 <html>
 <head>
   <title><?= $title ?></title>
-  <link href="./style.css" rel="stylesheet">
+  <link href="./styles.css" rel="stylesheet">
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
@@ -3286,7 +3291,7 @@ The processed PHP template:
 <html>
 <head>
   <title><?= $title ?></title>
-  <link href="assets/css/style.026fd625.css" rel="stylesheet">
+  <link href="assets/css/styles.026fd625.css" rel="stylesheet">
   <script src="assets/js/main.3347618e.js" defer="defer"></script>
 </head>
 <body>
@@ -3694,7 +3699,7 @@ Add the bundles in the template:
 
 If you use vendor styles in your style file, then vendor styles will not be saved to a separate file, because `sass-loader` generates one CSS bundle code.
 
-_style.scss_
+_styles.scss_
 ```scss
 @use "bootstrap/scss/bootstrap";
 body {
@@ -3712,7 +3717,7 @@ If you want save module styles separate from your styles, then load them in a te
   <!-- load module styles separately -->
   <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- load your styles separately -->
-  <link href="./style.scss" rel="stylesheet">
+  <link href="./styles.scss" rel="stylesheet">
 </head>
 <body>
   <h1>Hello World!</h1>
