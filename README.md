@@ -197,15 +197,16 @@ module.exports = {
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split CSS files](#recipe-split-css)
    - [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name)
-1. Demo
+1. Demo sites
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 1. Examples
-   - Simple example "Hello World!" [Try it!](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
-   - Bootstrap with Webpack [Try it!](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
-   - Tailwind CSS with Webpack [Try it!](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+   - Simple example "Hello World!" [View in browser](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
+   - Bootstrap with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
+   - Tailwind CSS with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+   - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
 
 <a id="features" name="features" href="#features"></a>
 ## Features
@@ -2365,20 +2366,30 @@ You need to install the `handlebars` package:
 npm i -D handlebars
 ```
 
-For example, there is the template _src/views/page/index.hbs_
-```html
+For example, there is the template _src/views/page/home.hbs_
+```hbs
+<!DOCTYPE html>
 <html>
+<head>
+  <title>{{ title }}</title>
+</head>
 <body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {{#each people}}
-    <li>{{this}}</li>
-    {{/each}}
-  </ul>
-  {{ include '/src/views/partials/footer.html' }}
+  {{> header }}
+  <div class="container">
+    <h1>Handlebars</h1>
+    <div>{{ arraySize persons }} persons:</div>
+    <ul class="person">
+      {{#each persons}}
+        {{> person person=.}}
+      {{/each}}
+    </ul>
+  </div>
+  {{> footer }}
 </body>
 </html>
 ```
+
+Where the `{{> header }}`, `{{> person person=.}}` and `{{> footer }}` are partials.
 
 Define the `preprocessor` as `handlebars`:
 
@@ -2389,17 +2400,23 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: { // output dist/imdex.html
-          import: './src/views/page/index.hbs',
-          data: {
-            headline: 'Breaking Bad',
-            people: ['Walter White', 'Jesse Pinkman'],
-          },
+        // define templates here
+        index: {
+          import: 'src/views/pages/home.hbs', // => dist/index.html
+          // pass data to template as an object
+          // data: { title: 'Handlebars', persons: [...] },
+          // OR define the data file
+          data: 'src/views/pages/homeData.js',
         },
       },
-      loaderOptions: {
-        preprocessor: 'handlebars', // use Handlebars templating engine
-        // preprocessorOptions: {...},
+      // use handlebars templating engine
+      preprocessor: 'handlebars',
+      // define handlebars options
+      preprocessorOptions: {
+        partials: ['src/views/partials'],
+        helpers: {
+          arraySize: (array) => array.length,
+        },
       },
     }),
   ],
@@ -2407,6 +2424,10 @@ module.exports = {
 ```
 
 For the `handlebars` preprocessor options see [here](#loader-option-preprocessor-options-handlebars).
+
+[Source code](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js)
 
 
 #### [↑ back to contents](#contents)
