@@ -36,6 +36,9 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
+### 📚 Read it
+ - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd?preview=afd270c5c4861884d243f2fd45fa83d7b7c1c6874d28e936177fb4b57683332974be40f4dffeb1f3e90881923bf7e695171d685fb874942a649eeec3)
+
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
@@ -839,10 +842,7 @@ Default properties:
 - `test` - an RegEpx to process all source styles that pass test assertion
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
-- `inline` - inline extracted CSS into HTML, available values:[package.json](examples%2Fhello-world%2Fpackage.json)
-[package-lock.json](examples%2Fhello-world%2Fpackage-lock.json)
-[README.md](examples%2Fhello-world%2FREADME.md)
-[webpack.config.js](examples%2Fhello-world%2Fwebpack.config.js)
+- `inline` - inline extracted CSS into HTML, available values:
   - `false` - stores CSS in an output file (**defaults**)
   - `true` - adds CSS to the DOM by injecting a `<style>` tag
   - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
