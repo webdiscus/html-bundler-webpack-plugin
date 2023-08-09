@@ -434,7 +434,7 @@ class AssetEntry {
     const entryDir = Options.options.entry;
 
     if (!path.isAbsolute(file)) {
-      file = path.join(Options.rootContext, file);
+      file = path.join(Options.context, file);
     }
 
     let outputFile = path.relative(entryDir, file);

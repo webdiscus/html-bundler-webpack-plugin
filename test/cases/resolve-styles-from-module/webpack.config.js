@@ -5,14 +5,14 @@ module.exports = {
   mode: 'production',
   devtool: 'source-map',
 
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+
   resolve: {
     alias: {
       '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
-  },
-
-  output: {
-    path: path.join(__dirname, 'dist/'),
   },
 
   plugins: [

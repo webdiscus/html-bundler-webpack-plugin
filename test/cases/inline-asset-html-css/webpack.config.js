@@ -4,14 +4,14 @@ const HtmlBundlerPlugin = require('../../../');
 module.exports = {
   mode: 'development',
 
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+
   resolve: {
     alias: {
       '@images': path.join(__dirname, '../../fixtures/images'),
     },
-  },
-
-  output: {
-    path: path.join(__dirname, 'dist/'),
   },
 
   plugins: [

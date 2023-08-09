@@ -225,7 +225,7 @@ class AssetCompiler {
 
       Resolver.init({
         fs,
-        rootContext: Options.rootContext,
+        rootContext: Options.context,
       });
 
       UrlDependency.init(fs, compilation);

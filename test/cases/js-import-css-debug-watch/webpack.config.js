@@ -4,12 +4,12 @@ const HtmlBundlerPlugin = require('../../../');
 module.exports = {
   mode: 'production',
 
-  entry: {
-    main: './src/main.js',
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
+  },
+
+  entry: {
+    main: './src/main.js',
   },
 
   resolve: {

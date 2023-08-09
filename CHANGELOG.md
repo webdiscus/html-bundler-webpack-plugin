@@ -1,5 +1,8 @@
 # Change log
 
+## 2.6.1 (2023-08-09)
+- fix: when the Webpack `output.path` option is undefined, set the default path as CWD + `/dist`
+
 ## 2.6.0 (2023-08-09)
 - feat: add the `css.chunkFilename` option for output filename of non-initial chunk files
 - feat: add the `hotUpdate` option to enable/disable live reload in serve/watch mode

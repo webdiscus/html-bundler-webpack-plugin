@@ -4,17 +4,17 @@ const HtmlBundlerPlugin = require('../../../');
 module.exports = {
   mode: 'development',
 
+  output: {
+    path: path.join(__dirname, 'dist/'),
+    //publicPath: 'auto', // test responsive loader with auto publicPath
+  },
+
   resolve: {
     alias: {
       '@images': path.join(__dirname, '../../fixtures/images'),
       '@styles': path.join(__dirname, 'src/assets/styles/'),
       '@scripts': path.join(__dirname, 'src/assets/scripts/'),
     },
-  },
-
-  output: {
-    path: path.join(__dirname, 'dist/'),
-    //publicPath: 'auto', // test responsive loader with auto publicPath
   },
 
   plugins: [

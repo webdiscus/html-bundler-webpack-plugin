@@ -23,6 +23,7 @@ beforeEach(async () => {
 
 describe('features tests', () => {
   test('Hello World!', () => compareFiles('hello-world'));
+  test('use minimal options', () => compareFiles('options-minimal'));
   test('use style in html', () => compareFiles('use-style-in-html'));
   test('use script in html', () => compareFiles('use-script-in-html'));
   test('resolve-js-in-many-pages', () => compareFiles('resolve-js-in-many-pages'));

@@ -56,7 +56,6 @@ class Options {
   static productionMode = true;
   static dynamicEntry = false;
   static context = '';
-  static rootContext = '';
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
     enabled: true,
@@ -105,14 +104,14 @@ class Options {
     this.#initWebpackOutput(options.output);
 
     this.webpackOptions = options;
-    this.rootContext = options.context;
     this.productionMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
+    this.context = options.context;
 
     // set the absolute path for dynamic entry
     this.dynamicEntry = typeof entry === 'string';
     if (this.dynamicEntry && !path.isAbsolute(entry)) {
-      this.options.entry = path.join(this.rootContext, entry);
+      this.options.entry = path.join(this.context, entry);
     }
 
     if (Object.keys(options.entry).length === 1 && Object.keys(Object.entries(options.entry)[0][1]).length === 0) {
@@ -161,7 +160,7 @@ class Options {
       js.outputPath = options.output.path;
     }
 
-    if (!this.options.sourcePath) this.options.sourcePath = this.rootContext;
+    if (!this.options.sourcePath) this.options.sourcePath = this.context;
     if (!this.options.outputPath) this.options.outputPath = options.output.path;
 
     // normalize minify options
@@ -190,7 +189,7 @@ class Options {
    */
   static #initWebpackOutput(output) {
     let { publicPath } = output;
-    if (!output.path) output.path = path.join(this.context, 'dist');
+    if (!output.path) output.path = path.join(process.cwd(), 'dist');
 
     // define js output filename
     if (!output.filename) {
