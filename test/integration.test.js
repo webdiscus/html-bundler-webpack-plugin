@@ -73,6 +73,8 @@ describe('plugin options', () => {
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
 
+  test('css filename and chunkFilename', () => compareFiles('option-css-filename-chunkFilename'));
+  test('css filename and undefined chunkFilename', () => compareFiles('option-css-filename-chunkFilename-undefined'));
   test('css.inline auto, dev', () => compareFiles('option-css-inline-auto-dev'));
   test('css.inline auto, prod', () => compareFiles('option-css-inline-auto-prod'));
 
@@ -205,6 +207,7 @@ describe('import styles in JavaScript', () => {
   test('import same css in many js', () => compareFiles('js-import-css-same-in-many'));
   test('import same css in many js 2', () => compareFiles('js-import-css-same-in-many2'));
   test('import same css in many js 3', () => compareFiles('js-import-css-same-in-many3'));
+  test('import same css in many js 4', () => compareFiles('js-import-css-same-in-many4'));
 
   // split chunks
   test('js-import-css-split-chunk-js', () => compareFiles('js-import-css-split-chunk-js'));

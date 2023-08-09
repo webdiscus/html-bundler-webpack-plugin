@@ -1,5 +1,6 @@
 const Resolver = require('../Resolver');
 const Collection = require('../../Plugin/Collection');
+const PluginService = require('../../Plugin/PluginService');
 const { hmrFile, injectBeforeEndHead } = require('../Utils');
 const { errorToHtml } = require('../Messages/Exeptions');
 
@@ -32,14 +33,6 @@ class RenderMode {
     const replacer = (value) => replacements[value];
 
     return str.replace(match, replacer);
-  }
-
-  /**
-   * @param {string} file
-   * @return {string}
-   */
-  encodeFile(file) {
-    return `\\u0027 + \\u0027${file}\\u0027 + \\u0027`;
   }
 
   /**
@@ -122,8 +115,8 @@ class RenderMode {
    * @return {string}
    */
   export(content, data, issuer) {
-    if (this.hot) {
-      // note: it can be tested only manually, because Webpack API no provide `loaderContext.hot` for testing
+    /* istanbul ignore next: Webpack API no provide `loaderContext.hot` for testing */
+    if (this.hot && PluginService.useHotUpdate()) {
       content = this.injectHmrFile(content);
       Collection.add({ type: 'script', resource: hmrFile, issuer });
     }
@@ -140,8 +133,11 @@ class RenderMode {
    */
   exportError(error, issuer) {
     let content = errorToHtml(error);
-    content = this.injectHmrFile(content);
-    Collection.add({ type: 'script', resource: hmrFile, issuer });
+
+    if (PluginService.useHotUpdate()) {
+      content = this.injectHmrFile(content);
+      Collection.add({ type: 'script', resource: hmrFile, issuer });
+    }
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
   }

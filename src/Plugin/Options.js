@@ -13,20 +13,21 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
  *  See https://webpack.js.org/configuration/output/#outputfilename.
  *  Must be an absolute or a relative by the context path.
- * @property {CssOptions=} css The options for embedded plugin module to extract CSS.
- * @property {JsOptions=} js The options for embedded plugin module to extract CSS.
- * @property {function(string, ResourceInfo, Compilation): string|null =} postprocess The post-process for extracted content from entry.
+ * @property {CssOptions?} css The options for embedded plugin module to extract CSS.
+ * @property {JsOptions?} js The options for embedded plugin module to extract CSS.
+ * @property {function(string, ResourceInfo, Compilation): string|null ?} postprocess The post-process for extracted content from entry.
  * @property {function(content: string, {sourceFile: string, assetFile: string})} afterProcess Called after processing all plugins.
  * @property {boolean} [extractComments = false] Whether comments should be extracted to a separate file.
  *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
- *  This option enable/disable storing of *.LICENSE.txt file.
+ *  This option enables/disable storing of *.LICENSE.txt file.
  *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
  * @property {Object|string} entry The entry points.
  *  The key is route to output file w/o an extension, value is a template source file.
  *  When the entry is a string, this should be a relative or absolute path to pages.
  * @property {{paths: Array<string>, files: Array<RegExp>, ignore: Array<RegExp>}} watchFiles Paths and files to watch file changes.
- * @property {Object=} loaderOptions Options defined in plugin but provided for the loader.
- * @property {Array<Object>|boolean=} preload Options to generate preload link tags for assets.
+ * @property {boolean?} [hotUpdate=true] Whether in serve/watch mode should be added hot-update.js file in html.
+ * @property {Object?} loaderOptions Options defined in plugin but provided for the loader.
+ * @property {Array<Object>|boolean?} preload Options to generate preload link tags for assets.
  * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
  * @property {boolean|Object|'auto'|null} [minifyOptions = null] Minification options, it is used for auto minify.
  */
@@ -36,15 +37,16 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The output filename of extracted JS.
  * @property {string|function(PathData, AssetInfo): string} [chunkFilename = '[id].js'] The output filename of non-initial chunk files.
- * @property {boolean|string} [`inline` = false] Whether the compiled JS should be inlined.
+ * @property {boolean|string} [inline = false] Whether the compiled JS should be inlined.
  */
 
 /**
  * @typedef {Object} CssOptions
  * @property {RegExp} test RegEx to match style files.
  * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The file name of output file.
- * @property {boolean|string} [`inline` = false] Whether the compiled CSS should be inlined.
+ * @property {string|function(PathData, AssetInfo): string} [filename = '[name].css'] The file name of output file.
+ * @property {string|function(PathData, AssetInfo): string} [chunkFilename = filename] The output filename of non-initial chunk files, e.g., styles imported in js.
+ * @property {boolean|string} [inline = false] Whether the compiled CSS should be inlined.
  */
 
 class Options {
@@ -60,14 +62,15 @@ class Options {
     enabled: true,
     filename: undefined, // used output.filename
     chunkFilename: undefined, // used output.chunkFilename
-    outputPath: null,
+    outputPath: undefined,
     inline: false,
   };
   static css = {
     test: /\.(css|scss|sass|less|styl)$/,
     enabled: true,
     filename: '[name].css',
-    outputPath: null,
+    chunkFilename: undefined,
+    outputPath: undefined,
     inline: false,
   };
 
@@ -88,6 +91,7 @@ class Options {
     this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
 
     if (!options.watchFiles) this.options.watchFiles = {};
+    this.options.hotUpdate = this.options.hotUpdate !== false;
   }
 
   /**
@@ -119,6 +123,10 @@ class Options {
     css.enabled = this.toBool(css.enabled, true, this.css.enabled);
     css.inline = this.toBool(css.inline, false, this.css.inline);
     if (!css.outputPath) css.outputPath = options.output.path;
+
+    if (!css.chunkFilename) {
+      css.chunkFilename = css.filename;
+    }
 
     js.enabled = this.toBool(js.enabled, true, this.js.enabled);
     js.inline = this.toBool(js.inline, false, this.js.inline);

@@ -226,14 +226,20 @@ class Collection {
     let orderStack = [];
 
     const walk = (module) => {
-      const deps = module.dependencies;
+      const { dependencies } = module;
       const result = [];
 
-      for (const dependency of deps) {
+      for (const dependency of dependencies) {
         if (!dependency.userRequest) continue;
 
         const parentIndex = moduleGraph.getParentBlockIndex(dependency);
         let depModule = moduleGraph.getModule(dependency);
+
+        if (!depModule) {
+          // prevent a potential error in as yet unknown use cases to find the location of the bug
+          /* istanbul ignore next */
+          continue;
+        }
 
         // use the original NormalModule instead of ConcatenatedModule
         if (!depModule.resource && depModule.rootModule) {

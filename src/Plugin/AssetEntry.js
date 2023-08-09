@@ -421,6 +421,7 @@ class AssetEntry {
     }
   }
 
+  /* istanbul ignore next: this method is called in watch mode after changes */
   /**
    * Add the entry file to compilation.
    *
@@ -473,6 +474,7 @@ class AssetEntry {
     new EntryPlugin(context, entrypoint.import[0], entryOptions).apply(compiler);
   }
 
+  /* istanbul ignore next: this method is called in watch mode after changes */
   /**
    * Remove the entry file from cache.
    *

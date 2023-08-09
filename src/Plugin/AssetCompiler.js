@@ -122,6 +122,7 @@ class AssetCompiler {
     this.invalidate = this.invalidate.bind(this);
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
+    this.afterResolve = this.afterResolve.bind(this);
     this.afterCreateModule = this.afterCreateModule.bind(this);
     this.beforeLoader = this.beforeLoader.bind(this);
     this.afterBuildModule = this.afterBuildModule.bind(this);
@@ -227,13 +228,11 @@ class AssetCompiler {
         rootContext: Options.rootContext,
       });
 
-      UrlDependency.init({
-        fs,
-        moduleGraph: compilation.moduleGraph,
-      });
+      UrlDependency.init(fs, compilation);
 
       // resolve modules
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
+      normalModuleFactory.hooks.afterResolve.tap(pluginName, this.afterResolve);
       contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
 
       // build modules
@@ -289,6 +288,7 @@ class AssetCompiler {
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
   }
 
+  /* istanbul ignore next: this method is called in watch mode after changes */
   /**
    * Invalidate changed file.
    *
@@ -426,13 +426,12 @@ class AssetCompiler {
    * @return {boolean|undefined} Return undefined to processing, false to ignore dependency.
    */
   beforeResolve(resolveData) {
-    const { context, request, contextInfo, dependencyType } = resolveData;
-    // note: the contextInfo.issuer is the filename w/o a query
-    const { issuer } = contextInfo;
+    const { request, dependencyType } = resolveData;
     const [file] = request.split('?', 1);
 
     AssetEntry.resolveEntryId(resolveData);
 
+    /* istanbul ignore next */
     // prevent compilation of renamed or deleted entry point in serve/watch mode
     if (Options.isDynamicEntry() && AssetEntry.isDeletedEntryFile(file)) {
       for (const [entryName, entry] of this.compilation.entries) {
@@ -445,16 +444,26 @@ class AssetCompiler {
       return false;
     }
 
-    // skip data-URL
-    if (request.startsWith('data:')) return;
-
-    // skip the module loaded via importModule
-    if (dependencyType === 'loaderImport') return;
-
     if (dependencyType === 'url') {
       UrlDependency.resolve(resolveData);
-      return;
     }
+  }
+
+  /**
+   * Called after the request is resolved.
+   *
+   * @param {Object} resolveData
+   * @return {boolean|undefined} Return undefined to processing, false to ignore dependency.
+   */
+  afterResolve(resolveData) {
+    const { request, contextInfo, dependencyType, createData } = resolveData;
+    const { resource, loaders } = createData;
+    const [file] = resource.split('?', 1);
+    // note: the contextInfo.issuer is the filename w/o a query
+    const { issuer } = contextInfo;
+
+    // skip: module loaded via importModule, css url, data-URL
+    if (dependencyType === 'loaderImport' || dependencyType === 'url' || request.startsWith('data:')) return;
 
     if (issuer) {
       const isIssuerStyle = Options.isStyle(issuer);
@@ -471,12 +480,28 @@ class AssetCompiler {
       // to avoid splitting the loader runtime scripts;
       // allow runtime scripts for styles imported in JavaScript, regards deep imported styles via url()
       if (isIssuerStyle && file.endsWith('.js')) {
-        resolveData._isScript = true;
-
         const rootIssuer = Collection.findRootIssuer(issuer);
+        resolveData._isScript = true;
 
         // return true if the root issuer is a JS (not style and not template), otherwise return false
         return rootIssuer != null && !Options.isStyle(rootIssuer) && !Options.isEntry(rootIssuer);
+      }
+
+      // try to detect imported style as resolved resource file, because a request can be a node module w/o an extension
+      // the issuer can be a style if a scss contains like `@import 'main.css'`
+      if (!Options.isStyle(issuer) && !Options.isEntry(issuer) && Options.isStyle(file)) {
+        const rootIssuer = Collection.findRootIssuer(issuer);
+
+        Collection.importStyleRootIssuers.add(rootIssuer || issuer);
+        resolveData._isImportedStyle = true;
+
+        if (!createData.request.includes(cssLoader.loader)) {
+          // the request of an imported style must be different from the request for the same style specified in a html,
+          // otherwise webpack doesn't apply the added loader for the imported style,
+          // see the test case js-import-css-same-in-many4
+          createData.request = `${cssLoader.loader}!${createData.request}`;
+          loaders.unshift(cssLoader);
+        }
       }
     }
 
@@ -499,6 +524,7 @@ class AssetCompiler {
     module._isTemplate = AssetEntry.isEntryResource(resource);
     module._isScript = resolveData._isScript === true;
     module._isStyle = Options.isStyle(resource);
+    module._isImportedStyle = resolveData._isImportedStyle === true;
     module._isLoaderImport = dependencyType === 'loaderImport';
     module._isDependencyUrl = dependencyType === 'url';
 
@@ -507,31 +533,8 @@ class AssetCompiler {
 
     const { type, loaders } = module;
     const { issuer } = resolveData.contextInfo;
-    const [file] = resource.split('?', 1);
 
     if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
-
-    // try to detect imported style as resolved resource file, because a request can be a node module w/o an extension
-    // the issuer can be a style if a scss contains like `@import 'main.css'`
-    if (issuer && !Options.isStyle(issuer) && !Options.isEntry(issuer) && Options.isStyle(file)) {
-      const rootIssuer = Collection.findRootIssuer(issuer);
-
-      module._isImportedStyle = true;
-      Collection.importStyleRootIssuers.add(rootIssuer || issuer);
-
-      // check entryId to avoid adding duplicate loaders after changes in serve mode
-      // add the CSS loader for only styles imported in JavaScript
-      if (!request.includes(cssLoader)) {
-        module.loaders.unshift(cssLoader);
-
-        // set the correct module type to enable the usage of built-in CSS support together with the bundler plugin
-        // if (this.compilation.compiler.options?.experiments?.css && type === 'css') {
-        //   module.type = 'javascript/auto';
-        // }
-      }
-
-      return;
-    }
 
     if (type === 'asset/inline' || type === 'asset' || (type === 'asset/source' && AssetInline.isSvgFile(resource))) {
       AssetInline.add(resource, issuer, Options.isEntry(issuer));
@@ -864,6 +867,7 @@ class AssetCompiler {
         chunkId: chunk.id,
         hash,
         resource: issuer,
+        useChunkFilename: true,
       });
       const assetFile = inline ? this.getInlineStyleAsseFile(filename, entryFilename) : filename;
       const outputFilename = inline ? assetFile : Options.getAssetOutputFile(assetFile, entryFilename);
@@ -938,11 +942,13 @@ class AssetCompiler {
    * @param {string} chunkId
    * @param {string} hash
    * @param {string} resource
+   * @param {boolean} useChunkFilename
    * @return {{isCached: boolean, filename: string}}
    */
-  getStyleAsseFile({ name, chunkId, hash, resource }) {
+  getStyleAsseFile({ name, chunkId, hash, resource, useChunkFilename = false }) {
     const { compilation } = this;
     const cssOptions = Options.getCss();
+    const filenameTemplate = useChunkFilename ? cssOptions.chunkFilename : cssOptions.filename;
 
     /** @type {PathData} The data to generate an asset path by the filename template. */
     const pathData = {
@@ -955,7 +961,7 @@ class AssetCompiler {
       filename: resource,
     };
 
-    const assetPath = compilation.getAssetPath(cssOptions.filename, pathData);
+    const assetPath = compilation.getAssetPath(filenameTemplate, pathData);
     const outputFilename = Options.resolveOutputFilename(assetPath, cssOptions.outputPath);
     const [sourceFile] = resource.split('?', 1);
 

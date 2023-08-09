@@ -96,23 +96,24 @@ class Resolver {
   }
 
   /**
-   * Resolve the full path of asset source file by raw request and issuer.
+   * Resolve the full path of asset source file.
    *
    * @param {string} rawRequest The raw request of resource.
    * @param {string} issuer The issuer of resource.
    * @return {string|null} The resolved full path of resource.
    */
-  static getSourceFile(rawRequest, issuer) {
-    let sourceFile = this.sourceFiles.get(issuer)?.get(rawRequest);
-    if (sourceFile) return sourceFile;
+  static resolveResource(rawRequest, issuer) {
+    let resource = this.sourceFiles.get(issuer)?.get(rawRequest);
+    if (resource) return resource;
 
-    // normalize request, e.g. the relative `path/to/../to/file` path to absolute `path/to/file`
-    sourceFile = path.resolve(this.context, rawRequest);
-    const [file] = sourceFile.split('?', 1);
+    // normalize request, e.g., the relative `path/to/../to/file` path to absolute `path/to/file`
+    resource = path.resolve(this.context, rawRequest);
+    const [file] = resource.split('?', 1);
 
     if (rawRequest.startsWith(this.context) || this.fs.existsSync(file)) {
-      this.addSourceFile(sourceFile, rawRequest, issuer);
-      return sourceFile;
+      this.addSourceFile(resource, rawRequest, issuer);
+
+      return resource;
     }
 
     return null;
@@ -225,7 +226,7 @@ class Resolver {
     // bypass the inline CSS
     if (Collection.isInlineStyle(rawRequest)) return rawRequest;
 
-    const resource = this.getSourceFile(rawRequest, issuerFile);
+    const resource = this.resolveResource(rawRequest, issuerFile);
 
     // resolve resource
     if (resource != null) {

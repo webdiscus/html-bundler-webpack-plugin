@@ -1,5 +1,14 @@
 # Change log
 
+## 2.6.0 (2023-08-09)
+- feat: add the `css.chunkFilename` option for output filename of non-initial chunk files
+- feat: add the `hotUpdate` option to enable/disable live reload in serve/watch mode
+- fix: missing an output css file when the same style file is imported in js and linked in html
+- chore: add the "hello world" example
+- chore: add simple-site example with automatically processing many HTML templates
+- chore: add the Handlebars example
+- chore: add react-app example, ejected from `create-react-app` (alpha version)
+
 ## 2.5.1 (2023-08-04)
 - fix: missing output html file after renaming template file in watch mode when using entry as a path
 - chore: add example for bootstrap

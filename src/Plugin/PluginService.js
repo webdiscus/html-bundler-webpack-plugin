@@ -17,7 +17,8 @@ class PluginService {
   // cached loader options
   static #loaderCache = new Map();
   static #used = false;
-  static #watchMode = false;
+  static #watchMode;
+  static #hotUpdate;
   static #contextCache = new Set();
   static dataFiles = new Map();
 
@@ -57,6 +58,7 @@ class PluginService {
 
     this.#used = true;
     this.#watchMode = false;
+    this.#hotUpdate = pluginOptions.hotUpdate;
     this.#options = options;
     this.#loaderOptions = loaderOptions;
     this.#loaderCache.clear();
@@ -129,8 +131,18 @@ class PluginService {
     return this.#used;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isWatchMode() {
     return this.#watchMode;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  static useHotUpdate() {
+    return this.#hotUpdate;
   }
 
   static isCached(context) {

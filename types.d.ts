@@ -36,6 +36,7 @@ declare namespace HtmlBundlerPlugin {
     minifyOptions?: MinifyOptions;
     extractComments?: boolean;
     watchFiles?: WatchFiles;
+    hotUpdate?: boolean;
     verbose?: 'auto' | boolean;
     /**
      * The reference to LoaderOptions.
@@ -97,6 +98,7 @@ type JsOptions = {
 type CssOptions = {
   test?: RegExp;
   filename?: FilenameTemplate;
+  chunkFilename?: FilenameTemplate;
   outputPath?: string;
   inline?: 'auto' | boolean;
 };

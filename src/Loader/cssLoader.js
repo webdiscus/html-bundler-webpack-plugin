@@ -8,12 +8,11 @@ const Collection = require('../Plugin/Collection');
 const { baseUri, urlPathPrefix } = require('./Utils');
 
 /**
- * TODO: test experiments.css
- *
  * @this {import("webpack").LoaderContext<LoaderOptions>}
  * @param {string} content
  */
 const loader = function (content) {
+  /* istanbul ignore next */
   if (this._compiler.options?.experiments?.css && this._module?.type === 'css') {
     return content;
   }
@@ -43,7 +42,7 @@ const pitchLoader = async function (remaining) {
   module._cssSource = esModule ? result.default : result;
   Collection.setImportStyleEsModule(esModule);
 
-  return '/* extracted by HTMLBundler CSSLoader */ export {};';
+  return '/* extracted by HTMLBundler CSSLoader */';
 };
 
 module.exports = loader;

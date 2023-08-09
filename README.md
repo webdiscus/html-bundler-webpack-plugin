@@ -37,14 +37,14 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
 ### 📚 Read it
- - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd?preview=afd270c5c4861884d243f2fd45fa83d7b7c1c6874d28e936177fb4b57683332974be40f4dffeb1f3e90881923bf7e695171d685fb874942a649eeec3)
+ - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
 
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
 - Reference to source **scripts** and **styles** in HTML using `<script src="...">` and `<link href="...">`.
 - Resolves [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
-- Inline [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
+- Inlines [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
 - Automatically processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
@@ -67,7 +67,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 - **NEW:** added support for importing style files in JavaScript.\
   **Note:** this feature was added for compatibility with `React` projects.\
   The importing styles in JavaScript is the `bad practice`. This is the `wrong way`.\
-  In new projects you should specify style source files directly in HTML. This the `right way`.
+  In new projects you should specify style source files directly in HTML.
 - **POTENTIAL BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
   If you use the `Eta` syntax, may be you need to update templates.
 
@@ -77,7 +77,7 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 ## Simple usage example
 
-Add source scripts and styles directly to HTML:
+The easiest way to link JavaScript and CSS to your HTML is to add their source files directly to the HTML:
 
 ```html
 <html>
@@ -94,6 +94,8 @@ Add source scripts and styles directly to HTML:
 </body>
 </html>
 ```
+
+You can specify script, style and image source files in HTML using a relative path or Webpack aliases.
 
 The generated HTML contains the output filenames of the processed files:
 
@@ -170,6 +172,7 @@ If the `entry` option is an object, the key is an output filename without `.html
    - [extractComments](#option-extract-comments)
    - [verbose](#option-verbose)
    - [watchFiles](#option-watch-files)
+   - [hotUpdate](#option-hot-update)
    - [loaderOptions](#option-loader-options) (reference to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
@@ -212,6 +215,7 @@ If the `entry` option is an object, the key is an output filename without `.html
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 1. Examples
    - Simple example "Hello World!" [View in browser](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
+   - Automatically processing many HTML templates [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/simple-site/)
    - Bootstrap with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
    - Tailwind CSS with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
    - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
@@ -349,7 +353,7 @@ For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs)
 For using the `Handlebars` see [Templating with Handlebars](#using-template-handlebars).\
 For other templates see [Template engines](#recipe-template-engine).
 
-For custom templates you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
+For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
 
 ---
 
@@ -682,7 +686,7 @@ new HtmlBundlerPlugin({
 
 > **Note**
 > 
-> In serve/watch mode you can add/delete/rename a template file in the entry path without restarting Webpack.
+> In serve/watch mode, you can add/delete/rename a template file in the entry path without restarting Webpack.
 
 #### [↑ back to contents](#contents)
 <a id="option-outputpath" name="option-outputpath" href="#option-outputpath"></a>
@@ -738,7 +742,7 @@ Default properties:
 - `filename` - an output filename of JavaScript. Details see by [filename option](#option-filename).
 - `chunkFilename` - an output filename of non-initial chunk files. Details see by [chunkFilename](https://webpack.js.org/configuration/output/#outputchunkfilename).
 - `outputPath` - an output path of JavaScript. Details see by [outputPath option](#option-outputpath).
-- `inline` - inline compiled JavaScript into HTML, available values:
+- `inline` - inlines compiled JavaScript into HTML, available values:
   - `false` - stores JavaScript in an output file (**defaults**)
   - `true` - adds JavaScript to the DOM by injecting a `<script>` tag
   - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
@@ -824,6 +828,7 @@ Type:
 type CssOptions = {
   test?: RegExp;
   filename?: FilenameTemplate;
+  chunkFilename?: FilenameTemplate;
   outputPath?: string;
   inline?: 'auto' | boolean;
 };
@@ -834,6 +839,7 @@ Default properties:
 {
   test: /\.(css|scss|sass|less|styl)$/,
   filename: '[name].css',
+  chunkFilename: '[name].css',
   outputPath: null,
   inline: false,
 }
@@ -841,8 +847,9 @@ Default properties:
 
 - `test` - an RegEpx to process all source styles that pass test assertion
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
+- `chunkFilename` - an output filename of non-initial chunk files, e.g., a style file imported in JavaScript.
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
-- `inline` - inline extracted CSS into HTML, available values:
+- `inline` - inlines extracted CSS into HTML, available values:
   - `false` - stores CSS in an output file (**defaults**)
   - `true` - adds CSS to the DOM by injecting a `<style>` tag
   - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
@@ -1295,7 +1302,7 @@ Allows to configure paths and files to watch file changes for rebuild in `watch`
 
 #### Properties:
 
-- `paths` -  A list of relative or absolute paths to directories where should be watched `files`.\
+- `paths` - A list of relative or absolute paths to directories where should be watched `files`.\
   The watching path for each template defined in the entry will be autodetect as the first level subdirectory of the template relative to the project's root path.
   E.g., the template `./src/views/index.html` has the watching path of `./src`.
 
@@ -1334,11 +1341,28 @@ This option has the prio over paths and files.
 > To display all watched files, enable the [`verbose`](#option-verbose) option.
 
 
+#### [↑ back to contents](#contents)
+<a id="option-hot-update" name="option-hot-update" href="#option-hot-update"></a>
+### `hotUpdate`
+Type: `boolean` Default: `true`
+
+In `serve` or `watch` mode injects the `hot-update.js` file into each generated HTML file to enable the live reloading.
+
+> **Warning**
+> 
+> If you use the Webpack config generated via `create-react-app`, then set `hotUpdate` to `false`,
+> to avoid the React’s error:
+> 
+> ```
+> You attempted to import {file} which falls outside of the project `src/` directory.
+> Relative imports outside of `src/` are not supported.
+> ```
+
 <a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
 ### `verbose`
 Type: `string|boolean` Default: `false`
 
-The verbose option allows to display in console the processing information about extracted resources.
+The verbose option allows displaying in the console the processing information about extracted resources.
 All resources are grouped by their issuers.
 
 Possible values:

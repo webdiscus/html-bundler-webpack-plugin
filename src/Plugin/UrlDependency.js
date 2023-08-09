@@ -2,16 +2,16 @@ const path = require('path');
 const Resolver = require('./Resolver');
 
 class UrlDependency {
-  static fs = null;
-  static compilation = null;
+  static fs;
+  static moduleGraph;
 
   /**
    * @param {fs: FileSystem} fs
    * @param {compilation: Compilation} compilation
    */
-  static init({ fs, moduleGraph }) {
+  static init(fs, compilation) {
     this.fs = fs;
-    this.moduleGraph = moduleGraph;
+    this.moduleGraph = compilation.moduleGraph;
   }
 
   /**
@@ -21,23 +21,20 @@ class UrlDependency {
    */
   static resolve(resolveData) {
     const fs = this.fs;
-    const [file, query] = resolveData.request.split('?');
+    const rawRequest = resolveData.request;
+    const [file, query] = rawRequest.split('?');
+    const resource = path.resolve(resolveData.context, file);
 
-    if (!fs.existsSync(path.resolve(resolveData.context, file))) {
+    if (!fs.existsSync(resource)) {
       const dependency = resolveData.dependencies[0];
       const parentModule = this.moduleGraph.getParentModule(dependency);
       const sourceFile = this.resolveInSnapshot(parentModule.buildInfo.snapshot, file);
 
       if (sourceFile != null) {
-        const resolvedRequest = query ? sourceFile + '?' + query : sourceFile;
-        const rawRequest = resolveData.request;
         const issuer = resolveData.contextInfo.issuer;
 
-        resolveData.request = resolvedRequest;
-        dependency.request = resolvedRequest;
-        dependency.userRequest = resolvedRequest;
-
-        Resolver.addSourceFile(resolvedRequest, rawRequest, issuer);
+        resolveData.request = query ? sourceFile + '?' + query : sourceFile;
+        Resolver.addSourceFile(resolveData.request, rawRequest, issuer);
       }
     }
   }

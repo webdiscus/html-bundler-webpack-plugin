@@ -34,6 +34,7 @@ module.exports = {
       },
 
       //verbose: true,
+      hotUpdate: false, // test to disable auto-injection of hot-update.js files
     }),
   ],
 
