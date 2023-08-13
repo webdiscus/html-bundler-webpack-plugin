@@ -1,5 +1,12 @@
 # Change log
 
+## 2.7.0 (2023-08-13)
+- feat: add `js.inline.chunk` and `js.inline.source` options to inline only js chunks matching regular expressions
+- fix: if the html outputPath is a relative path, it is relative to `output.path`, not to CWD
+- fix: resolve `asset` module by 2nd `npm start` when `cache.type` is `'filesystem'` (using `memory` type was OK)
+- chore: update the `eta` to the latest `v3.1.0` version
+- docs: update README
+
 ## 2.6.1 (2023-08-09)
 - fix: when the Webpack `output.path` option is undefined, set the default path as CWD + `/dist`
 
@@ -563,11 +570,9 @@ If you have pure HTML file you can disable this processing to save the compilati
 - docs: update content structure, improve readme content
 
 ## 0.9.1 (2023-02-08)
-- fix: resolve SVG filename with fragment in `use` tag
+- fix: resolve filename containing a URI fragment, e.g.:
   ```html
-  <svg width="24" height="24">
-    <use href="./icons.svg#home"></use>
-  </svg>
+  <use href="./icons.svg#home"></use>
   ```
 - fix: resolve assets when the same file is used on many pages generated from the same template
 - fix: pass data to template after changes when using HMR

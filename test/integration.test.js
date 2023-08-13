@@ -35,8 +35,8 @@ describe('resolve files', () => {
   test('many pages from one html', () => compareFiles('resolve-in-many-pages-from-one-html'));
   test('relative paths', () => compareFiles('resolve-relative-paths'));
   test('alias in html', () => compareFiles('resolve-alias-in-html'));
-  test('svg href with fragment', () => compareFiles('resolve-svg-use-fragment'));
-  test('svg href with fragment, filename', () => compareFiles('resolve-svg-use-fragment-filename'));
+  test('svg with fragment', () => compareFiles('resolve-svg-use-fragment'));
+  test('svg with fragment, filename', () => compareFiles('resolve-svg-use-fragment-filename'));
   test('assets in multi pages', () => compareFiles('multipages'));
 });
 
@@ -74,6 +74,9 @@ describe('plugin options', () => {
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
 
+  test('outputPath absolute', () => compareFiles('option-outputPath-absolute'));
+  test('outputPath relative', () => compareFiles('option-outputPath-relative'));
+
   test('css filename and chunkFilename', () => compareFiles('option-css-filename-chunkFilename'));
   test('css filename and undefined chunkFilename', () => compareFiles('option-css-filename-chunkFilename-undefined'));
   test('css.inline auto, dev', () => compareFiles('option-css-inline-auto-dev'));
@@ -82,6 +85,10 @@ describe('plugin options', () => {
   // test manually, because in development mode, IDs are generated randomly
   //test('js.inline auto, dev', () => compareFiles('option-js-inline-auto-dev'));
   //test('js.inline auto, prod', () => compareFiles('option-js-inline-auto-prod'));
+
+  test('js.inline.source', () => compareFiles('option-js-inline-source'));
+  test('js.inline.chunk', () => compareFiles('option-js-inline-chunk'));
+  test('js.inline source and chunk', () => compareFiles('option-js-inline-source-chunk'));
 
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));

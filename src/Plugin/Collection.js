@@ -22,9 +22,6 @@ const { noHeadException } = require('./Messages/Exception');
  * @property {string|null} assetFile The output filename, only if imported is false.
  */
 
-// TODO: remove polyfill when support for node.js 14 is dropped
-const hasReplaceAll = !!String.prototype.replaceAll;
-
 /**
  * Collection of script and style files parsed in a template.
  */
@@ -356,7 +353,7 @@ class Collection {
         AssetEntry.addToCompilation(entry);
       }
 
-      inline = Options.isInlineJs(resource);
+      inline = undefined;
     } else if (type === this.type.style) {
       inline = Options.isInlineCss(resource);
     }
@@ -698,62 +695,66 @@ class Collection {
     tagEndPos = content.indexOf(tagEnd, tagEndPos) + tagEnd.length;
 
     // add LF after injected scripts when next char is not a new line
-    if (LF && '\n\r'.indexOf(content[tagEndPos]) < 0) closeTag += LF;
+    if (LF && !'\n\r'.includes(content[tagEndPos])) closeTag += LF;
 
     // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
     return content.slice(0, tagStartPos) + openTag + source + closeTag + content.slice(tagEndPos);
   }
 
   /**
-   * Binding of compiled JavaScript to generated HTML.
+   * Binding of compiled JavaScript into generated HTML.
    *
    * The JS will be inlined or source script file will be replaced with output filename in content.
    *
    * @param {string} content The content of the template.
-   * @param {string} search The original request of a script in the content.
+   * @param {string} resource The resource file containing in the content.
    * @param {Object} asset The object of the script.
    * @param {string} LF The new line feed in depends on the minification option.
    * @return {string|boolean} Return content with inlined JS or false if the content was not modified.
    */
-  static #bindScript(content, search, asset, LF) {
-    const pos = content.indexOf(search);
+  static #bindScript(content, resource, asset, LF) {
+    let pos = content.indexOf(resource);
     if (pos < 0) return false;
 
     const sources = this.compilation.assets;
-    const { inline, chunks } = asset;
-    const tagEnd = '</script>';
-    let beginStr = '<script>';
-    let endStr = '</script>';
+    const { chunks } = asset;
+    const openTag = '<script>';
+    const closeTag = '</script>';
+
     let srcStartPos = pos;
-    let srcEndPos = srcStartPos + search.length;
+    let srcEndPos = srcStartPos + resource.length;
     let tagStartPos = srcStartPos;
     let tagEndPos = srcEndPos;
     let replacement = '';
 
-    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
-    tagEndPos = content.indexOf(tagEnd, tagEndPos) + tagEnd.length;
+    if (chunks.length === 1 && chunks[0].inline !== true) {
+      // replace the single chunk file for preload in the `link` tag and in the `script` tag
+      // TODO: remove polyfill when support for node.js 14 is dropped
+      return String.prototype.replaceAll
+        ? content.replaceAll(resource, chunks[0].assetFile)
+        : replaceAll(content, resource, chunks[0].assetFile);
+    }
 
-    if (!inline) {
-      if (chunks.length === 1) {
-        // TODO: remove polyfill when support for node.js 14 is dropped
-        return hasReplaceAll
-          ? content.replaceAll(search, chunks[0].assetFile)
-          : replaceAll(content, search, chunks[0].assetFile);
+    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
+    tagEndPos = content.indexOf(closeTag, tagEndPos) + closeTag.length;
+
+    let beforeTagSrc = content.slice(tagStartPos, srcStartPos);
+    let afterTagSrc = content.slice(srcEndPos, tagEndPos);
+
+    for (let { inline, chunkFile, assetFile } of chunks) {
+      if (LF && replacement) replacement += LF;
+
+      if (inline) {
+        const code = sources[chunkFile].source();
+        replacement += openTag + code + closeTag;
+        AssetTrash.add(chunkFile);
       } else {
-        beginStr = content.slice(tagStartPos, srcStartPos);
-        endStr = content.slice(srcEndPos, tagEndPos);
+        replacement += beforeTagSrc + assetFile + afterTagSrc;
       }
     }
 
-    for (let { chunkFile, assetFile } of chunks) {
-      const str = inline ? sources[chunkFile].source() : assetFile;
-
-      if (LF && replacement) replacement += LF;
-      replacement += beginStr + str + endStr;
-    }
-
     // add LF after injected scripts when next char is not a new line
-    if (LF && '\n\r'.indexOf(content[tagEndPos]) < 0) replacement += LF;
+    if (LF && !'\n\r'.includes(content[tagEndPos])) replacement += LF;
 
     return content.slice(0, tagStartPos) + replacement + content.slice(tagEndPos);
   }
@@ -768,7 +769,7 @@ class Collection {
     const splitChunkIds = new Set();
     const chunkCache = new Map();
 
-    for (let [resource, { type, inline, name, entries }] of this.files) {
+    for (let [resource, { type, name, entries }] of this.files) {
       if (type !== this.type.script) continue;
 
       const entrypoint = namedChunkGroups.get(name);
@@ -805,7 +806,7 @@ class Collection {
         // let's show an original error
         if (!assets.hasOwnProperty(entryFile)) continue;
 
-        const data = { type, inline, resource, chunks: [] };
+        const data = { type, resource, chunks: [] };
         let injectedChunks;
 
         if (hasSplitChunks) {
@@ -819,15 +820,11 @@ class Collection {
             injectedChunks.add(chunkFile);
           }
 
-          let assetFile = undefined;
-          if (inline === true) {
-            AssetTrash.add(chunkFile);
-          } else {
-            assetFile = Options.getAssetOutputFile(chunkFile, entryFile);
-            splitChunkFiles.add(chunkFile);
-          }
+          const assetFile = Options.getAssetOutputFile(chunkFile, entryFile);
+          const inline = Options.isInlineJs(resource, chunkFile);
 
-          data.chunks.push({ chunkFile, assetFile });
+          splitChunkFiles.add(chunkFile);
+          data.chunks.push({ inline, chunkFile, assetFile });
         }
 
         const entryData = this.data.get(entryFile);

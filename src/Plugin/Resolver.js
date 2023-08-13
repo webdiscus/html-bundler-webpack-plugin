@@ -245,6 +245,7 @@ class Resolver {
 
       // try to resolve inline data url
       const dataUrl = AssetInline.getDataUrl(resource, issuerFile);
+
       if (dataUrl != null) {
         Collection.setData(this.entryPoint, issuer, { type: Collection.type.resource, inline: true, resource });
         return dataUrl;

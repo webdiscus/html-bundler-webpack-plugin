@@ -106,10 +106,10 @@ assets:
              -> chunks:
                   - ../js/612.bundle.js
                   - ../js/about-split.bundle.js
-        inline: src/views/about/about-inline-split.js?inline
-                inline chunks:
-                  - 544.bundle.js
-                  - about-inline-split.bundle.js
+        script: src/views/about/about-inline-split.js?inline
+             -> chunks:
+                  ~ 544.bundle.js (inline)
+                  ~ about-inline-split.bundle.js (inline)
         script: src/views/about/about.js
              -> ../js/about.bundle.js
 

@@ -119,7 +119,6 @@ class Resolver {
     const isStyle = type === 'style';
     let isAliasArray = false;
     let resolvedRequest = null;
-    let usedEnhancedResolver = false;
 
     // resolve an absolute path by prepending options.basedir
     if (request[0] === '/') {
@@ -173,19 +172,17 @@ class Resolver {
       resolvedRequest = this.resolveScriptExtension(resolvedRequest);
     }
 
-    if (!usedEnhancedResolver) {
-      // request of the svg file can contain a fragment id, e.g. shapes.svg#circle
-      const separator = resolvedRequest.indexOf('#') > 0 ? '#' : '?';
-      const [resolvedFile] = resolvedRequest.split(separator, 1);
+    // request of the svg file can contain a fragment id, e.g., shapes.svg#circle
+    const separator = resolvedRequest.indexOf('#') > 0 ? '#' : '?';
+    const [resolvedFile] = resolvedRequest.split(separator, 1);
 
-      if (!fs.existsSync(resolvedFile)) {
-        if (isScript) {
-          Snapshot.addMissingFile(issuer, resolvedFile);
-        }
-
-        const error = new Error(`Can't resolve '${request}' in '${context}'`);
-        resolveException(error, request, path.relative(this.rootContext, issuer));
+    if (!fs.existsSync(resolvedFile)) {
+      if (isScript) {
+        Snapshot.addMissingFile(issuer, resolvedFile);
       }
+
+      const error = new Error(`Can't resolve '${request}' in '${context}'`);
+      resolveException(error, request, path.relative(this.rootContext, issuer));
     }
 
     return resolvedRequest;

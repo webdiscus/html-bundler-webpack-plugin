@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+
+  <!-- ./js/script-inline.js: inline JS using js.inline.source option -->
+  <script>(()=>{"use strict";var e,r={},o={};function t(e){var n=o[e];if(void 0!==n)return n.exports;var a=o[e]={exports:{}};return r[e](a,a.exports,t),a.exports}t.m=r,e=[],t.O=(r,o,n,a)=>{if(!o){var i=1/0;for(p=0;p<e.length;p++){for(var[o,n,a]=e[p],l=!0,f=0;f<o.length;f++)(!1&a||i>=a)&&Object.keys(t.O).every((e=>t.O[e](o[f])))?o.splice(f--,1):(l=!1,a<i&&(i=a));if(l){e.splice(p--,1);var u=n();void 0!==u&&(r=u)}}return r}a=a||0;for(var p=e.length;p>0&&e[p-1][2]>a;p--)e[p]=e[p-1];e[p]=[o,n,a]},t.d=(e,r)=>{for(var o in r)t.o(r,o)&&!t.o(e,o)&&Object.defineProperty(e,o,{enumerable:!0,get:r[o]})},t.o=(e,r)=>Object.prototype.hasOwnProperty.call(e,r),t.r=e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})},(()=>{var e={666:0};t.O.j=r=>0===e[r];var r=(r,o)=>{var n,a,[i,l,f]=o,u=0;if(i.some((r=>0!==e[r]))){for(n in l)t.o(l,n)&&(t.m[n]=l[n]);if(f)var p=f(t)}for(r&&r(o);u<i.length;u++)a=i[u],t.o(e,a)&&e[a]&&e[a][0](),e[a]=0;return t.O(p)},o=self.webpackChunk=self.webpackChunk||[];o.forEach(r.bind(null,0)),o.push=r.bind(null,o.push.bind(o))})()})();</script>
+<script>(self.webpackChunk=self.webpackChunk||[]).push([[812],{812:()=>{console.log(">> script-inline.js")}}]);</script>
+<script>"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[601],{},s=>{s.O(0,[812],(()=>(812,s(s.s=812)))),s.O()}]);</script>
+
+  <!-- ./js/script.js: file JS, because it doesn't match either js.inline.source or js.inline.chunk -->
+  <script src="js/639.bundle.js" defer="defer"></script>
+<script src="js/script.bundle.js" defer="defer"></script>
+
+  <!-- ./js/app/app.js: inline only runtime of split chunks using js.inline.chunk option -->
+  <script src="js/998.bundle.js" defer="defer"></script>
+<script src="js/31.bundle.js" defer="defer"></script>
+<script src="js/93.bundle.js" defer="defer"></script>
+<script src="js/316.bundle.js" defer="defer"></script>
+<script src="js/app.bundle.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Test</h1>
+</body>
+</html>

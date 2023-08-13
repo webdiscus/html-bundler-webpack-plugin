@@ -52,6 +52,8 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
 class Options {
   /** @type {PluginOptions} */
   static options = {};
+  /** @type {AssetEntry} */
+  static assetEntry = null;
   static webpackOptions = {};
   static productionMode = true;
   static dynamicEntry = false;
@@ -77,12 +79,12 @@ class Options {
    * Initialize plugin options.
    *
    * @param {Object} options The plugin options.
-   * @param {AssetEntry} AssetEntry The instance of the AssetEntry class.
+   * @param {AssetEntry} assetEntry The instance of the AssetEntry class.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
-  static init(options, { AssetEntry }) {
+  static init(options, { assetEntry }) {
     this.options = options;
-    this.AssetEntry = AssetEntry;
+    this.assetEntry = assetEntry;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
 
@@ -108,6 +110,11 @@ class Options {
     this.verbose = this.toBool(this.options.verbose, false, false);
     this.context = options.context;
 
+    if (!this.options.sourcePath) this.options.sourcePath = this.context;
+    if (!this.options.outputPath) this.options.outputPath = options.output.path;
+    else if (!path.isAbsolute(this.options.outputPath))
+      this.options.outputPath = path.resolve(options.output.path, this.options.outputPath);
+
     // set the absolute path for dynamic entry
     this.dynamicEntry = typeof entry === 'string';
     if (this.dynamicEntry && !path.isAbsolute(entry)) {
@@ -128,7 +135,22 @@ class Options {
     }
 
     js.enabled = this.toBool(js.enabled, true, this.js.enabled);
-    js.inline = this.toBool(js.inline, false, this.js.inline);
+
+    if (js.inline && typeof js.inline === 'object') {
+      js.inline.enabled = this.toBool(js.inline.enabled, false, true);
+      if (js.inline.chunk && !Array.isArray(js.inline.chunk)) {
+        js.inline.chunk = [js.inline.chunk];
+      }
+      if (js.inline.source && !Array.isArray(js.inline.source)) {
+        js.inline.source = [js.inline.source];
+      }
+    } else {
+      js.inline = {
+        enabled: this.toBool(js.inline, false, this.js.inline),
+        chunk: undefined,
+        source: undefined,
+      };
+    }
 
     if (js.filename) {
       options.output.filename = js.filename;
@@ -159,9 +181,6 @@ class Options {
     } else {
       js.outputPath = options.output.path;
     }
-
-    if (!this.options.sourcePath) this.options.sourcePath = this.context;
-    if (!this.options.outputPath) this.options.outputPath = options.output.path;
 
     // normalize minify options
     if (this.options.minify != null && typeof this.options.minify === 'object') {
@@ -211,7 +230,6 @@ class Options {
     this.isUrlPublicPath = false;
     this.isRelativePublicPath = false;
     this.webpackPublicPath = publicPath;
-    this.webpackOutputPath = output.path;
 
     if (publicPath === 'auto') {
       this.autoPublicPath = true;
@@ -261,27 +279,29 @@ class Options {
   }
 
   /**
-   * Whether the resource should be inlined.
+   * Whether the JS chunk should be inlined.
    *
    * @param {string} resource The resource file, including a query.
-   * @param {boolean} defaultValue When a resource query doesn't have the `inline` parameter then return default value.
+   * @param {string} chunk The chunk filename.
    * @return {boolean}
    */
-  static #isInlineResource(resource, defaultValue) {
+  static isInlineJs(resource, chunk) {
     const [, query] = resource.split('?', 2);
-    const value = new URLSearchParams(query).get('inline');
+    const urlParams = new URLSearchParams(query);
+    const { inline } = this.options.js;
 
-    return this.toBool(value, false, defaultValue);
-  }
+    if (urlParams.has('inline')) {
+      const value = urlParams.get('inline');
+      return this.toBool(value, false, inline.enabled);
+    }
 
-  /**
-   * Whether the JS resource should be inlined.
-   *
-   * @param {string} resource The resource file, including a query.
-   * @return {boolean}
-   */
-  static isInlineJs(resource) {
-    return this.#isInlineResource(resource, this.options.js.inline);
+    if (!inline.source && !inline.chunk) return inline.enabled;
+
+    // regard filter only if the source or chunk is defined
+    const inlineSource = inline.source && inline.source.some((test) => resource.match(test));
+    const inlineChunk = inline.chunk && inline.chunk.some((test) => chunk.match(test));
+
+    return inline.enabled && (inlineSource || inlineChunk);
   }
 
   /**
@@ -291,7 +311,11 @@ class Options {
    * @return {boolean}
    */
   static isInlineCss(resource) {
-    return this.#isInlineResource(resource, this.options.css.inline);
+    const [, query] = resource.split('?', 2);
+    const urlParams = new URLSearchParams(query);
+    const value = urlParams.get('inline');
+
+    return this.toBool(value, false, this.options.css.inline);
   }
 
   /**
@@ -413,14 +437,14 @@ class Options {
    * @return {string}
    */
   static getAssetOutputPath(assetFile = null) {
-    const isAutoRelative = assetFile && this.isRelativePublicPath && !this.AssetEntry.isEntryFilename(assetFile);
+    const isAutoRelative = assetFile && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(assetFile);
 
     if (this.autoPublicPath || isAutoRelative) {
       if (!assetFile) return '';
 
-      const fullFilename = path.resolve(this.webpackOutputPath, assetFile);
+      const fullFilename = path.resolve(this.webpackOptions.output.path, assetFile);
       const context = path.dirname(fullFilename);
-      const publicPath = path.relative(context, this.webpackOutputPath) + '/';
+      const publicPath = path.relative(context, this.webpackOptions.output.path) + '/';
 
       return isWin ? pathToPosix(publicPath) : publicPath;
     }
@@ -436,15 +460,15 @@ class Options {
    * @return {string}
    */
   static getAssetOutputFile(assetFile, issuer) {
-    const isAutoRelative = issuer && this.isRelativePublicPath && !this.AssetEntry.isEntryFilename(issuer);
+    const isAutoRelative = issuer && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(issuer);
 
     // if the public path is relative, then a resource using not in the template file must be auto resolved
     if (this.autoPublicPath || isAutoRelative) {
       if (!issuer) return assetFile;
 
-      const issuerFullFilename = path.resolve(this.webpackOutputPath, issuer);
+      const issuerFullFilename = path.resolve(this.webpackOptions.output.path, issuer);
       const context = path.dirname(issuerFullFilename);
-      const file = path.posix.join(this.webpackOutputPath, assetFile);
+      const file = path.posix.join(this.webpackOptions.output.path, assetFile);
       const outputFilename = path.relative(context, file);
 
       return isWin ? pathToPosix(outputFilename) : outputFilename;

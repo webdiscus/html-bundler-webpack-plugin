@@ -10,6 +10,7 @@ const {
   bgAnsi256,
   yellowBright,
   bgAnsi,
+  yellow,
 } = require('ansis/colors');
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
@@ -52,43 +53,43 @@ const colorType = (item, pad) => {
 };
 
 const renderAssets = (item) => {
+  const { type } = item;
   let str = '';
   // style can contain resource such as images, fonts
   const assets = item?.ref?.assets ? item.ref.assets : item.assets;
+
   if (Array.isArray(assets)) {
     assets.forEach((assetResource) => {
-      let sourceFile = relativePathForView(assetResource.resource);
+      const { inline, resource, assetFile } = assetResource;
+      const sourceFile = relativePathForView(resource);
 
       str += colorType(assetResource, padLevel2) + ` ${cyan(sourceFile)}\n`;
 
-      if (assetResource.inline) {
-        return;
-      }
-
-      if (assetResource.assetFile) {
-        str += `${'->'.padStart(padLevel2)} ${assetResource.assetFile}\n`;
+      if (!inline && assetFile) {
+        str += `${'->'.padStart(padLevel2)} ${assetFile}\n`;
       }
     });
   }
 
-  // js
-  if (Array.isArray(item.chunks)) {
-    if (item.chunks.length === 1) {
-      if (!item.inline) {
-        str += `${'->'.padStart(padLevel1)} ${item.chunks[0].assetFile}\n`;
-      }
+  if (type === Collection.type.script) {
+    const isSingleChunk = item.chunks.length === 1;
+    let li;
+    let padLen;
+
+    if (isSingleChunk) {
+      padLen = padLevel1;
     } else {
-      if (item.inline) {
-        str += `${''.padStart(padLevel1)} ${ansi256(226)`inline chunks:`}` + '\n';
+      padLen = padChunks;
+      str += `${'->'.padStart(padLevel1)} ${ansi256(120)`chunks:`}` + '\n';
+    }
+
+    for (let { inline, chunkFile, assetFile } of item.chunks) {
+      if (inline) {
+        li = isSingleChunk ? '~>' : '~';
+        str += `${li.padStart(padLen)} ${gray(path.basename(chunkFile))} ${yellow`(inline)`}\n`;
       } else {
-        str += `${'->'.padStart(padLevel1)} ${ansi256(120)`chunks:`}` + '\n';
-      }
-      for (let { chunkFile, assetFile } of item.chunks) {
-        if (item.inline) {
-          str += `${'-'.padStart(padChunks)} ${gray(path.basename(chunkFile))}\n`;
-        } else {
-          str += `${'-'.padStart(padChunks)} ${assetFile}\n`;
-        }
+        li = isSingleChunk ? '->' : '-';
+        str += `${li.padStart(padLen)} ${assetFile}\n`;
       }
     }
   }

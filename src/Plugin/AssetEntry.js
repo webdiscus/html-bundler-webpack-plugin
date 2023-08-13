@@ -574,8 +574,8 @@ class AssetEntry {
   static #add(entry, assetEntryOptions) {
     const { name, filenameTemplate, outputPath } = assetEntryOptions;
 
-    if (path.isAbsolute(assetEntryOptions.outputPath)) {
-      assetEntryOptions.publicPath = path.relative(Options.getWebpackOutputPath(), assetEntryOptions.outputPath);
+    if (path.isAbsolute(outputPath)) {
+      assetEntryOptions.publicPath = path.relative(Options.getWebpackOutputPath(), outputPath);
     }
 
     entry.filename = (pathData, assetInfo) => {

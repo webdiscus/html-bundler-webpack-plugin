@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const resolve = require('resolve');
-
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -161,7 +160,7 @@ module.exports = function (webpackEnv) {
   return {
     target: ['browserslist'],
     // Webpack noise constrained to errors and warnings
-    //stats: 'errors-warnings',
+    //stats: 'errors-warnings', // TODO: enable
     mode: isEnvProduction ? 'production' : isEnvDevelopment && 'development',
     // Stop compilation early in production
     bail: isEnvProduction,
@@ -186,15 +185,19 @@ module.exports = function (webpackEnv) {
         : isEnvDevelopment && ((info) => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/')),
     },
     cache: {
-      type: 'filesystem',
-      version: createEnvironmentHash(env.raw),
-      cacheDirectory: paths.appWebpackCache,
-      store: 'pack',
-      buildDependencies: {
-        defaultWebpack: ['webpack/lib/'],
-        config: [__filename],
-        tsconfig: [paths.appTsConfig, paths.appJsConfig].filter((f) => fs.existsSync(f)),
-      },
+      // the current plugin version works only with the 'memory' cache type
+      type: 'memory',
+      // TODO: add support for the 'filesystem' cache type
+      // type: 'filesystem',
+      // version: createEnvironmentHash(env.raw),
+      // //cacheDirectory: paths.appWebpackCache,
+      // cacheDirectory: path.join(__dirname, '.cache'),
+      // store: 'pack',
+      // buildDependencies: {
+      //   defaultWebpack: ['webpack/lib/'],
+      //   config: [__filename],
+      //   tsconfig: [paths.appTsConfig, paths.appJsConfig].filter((f) => fs.existsSync(f)),
+      // },
     },
     infrastructureLogging: {
       level: 'none',
@@ -530,8 +533,13 @@ module.exports = function (webpackEnv) {
           chunkFilename: isEnvProduction
             ? 'static/js/[name].[contenthash:8].chunk.js'
             : isEnvDevelopment && 'static/js/[name].chunk.js',
-          // Inlines JS in HTML in development mode, in production mode save to file.
-          //inline: 'auto',
+          // Inlines the webpack runtime script. This script is too small to warrant
+          // a network request.
+          // https://github.com/facebook/create-react-app/issues/5358
+          inline: {
+            enabled: isEnvProduction && shouldInlineRuntimeChunk,
+            chunk: [/runtime-.+[.]js/],
+          },
         },
         css: {
           // The output filename of extracted CSS from styles referenced in html.
@@ -556,21 +564,16 @@ module.exports = function (webpackEnv) {
           minifyCSS: true,
           minifyURLs: true,
         },
-        hotUpdate: false,
-
         // Provides environment variables in HTML templates.
         // The public URL is available as <%=PUBLIC_URL%> in index.html, e.g.:
         // <link rel="icon" href="<%=PUBLIC_URL%>/favicon.ico">
         // It will be an empty string unless you specify "homepage"
         // in `package.json`, in which case it will be the pathname of that URL.
         data: env.raw,
+        // Disable using the plugin's hot update js file,
+        // because this file is imported from node_modules, but it's not allowed here.
+        hotUpdate: false,
       }),
-
-      // TODO: implement inlineOptions.filter, e.g.: [/runtime-.+[.]js/]
-      // Inlines the webpack runtime script. This script is too small to warrant
-      // a network request.
-      // https://github.com/facebook/create-react-app/issues/5358
-      //isEnvProduction && shouldInlineRuntimeChunk && new InlineChunkHtmlPlugin(HtmlWebpackPlugin, [/runtime-.+[.]js/]),
 
       // This gives some necessary context to module not found errors, such as
       // the requesting resource.
@@ -581,7 +584,7 @@ module.exports = function (webpackEnv) {
       // during a production build.
       // Otherwise React will be compiled in the very slow development mode.
       new webpack.DefinePlugin(env.stringified),
-      // Experimental hot reloading for React .
+      // Experimental hot reloading for React.
       // https://github.com/facebook/react/tree/main/packages/react-refresh
       isEnvDevelopment &&
         shouldUseReactRefresh &&
@@ -616,7 +619,6 @@ module.exports = function (webpackEnv) {
       //     };
       //   },
       // }),
-
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.

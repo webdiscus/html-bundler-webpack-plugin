@@ -9,3 +9,6 @@ node_modules
 dist
 test/output/
 test/**/package-lock.json
+
+# webpack cache filesystem
+.cache

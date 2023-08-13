@@ -36,9 +36,6 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
-### 📚 Read it
- - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
-
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
@@ -61,6 +58,9 @@ no longer need to define them in the Webpack entry or import styles in JavaScrip
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
+### 📚 Read it
+- [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
+
 
 ## 🔆 What's New in v2
 - **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
@@ -72,6 +72,12 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
   If you use the `Eta` syntax, may be you need to update templates.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
+
+> **Warning**\
+> **Limitation**
+> 
+> The current version of the plugin works only with `cache.type` as `'memory'` (Webpack's default setting).\
+> Support for the `'filesystem'` cache type will be implemented soon.
 
 ---
 
@@ -691,9 +697,78 @@ new HtmlBundlerPlugin({
 #### [↑ back to contents](#contents)
 <a id="option-outputpath" name="option-outputpath" href="#option-outputpath"></a>
 ### `outputPath`
-Type: `string` Default: `webpack.options.output.path`
+Type: `string` Default: webpack `output.path`
 
-The output directory for processed file. This directory can be absolute or relative to `webpack.options.output.path`.
+The output directory for generated HTML files only.
+This directory can be absolute or relative to webpack `output.path`.
+
+For example, here are html and js files:
+```
+src/index.html
+src/main.js
+```
+
+_src/index.html_
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="./main.js"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+There is webpack config:
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = { 
+  output: {
+    path: path.join(__dirname, 'dist/'), // the root output directory for all assets
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      // absoulte html output directory
+      outputPath: path.join(__dirname, 'dist/example/'),
+      // OR relative to output.path
+      // outputPath: 'example/',
+      entry: { 
+        index: './src/index.html', // => dist/example/index.html
+      },
+      js: {
+        filename: '[name].bundle.js',
+        outputPath: 'assets/js/', // output path for js files, relative to output.path
+      },
+    }),
+  ],
+};
+```
+
+The processed files in the output directory:
+```
+dist/example/index.html
+dist/assets/js/main.bundle.js
+```
+
+The generated _dist/example/index.html_:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="../assets/js/main.bundle.js"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+> **Warning**
+> 
+> The `outputPath` is NOT used for output assets (js, css, images, etc.).
 
 
 <a id="option-filename" name="option-filename" href="#option-filename"></a>
@@ -725,7 +800,13 @@ type JsOptions = {
   filename?: FilenameTemplate;
   chunkFilename?: FilenameTemplate;
   outputPath?: string;
-  inline?: 'auto' | boolean;
+  inline?: 'auto' | boolean | JsInlineOptions;
+};
+
+type JsInlineOptions = {
+    enabled?: 'auto' | boolean;
+    chunk?: RegExp | Array<RegExp>;
+    source?: RegExp | Array<RegExp>;
 };
 ```
 
@@ -742,10 +823,44 @@ Default properties:
 - `filename` - an output filename of JavaScript. Details see by [filename option](#option-filename).
 - `chunkFilename` - an output filename of non-initial chunk files. Details see by [chunkFilename](https://webpack.js.org/configuration/output/#outputchunkfilename).
 - `outputPath` - an output path of JavaScript. Details see by [outputPath option](#option-outputpath).
-- `inline` - inlines compiled JavaScript into HTML, available values:
-  - `false` - stores JavaScript in an output file (**defaults**)
-  - `true` - adds JavaScript to the DOM by injecting a `<script>` tag
-  - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
+
+The `inline` property allows to inline compiled JavaScript chunks into HTML.
+
+If `inline` is `'auto'` or `boolean`, available values:
+- `false` - stores JavaScript in an output file (**defaults**)
+- `true` - adds JavaScript to the DOM by injecting a `<script>` tag
+- `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
+
+If `inline` is an `object`:
+- `enabled` - has the values: `true` (**defaults**), `false` or `'auto'`, descriptsion see above,\
+   if the `enabled` is undefined, then using the `inline` as the `object`, the value is `true`
+- `chunk` - inlines the single chunk when output chunk filename matches a regular expression(s)
+- `source` - inlines all chunks when source filename matches a regular expression(s)
+
+You can use both the `chunk` and the `source` options,
+then there will be inlined chunks matching regular expressions with `OR` logic.
+
+For example, there is used the `optimization.splitChunks` and we want to inline only the small webpack runtime chunk 
+but other JS chunks of the same splited `app.js` file should be saved to chunk files, then use the following inline option:
+
+```js
+js: {
+  filename: 'assets/js/[name].[contenthash:8].js',
+  inline: {
+    chunk: [/runtime.+[.]js/],
+  },
+},
+```
+
+Then the `app.js` file will be splited to many output chunks, e.g.:
+```
+assets/js/325.xxxxxxxx.js  -> save as file
+assets/js/545.xxxxxxxx.js  -> save as file
+assets/js/app.xxxxxxxx.js  -> save as file
+runtime.xxxxxxxx.js        -> inline the chunk into HTML and NOT save as file
+```
+
+The single `runtime.xxxxxxxx.js` chunk will be injected into HTML, other chunks will be saved to output directory.
 
 > **Note**
 > 

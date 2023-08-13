@@ -113,7 +113,7 @@ class AssetCompiler {
    * @param {PluginOptions|{}} options
    */
   constructor(options = {}) {
-    Options.init(options, { AssetEntry });
+    Options.init(options, { assetEntry: AssetEntry });
 
     // let know the loader that the plugin is being used
     PluginService.init(Options);
@@ -604,14 +604,11 @@ class AssetCompiler {
   /**
    * Called after a module has been built successfully, after loader processing.
    *
+   * Note: when the cache.type is set to 'filesystem', then by 2nd `npm start` this hook will not be called.
+   *
    * @param {Object} module The Webpack module.
    */
-  afterBuildModule(module) {
-    // decide an asset type by webpack option parser.dataUrlCondition.maxSize
-    if (module.type === 'asset') {
-      module.type = module.buildInfo.dataUrl === true ? 'asset/inline' : 'asset/resource';
-    }
-  }
+  afterBuildModule(module) {}
 
   /**
    * @param {Array<Object>} result
@@ -636,7 +633,8 @@ class AssetCompiler {
     Collection.setEntryDependencies(entry);
 
     for (const module of chunkModules) {
-      const { _isScript, _isImportedStyle, resource, resourceResolveData } = module;
+      const { _isScript, _isImportedStyle, buildInfo, resource, resourceResolveData } = module;
+      let moduleType = module.type;
 
       if (
         _isScript ||
@@ -658,7 +656,12 @@ class AssetCompiler {
         issuer = entry.resource;
       }
 
-      switch (module.type) {
+      // decide an asset type by webpack option parser.dataUrlCondition.maxSize
+      if (moduleType === 'asset') {
+        moduleType = buildInfo.dataUrl === true ? 'asset/inline' : 'asset/resource';
+      }
+
+      switch (moduleType) {
         case 'javascript/auto':
           const assetModule = this.createAssetModule(entry, chunk, module);
 

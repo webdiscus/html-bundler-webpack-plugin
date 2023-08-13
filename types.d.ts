@@ -92,7 +92,20 @@ type JsOptions = {
   filename?: FilenameTemplate;
   chunkFilename?: FilenameTemplate;
   outputPath?: string;
-  inline?: 'auto' | boolean;
+  inline?: 'auto' | boolean | JsInlineOptions;
+};
+
+/**
+ * An object with js inline options.
+ * When the chunk or the source filter(s) is/are defined, then apply the filer.
+ */
+type JsInlineOptions = {
+  // Regards the chunk or the source filters only if `enabled` is true or `auto` evaluates to true.
+  enabled?: 'auto' | boolean;
+  // Inlines the single chunk when output chunk filename matches a regular expression(s).
+  chunk?: RegExp | Array<RegExp>;
+  // Inlines all chunks when source filename matches a regular expression(s).
+  source?: RegExp | Array<RegExp>;
 };
 
 type CssOptions = {
