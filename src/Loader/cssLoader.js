@@ -23,6 +23,7 @@ const loader = function (content) {
  * @param {string} remaining
  */
 const pitchLoader = async function (remaining) {
+  // TODO: find the module from this._compilation, because this._module is deprecated
   const { resource, resourcePath, _module: module } = this;
   const options = this.getOptions() || {};
 

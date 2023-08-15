@@ -25,7 +25,9 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  *  The key is route to output file w/o an extension, value is a template source file.
  *  When the entry is a string, this should be a relative or absolute path to pages.
  * @property {{paths: Array<string>, files: Array<RegExp>, ignore: Array<RegExp>}} watchFiles Paths and files to watch file changes.
- * @property {boolean?} [hotUpdate=true] Whether in serve/watch mode should be added hot-update.js file in html.
+ * @property {boolean?} [hotUpdate=false] Whether in serve/watch mode should be added hot-update.js file in html.
+ *   Use it only if you don't have a referenced source file of a script in html.
+ *   If you already have a js file, this setting should be false as Webpack automatically injects the hot update code into the compiled js file.
  * @property {Object?} loaderOptions Options defined in plugin but provided for the loader.
  * @property {Array<Object>|boolean?} preload Options to generate preload link tags for assets.
  * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
@@ -92,7 +94,7 @@ class Options {
     this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
 
     if (!options.watchFiles) this.options.watchFiles = {};
-    this.options.hotUpdate = this.options.hotUpdate !== false;
+    this.options.hotUpdate = this.options.hotUpdate === true;
   }
 
   /**

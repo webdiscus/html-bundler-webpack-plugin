@@ -5,7 +5,7 @@
   <link href="@images/favicons/favicon.svg" rel="icon" type="image/svg">
   <script disable-src="app.js"></script>
 </head>
-<body>312
+<body>
   {{> header }}
   {{> menu/nav }}
   {{> menu/top/desktop }}
@@ -29,7 +29,14 @@
     {{/each}}
   </ul>
 
+  <h2>Test: watch helpers for changes (adding/renaming/deleting)</h2>
+  <p>
+    Dou you see a bold text? _{{#bold}}bold{{/bold}}_<br>
+    Dou you see an italic text? _{{#italic}}italic{{/italic}}_
+  </p>
+
   {{> footer }}
-  {{> lorem }}
+  {{> 'lorem' myVar="pass myVar via partial syntax `>`" }}
+  {{ include 'src/views/partials/lorem' myVar="pass myVar via helper `include`" }}
 </body>
 </html>

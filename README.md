@@ -54,6 +54,14 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 You can specify the script and style source files directly in an HTML template,
 no longer need to define them in the Webpack entry or import styles in JavaScript.
 
+```
+                  html <-- Start from HTML template
+        ┌──────────┼─────────┐
+      scss        img        js <-- not from here
+   ┌────┼────┐         ┌─────┼─────┐
+ scss  img  font      scss  css    js
+```
+
 ### ❓Question / Feature Request / Bug
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
@@ -198,7 +206,7 @@ If the `entry` option is an object, the key is an output filename without `.html
    - [Nunjucks](#using-template-nunjucks)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
-1. [Setup HMR (Live Reload)](#setup-hmr)
+1. [Setup Live Reload](#setup-live-reload)
 1. [Recipes](#recipes)
    - [How to keep source directory structure for HTML](#recipe-keep-folder-structure-html)
    - [How to keep source directory structure for assets (fonts, images, etc.)](#recipe-keep-folder-structure-assets)
@@ -1413,7 +1421,7 @@ Allows to configure paths and files to watch file changes for rebuild in `watch`
 > **Note**
 >
 > To watch changes with a `live reload` in the browser, you must additionally configure the `watchFiles` in `devServer`,
-> see [setup HMR](#setup-hmr).
+> see [setup live reload](#setup-live-reload).
 
 #### Properties:
 
@@ -1459,19 +1467,12 @@ This option has the prio over paths and files.
 #### [↑ back to contents](#contents)
 <a id="option-hot-update" name="option-hot-update" href="#option-hot-update"></a>
 ### `hotUpdate`
-Type: `boolean` Default: `true`
+Type: `boolean` Default: `false`
 
-In `serve` or `watch` mode injects the `hot-update.js` file into each generated HTML file to enable the live reloading.
+If the value is `true`, then in the `serve` or `watch` mode,  the `hot-update.js` file is injected into each generated HTML file to enable the live reloading.
+Use this options only if you don't have a referenced source file of a script in html.
 
-> **Warning**
-> 
-> If you use the Webpack config generated via `create-react-app`, then set `hotUpdate` to `false`,
-> to avoid the React’s error:
-> 
-> ```
-> You attempted to import {file} which falls outside of the project `src/` directory.
-> Relative imports outside of `src/` are not supported.
-> ```
+If you already have a js file in html, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
 
 <a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
 ### `verbose`
@@ -2433,10 +2434,11 @@ module.exports = {
 The default preprocessor is `eta`, you can omit it:
 ```js
 new HtmlBundlerPlugin({
-  loaderOptions: {
-    preprocessor: 'eta', // use Eta templating engine
-    // preprocessorOptions: {...},
+  entry: {
+    index: './src/views/page/index.eta',
   },
+  // preprocessor: 'eta', // defaults is used Eta
+    // preprocessorOptions: {...},
 })
 ```
 
@@ -2489,10 +2491,8 @@ module.exports = {
           },
         },
       },
-      loaderOptions: {
         preprocessor: 'ejs', // use EJS templating engine
         // preprocessorOptions: {...},
-      },
     }),
   ],
 };
@@ -2613,10 +2613,8 @@ module.exports = {
           people: ['Walter White', 'Jesse Pinkman'],
         },
       },
-      loaderOptions: {
         // define preprocessor as the function that shoud return a string or promise
         preprocessor: (template, { data }) => Mustache.render(template, data),
-      },
     }),
   ],
 };
@@ -2663,10 +2661,8 @@ module.exports = {
           },
         },
       },
-      loaderOptions: {
         preprocessor: 'nunjucks', // use Nunjucks templating engine
         // preprocessorOptions: {...},
-      },
     }),
   ],
 };
@@ -2718,10 +2714,8 @@ module.exports = {
           },
         },
       },
-      loaderOptions: {
         // async parseAndRender method return the promise
         preprocessor: (template, { data }) => LiquidEngine.parseAndRender(template, data),
-      },
     }),
   ],
 };
@@ -2731,14 +2725,14 @@ module.exports = {
 
 
 #### [↑ back to contents](#contents)
-<a id="setup-hmr" name="setup-hmr" href="#setup-hmr"></a>
-## Setup HMR (Live Reload)
+<a id="setup-live-reload" name="setup-live-reload" href="#setup-live-reload"></a>
+## Setup Live Reload
 
 To enable reloading of the browser after changes, add the `devServer` option to the Webpack config:
 
 ```js
 module.exports = {
-  // enable HMR with live reload
+  // enable live reload
   devServer: {
     static: path.join(__dirname, 'dist'),
     watchFiles: {
@@ -3130,8 +3124,9 @@ module.exports = {
         index: 'src/views/index.html',
       },
       css: {
-        // Adds CSS to the DOM by injecting a `<style>` tag
+        // adds CSS to the DOM by injecting a `<style>` tag
         inline: true,
+        // output filename of extracted CSS, used if inline is false
         filename: 'css/[name].[contenthash:8].css',
       },
     }),
@@ -3260,8 +3255,9 @@ module.exports = {
         index: 'src/views/index.html',
       },
       js: {
-        // Adds JavaScript to the DOM by injecting a `<script>` tag
+        // adds JavaScript to the DOM by injecting a `<script>` tag
         inline: true,
+        // output filename of compiled JavaScript, used if inline is false
         filename: 'js/[name].[contenthash:8].js',
       },
     }),
@@ -3367,6 +3363,7 @@ module: {
   ],
 }
 ```
+The plugin automatically inlines images smaller then `maxSize`.
 
 ---
 

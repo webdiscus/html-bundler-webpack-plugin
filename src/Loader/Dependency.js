@@ -10,6 +10,7 @@ class Dependency {
   /** The file system used by Webpack */
   static fileSystem = null;
   static files = new Set();
+  static directories = new Set();
   static loaderContext = null;
   static watchFiles = {};
   static #entryFiles = new Set();
@@ -34,6 +35,13 @@ class Dependency {
 
     const customWatchFiles = Options.getCustomWatchFiles();
     if (customWatchFiles.length > 0) customWatchFiles.forEach(this.addFile);
+  }
+
+  /**
+   * @param {string} dir
+   */
+  static addDir(dir) {
+    this.directories.add(dir);
   }
 
   /**
@@ -63,6 +71,10 @@ class Dependency {
 
     const { loaderContext } = this;
 
+    for (let dir of this.directories) {
+      loaderContext.addContextDependency(dir);
+    }
+
     for (let file of this.files) {
       if (!this.#entryFiles.has(file)) {
         // the dependency already contains the current resource file,
@@ -76,7 +88,8 @@ class Dependency {
    * Called when the compiler is closing or a watching compilation has stopped.
    */
   static shutdown() {
-    return this.files.clear();
+    this.files.clear();
+    this.directories.clear();
   }
 }
 

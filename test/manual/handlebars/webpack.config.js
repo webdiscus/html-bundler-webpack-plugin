@@ -35,13 +35,12 @@ module.exports = {
         data: 'data-global.json',
         preprocessor: 'handlebars',
         preprocessorOptions: {
-          partials: [
-            // relative or absolute paths to partials
-            'src/views/includes',
-            'src/views/partials',
-          ],
+          helpers: ['src/views/helpers'],
+          partials: ['src/views/includes', 'src/views/partials'],
         },
       },
+
+      hotUpdate: true, // test this option
     }),
   ],
 

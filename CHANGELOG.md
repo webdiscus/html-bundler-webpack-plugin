@@ -1,5 +1,12 @@
 # Change log
 
+## 2.8.0 (2023-08-15)
+- feat: add watching for changes (add/remove/rename) in handlebars helpers without restarting Webpack
+- feat: change the default value of the `hotUpdate` option to `false`. _This is not breaking change._\
+  If you already have a js file, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
+  Enable this option only if you don't have a referenced source file of a script in a html template.
+- docs: update README
+
 ## 2.7.0 (2023-08-13)
 - feat: add `js.inline.chunk` and `js.inline.source` options to inline only js chunks matching regular expressions
 - fix: if the html outputPath is a relative path, it is relative to `output.path`, not to CWD

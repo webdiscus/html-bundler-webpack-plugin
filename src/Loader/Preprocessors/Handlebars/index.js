@@ -13,7 +13,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
   let partials = {};
 
   /**
-   * Read partial files in the directories.
+   * Read files in the directories.
    *
    * @param {Array<string>} dirs The directories in which to read the list of files.
    * @param {Array<RegExp>|undefined} includes The filter to include only files matching RegExps.
@@ -35,6 +35,9 @@ const preprocessor = ({ fs, rootContext, options }) => {
         if (isWin) id = pathToPosix(id);
         result[id] = file;
       });
+
+      // watch changes in the directory (add/remove a file)
+      Dependency.addDir(dir);
     }
 
     return result;
@@ -43,15 +46,29 @@ const preprocessor = ({ fs, rootContext, options }) => {
   /**
    * Get actual partials.
    *
-   * @param {Array<string>|{}} partialsOption The partials option.
+   * @param {Array<string>|{}} options The partials option.
    * @return {{}}
    */
-  const getPartials = (partialsOption) => {
-    return Array.isArray(partialsOption)
+  const getPartials = (options) => {
+    return Array.isArray(options)
       ? // read partial files
-        getEntries(partialsOption, includeFiles)
+        getEntries(options, includeFiles)
       : // object of partial name => absolute path to partial file
-        partialsOption;
+        options;
+  };
+
+  /**
+   * Get actual helpers.
+   *
+   * @param {Array<string>|{}} options The helpers option.
+   * @return {{}}
+   */
+  const getHelpers = (options) => {
+    return Array.isArray(options)
+      ? // read helper files
+        getEntries(options, [/\.(js)$/])
+      : // object of helper name => absolute path to helper file
+        options;
   };
 
   /**
@@ -77,6 +94,9 @@ const preprocessor = ({ fs, rootContext, options }) => {
     for (const partial in partials) {
       const partialFile = partials[partial];
 
+      // watch changes in a file (change/rename)
+      Dependency.addFile(partialFile);
+
       if (!fs.existsSync(partialFile)) {
         throw new Error(`Could not find the partial '${partialFile}'`);
       }
@@ -86,40 +106,69 @@ const preprocessor = ({ fs, rootContext, options }) => {
     }
   };
 
-  if (!Array.isArray(views)) views = [views];
+  /**
+   * Update helpers after changes in watch/serve mode.
+   */
+  const updateHelpers = () => {
+    if (!options.helpers || !Array.isArray(options.helpers)) return;
 
-  if (options.helpers) {
-    if (Array.isArray(options.helpers)) {
-      const files = getEntries(options.helpers);
-      for (const name in files) {
-        const file = files[name];
-        if (!fs.existsSync(file)) {
-          throw new Error(`Could not find the helper '${file}'`);
-        }
-        helpers[name] = require(file);
+    const actualHelpers = getHelpers(options.helpers);
+    const oldNames = Object.keys(helpers);
+    const newNames = Object.keys(actualHelpers);
+    const outdatedHelperNames = oldNames.filter((name) => !newNames.includes(name));
+
+    // remove deleted/renamed helpers
+    outdatedHelperNames.forEach((name) => {
+      Dependency.removeFile(helpers[name]);
+      Handlebars.unregisterHelper(name);
+    });
+
+    helpers = actualHelpers;
+
+    for (const helperName in helpers) {
+      const helperFile = helpers[helperName];
+
+      // watch changes in a file (change/rename)
+      Dependency.addFile(helperFile);
+
+      if (!fs.existsSync(helperFile)) {
+        throw new Error(`Could not find the helper '${helperFile}'`);
       }
-    } else {
-      // object of helper name => absolute path to helper file
-      helpers = options.helpers;
+
+      const helper = require(helperFile);
+      Handlebars.registerHelper(helperName, helper);
     }
-  }
+  };
 
   // build-in helpers
-  if (!helpers.include) {
-    helpers.include = require('./helpers/include')({
+  const buildInHelpers = {
+    include: require('./helpers/include')({
       fs,
       Handlebars,
       root,
-      views,
+      views: Array.isArray(views) ? views : [views],
       extensions,
-    });
+    }),
+  };
+  for (const helper in buildInHelpers) {
+    Handlebars.registerHelper(helper, buildInHelpers[helper]);
   }
 
-  for (const helper in helpers) {
-    Handlebars.registerHelper(helper, helpers[helper]);
+  if (options.helpers) {
+    if (Array.isArray(options.helpers)) {
+      updateHelpers();
+    } else {
+      // object of helper name => absolute path to helper file
+      helpers = options.helpers;
+      for (const helper in helpers) {
+        Handlebars.registerHelper(helper, helpers[helper]);
+      }
+    }
   }
 
-  if (options.partials) updatePartials();
+  if (options.partials) {
+    updatePartials();
+  }
 
   return {
     /**
@@ -134,7 +183,10 @@ const preprocessor = ({ fs, rootContext, options }) => {
     /**
      * Called before each new compilation after changes, in the serve/watch mode.
      */
-    watch: updatePartials,
+    watch: () => {
+      updateHelpers();
+      updatePartials();
+    },
   };
 };
 
