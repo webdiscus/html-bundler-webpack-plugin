@@ -3,10 +3,20 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  stats: 'minimal',
+  //mode: 'production',
+  //stats: 'minimal',
+  stats: 'errors-warnings',
+  // stats: {
+  //   all: true,
+  // },
 
   output: {
     path: path.join(__dirname, 'dist/'),
+    clean: true,
+  },
+
+  resolve: {
+    extensions: ['.js', '.jsx'],
   },
 
   plugins: [
@@ -16,22 +26,35 @@ module.exports = {
           import: './src/home.html',
           data: {
             title: 'Home',
+            getTitle: () => 'Generated title', // test a data prop as a function
           },
         },
       },
       js: {
         filename: 'js/[name].bundle.js',
+        //inline: true,
       },
       css: {
         filename: 'css/[name].bundle.css',
       },
-      hotUpdate: false,
+      //minify: true,
       //verbose: true,
     }),
   ],
 
   module: {
     rules: [
+      {
+        test: /\.(m?js|jsx)$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            cacheDirectory: true,
+            presets: [['@babel/preset-react']],
+          },
+        },
+      },
       {
         test: /\.css$/,
         use: ['css-loader'],
@@ -57,15 +80,14 @@ module.exports = {
     ],
   },
 
+  // test cache.type 'filesystem'
   cache: {
-    type: 'memory', // OK
-    // TODO: add support for the 'filesystem' cache type
-    //type: 'filesystem',
-    //cacheDirectory: path.join(__dirname, '.cache'),
-    //store: 'pack',
+    //type: 'memory',
+    type: 'filesystem',
+    cacheDirectory: path.join(__dirname, '.cache'),
   },
 
-  // enable HMR with live reload
+  // enable live reload
   devServer: {
     //hot: false,
     static: path.join(__dirname, 'dist'),

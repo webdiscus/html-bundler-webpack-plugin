@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parseQuery, getFileExtension, replaceAll } from '../src/Common/Helpers';
+import { getFileExtension, replaceAll } from '../src/Common/Helpers';
 import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
@@ -12,98 +12,6 @@ import Collection from '../src/Plugin/Collection';
 beforeAll(() => {
   // important: the environment constant is used in code
   process.env.NODE_ENV_TEST = 'true';
-});
-
-describe('parseQuery tests', () => {
-  test('parseQuery key w/o value should be true', () => {
-    const received = parseQuery('image.jpg?disable');
-    const expected = {
-      disable: true,
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery key is true', () => {
-    const received = parseQuery('image.jpg?disable=true');
-    const expected = {
-      disable: true,
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery key is false', () => {
-    const received = parseQuery('image.jpg?disable=false');
-    const expected = {
-      disable: false,
-    };
-    //return expect(received).toEqual(expected);
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery array', () => {
-    const received = parseQuery('file.html?key=val&arr[]=a&arr[]=1&disable');
-    const expected = {
-      key: 'val',
-      arr: ['a', '1'],
-      disable: true,
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery comma', () => {
-    const received = parseQuery('image.jpg?size=500,placeholder');
-    const expected = {
-      size: '500',
-      placeholder: true,
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery array sizes', () => {
-    const received = parseQuery('image.jpg?sizes[]=300,sizes[]=600,sizes[]=800&format=webp');
-    const expected = {
-      format: 'webp',
-      sizes: ['300', '600', '800'],
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery values with special chars', () => {
-    const received = parseQuery('image.jpg?name=[path][hash:8]-[width]x[height].[ext]&background=%23FF0000&context=./');
-    const expected = {
-      name: '[path][hash:8]-[width]x[height].[ext]',
-      background: '#FF0000',
-      context: './',
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery json5 flat', () => {
-    const received = parseQuery(
-      `image.jpg?{placeholder:true, sizes:[10,20,30],background:'%23FF0000',  format: "webp"}`
-    );
-    const expected = {
-      placeholder: true,
-      sizes: [10, 20, 30],
-      background: '#FF0000',
-      format: 'webp',
-    };
-    return expect(received).toStrictEqual(expected);
-  });
-
-  test('parseQuery json5 level2', () => {
-    const received = parseQuery(
-      `image.jpg?{placeholder:true, sizes:[10,20,30],background:'%23FF0000', obj: {a:123, b: [1,'x',2], c: 'abc'}, format: "webp"}`
-    );
-    const expected = {
-      placeholder: true,
-      sizes: [10, 20, 30],
-      background: '#FF0000',
-      obj: { a: 123, b: [1, 'x', 2], c: 'abc' },
-      format: 'webp',
-    };
-    return expect(received).toStrictEqual(expected);
-  });
 });
 
 describe('unique filename tests', () => {

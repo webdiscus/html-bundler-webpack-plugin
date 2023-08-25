@@ -26,7 +26,7 @@ module.exports = {
       js: {
         filename: 'js/[name].[contenthash:8].js',
         // BUG: When using React Markdown in the `development` mode, and JS is inlined, webpack occur an error
-        inline: true,
+        //inline: true,
       },
 
       //verbose: true,
@@ -53,11 +53,16 @@ module.exports = {
     hints: false, // disable the size limit warning
   },
 
-  // enable HMR with live reload
+  cache: {
+    type: 'memory',
+    // test filesystem cache
+    // type: 'filesystem',
+    // cacheDirectory: path.join(__dirname, '.cache'),
+  },
+
+  // enable live reload
   devServer: {
-    static: {
-      directory: path.join(__dirname, 'dist'),
-    },
+    static: path.join(__dirname, 'dist'),
     watchFiles: {
       paths: ['src/**/*.*'],
       options: {

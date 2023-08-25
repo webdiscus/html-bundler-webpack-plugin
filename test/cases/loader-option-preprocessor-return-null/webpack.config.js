@@ -27,11 +27,29 @@ module.exports = {
               lastname: 'White',
             },
           },
+          filename: (PathData) => {
+            // TODO: add test for PathData.chunk.name and PathData.chunk.runtime
+            // console.log('>>> filename: ', {
+            //   PathData,
+            // });
+
+            return '[name].html';
+          },
         },
       },
       loaderOptions: {
         // test preprocessor return null, has the same effect as `preprocessor: false`
-        preprocessor: () => null,
+        preprocessor: (tmpl, loaderContext) => {
+          // TODO: add test for loaderContext.entryName
+          // console.log('### preprocessor: ', {
+          //   entryId: loaderContext.entryId,
+          //   name: loaderContext.name,
+          //   entryName: loaderContext.entryName,
+          //   entryData: loaderContext.data,
+          //   resourcePath: loaderContext.resourcePath,
+          // });
+          return null;
+        },
       },
     }),
   ],

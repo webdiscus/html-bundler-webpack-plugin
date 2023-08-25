@@ -188,7 +188,7 @@ class Resolver {
 
       if (Collection.hasStyle(resource)) {
         // set the output filename for already created (in renderManifest) data
-        Collection.setDataFilename(this.entryPoint, { resource, filename: outputFilename });
+        Collection.setResourceFilename(this.entryPoint, { resource, filename: outputFilename });
       } else {
         Collection.setData(this.entryPoint, issuer, {
           type: Collection.type.resource,

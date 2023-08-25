@@ -56,7 +56,7 @@ module.exports = {
     ],
   },
 
-  // enable HMR with live reload
+  // enable live reload
   devServer: {
     //hot: false,
     static: {

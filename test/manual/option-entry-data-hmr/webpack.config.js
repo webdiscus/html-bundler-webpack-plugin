@@ -88,7 +88,7 @@ module.exports = {
     ],
   },
 
-  // enable HMR with live reload
+  // enable live reload
   devServer: {
     static: {
       directory: path.join(__dirname, 'dist'),

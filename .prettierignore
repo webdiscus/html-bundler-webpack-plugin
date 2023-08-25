@@ -1,2 +1,2 @@
 # Ignore all HTML files in test directory:
-test/**/*.html
+test/cases/**/*.html

@@ -56,9 +56,11 @@ class Options {
   static options = {};
   /** @type {AssetEntry} */
   static assetEntry = null;
+  static Collection = null; // TODO
   static webpackOptions = {};
   static productionMode = true;
   static dynamicEntry = false;
+  static cacheable = false;
   static context = '';
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
@@ -111,6 +113,7 @@ class Options {
     this.productionMode = options.mode == null || options.mode === 'production';
     this.verbose = this.toBool(this.options.verbose, false, false);
     this.context = options.context;
+    this.cacheable = options.cache?.type === 'filesystem';
 
     if (!this.options.sourcePath) this.options.sourcePath = this.context;
     if (!this.options.outputPath) this.options.outputPath = options.output.path;
@@ -199,7 +202,7 @@ class Options {
   static initWatchMode() {
     const { publicPath } = this.webpackOptions.output;
     if (publicPath == null || publicPath === 'auto') {
-      // By using watch/serve browsers not support an automatic publicPath in HMR script injected into inlined JS,
+      // By using watch/serve browsers not support an automatic publicPath in hot update script injected into inlined JS,
       // the output.publicPath must be an empty string.
       this.webpackOptions.output.publicPath = '';
     }
@@ -278,6 +281,10 @@ class Options {
 
   static isRealContentHash() {
     return this.webpackOptions.optimization.realContentHash === true;
+  }
+
+  static isCacheable() {
+    return this.cacheable;
   }
 
   /**

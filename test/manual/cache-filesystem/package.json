@@ -6,6 +6,10 @@
     "build": "webpack --mode=production --progress"
   },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "file:../../.."
+    "babel-loader": "^9.1.3",
+    "@babel/preset-react": "^7.22.5",
+    "html-bundler-webpack-plugin": "file:../../..",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

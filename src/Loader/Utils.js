@@ -48,7 +48,7 @@ const injectBefore = (content, string, before = []) => {
 module.exports = {
   baseUri,
   urlPathPrefix,
-  hmrFile: path.join(__dirname, 'Hmr/hot-update.js'),
+  hotUpdateFile: path.join(__dirname, 'Hmr/hot-update.js'),
   injectBeforeEndHead,
   injectBeforeEndBody,
 };

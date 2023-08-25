@@ -1,15 +1,8 @@
-import path from 'path';
-
 import { compareFiles } from './utils/helpers';
-import { removeDirsSync, syncExpected } from './utils/file';
+import { removeDirsSync } from './utils/file';
 
 // Remove all 'dist/' directories from tests, use it only for some local tests.
 //removeDirsSync(__dirname, /dist$/);
-
-// !!! ATTENTION - DANGER !!!
-// After update packages and clean install, the new generated hashed filenames may be different from already expected.
-// In this case, enable function `syncExpected` and run any single test, e.g. `hello world` only once. Then disable it.
-// syncExpected(path.join(__dirname, 'cases'));
 
 beforeAll(() => {
   // important: the environment constant is used in code
@@ -132,6 +125,12 @@ describe('loader options common', () => {
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
   test('preprocessor null', () => compareFiles('loader-option-preprocessor-return-null'));
   test('root', () => compareFiles('loader-option-root'));
+});
+
+describe('resole entry name', () => {
+  test('entry as string', () => compareFiles('resolve-entry-name-string'));
+  test('entry as object', () => compareFiles('resolve-entry-name-obj'));
+  test('entry as path', () => compareFiles('resolve-entry-name-path'));
 });
 
 describe('loader preprocessor options', () => {
@@ -268,7 +267,8 @@ describe('special cases', () => {
   test('Template with CRLF line separator', () => compareFiles('template-clrf'));
   test('encode / decode reserved HTML chars', () => compareFiles('decode-chars'));
   test('preprocessor hbs load partials', () => compareFiles('preprocessor-hbs-partials'));
-  test('preprocessor for output php template', () => compareFiles('preprocessor-php'));
+  test('preprocessor for output php template', () => compareFiles('preprocessor-disabled-php'));
+  test('preprocessor for output ftl template', () => compareFiles('preprocessor-disabled-ftl'));
   test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
   test('preload, no head', () => compareFiles('preload-no-head'));
   test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));

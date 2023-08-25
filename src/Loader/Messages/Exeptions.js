@@ -1,3 +1,9 @@
+const WebpackError = require('webpack/lib/WebpackError');
+const makeSerializable = require('webpack/lib/util/makeSerializable');
+
+/** @typedef {import("webpack/lib/serialization/ObjectMiddleware").ObjectDeserializerContext} ObjectDeserializerContext */
+/** @typedef {import("webpack/lib/serialization/ObjectMiddleware").ObjectSerializerContext} ObjectSerializerContext */
+
 const ansis = require('ansis');
 const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis/colors');
 const { pluginName } = require('../../config');
@@ -5,7 +11,10 @@ const { pluginName } = require('../../config');
 const redBright = ansi256(203);
 const pluginHeaderHtml = `<span style="color:#e36049">[${pluginName}]</span>`;
 
-class LoaderException extends Error {
+class LoaderException extends WebpackError {
+  error = null;
+  message = '';
+
   /**
    * @param {string} message The plugin error message.
    * @param {Error?} error The original error.
@@ -21,10 +30,34 @@ class LoaderException extends Error {
     this.name = this.constructor.name;
     this.message = message;
   }
+
+  /**
+   * @param {ObjectSerializerContext} context context
+   */
+  static serialize(context) {
+    const { write } = context;
+
+    write(this.error);
+    write(this.message);
+
+    super.serialize(context);
+  }
+
+  /**
+   * @param {ObjectDeserializerContext} context context
+   */
+  static deserialize(context) {
+    const { read } = context;
+
+    this.error = read();
+    this.message = read();
+
+    super.deserialize(context);
+  }
 }
 
 /**
- * Return error string as HTML to display the error in browser by HMR.
+ * Return error string as HTML to display the error in browser by serve/watch mode.
  *
  * @param {string} error
  * @returns {string}
@@ -145,6 +178,10 @@ const compileError = (error, file) => {
 const exportError = (error, file) => {
   return new LoaderException(`Export of compiled template failed.\nFile: ${cyan(file)}`, error);
 };
+
+// This is required when used cache as `filesystem` to avoid Webpack warning:
+// "No serializer registered for LoaderException."
+makeSerializable(LoaderException, __filename);
 
 module.exports = {
   errorToHtml,

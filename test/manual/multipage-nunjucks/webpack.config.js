@@ -161,7 +161,7 @@ module.exports = {
       'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
     },
 
-    // enable HMR
+    // enable live reload
     watchFiles: {
       paths: ['src/**/*.*', 'templates/**/*.*'],
       options: {

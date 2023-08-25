@@ -1,5 +1,5 @@
 <div align="center">
-    <h1>
+    <h1 align="center">
         <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
@@ -8,7 +8,8 @@
 </div>
 
 ---
-[![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen "npm package")](https://www.npmjs.com/package/html-bundler-webpack-plugin "download npm package")
+
+[![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen 'npm package')](https://www.npmjs.com/package/html-bundler-webpack-plugin 'download npm package')
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
 [![node](https://img.shields.io/github/package-json/dependency-version/webdiscus/html-bundler-webpack-plugin/peer/webpack)](https://webpack.js.org/)
 [![Test](https://github.com/webdiscus/html-bundler-webpack-plugin/actions/workflows/test.yml/badge.svg)](https://github.com/webdiscus/html-bundler-webpack-plugin/actions/workflows/test.yml)
@@ -17,22 +18,34 @@
 
 ## HTML template as entry point
 
-The plugin allows to specify template files as entry points in the `entry` option.
-You can use templates such as HTML, PHTML, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
+> _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
-In a template can be referenced any source assets such as JS, TS, CSS, SCSS, images and others, similar to how it works in Vite.\
-For example: 
+The plugin allows to specify template files as [entry points](#option-entry).
+You can use various templates such as HTML, PHTML, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
+
+The plugin resolves references in the HTML template and adds them to the Webpack compilation.
+Webpack will automatically process the source files and the plugin replace the references with their URLs to output files in the generated HTML.
+Using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options, you can inline JS and CSS into HTML.
+
+<table align="center">
+<tr><th>Entry point is HTML</th></tr>
+<tr><td><pre>
+             html <-- Start from HTML
+     ┌─────────┼────────┐
+    css       img       js
+  ┌──┴──┐          ┌────┼────┐
+ img   font        js  css  img
+</pre></td></tr>
+</table>
+
+In a HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
+
 - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
 - `<link href="./styles.scss" rel="stylesheet">`
 - `<script src="./App.tsx" defer="defer"></script>`
 - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
-   
-Note: `@images` is the Webpack alias to a source images directory.
 
-
-The plugin detects all source files referenced in a template and extracts processed assets to the output directory.
-Compiled JS and CSS can be inlined into generated HTML using the `inline` plugin option.
-In the generated HTML and CSS, the plugin substitutes the source filenames with the output filenames.
+### ⚙️ How works the plugin
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
@@ -48,29 +61,21 @@ In the generated HTML and CSS, the plugin substitutes the source filenames with 
 - Dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting.
 - Support for React.
 
-
 ### ✅ Profit
 
 You can specify the script and style source files directly in an HTML template,
 no longer need to define them in the Webpack entry or import styles in JavaScript.
-
-```
-                  html <-- Start from HTML template
-        ┌──────────┼─────────┐
-      scss        img        js <-- not from here
-   ┌────┼────┐         ┌─────┼─────┐
- scss  img  font      scss  css    js
-```
 
 ### ❓Question / Feature Request / Bug
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
 ### 📚 Read it
+
 - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
 
-
 ## 🔆 What's New in v2
+
 - **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
 - **NEW:** added support for importing style files in JavaScript.\
   **Note:** this feature was added for compatibility with `React` projects.\
@@ -83,50 +88,54 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 > **Warning**\
 > **Limitation**
-> 
-> The current version of the plugin works only with `cache.type` as `'memory'` (Webpack's default setting).\
-> Support for the `'filesystem'` cache type will be implemented soon.
+>
+> The current version works stable with `cache.type` as `'memory'` (Webpack's default setting).\
+> Support for the `'filesystem'` cache type is experimental and under development.
 
 ---
 
 ## Simple usage example
 
-The easiest way to link JavaScript and CSS to your HTML is to add their source files directly to the HTML:
+Start with an HTML template. Add the `<link>` and `<script>` tags.
+You can directly include asset source files such as SCSS, JS, images, and other media files in an HTML template.
+
+The plugin resolves `<script src="...">` `<link href="...">` and `<img src="...">` that references your JavaScript, style and image source files.
 
 ```html
 <html>
-<head>
-  <!-- specify source style files -->
-  <link href="./styles.scss" rel="stylesheet">
-  <!-- specify source script files here and/or in body -->
-  <script src="./main.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <!-- specify source image files -->
-  <img src="./picture.png">
-</body>
+  <head>
+    <!-- include a SCSS file -->
+    <link href="./styles.scss" rel="stylesheet" />
+    <!-- include a source script file -->
+    <script src="./main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <!-- reference an image file -->
+    <img src="./picture.png" />
+  </body>
 </html>
 ```
 
-You can specify script, style and image source files in HTML using a relative path or Webpack aliases.
+All source filenames should be relative to the current HTML template, or you can use [Webpack alias](https://webpack.js.org/configuration/resolve/#resolvealias).
+The references are rewritten in the generated HTML so that they link to the correct output files.
 
-The generated HTML contains the output filenames of the processed files:
+The generated HTML contains the output filenames:
 
 ```html
 <html>
-<head>
-  <link href="css/styles.05e4dd86.css" rel="stylesheet">
-  <script src="js/main.f4b855d8.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <img src="img/picture.58b43bd8.png">
-</body>
+  <head>
+    <link href="css/styles.05e4dd86.css" rel="stylesheet" />
+    <script src="js/main.f4b855d8.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <img src="img/picture.58b43bd8.png" />
+  </body>
 </html>
 ```
 
-Add the HTML templates in the `entry` option (syntax is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)):
+HTML templates can be defined in the [`entry`](#option-entry) option:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -147,18 +156,40 @@ module.exports = {
 };
 ```
 
-If the `entry` option is a path, the plugin finds all templates automatically 
+If the `entry` option is a path, the plugin finds all templates automatically
 and keep the same directory structure in the output directory.
 
 If the `entry` option is an object, the key is an output filename without `.html` extension and the value is a template file.
 
+<table>
+<tr>
+<td>Simple example SPA</td>
+<td>
+
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
 
+</td>
+</tr>
+<tr>
+<td>Automatically processing many HTML templates</td>
+<td>
 
-> How to create multiple HTML pages with html-bundler-webpack-plugin, see the [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate).
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js)
 
+</td>
+</tr>
+<tr>
+<td>Create multiple HTML pages</td>
+<td>
+
+See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
+
+</td>
+</tr>
+</table>
 
 <a id="contents" name="contents" href="#contents"></a>
+
 ## Contents
 
 1. [Features](#features)
@@ -235,6 +266,7 @@ If the `entry` option is an object, the key is an output filename without `.html
    - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
 
 <a id="features" name="features" href="#features"></a>
+
 ## Features
 
 - HTML template is the entry point for all resources
@@ -243,7 +275,7 @@ If the `entry` option is an object, the key is an output filename without `.html
 - resolves source filenames in the CSS `url()` and in HTML attributes
 - extracts resolved resources to output directory
 - generated HTML contains output filenames
-- support the module types `asset/resource` `asset/inline` `asset` `asset/source` ([*](#note-asset-source))
+- support the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
 - `inline CSS` in HTML
 - `inline JavaScript` in HTML
 - `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
@@ -259,12 +291,12 @@ If the `entry` option is an object, the key is an output filename without `.html
 - support for importing style files in JavaScript (not recomended, because it is `bad practice`)
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
-(*) - `asset/source` works currently for SVG only, in a next version will work for other files too
+(\*) - `asset/source` works currently for SVG only, in a next version will work for other files too
 
 Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
 
-| Package                                                                                                 | Features                                                            | 
-|---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| Package                                                                                                 | Features                                                            |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
 | [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
 | [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
 | [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
@@ -279,40 +311,68 @@ Just one HTML bundler plugin replaces the most used functionality of the plugins
 | [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
 | [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
 
-
 <a id="install" name="install" href="#install"></a>
+
 ## Install and Quick start
 
 Install the `html-bundler-webpack-plugin`:
+
 ```bash
 npm install html-bundler-webpack-plugin --save-dev
 ```
 
-Install additional packages for styles:
+or
+
 ```bash
-npm install css-loader sass sass-loader --save-dev
+yarn add -D html-bundler-webpack-plugin
+```
+
+or
+
+```bash
+pnpm add -D html-bundler-webpack-plugin
+```
+
+It's recommended to combine `html-bundler-webpack-plugin` with the [css-loader](https://github.com/webpack-contrib/css-loader) and the [sass-loader](https://github.com/webpack-contrib/sass-loader).\
+Install additional packages for styles:
+
+```bash
+npm install css-loader sass-loader sass --save-dev
+```
+
+or
+
+```bash
+yarn add -D css-loader sass-loader sass
+```
+
+or
+
+```bash
+pnpm add -D css-loader sass-loader sass
 ```
 
 For example, there is a template _./src/views/home/index.html_:
 
 ```html
 <html>
-<head>
-  <title><%= title %></title>
-  <link href="./favicon.ico" rel="icon">
-  <link href="./styles.scss" rel="stylesheet">
-  <script src="./main.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello <%= name %>!</h1>
-  <img src="./picture.png">
-</body>
+  <head>
+    <title><%= title %></title>
+    <link href="./favicon.ico" rel="icon" />
+    <link href="./styles.scss" rel="stylesheet" />
+    <script src="./main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello <%= name %>!</h1>
+    <img src="./picture.png" />
+  </body>
 </html>
 ```
 
 To compile this template use the following Webpack configuration:
 
 <a id="simple-webpack-config" name="simple-webpack-config" href="#simple-webpack-config"></a>
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
@@ -321,9 +381,10 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         // define templates here
-        index: { // => dist/index.html (key is output filename w/o '.html')
+        index: {
+          // => dist/index.html (key is output filename w/o '.html')
           import: 'src/views/home.html', // template file
-          data: { title: 'Homepage', name: 'Heisenberg' } // pass variables into template
+          data: { title: 'Homepage', name: 'Heisenberg' }, // pass variables into template
         },
       },
       js: {
@@ -371,39 +432,47 @@ For custom templates, you can use the [preprocessor](#loader-option-preprocessor
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="webpack-options" name="webpack-options" href="#webpack-options"></a>
+
 ## Webpack options
 
 Important Webpack options used to properly configure this plugin.
 
 <a id="webpack-option-output" name="webpack-options-output" href="#webpack-options-output"></a>
 <a id="webpack-option-output-path" name="webpack-options-output-path" href="#webpack-options-output-path"></a>
+
 ### `output.path`
+
 Type: `string` Default: `path.join(process.cwd(), 'dist')`
 
 The root output directory for all processed files, as an absolute path.\
 You can omit this option, then all generated files will be saved under `dist/` in your project directory.
 
 <a id="webpack-option-output-publicpath" name="webpack-options-output-publicpath" href="#webpack-options-output-publicpath"></a>
+
 ### `output.publicPath`
+
 Type: `string|function` Default: `auto`
 
 The value of the option is prefixed to every URL created by this plugin.
 If the value is not the empty string or `auto`, then the option must end with `/`.
 
 The possible values:
+
 - `publicPath: 'auto'` - automatically determines a path of an asset relative of their issuer.
   The generated HTML page can be opened directly form the local directory and all js, css and images will be loaded in a browser.
-- `publicPath: ''` - a path relative to an HTML page, in the same directory. The resulting path is different from a path generated with  `auto`.
+- `publicPath: ''` - a path relative to an HTML page, in the same directory. The resulting path is different from a path generated with `auto`.
 - `publicPath: '/'` - a path relative to `document root` directory on a server
 - `publicPath: '/assets/'` - a sub path relative to `document root` directory on a server
 - `publicPath: '//cdn.example.com/'` - an external URL with the same protocol (`http://` or `https://`)
 - `publicPath: 'https://cdn.example.com/'` - an external URL with the `https://` protocol only
 
 <a id="webpack-option-output-filename" name="webpack-options-output-filename" href="#webpack-options-output-filename"></a>
+
 ### `output.filename`
+
 Type: `string|function` Default: `[name].js`
 
 The output name of a generated JS file.\
@@ -432,6 +501,7 @@ module.exports = {
 ```
 
 <a id="webpack-option-entry" name="webpack-options-entry" href="#webpack-options-entry"></a>
+
 ### `entry`
 
 The starting point to build the bundle.
@@ -449,11 +519,15 @@ to pass custom variables into the HTML template.
 For details see the [plugin option `entry`](#option-entry).
 
 #### [↑ back to contents](#contents)
+
 <a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
+
 ## Plugin options
 
 <a id="option-test" name="option-test" href="#option-test"></a>
+
 ### `test`
+
 Type: `RegExp` Default: `/\.(html|ejs|eta|hbs|handlebars|njk)$/`
 
 The `test` option allows to handel only those templates as entry points that match the name of the source file.
@@ -470,7 +544,9 @@ To do this, the plugin must differentiate between a template entry point and a s
 This plugin can completely replace the functionality of mini-css-extract-plugin and webpack-remove-empty-scripts in future.
 
 <a id="option-entry" name="option-entry" href="#option-entry"></a>
+
 ### `entry`
+
 Type: `EntryObject | string`.
 
 The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
@@ -485,15 +561,16 @@ The plugin automatically extracts JS and CSS whose source files are specified in
 ```ts
 type EntryObject = {
   [key: string]: EntryDescription | string;
-}
+};
 ```
-The key of the `EntryObject` is the `output filename` without an extension, relative to the [`outputPath`](#option-outputpath) option.
 
+The key of the `EntryObject` is the `output filename` without an extension, relative to the [`outputPath`](#option-outputpath) option.
 
 #### Simple syntax
 
 When the entry point value is a `string`, it must be an absolute or relative template file.
 For example:
+
 ```js
 {
   entry: {
@@ -504,11 +581,11 @@ For example:
 ```
 
 <a id="option-entry-advanced" name="option-entry-advanced" href="#option-entry-advanced"></a>
+
 #### Advanced syntax
 
 If you need to pass data to a template or want to dynamically generate an output filename regardless of the entry key,
 you can define the value of an entry as an `EntryDescription` object.
-
 
 ```ts
 type EntryDescription = {
@@ -528,10 +605,7 @@ type EntryDescription = {
 
 type FilenameTemplate =
   | string
-  | ((
-  pathData: import('webpack/Compilation').PathData,
-  assetInfo?: import('webpack/Compilation').AssetInfo
-) => string);
+  | ((pathData: import('webpack/Compilation').PathData, assetInfo?: import('webpack/Compilation').AssetInfo) => string);
 ```
 
 ##### `import`
@@ -540,7 +614,7 @@ The `import` is a path to a template file, absolute or relative to the Webpack `
 
 ##### `filename`
 
-When the `filename` is defined as a `string`, it will be used as the output html filename. 
+When the `filename` is defined as a `string`, it will be used as the output html filename.
 In this case, the entry key can be any unique string.
 
 For example:
@@ -556,7 +630,7 @@ For example:
 }
 ```
 
-When the `filename` is defined as a [template string](https://webpack.js.org/configuration/output/#template-strings), 
+When the `filename` is defined as a [template string](https://webpack.js.org/configuration/output/#template-strings),
 then the entry key will be used as the `[name]` in the `template string`. Defaults, the [filename](#option-filename) is the `[name].html` template string.
 
 For example:
@@ -583,6 +657,7 @@ The example above is equivalent to the simple syntax:
 ```
 
 <a id="option-entry-data" name="option-entry-data" href="#option-entry-data"></a>
+
 ##### `data`
 
 The `data` is passed into [`preprocessor`](#loader-option-preprocessor) to render the template with variables.
@@ -639,8 +714,8 @@ To pass global variables in all templates use the [data](#loader-option-data) lo
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
 > But the `data` property can only be defined in the `entry` option of the plugin.
 
-
 <a id="option-entry-path" name="option-entry-path" href="#option-entry-path"></a>
+
 #### Entry as a path to templates
 
 You can define the entry as a path to recursively detect all templates from that directory.
@@ -650,6 +725,7 @@ Templates matching the [test](#option-test) option are detected recursively from
 The output files will have the same folder structure as source template directory.
 
 For example, there are files in the template directory `./src/views/`
+
 ```
 ./src/views/index.html
 ./src/views/about/index.html
@@ -660,10 +736,11 @@ For example, there are files in the template directory `./src/views/`
 ```
 
 Define the entry option as the relative path to pages:
+
 ```js
 new HtmlBundlerPlugin({
   entry: 'src/views/',
-})
+});
 ```
 
 Files that are not matching to the [test](#option-test) option are ignored.
@@ -676,10 +753,9 @@ The output HTML filenames keep their source structure in the output directory re
 ...
 ```
 
-
 If you need to modify the output HTML filename, use the [filename](#option-filename) option as the function.
 
-For example, we want keep a source structure for all pages, 
+For example, we want keep a source structure for all pages,
 while `./src/views/home/index.html` should not be saved as `./dist/home/index.htm`, but as `./dist/index.htm`:
 
 ```js
@@ -695,45 +771,51 @@ new HtmlBundlerPlugin({
     // bypass the original structure
     return '[name].html';
   },
-})
+});
 ```
 
 > **Note**
-> 
+>
 > In serve/watch mode, you can add/delete/rename a template file in the entry path without restarting Webpack.
 
 #### [↑ back to contents](#contents)
+
 <a id="option-outputpath" name="option-outputpath" href="#option-outputpath"></a>
+
 ### `outputPath`
+
 Type: `string` Default: webpack `output.path`
 
 The output directory for generated HTML files only.
 This directory can be absolute or relative to webpack `output.path`.
 
 For example, here are html and js files:
+
 ```
 src/index.html
 src/main.js
 ```
 
 _src/index.html_
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <script src="./main.js"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <script src="./main.js"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
 There is webpack config:
+
 ```js
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = { 
+module.exports = {
   output: {
     path: path.join(__dirname, 'dist/'), // the root output directory for all assets
   },
@@ -743,7 +825,7 @@ module.exports = {
       outputPath: path.join(__dirname, 'dist/example/'),
       // OR relative to output.path
       // outputPath: 'example/',
-      entry: { 
+      entry: {
         index: './src/index.html', // => dist/example/index.html
       },
       js: {
@@ -756,53 +838,60 @@ module.exports = {
 ```
 
 The processed files in the output directory:
+
 ```
 dist/example/index.html
 dist/assets/js/main.bundle.js
 ```
 
 The generated _dist/example/index.html_:
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <script src="../assets/js/main.bundle.js"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <script src="../assets/js/main.bundle.js"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
 > **Warning**
-> 
+>
 > The `outputPath` is NOT used for output assets (js, css, images, etc.).
 
-
 <a id="option-filename" name="option-filename" href="#option-filename"></a>
+
 ### `filename`
+
 Type: `string | Function` Default: `[name].html`
 
 The HTML output filename relative to the [`outputPath`](#option-outputpath) option.
 
 If type is `string` then following substitutions (see [output.filename](https://webpack.js.org/configuration/output/#template-strings) for chunk-level) are available in template string:
+
 - `[id]` The ID of the chunk.
 - `[name]` The filename without extension or path.
 - `[contenthash]` The hash of the content.
 - `[contenthash:nn]` The `nn` is the length of hashes (defaults to 20).
 
 If type is `Function` then following arguments are available in the function:
+
 - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
   - `pathData.filename` the full path to source file
   - `pathData.chunk.name` the name of entry key
 - `@return {string}` The name or template string of output file.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-js" name="option-js" href="#option-js"></a>
+
 ### `js`
 
 Type:
+
 ```ts
 type JsOptions = {
   filename?: FilenameTemplate;
@@ -812,13 +901,14 @@ type JsOptions = {
 };
 
 type JsInlineOptions = {
-    enabled?: 'auto' | boolean;
-    chunk?: RegExp | Array<RegExp>;
-    source?: RegExp | Array<RegExp>;
+  enabled?: 'auto' | boolean;
+  chunk?: RegExp | Array<RegExp>;
+  source?: RegExp | Array<RegExp>;
 };
 ```
 
 Default properties:
+
 ```js
 {
   filename: '[name].js',
@@ -835,11 +925,13 @@ Default properties:
 The `inline` property allows to inline compiled JavaScript chunks into HTML.
 
 If `inline` is `'auto'` or `boolean`, available values:
+
 - `false` - stores JavaScript in an output file (**defaults**)
 - `true` - adds JavaScript to the DOM by injecting a `<script>` tag
 - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
 
 If `inline` is an `object`:
+
 - `enabled` - has the values: `true` (**defaults**), `false` or `'auto'`, descriptsion see above,\
    if the `enabled` is undefined, then using the `inline` as the `object`, the value is `true`
 - `chunk` - inlines the single chunk when output chunk filename matches a regular expression(s)
@@ -848,7 +940,7 @@ If `inline` is an `object`:
 You can use both the `chunk` and the `source` options,
 then there will be inlined chunks matching regular expressions with `OR` logic.
 
-For example, there is used the `optimization.splitChunks` and we want to inline only the small webpack runtime chunk 
+For example, there is used the `optimization.splitChunks` and we want to inline only the small webpack runtime chunk
 but other JS chunks of the same splited `app.js` file should be saved to chunk files, then use the following inline option:
 
 ```js
@@ -861,6 +953,7 @@ js: {
 ```
 
 Then the `app.js` file will be splited to many output chunks, e.g.:
+
 ```
 assets/js/325.xxxxxxxx.js  -> save as file
 assets/js/545.xxxxxxxx.js  -> save as file
@@ -871,7 +964,7 @@ runtime.xxxxxxxx.js        -> inline the chunk into HTML and NOT save as file
 The single `runtime.xxxxxxxx.js` chunk will be injected into HTML, other chunks will be saved to output directory.
 
 > **Note**
-> 
+>
 > The `filename` and `chunkFilename` options are the same as in Webpack `output` options, just defined in one place along with other relevant plugin options.
 > You don't need to define them in the in Webpack `output` options anymore. Keep the config clean & clear.
 
@@ -879,6 +972,7 @@ All source script files specified in `<script src="...">` are automatically reso
 and JS will be extracted to output file. The source filename will be replaced with the output filename.
 
 For example:
+
 ```html
 <script src="./main.js"></script>
 ```
@@ -906,7 +1000,6 @@ If you want to have a different output filename, you can use the `filename` opti
 The `chunkFilename` option only takes effect if you have the `optimization.splitChunks` option.
 
 For example:
-
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -936,17 +1029,20 @@ module.exports = {
 ```
 
 > **Warning**
-> 
+>
 > Webpack tries to split and concatenate chunks of all files (templates, styles, scripts) into jumbles.
 > Therefore, the `test` option `MUST` be specified to match only source JS files, otherwise Webpack will generate **invalid output files**.
 
 Also see [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name).
 
 #### [↑ back to contents](#contents)
+
 <a id="option-css" name="option-css" href="#option-css"></a>
+
 ### `css`
 
 Type:
+
 ```ts
 type CssOptions = {
   test?: RegExp;
@@ -958,6 +1054,7 @@ type CssOptions = {
 ```
 
 Default properties:
+
 ```js
 {
   test: /\.(css|scss|sass|less|styl)$/,
@@ -981,8 +1078,9 @@ All source style files specified in `<link href="..." rel="stylesheet">` are aut
 and CSS will be extracted to output file. The source filename will be replaced with the output filename.
 
 For example:
+
 ```html
-<link href="./styles.scss" rel="stylesheet">
+<link href="./styles.scss" rel="stylesheet" />
 ```
 
 > **Warning**
@@ -1013,51 +1111,55 @@ If you want to have a different output filename, you can use the `filename` opti
 > **Warning**
 >
 > Don't use `mini-css-extract-plugin` because the bundler plugin extracts CSS much faster than other plugins.
-> 
+>
 > Don't use `resolve-url-loader` because the bundler plugin resolves all URLs in CSS, including assets from node modules.
-> 
+>
 > Don't use `style-loader` because the bundler plugin can auto inline CSS.
 
 #### [↑ back to contents](#contents)
-<a id="option-preprocessor" name="option-preprocessor" href="#option-preprocessor"></a>
-### `preprocessor` and `preprocessorOptions`
 
+<a id="option-preprocessor" name="option-preprocessor" href="#option-preprocessor"></a>
+
+### `preprocessor` and `preprocessorOptions`
 
 Since the `v2.2.0`, the `preprocessor` and `preprocessorOptions` plugin options are references to [loaderOptions.preprocessor](#loader-option-preprocessor) and [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions).
 
 Now it is possible to define these options directly in the plugin options to simplify the config.
 
 The NEW syntactic "sugar":
-  ```js
-  new HtmlBundlerPlugin({
-    entry: {
-      index: './src/views/home.ejs',
-    },
-    // new references to options in the loaderOptions
-    preprocessor: 'ejs',
-    preprocessorOptions: {...},
-  }),
-  ```
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  // new references to options in the loaderOptions
+  preprocessor: 'ejs',
+  preprocessorOptions: {...},
+}),
+```
 
 The old syntax is still valid and will never be deprecated:
-  ```js
-  new HtmlBundlerPlugin({
-    entry: {
-      index: './src/views/home.ejs',
-    },
-    loaderOptions: {
-      // original options are under loaderOptions
-      preprocessor: 'ejs',
-      preprocessorOptions: {...},
-    },
-  }),
-  ```
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  loaderOptions: {
+    // original options are under loaderOptions
+    preprocessor: 'ejs',
+    preprocessorOptions: {...},
+  },
+}),
+```
 
 Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader options.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-data" name="option-data" href="#option-data"></a>
+
 ### `data`
 
 Since the `v2.5.0`, the `data` plugin option is the reference to [loaderOptions.data](#loader-option-data).
@@ -1065,49 +1167,48 @@ Since the `v2.5.0`, the `data` plugin option is the reference to [loaderOptions.
 Now it is possible to define the `data` option directly in the plugin options to simplify the config.
 
 The NEW syntactic "sugar":
-  ```js
-  new HtmlBundlerPlugin({
-    entry: {
-      index: './src/views/home.ejs',
-    },
-    // new reference to the loaderOptions.data
-    data: {...},
-  }),
-  ```
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  // new reference to the loaderOptions.data
+  data: {...},
+}),
+```
 
 The old syntax is still valid and will never be deprecated:
-  ```js
-  new HtmlBundlerPlugin({
-    entry: {
-      index: './src/views/home.ejs',
-    },
-    loaderOptions: {
-      // original option is under loaderOptions
-      data: {...},
-    },
-  }),
-  ```
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  loaderOptions: {
+    // original option is under loaderOptions
+    data: {...},
+  },
+}),
+```
 
 Please see the details below under the [data](#loader-option-data) loader options.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
+
 ### `postprocess`
+
 Type:
+
 ```ts
-type postprocess = (
-  content: string,
-  info: ResourceInfo,
-  compilation: Compilation,
-) => string | null;
+type postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | null;
 
 type ResourceInfo = {
   verbose: boolean;
   isEntry: boolean;
-  filename: 
-    | string 
-    | ((pathData: PathData) => string);
+  filename: string | ((pathData: PathData) => string);
   outputPath: string;
   sourceFile: string;
   assetFile: string;
@@ -1136,12 +1237,14 @@ The `ResourceInfo` have the following properties:
 Return new content as a `string`.
 If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-preload" name="option-preload" href="#option-preload"></a>
+
 ### `preload`
 
 Type: `Preload` Default: `null`
+
 ```ts
 type Preload = Array<{
   test: RegExp;
@@ -1160,7 +1263,7 @@ The descriptions of the properties:
 - `as` - a content type, one of `audio` `document` `embed` `font` `image` `object` `script` `style` `track` `video` `worker`
 - `rel` - a value indicates how to load a resource, one of `preload` `prefetch` , defaults `preload`
 - `type` - a [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) of the content.\
-  Defaults the type is detected automatically, for example: 
+  Defaults the type is detected automatically, for example:
   - `picture.png` as `image/png`
   - `picture.jpg` as `image/jpeg`
   - `picture.svg` as `image/svg+xml`
@@ -1178,6 +1281,7 @@ The descriptions of the properties:
 If you define the `attributes` than you can write the `as`, `rel` and `type` properties in the `attributes`.
 
 For example:
+
 ```js
 {
   test: /\.(ttf|woff2?)$/,
@@ -1197,8 +1301,9 @@ preload: [
 ```
 
 The generated preload tag like following:
+
 ```html
-<link rel="preload" href="css/styles.1f4faaff.css" as="style">
+<link rel="preload" href="css/styles.1f4faaff.css" as="style" />
 ```
 
 #### Preload scripts
@@ -1213,8 +1318,9 @@ preload: [
 ```
 
 The generated preload tag like following:
+
 ```html
-<link rel="preload" href="js/main.c608b1cd.js" as="script">
+<link rel="preload" href="js/main.c608b1cd.js" as="script" />
 ```
 
 #### Preload images
@@ -1231,9 +1337,10 @@ preload: [
 ```
 
 The generated preload tags like following:
+
 ```html
-<link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
-<link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
+<link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png" />
+<link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml" />
 ```
 
 You can preload images with a URL query, e.g. `image.png?size=640`, using the `media` attribute:
@@ -1252,9 +1359,8 @@ preload: [
 ```
 
 > **Note**
-> 
+>
 > The `media` attribute be useful when used [responsive-loader](https://www.npmjs.com/package/responsive-loader).
-
 
 #### Preload fonts
 
@@ -1268,10 +1374,9 @@ preload: [
 ```
 
 > **Note**
-> 
+>
 > Font preloading requires the `crossorigin` attribute to be set.
 > See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
-
 
 #### Preload tags order
 
@@ -1281,19 +1386,20 @@ For example, there is an HTML template with specified source assets:
 
 ```html
 <html>
-<head>
-  <script src="./main.js" defer></script>
-  <link href="./styles.scss" rel="stylesheet" />
-</head>
-<body>
-  <img src="./apple.png" alt="apple">
-  <script src="./app.js"></script>
-  <img src="./lemon.svg" alt="lemon">
-</body>
+  <head>
+    <script src="./main.js" defer></script>
+    <link href="./styles.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <img src="./apple.png" alt="apple" />
+    <script src="./app.js"></script>
+    <img src="./lemon.svg" alt="lemon" />
+  </body>
 </html>
 ```
 
 Specify the order of preload tags:
+
 ```js
 preload: [
   // 1. preload images
@@ -1318,34 +1424,37 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
 
 ```html
 <html>
-<head>
-  <!-- 1. preload images -->
-  <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png">
-  <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml">
-  <!-- 2. preload styles -->
-  <link rel="preload" href="css/styles.1f4faaff.css" as="style">
-  <!-- 3. preload scripts -->
-  <link rel="preload" href="js/main.c608b1cd.js" as="script">
-  <link rel="preload" href="js/app.2c8d13ac.js" as="script">
-  
-  <script src="js/main.c608b1cd.js" defer></script>
-  <link href="css/styles.1f4faaff.css" rel="stylesheet" />
-</head>
-<body>
-  <img src="img/apple.697ef306.png" alt="apple">
-  <script src="js/app.2c8d13ac.js"></script>
-  <img src="img/lemon.3666c92d.svg" alt="lemon">
-</body>
+  <head>
+    <!-- 1. preload images -->
+    <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png" />
+    <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml" />
+    <!-- 2. preload styles -->
+    <link rel="preload" href="css/styles.1f4faaff.css" as="style" />
+    <!-- 3. preload scripts -->
+    <link rel="preload" href="js/main.c608b1cd.js" as="script" />
+    <link rel="preload" href="js/app.2c8d13ac.js" as="script" />
+
+    <script src="js/main.c608b1cd.js" defer></script>
+    <link href="css/styles.1f4faaff.css" rel="stylesheet" />
+  </head>
+  <body>
+    <img src="img/apple.697ef306.png" alt="apple" />
+    <script src="js/app.2c8d13ac.js"></script>
+    <img src="img/lemon.3666c92d.svg" alt="lemon" />
+  </body>
 </html>
 ```
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-minify" name="option-minify" href="#option-minify"></a>
+
 ### `minify`
+
 Type: `Object|string|boolean` Default: `false`
 
 For minification generated HTML is used the [html-minifier-terser](https://github.com/terser/html-minifier-terser) with the following `default options`:
+
 ```js
 {
   collapseWhitespace: true,
@@ -1361,6 +1470,7 @@ For minification generated HTML is used the [html-minifier-terser](https://githu
 ```
 
 Possible values:
+
 - `false` - disable minification
 - `true` - enable minification with default options
 - `auto` - in `development` mode disable minification, in `production` mode enable minification with default options,
@@ -1368,17 +1478,20 @@ Possible values:
 - `{}` - enable minification with custom options, this object are merged with `default options`\
   see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
 
-
 <a id="option-minify-options" name="option-minify-options" href="#option-minify-options"></a>
+
 ### `minifyOptions`
+
 Type: `Object` Default: `null`
 
 When the [minify](#option-minify) option is set to `auto`, you can configure minification options using the `minifyOptions`.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-extract-comments" name="option-extract-comments" href="#option-extract-comments"></a>
+
 ### `extractComments`
+
 Type: `boolean` Default: `false`
 
 Enable/disable extracting comments from source scripts to the `*.LICENSE.txt` file.
@@ -1388,23 +1501,27 @@ Webpack extracts those comments into a separate text file.
 By default, the plugin doesn't create such unwanted text files.
 But if you want to extract files like `*.LICENSE.txt`, set this option to `true`.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-watch-files" name="option-watch-files" href="#option-watch-files"></a>
+
 ### `watchFiles`
+
 Type:
+
 ```ts
 type WatchFiles = {
   paths?: Array<string>;
   files?: Array<RegExp>;
   ignore?: Array<RegExp>;
-}
+};
 ```
 
 Default:
+
 ```js
 watchFiles: {
-  paths: ['./src'], 
+  paths: ['./src'],
   files: [/\.(html|ejs|eta)$/],
   ignore: [
     /[\\/](node_modules|dist|test)$/, // ignore standard project dirs
@@ -1434,7 +1551,6 @@ Allows to configure paths and files to watch file changes for rebuild in `watch`
 
 - `ignore` - Ignore the specified paths or files, that match the regular expressions.
 
-
 For example, all source files are in the `./src` directory,
 while some partials included in a template are in `./vendor/` directory, then add it to the `paths`:
 
@@ -1463,25 +1579,30 @@ This option has the prio over paths and files.
 >
 > To display all watched files, enable the [`verbose`](#option-verbose) option.
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-hot-update" name="option-hot-update" href="#option-hot-update"></a>
+
 ### `hotUpdate`
+
 Type: `boolean` Default: `false`
 
-If the value is `true`, then in the `serve` or `watch` mode,  the `hot-update.js` file is injected into each generated HTML file to enable the live reloading.
+If the value is `true`, then in the `serve` or `watch` mode, the `hot-update.js` file is injected into each generated HTML file to enable the live reloading.
 Use this options only if you don't have a referenced source file of a script in html.
 
 If you already have a js file in html, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
 
 <a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
+
 ### `verbose`
+
 Type: `string|boolean` Default: `false`
 
 The verbose option allows displaying in the console the processing information about extracted resources.
 All resources are grouped by their issuers.
 
 Possible values:
+
 - `false` - do not display information
 - `true` - display information
 - `auto` - in `development` mode enable verbose, in `production` mode disable verbose
@@ -1490,9 +1611,10 @@ Possible values:
 >
 > If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
 
-
 #### [↑ back to contents](#contents)
+
 <a id="option-loader-options" name="option-loader-options" href="#option-loader-options"></a>
+
 ### `loaderOptions`
 
 This is the reference to the [loader options](#loader-options).
@@ -1502,6 +1624,7 @@ The `HtmlBundlerPlugin.loader` will be added automatically.
 For example, both configurations are functionally identical:
 
 _1) the variant using the `loaderOptions`_ (recommended for common use cases)
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
@@ -1512,7 +1635,7 @@ module.exports = {
       },
       loaderOptions: {
         // resolve files specified in non-standard attributes 'data-src', 'data-srcset'
-        sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'], }],
+        sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'] }],
         // compile a template into HTML using `ejs` module
         preprocessor: 'ejs',
       },
@@ -1522,6 +1645,7 @@ module.exports = {
 ```
 
 _2) the variant using the `module.rules`_
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
@@ -1538,7 +1662,7 @@ module.exports = {
         test: /.(html|ejs)$/,
         loader: HtmlBundlerPlugin.loader,
         options: {
-          sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'], }],
+          sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'] }],
           preprocessor: 'ejs',
         },
       },
@@ -1552,18 +1676,21 @@ For common use cases, the first option is recommended. So your config is smaller
 The second variant use only for special cases, e.g. when you have templates with different syntax.
 An example see by [How to use some different template engines](#recipe-diff-templates).
 
-
 > **Note**
 >
 > Options defined in `module.rules` take precedence over the same options defined in `loaderOptions`.
+
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="loader-options" name="loader-options" href="#loader-options"></a>
+
 ## Loader options
 
 <a id="default-loader" name="default-loader" href="#default-loader"></a>
 The `default loader`:
+
 ```js
 {
   test: /\.(html|ejs|eta|hbs|handlebars|njk)$/,
@@ -1581,17 +1708,18 @@ The default loader handels HTML files and `EJS`-like templates.
 > It is recommended to define all loader options in the [`loaderOptions`](#option-loader-options) by the plugin options
 > to keep the webpack config clean and smaller.
 
-
 > **Warning**
 >
 > The plugin works only with the own loader `HtmlBundlerPlugin.loader`.
 > Do not use another loader.
 > This loader replaces the functionality of `html-loader` and many other template loaders.
 
-
 <a id="loader-option-sources" name="loader-option-sources" href="#loader-option-sources"></a>
+
 ### `sources`
+
 Type:
+
 ```ts
 type Sources =
   | boolean
@@ -1613,12 +1741,13 @@ Default: `true`
 The `sources` option allow to specify a tag attribute that should be resolved.
 
 <a id="loader-option-sources-default" name="loader-option-sources-default" href="#loader-option-sources-default"></a>
+
 #### Default attributes
 
 By default, resolves source files in the following tags and attributes:
 
 | Tag      | Attributes                                                                                                   |
-|----------|--------------------------------------------------------------------------------------------------------------|
+| -------- | ------------------------------------------------------------------------------------------------------------ |
 | `link`   | `href` for `type="text/css"` `rel="stylesheet"` `as="style"` `as="script"`<br>`imagesrcset` for `as="image"` |
 | `script` | `src`                                                                                                        |
 | `img`    | `src` `srcset`                                                                                               |
@@ -1638,25 +1767,29 @@ By default, resolves source files in the following tags and attributes:
 > **Note**
 >
 > Automatically are processed only attributes containing a relative path or Webpack alias:
+>
 > - `src="./image.png"` or `src="image.png"` - an asset in the local directory
 > - `src="../../assets/image.png"` - a relative path to parent directory
 > - `src="@images/image.png"` - an image directory as Webpack alias
 >
 > Url values are not processed:
+>
 > - `src="https://example.com/img/image.png"`
 > - `src="//example.com/img/image.png"`
 > - `src="/img/image.png"`
 >
 > Others not file values are ignored, e.g.:
+>
 > - `src="data:image/png; ..."`
 > - `src="javascript: ..."`
 
-
 <a id="loader-option-sources-filter" name="loader-option-sources-filter" href="#loader-option-sources-filter"></a>
+
 #### Filter function
 
 The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
 The argument is an object containing the properties:
+
 - `tag: string` - a name of the HTML tag
 - `attribute: string` - a name of the HTML attribute
 - `value: string` - a value of the HTML attribute
@@ -1667,12 +1800,12 @@ The processing of an attribute can be ignored by returning `false`.
 
 To disable the processing of all attributes, set the `sources` option as `false`.
 
-
 Examples of using argument properties:
+
 ```js
 {
   tag: 'img',
-  // use the destructuring of variables from the object argument  
+  // use the destructuring of variables from the object argument
   filter: ({ tag, attribute, value, attributes, resourcePath }) => {
     if (attribute === 'src') return false;
     if (value.endsWith('.webp')) return false;
@@ -1700,7 +1833,7 @@ new HtmlBundlerPlugin({
       },
     ],
   },
-})
+});
 ```
 
 You can use the `filter` function to allow the processing only specific attributes.
@@ -1712,21 +1845,21 @@ For example, allow processing only for images in `content` attribute of the `met
 
 ```html
 <html>
-<head>
-  <!-- ignore the 'content' attribute via filter -->
-  <meta name="theme-color" content="#ffffff">
-  <meta property="og:title" content="Frutis" />
-  <meta property="og:image:type" content="image/png" />
-  <meta property="og:video:type" content="video/mp4" />
-  
-  <!-- resolve the 'content' attribute via filter  -->
-  <meta property="og:image" content="./frutis.png" />
-  <meta property="og:video" content="./video.mp4" />
-</head>
-<body>
-  <!-- resolve standard 'src' attribute -->
-  <img src="./image.png">
-</body>
+  <head>
+    <!-- ignore the 'content' attribute via filter -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta property="og:title" content="Frutis" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:video:type" content="video/mp4" />
+
+    <!-- resolve the 'content' attribute via filter  -->
+    <meta property="og:image" content="./frutis.png" />
+    <meta property="og:video" content="./video.mp4" />
+  </head>
+  <body>
+    <!-- resolve standard 'src' attribute -->
+    <img src="./image.png" />
+  </body>
 </html>
 ```
 
@@ -1755,7 +1888,7 @@ new HtmlBundlerPlugin({
       },
     ],
   },
-})
+});
 ```
 
 The filter can disable an attribute of a tag.
@@ -1772,16 +1905,18 @@ new HtmlBundlerPlugin({
       {
         tag: 'img',
         filter: ({ attribute }) => attribute !== 'srcset',
-      }
+      },
     ],
   },
-})
+});
 ```
 
-
 #### [↑ back to contents](#contents)
+
 <a id="loader-option-root" name="loader-option-root" href="#loader-option-root"></a>
+
 ### `root`
+
 Type: `string|boolean` Default: `false`
 
 The `root` option allow to resolve an asset file with leading `/` root path.
@@ -1792,6 +1927,7 @@ The files with leading `/` are not processed.
 Define the `root` option as the absolute path to the source directory to enable the processing.
 
 For example, there are project files:
+
 ```
 ./src/views/index.html
 ./src/styles/styles.scss
@@ -1809,28 +1945,32 @@ new HtmlBundlerPlugin({
   loaderOptions: {
     root: path.join(__dirname, 'src'),
   },
-})
+});
 ```
 
 Now you can use the `/` root path for the source assets:
+
 ```html
 <html>
-<head>
-  <link href="/styles/styles.scss" rel="stylesheet">
-  <script src="/scripts/main.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <img src="/images/apple.png">
-</body>
+  <head>
+    <link href="/styles/styles.scss" rel="stylesheet" />
+    <script src="/scripts/main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <img src="/images/apple.png" />
+  </body>
 </html>
 ```
 
-
 #### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
+
 ### `preprocessor`
+
 Type:
+
 ```ts
 type Preprocessor =
   | false
@@ -1846,7 +1986,7 @@ type Preprocessor =
 
 Default: `eta`
 
-You can use the preprocessor as a `string` for supported template engines, 
+You can use the preprocessor as a `string` for supported template engines,
 or define your own preprocessor as a function to use any template engine.
 
 #### Supported templating engines "out of the box"
@@ -1858,8 +1998,7 @@ type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks';
 The preprocessor is already ready to use the most popular templating engines:
 [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks).
 
-
-Defaults used the [Eta](https://eta.js.org) templating engine, 
+Defaults used the [Eta](https://eta.js.org) templating engine,
 because `Eta` has the `EJS`-like syntax, is only `2KB` gzipped and is much fasted than EJS.
 The npm package `eta` is already installed with this plugin.
 
@@ -1868,11 +2007,13 @@ You can pass a custom options of the templating engine using the [preprocessorOp
 For example, if you have `EJS` templates:
 
 install npm package `ejs`
+
 ```
 npm i -D ejs
 ```
 
 define the `preprocessor` as the `'ejs'` string
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
@@ -1910,20 +2051,21 @@ module.exports = {
 > };
 > ```
 
-
 <a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom" href="#loader-option-preprocessor-custom"></a>
+
 #### Custom templating engine
 
 To use any templating engine, you can define the `preprocessor` as a function.
 
 ```ts
-type Preprocessor = ((
+type Preprocessor = (
   template: string,
   loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-) => null | string | Promise<any>);
+) => null | string | Promise<any>;
 ```
 
 The default `preprocessor` is pre-configured as the following function:
+
 ```js
 const { Eta } = require('eta');
 const eta = new Eta({
@@ -1955,7 +2097,7 @@ The example for your own `sync` render function:
 
 ```js
 {
-  preprocessor: (template, { data }) => render(template, data)
+  preprocessor: (template, { data }) => render(template, data);
 }
 ```
 
@@ -1967,7 +2109,7 @@ The example of using `Promise` for your own `async` render function:
     new Promise((resolve) => {
       const result = render(template, data);
       resolve(result);
-    })
+    });
 }
 ```
 
@@ -1975,8 +2117,8 @@ The example of using `Promise` for your own `async` render function:
 >
 > The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
 
-
 <a id="loader-option-preprocessor-disable" name="loader-option-preprocessor-disable" href="#loader-option-preprocessor-disable"></a>
+
 #### Disable templating engine
 
 You can use this plugin to resolve all source asset files in any `HTML`-like template used by server-side rendering.
@@ -1993,8 +2135,11 @@ The original template remains unchanged except for the filenames being replaced.
 See [How to process a PHP template](#recipe-preprocessor-php).
 
 #### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessorOptions" name="loader-option-preprocessorOptions" href="#loader-option-preprocessorOptions"></a>
+
 ### `preprocessorOptions`
+
 Type: `Object` Default: `{}`
 
 With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars` or `nunjucks`.
@@ -2002,9 +2147,10 @@ Each preprocessor has its own options, depend on using template engine.
 
 > This loader option is referenced as the [preprocessorOptions](#option-preprocessor) plugin option to simplify the config.
 
-
 <a id="loader-option-preprocessor-options-eta" name="loader-option-preprocessor-options-eta" href="#loader-option-preprocessor-options-eta"></a>
+
 #### Options for `preprocessor: 'eta'` (default)
+
 ```js
 loaderOptions: {
   preprocessor: 'eta',
@@ -2020,6 +2166,7 @@ loaderOptions: {
 For the complete list of options see [here](https://eta.js.org/docs/api/configuration).
 
 For example, there are a template page and partials:
+
 ```
 src/views/page/home.html
 src/views/includes/gallery.html
@@ -2030,17 +2177,18 @@ src/views/partials/menu/top/desktop.html
 ```
 
 Include the partials in the `src/views/page/home.html` template with the `include()`:
+
 ```html
-<%~ include('teaser.html') %>
-<%~ include('menu/nav.html') %>
-<%~ include('menu/top/desktop.html') %>
-<%~ include('footer.html') %>
+<%~ include('teaser.html') %> <%~ include('menu/nav.html') %> <%~ include('menu/top/desktop.html') %> <%~
+include('footer.html') %>
 ```
 
 If partials have `.eta` extensions, then the extension can be omitted in the include argument.
 
 <a id="loader-option-preprocessor-options-ejs" name="loader-option-preprocessor-options-ejs" href="#loader-option-preprocessor-options-ejs"></a>
+
 #### Options for `preprocessor: 'ejs'`
+
 ```js
 loaderOptions: {
   preprocessor: 'ejs',
@@ -2060,6 +2208,7 @@ loaderOptions: {
 For the complete list of options see [here](https://ejs.co/#docs).
 
 For example, there are template page and partials:
+
 ```
 src/views/page/home.html
 src/views/includes/gallery.html
@@ -2070,19 +2219,20 @@ src/views/partials/menu/top/desktop.html
 ```
 
 Include the partials in the `src/views/page/home.html` template with the `include()`:
+
 ```html
 <!-- root path -->
 <%- include('/includes/gallery.html') %>
 
 <!-- views paths -->
-<%- include('teaser.html') %>
-<%- include('menu/nav.html') %>
-<%- include('menu/top/desktop.html') %>
-<%- include('footer.html') %>
+<%- include('teaser.html') %> <%- include('menu/nav.html') %> <%- include('menu/top/desktop.html') %> <%-
+include('footer.html') %>
 ```
+
 If you have partials with `.ejs` extensions, then the extension can be omitted.
 
 <a id="loader-option-preprocessor-options-handlebars" name="loader-option-preprocessor-options-handlebars" href="#loader-option-preprocessor-options-handlebars"></a>
+
 #### Options for `preprocessor: 'handlebars'`
 
 The `preprocessor` has built-in `include` helper, to load a partial file directly in a template without registration of partials.
@@ -2105,6 +2255,7 @@ loaderOptions: {
 ```
 
 For example, there are template page and partials:
+
 ```
 src/views/page/home.html
 src/views/includes/gallery.html
@@ -2115,15 +2266,13 @@ src/views/partials/menu/top/desktop.html
 ```
 
 Include the partials in the `src/views/page/home.html` template with the `include` helper:
+
 ```html
 <!-- root path -->
 {{ include '/includes/gallery' }}
 
 <!-- views paths -->
-{{ include 'teaser' }}
-{{ include 'menu/nav' }}
-{{ include 'menu/top/desktop' }}
-{{ include 'footer' }}
+{{ include 'teaser' }} {{ include 'menu/nav' }} {{ include 'menu/top/desktop' }} {{ include 'footer' }}
 ```
 
 The `include` helper automatically resolves `.hthm` and `.hbs` extensions, it can be omitted.
@@ -2147,6 +2296,7 @@ loaderOptions: {
   },
 },
 ```
+
 For example, if the partial path is the `src/views/partials` then the file `src/views/partials/menu/top/desktop.html` will have the partial name `menu/top/desktop`.
 
 You can define all partials manually using the option as an object:
@@ -2168,19 +2318,16 @@ loaderOptions: {
 ```
 
 Include the partials in the `src/views/page/home.html` template:
+
 ```html
-{{> gallery }}
-{{> teaser }}
-{{> menu/nav }}
-{{> menu/top/desktop }}
-{{> footer }}
+{{> gallery }} {{> teaser }} {{> menu/nav }} {{> menu/top/desktop }} {{> footer }}
 ```
 
 **The `helpers` option**
 
 Type: `Array<string>|Object` Default: `[]`
 
-When the `helpers` is an array of relative or absolute paths to helpers, 
+When the `helpers` is an array of relative or absolute paths to helpers,
 then the name of a helper is the relative path to the helper file without an extension.
 
 For example, there are helper files:
@@ -2209,16 +2356,14 @@ loaderOptions: {
 Usage of helpers:
 
 ```html
-{{#bold}}The bold text.{{/bold}}
-{{#italic}}The italic text.{{/italic}}
+{{#bold}}The bold text.{{/bold}} {{#italic}}The italic text.{{/italic}}
 
 <!-- the helper with namespace `wrapper/span` -->
 {{#[wrapper/span]}}The text wrapped with span tag.{{/[wrapper/span]}}
-
 ```
 
 > **Note**
-> 
+>
 > - The helper located in a subdirectory, e.g. `wrapper/span.js` will be available in template as `[wrapper/span]`.
 > - When helper name contain the `/` slash, then the helper name must be wrapped with the `[]`.
 
@@ -2238,8 +2383,8 @@ loaderOptions: {
 
 For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
-
 <a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks" href="#loader-option-preprocessor-options-nunjucks"></a>
+
 #### Options for `preprocessor: 'nunjucks'`
 
 ```js
@@ -2254,7 +2399,7 @@ loaderOptions: {
     ],
     async: false, // defaults 'false'
     jinjaCompatibility: false, // installs support for Jinja compatibility, defaults 'false'
-    
+
     // here are original Nunjucks options
     autoescape: true, // escape dangerous characters, defaults 'true'
     // ...
@@ -2266,10 +2411,12 @@ For all available options, see the [Nunjucks API configure](https://mozilla.gith
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="loader-option-data" name="loader-option-data" href="#loader-option-data"></a>
+
 ### `data`
+
 Type: `Object|string` Default: `{}`
 
 > Since `v2.5.0` the `data` option is referenced in the [plugin options](#option-data).
@@ -2277,24 +2424,25 @@ Type: `Object|string` Default: `{}`
 The properties of the `data` option are available as global variables in all templates.
 To pass variables to a specific template, use the [entry.{name}.data](#option-entry-data) option.
 
-
 #### Data as an object
+
 Type: `Object`
 
 The data defined as an object are loaded once with Webpack start.
 
 #### Data as file path
+
 Type: `string`
 
 The string value is an absolute or relative filename of a JSON or JS file. The JS file must export an object.
-The data file will be reloaded after changes. 
+The data file will be reloaded after changes.
 
 > **Note**
 >
 > Use the `data` as a path to dynamically update variables in a template **without restarting Webpack**.
 
 > **Warning**
-> 
+>
 > The [entry.{name}.data](#option-entry-data) property overrides the same property defined in the loader `data`.
 
 For example, there are variables defined in both the `entry` property and the loader option:
@@ -2333,6 +2481,7 @@ module.exports = {
 ```
 
 JSON data file _src/data/home.json_
+
 ```json
 {
   "title": "Home",
@@ -2341,15 +2490,16 @@ JSON data file _src/data/home.json_
 ```
 
 JS data file _src/data/global.js_
+
 ```js
 module.exports = {
   title: 'Default Title',
   globalData: 'Global Data',
-}
+};
 ```
 
-
 In the `./src/views/home.html` template are available following variables:
+
 ```js
 {
   title: 'Home',
@@ -2359,6 +2509,7 @@ In the `./src/views/home.html` template are available following variables:
 ```
 
 In the `./src/views/about.html` template are available following variables:
+
 ```js
 {
   title: 'Default Title',
@@ -2368,12 +2519,14 @@ In the `./src/views/about.html` template are available following variables:
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
+
 ## Template engines
 
 Using the [preprocessor](#loader-option-preprocessor), you can compile any template with a template engine such as:
+
 - [Eta](https://eta.js.org)
 - [EJS](https://ejs.co)
 - [Handlebars](https://handlebarsjs.com)
@@ -2387,25 +2540,27 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
 > This plugin works on the same codebase but has additional Pug-specific options and features.
 
-
 <a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
+
 ### Using the Eta
+
 _Supported "out of the box"_
 
-`Eta` is [compatible*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
+`Eta` is [compatible\*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
 
 For example, there is the template _src/views/page/index.eta_
+
 ```html
 <html>
-<body>
-  <h1><%= headline %></h1>
-  <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
-  </ul>
-  <%~ include('/src/views/partials/footer') %>
-</body>
+  <body>
+    <h1><%= headline %></h1>
+    <ul class="people">
+      <% for (let i = 0; i < people.length; i++) {%>
+      <li><%= people[i] %>></li>
+      <% } %>
+    </ul>
+    <%~ include('/src/views/partials/footer') %>
+  </body>
 </html>
 ```
 
@@ -2418,7 +2573,8 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: { // output dist/imdex.html
+        index: {
+          // output dist/imdex.html
           import: './src/views/page/index.eta',
           data: {
             headline: 'Breaking Bad',
@@ -2432,45 +2588,51 @@ module.exports = {
 ```
 
 The default preprocessor is `eta`, you can omit it:
+
 ```js
 new HtmlBundlerPlugin({
   entry: {
     index: './src/views/page/index.eta',
   },
   // preprocessor: 'eta', // defaults is used Eta
-    // preprocessorOptions: {...},
-})
+  // preprocessorOptions: {...},
+});
 ```
 
 For the `eta` preprocessor options see [here](#loader-option-preprocessor-options-eta).
 
 <a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
+
 > **Warning**
 >
 > For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
 > to use variables in template without the Eta-specific `it.` scope.
 
 #### [↑ back to contents](#contents)
+
 <a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
+
 ### Using the EJS
 
 You need to install the `ejs` package:
+
 ```
 npm i -D ejs
 ```
 
 For example, there is the template _src/views/page/index.ejs_
+
 ```html
 <html>
-<body>
-  <h1><%= headline %></h1>
-  <ul class="people">
-    <% for (let i = 0; i < people.length; i++) {%>
-    <li><%= people[i] %>></li>
-    <% } %>
-  </ul>
-  <%- include('/src/views/partials/footer.html'); %>
-</body>
+  <body>
+    <h1><%= headline %></h1>
+    <ul class="people">
+      <% for (let i = 0; i < people.length; i++) {%>
+      <li><%= people[i] %>></li>
+      <% } %>
+    </ul>
+    <%- include('/src/views/partials/footer.html'); %>
+  </body>
 </html>
 ```
 
@@ -2483,7 +2645,8 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: { // output dist/imdex.html
+        index: {
+          // output dist/imdex.html
           import: './src/views/page/index.ejs',
           data: {
             headline: 'Breaking Bad',
@@ -2491,8 +2654,8 @@ module.exports = {
           },
         },
       },
-        preprocessor: 'ejs', // use EJS templating engine
-        // preprocessorOptions: {...},
+      preprocessor: 'ejs', // use EJS templating engine
+      // preprocessorOptions: {...},
     }),
   ],
 };
@@ -2501,15 +2664,19 @@ module.exports = {
 For the `ejs` preprocessor options see [here](#loader-option-preprocessor-options-ejs).
 
 #### [↑ back to contents](#contents)
+
 <a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
+
 ### Using the Handlebars
 
 You need to install the `handlebars` package:
+
 ```
 npm i -D handlebars
 ```
 
 For example, there is the template _src/views/page/home.hbs_
+
 ```hbs
 <!DOCTYPE html>
 <html>
@@ -2572,27 +2739,30 @@ For the `handlebars` preprocessor options see [here](#loader-option-preprocessor
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js)
 
-
 #### [↑ back to contents](#contents)
+
 <a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
+
 ### Using the Mustache
 
 You need to install the `mustache` package:
+
 ```
 npm i -D mustache
 ```
 
 For example, there is the template _src/views/page/index.mustache_
+
 ```html
 <html>
-<body>
-  <h1>{{ headline }}</h1>
-  <ul class="people">
-    {{#people}}
-    <li>{{.}}</li>
-    {{/people}}
-  </ul>
-</body>
+  <body>
+    <h1>{{ headline }}</h1>
+    <ul class="people">
+      {{#people}}
+      <li>{{.}}</li>
+      {{/people}}
+    </ul>
+  </body>
 </html>
 ```
 
@@ -2613,34 +2783,37 @@ module.exports = {
           people: ['Walter White', 'Jesse Pinkman'],
         },
       },
-        // define preprocessor as the function that shoud return a string or promise
-        preprocessor: (template, { data }) => Mustache.render(template, data),
+      // define preprocessor as the function that shoud return a string or promise
+      preprocessor: (template, { data }) => Mustache.render(template, data),
     }),
   ],
 };
 ```
 
-
 #### [↑ back to contents](#contents)
+
 <a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
+
 ### Using the Nunjucks
 
 You need to install the `nunjucks` package:
+
 ```
 npm i -D nunjucks
 ```
 
 For example, there is the template _src/views/page/index.njk_
+
 ```html
 <html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {% for name in people %}
-    <li class="name">{{ name }}</li>
-    {% endfor %}
-  </ul>
-</body>
+  <body>
+    <h1>{{ headline }}!</h1>
+    <ul class="people">
+      {% for name in people %}
+      <li class="name">{{ name }}</li>
+      {% endfor %}
+    </ul>
+  </body>
 </html>
 ```
 
@@ -2661,8 +2834,8 @@ module.exports = {
           },
         },
       },
-        preprocessor: 'nunjucks', // use Nunjucks templating engine
-        // preprocessorOptions: {...},
+      preprocessor: 'nunjucks', // use Nunjucks templating engine
+      // preprocessorOptions: {...},
     }),
   ],
 };
@@ -2671,25 +2844,29 @@ module.exports = {
 For the `nunjucks` preprocessor options see [here](#loader-option-preprocessor-options-nunjucks).
 
 #### [↑ back to contents](#contents)
+
 <a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
+
 ### Using the LiquidJS
 
 You need to install the `liquidjs` package:
+
 ```
 npm i -D liquidjs
 ```
 
 For example, there is the template _src/views/page/index.liquid_
+
 ```html
 <html>
-<body>
-  <h1>{{ headline }}!</h1>
-  <ul class="people">
-    {% for name in people %}
-    <li class="name">{{ name }}</li>
-    {% endfor %}
-  </ul>
-</body>
+  <body>
+    <h1>{{ headline }}!</h1>
+    <ul class="people">
+      {% for name in people %}
+      <li class="name">{{ name }}</li>
+      {% endfor %}
+    </ul>
+  </body>
 </html>
 ```
 
@@ -2714,8 +2891,8 @@ module.exports = {
           },
         },
       },
-        // async parseAndRender method return the promise
-        preprocessor: (template, { data }) => LiquidEngine.parseAndRender(template, data),
+      // async parseAndRender method return the promise
+      preprocessor: (template, { data }) => LiquidEngine.parseAndRender(template, data),
     }),
   ],
 };
@@ -2723,9 +2900,10 @@ module.exports = {
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="setup-live-reload" name="setup-live-reload" href="#setup-live-reload"></a>
+
 ## Setup Live Reload
 
 To enable reloading of the browser after changes, add the `devServer` option to the Webpack config:
@@ -2747,17 +2925,19 @@ module.exports = {
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-keep-folder-structure-html" name="recipe-keep-folder-structure-html" href="#recipe-keep-folder-structure-html"></a>
+
 ## How to keep source directory structure for HTML
 
 Define the `entry` option as a path to templates. The output path will have the same directory structure.
 For details, see the [entry path](#option-entry-path).
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-keep-folder-structure-assets" name="recipe-keep-folder-structure-assets" href="#recipe-keep-folder-structure-assets"></a>
+
 ## How to keep source directory structure for assets
 
 Define the `filename` as a function.
@@ -2771,6 +2951,7 @@ src/assets/fonts/Roboto/Roboto-Regular.woff2
 ```
 
 Use the following function:
+
 ```js
 {
   test: /[\\/]fonts|node_modules[\\/].+(woff(2)?|ttf|otf|eot|svg)$/i,
@@ -2781,15 +2962,17 @@ Use the following function:
       const srcPath = 'src/assets/fonts';
       const regExp = new RegExp(`[\\\\/]?(?:${path.normalize(srcPath)}|node_modules)[\\\\/](.+?)$`);
       const assetPath = path.dirname(regExp.exec(filename)[1].replace('@', '').replace(/\\/g, '/'));
-      
+
       return `fonts/${assetPath}/[name][ext][query]`;
     },
   },
 },
 ```
+
 The destructed `filename` argument of the function is a source file. It can be absolute or relative.
 
 The output directory `dist/` will have the same structure:
+
 ```
 dist/fonts/material-icons/iconfont/material-icons-sharp.woff2
 dist/fonts/material-symbols/material-symbols-sharp.woff2
@@ -2816,14 +2999,17 @@ The example to keep original directory structure for images:
 ```
 
 > **Note**
-> 
+>
 > For images, it is recommended to use the hashed output filename.
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
+
 ## How to use source image files in HTML
 
 Add to Webpack config the rule:
+
 ```js
 module: {
   rules: [
@@ -2839,44 +3025,57 @@ module: {
 ```
 
 Add a source file using a relative path or Webpack alias in HTML:
+
 ```html
 <html>
-<head>
-  <link href="./favicon.ico" rel="icon" />
-</head>
-<body>
-  <img src="./apple.png" srcset="./apple1.png 320w, ./apple2.png 640w" alt="apple">
-  <picture>
-    <source srcset="./fig1.jpg, ./fig2.jpg 320w, ./fig3.jpg 640w">
-  </picture>
-</body>
+  <head>
+    <link href="./favicon.ico" rel="icon" />
+  </head>
+  <body>
+    <img src="./apple.png" srcset="./apple1.png 320w, ./apple2.png 640w" alt="apple" />
+    <picture>
+      <source srcset="./fig1.jpg, ./fig2.jpg 320w, ./fig3.jpg 640w" />
+    </picture>
+  </body>
 </html>
 ```
 
 The generated HTML contains hashed output images filenames:
+
 ```html
 <html>
-<head>
-  <link href="/assets/img/favicon.05e4dd86.ico" rel="icon" />
-</head>
-<body>
-  <img src="/assets/img/apple.f4b855d8.png" srcset="/assets/img/apple1.855f4bd8.png 320w, /assets/img/apple2.d8f4b855.png 640w" alt="apple">
-  <picture>
-    <source srcset="/assets/img/fig1.605e4dd8.jpg, /assets/img/fig2.8605e4dd.jpg 320w, /assets/img/fig3.e4605dd8.jpg 640w">
-  </picture>
-</body>
+  <head>
+    <link href="/assets/img/favicon.05e4dd86.ico" rel="icon" />
+  </head>
+  <body>
+    <img
+      src="/assets/img/apple.f4b855d8.png"
+      srcset="/assets/img/apple1.855f4bd8.png 320w, /assets/img/apple2.d8f4b855.png 640w"
+      alt="apple" />
+    <picture>
+      <source
+        srcset="
+          /assets/img/fig1.605e4dd8.jpg,
+          /assets/img/fig2.8605e4dd.jpg 320w,
+          /assets/img/fig3.e4605dd8.jpg 640w
+        " />
+    </picture>
+  </body>
 </html>
 ```
 
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-responsive-images" name="recipe-responsive-images" href="#recipe-responsive-images"></a>
+
 ## How to resize and generate responsive images
 
 To resize or generate responsive images is recommended to use the [responsive-loader](https://github.com/dazuaz/responsive-loader).
 
 Install additional packages:
+
 ```
 npm i -D responsive-loader sharp
 ```
@@ -2885,41 +3084,46 @@ To resize an image use the query parameter `size`:
 
 ```html
 <!-- resize source image to max. 640px -->
-<img src="./image.png?size=640">
+<img src="./image.png?size=640" />
 ```
 
-To generate responsible images use in `srcset` attribute the query parameter `sizes` als `JSON5` to avoid parsing error, 
+To generate responsible images use in `srcset` attribute the query parameter `sizes` als `JSON5` to avoid parsing error,
 because many images must be separated by commas `,` but we use the comma to separate sizes for one image:
+
 ```html
 <!-- responsible images with different sizes: 320px, 480px, 640px -->
-<img src="./image.png?size=480"
-     srcset="./image.png?{sizes:[320,480,640]}">
+<img src="./image.png?size=480" srcset="./image.png?{sizes:[320,480,640]}" />
 ```
 
-You can convert source image to other output format. 
+You can convert source image to other output format.
 For example, we have original image 2000px width as PNG and want to resize to 640px and save as WEBP:
 
 ```html
-<img src="./image.png?size=640&format=webp">
+<img src="./image.png?size=640&format=webp" />
 ```
 
 You can create a small inline image placeholder. To do this, use the following query parameters:
+
 - `placeholder=true` - enable to generate the placeholder
 - `placeholderSize=35` - the size of the generating placeholder
 - `prop=placeholder` - the plugin-specific `prop` parameter retrieves the property from the object generated by `responsive-loader`
 
 ```html
-<img src="./image.png?placeholder=true&placeholderSize=35&prop=placeholder"
-     srcset="./image.png?{sizes:[320,480,640]}">
+<img
+  src="./image.png?placeholder=true&placeholderSize=35&prop=placeholder"
+  srcset="./image.png?{sizes:[320,480,640]}" />
 ```
 
 The generated HTML:
+
 ```html
-<img src="data:image/png;base64,iVBORw0K ..."
-     srcset="/img/image-320w.png 320w,/img/image-480w.png 480w,/img/image-640w.png 640w">
+<img
+  src="data:image/png;base64,iVBORw0K ..."
+  srcset="/img/image-320w.png 320w, /img/image-480w.png 480w, /img/image-640w.png 640w" />
 ```
 
 Add to Webpack config the rule for responsive images:
+
 ```js
 module.exports = {
   module: {
@@ -2940,13 +3144,14 @@ module.exports = {
     ],
   },
 };
-
 ```
 
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
+
 ## How to preload fonts
 
 To preload resources such as fonts, use the [preload](#option-preload) plugin option.
@@ -2957,30 +3162,31 @@ _styles.scss_
 
 ```scss
 @font-face {
-  font-family: "MyFont";
+  font-family: 'MyFont';
   // load source fonts using the `@fonts` Webpack alias to the font directory
-  src: local(MyFont Regular),
-  url('@fonts/myfont.woff2') format('woff2'),
-  url('@fonts/myfont.woff') format('woff');
+  src:
+    local(MyFont Regular),
+    url('@fonts/myfont.woff2') format('woff2'),
+    url('@fonts/myfont.woff') format('woff');
 }
 
 body {
-  font-family: "MyFont", serif;
+  font-family: 'MyFont', serif;
 }
-
 ```
 
 The template _index.html_ where is loaded the source style:
+
 ```html
 <html>
-<head>
-  <title>Demo</title>
-  <!-- load source style -->
-  <link href="./styles.scss" rel="stylesheet" />
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <title>Demo</title>
+    <!-- load source style -->
+    <link href="./styles.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3041,17 +3247,17 @@ The generated HTML contains the preload tag with the font:
 
 ```html
 <html>
-<head>
-  <title>Demo</title>
-  <!-- preload fonts detected in style -->
-  <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true">
-  <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true">
-  <!-- compiled style -->
-  <link href="css/styles.1f4faaff.css" rel="stylesheet" />
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <title>Demo</title>
+    <!-- preload fonts detected in style -->
+    <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true" />
+    <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true" />
+    <!-- compiled style -->
+    <link href="css/styles.1f4faaff.css" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3063,27 +3269,29 @@ The generated HTML contains the preload tag with the font:
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
+
 ## How to inline CSS in HTML
 
 There are two ways to inline CSS in HTML:
+
 - inline all CSS globally with `css.inline` [option](#option-css)
 - inline single CSS with `?inline` query added to a filename
-
 
 The `inline` option can take the following values: `false`, `true` and `'auto'`.
 For details see the [inline option](#option-css).
 
 > **Note**
-> 
+>
 > The individual `?inline` query parameter takes precedence over the globally `css.inline` option.\
-> For example, if `css.inline = true` and in HTML a single file has the `?inline=false` query, 
+> For example, if `css.inline = true` and in HTML a single file has the `?inline=false` query,
 > this file will be extracted in an output file, while all other styles will be inlined.
-
 
 For example, there are two SCSS files:
 
 _main.scss_
+
 ```scss
 $bgColor: steelblue;
 body {
@@ -3092,6 +3300,7 @@ body {
 ```
 
 _styles.scss_:
+
 ```scss
 $color: red;
 h1 {
@@ -3103,13 +3312,13 @@ There is the _./src/views/index.html_ with both style files:
 
 ```html
 <html>
-<head>
-  <link href="./main.scss" rel="stylesheet" />
-  <link href="./styles.scss" rel="stylesheet" />
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <link href="./main.scss" rel="stylesheet" />
+    <link href="./styles.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3143,19 +3352,24 @@ module.exports = {
 ```
 
 The generated HTML contains inlined CSS:
+
 ```html
 <html>
-<head>
-  <style>
-    body{ background-color: steelblue; }
-  </style>
-  <style>
-    h1{ color: red; }
-  </style>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <style>
+      body {
+        background-color: steelblue;
+      }
+    </style>
+    <style>
+      h1 {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3163,15 +3377,15 @@ To inline a single CSS, add the `?inline` query to a style file which you want t
 
 ```html
 <html>
-<head>
-  <!-- file CSS -->
-  <link href="./main.scss" rel="stylesheet" />
-  <!-- inline CSS -->
-  <link href="./styles.scss?inline" rel="stylesheet" />
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <!-- file CSS -->
+    <link href="./main.scss" rel="stylesheet" />
+    <!-- inline CSS -->
+    <link href="./styles.scss?inline" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3179,17 +3393,19 @@ The generated HTML contains inline CSS already processed via Webpack:
 
 ```html
 <html>
-<head>
-  <!-- file CSS -->
-  <link href="/assets/css/main.05e4dd86.css" rel="stylesheet">
-  <!-- inline CSS -->
-  <style>
-    h1{color: red;}
-  </style>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <!-- file CSS -->
+    <link href="/assets/css/main.05e4dd86.css" rel="stylesheet" />
+    <!-- inline CSS -->
+    <style>
+      h1 {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3200,10 +3416,13 @@ The generated HTML contains inline CSS already processed via Webpack:
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
+
 ## How to inline JS in HTML
 
 There are two ways to inline CSS in HTML:
+
 - inline all JS globally with `js.inline` [option](#option-js)
 - inline single JS with `?inline` query added to a filename
 
@@ -3225,6 +3444,7 @@ console.log('>> main.js');
 ```
 
 _script.js_
+
 ```js
 console.log('>> script.js');
 ```
@@ -3233,16 +3453,15 @@ There is the _./src/views/index.html_ with both script files:
 
 ```html
 <html>
-<head>
-  <script src="./main.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <script src="./script.js"></script>
-</body>
+  <head>
+    <script src="./main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <script src="./script.js"></script>
+  </body>
 </html>
 ```
-
 
 To inline all JS globally add the `js.inline` option:
 
@@ -3266,19 +3485,26 @@ module.exports = {
 ```
 
 The generated HTML contains inlined JS scripts:
+
 ```html
 <html>
-<head>
-  <script>
-    (()=>{"use strict";console.log(">> main.js")})();
-  </script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <script>
-    (()=>{"use strict";console.log(">> script.js")})();
-  </script>
-</body>
+  <head>
+    <script>
+      (() => {
+        'use strict';
+        console.log('>> main.js');
+      })();
+    </script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <script>
+      (() => {
+        'use strict';
+        console.log('>> script.js');
+      })();
+    </script>
+  </body>
 </html>
 ```
 
@@ -3286,15 +3512,15 @@ To inline a single JS file, add the `?inline` query to a script file which you w
 
 ```html
 <html>
-<head>
-  <!-- file JS -->
-  <script src="./main.js" defer="defer"></script>
-  <!-- inline JS -->
-  <script src="./script.js?inline"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <!-- file JS -->
+    <script src="./main.js" defer="defer"></script>
+    <!-- inline JS -->
+    <script src="./script.js?inline"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3302,17 +3528,20 @@ The generated HTML contains inline JS already compiled via Webpack:
 
 ```html
 <html>
-<head>
-  <!-- file JS -->
-  <script src="assets/js/main.992ba657.js" defer="defer"></script>
-  <!-- inline JS -->
-  <script>
-    (()=>{"use strict";console.log(">> script.js")})();
-  </script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <!-- file JS -->
+    <script src="assets/js/main.992ba657.js" defer="defer"></script>
+    <!-- inline JS -->
+    <script>
+      (() => {
+        'use strict';
+        console.log('>> script.js');
+      })();
+    </script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
@@ -3327,14 +3556,18 @@ The generated HTML contains inline JS already compiled via Webpack:
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
+
 ## How to inline SVG, PNG images in HTML
 
 You can inline the images in two ways:
+
 - force inline image using `?inline` query
 - auto inline by image size
 
 Add to Webpack config the rule:
+
 ```js
 module: {
   rules: [
@@ -3363,13 +3596,15 @@ module: {
   ],
 }
 ```
+
 The plugin automatically inlines images smaller then `maxSize`.
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-preprocessor-php" name="recipe-preprocessor-php" href="#recipe-preprocessor-php"></a>
+
 ## How to process a PHP template
 
 The plugin can replace the source filenames of scripts, styles, images, etc. with output filenames in a PHP template.
@@ -3403,7 +3638,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       test: /\.(php|phtml)$/i, // define template extensions to be processed
-      filename: '[name].phtml', // define output filename for templates defined in entry 
+      filename: '[name].phtml', // define output filename for templates defined in entry
       entry: {
         index: './src/views/index.phtml',
       },
@@ -3420,6 +3655,7 @@ module.exports = {
 ```
 
 The processed PHP template:
+
 ```php
 <?php
   $title = 'Home';
@@ -3438,9 +3674,10 @@ The processed PHP template:
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>
+
 ## How to pass data into multiple templates
 
 You can pass variables into template using a template engine, e.g. [Handlebars](https://handlebarsjs.com).
@@ -3448,60 +3685,51 @@ For multiple page configuration, better to use the [Nunjucks](https://mozilla.gi
 
 For example, you have several pages with variables.\
 Both pages have the same layout _src/views/layouts/default.html_
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>{{ title }}</title>
-  <!-- block for specific page styles -->
-  {% block styles %}{% endblock %}
-  <!-- block for specific page scripts -->
-  {% block scripts %}{% endblock %}
-</head>
-<body>
-  <main class="main-content">
-    <!-- block for specific page content -->
-    {% block content %}{% endblock %}
-  </main>
-</body>
+  <head>
+    <title>{{ title }}</title>
+    <!-- block for specific page styles -->
+    {% block styles %}{% endblock %}
+    <!-- block for specific page scripts -->
+    {% block scripts %}{% endblock %}
+  </head>
+  <body>
+    <main class="main-content">
+      <!-- block for specific page content -->
+      {% block content %}{% endblock %}
+    </main>
+  </body>
 </html>
 ```
 
 _src/views/pages/home/index.html_
+
 ```html
-{% extends "src/views/layouts/default.html" %}
-
-{% block styles %}
+{% extends "src/views/layouts/default.html" %} {% block styles %}
 <!-- load source style -->
-<link href="./home.scss" rel="stylesheet">
-{% endblock %}
-
-{% block scripts %}
+<link href="./home.scss" rel="stylesheet" />
+{% endblock %} {% block scripts %}
 <!-- load source script -->
 <script src="./home.js" defer="defer"></script>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <h1>{{ filmTitle }}</h1>
 <p>Location: {{ location }}</p>
 <!-- @images is the Webpack alias for the source images directory -->
-<img src="@images/{{ imageFile }}">
+<img src="@images/{{ imageFile }}" />
 {% endblock %}
 ```
 
 _src/views/pages/about/index.html_
+
 ```html
-{% extends "src/views/layouts/default.html" %}
-
-{% block styles %}
-<link href="./about.scss" rel="stylesheet">
-{% endblock %}
-
-{% block scripts %}
+{% extends "src/views/layouts/default.html" %} {% block styles %}
+<link href="./about.scss" rel="stylesheet" />
+{% endblock %} {% block scripts %}
 <script src="./about.js" defer="defer"></script>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
 <h1>Main characters</h1>
 <ul>
   {% for item in actors %}
@@ -3512,12 +3740,13 @@ _src/views/pages/about/index.html_
 ```
 
 _Webpack config_
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const Nunjucks = require('nunjucks');
 
-// Note: 
-// If your pages have a lot of variables, it's a good idea to define them separately 
+// Note:
+// If your pages have a lot of variables, it's a good idea to define them separately
 // to keep the configuration clean and clear.
 const entryData = {
   // variables for home page
@@ -3553,11 +3782,13 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         // define your templates here
-        index: { // => dist/index.html
+        index: {
+          // => dist/index.html
           import: 'src/views/pages/home/index.html',
           data: entryData.home,
         },
-        about: { // => dist/about.html
+        about: {
+          // => dist/about.html
           import: 'src/views/pages/about/index.html',
           data: entryData.about,
         },
@@ -3592,59 +3823,62 @@ module.exports = {
     ],
   },
 };
-
 ```
 
 The generated _dist/index.html_
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Home</title>
-  <link href="assets/css/home.2180238c.css" rel="stylesheet">
-  <script src="assets/js/home.790d746b.js" defer="defer"></script>
-</head>
-<body>
-  <main class="main-content">
-    <h1>Breaking Bad</h1>
-    <p>Breaking Bad is an American crime drama</p>
-    <p>Location: Albuquerque, New Mexico</p>
-    <img src="assets/img/picture.697ef306.png" alt="location" />
-  </main>
-</body>
+  <head>
+    <title>Home</title>
+    <link href="assets/css/home.2180238c.css" rel="stylesheet" />
+    <script src="assets/js/home.790d746b.js" defer="defer"></script>
+  </head>
+  <body>
+    <main class="main-content">
+      <h1>Breaking Bad</h1>
+      <p>Breaking Bad is an American crime drama</p>
+      <p>Location: Albuquerque, New Mexico</p>
+      <img src="assets/img/picture.697ef306.png" alt="location" />
+    </main>
+  </body>
 </html>
 ```
 
 The generated _dist/about.html_
+
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>About</title>
-  <link href="assets/css/about.2777c101.css" rel="stylesheet">
-  <script src="assets/js/about.1.c5e03c0e.js" defer="defer"></script>
-</head>
-<body>
-  <main class="main-content">
-    <h1>Main characters</h1>
-    <ul>
-      <li class="name">Walter White, &quot;Heisenberg&quot;</li>
-      <li class="name">Jesse Pinkman</li>
-    </ul>
-  </main>
-</body>
+  <head>
+    <title>About</title>
+    <link href="assets/css/about.2777c101.css" rel="stylesheet" />
+    <script src="assets/js/about.1.c5e03c0e.js" defer="defer"></script>
+  </head>
+  <body>
+    <main class="main-content">
+      <h1>Main characters</h1>
+      <ul>
+        <li class="name">Walter White, &quot;Heisenberg&quot;</li>
+        <li class="name">Jesse Pinkman</li>
+      </ul>
+    </main>
+  </body>
 </html>
 ```
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-diff-templates" name="recipe-diff-templates" href="#recipe-diff-templates"></a>
+
 ## How to use some different template engines
 
 When you have many templates with different syntax, you can use a separate module rules for each template engine.
 For example, in your project are mixed templates with EJS and Handlebars syntax.
+
 ```
 - src/views/ejs/home.ejs
 - src/views/hbs/about.hbs
@@ -3652,7 +3886,6 @@ For example, in your project are mixed templates with EJS and Handlebars syntax.
 
 To handle different templates, define the `test` plugin option that must match those templates and
 add a preprocessor for each template type in the module rules.
-
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -3678,9 +3911,7 @@ module.exports = {
         options: {
           preprocessor: 'ejs',
           preprocessorOptions: {
-            views: [
-              path.join(__dirname, 'src/views/ejs/partials'),
-            ],
+            views: [path.join(__dirname, 'src/views/ejs/partials')],
           },
         },
       },
@@ -3691,9 +3922,7 @@ module.exports = {
         options: {
           preprocessor: 'handlebars',
           preprocessorOptions: {
-            views: [
-              path.join(__dirname, 'src/views/hbs/partials')
-            ],
+            views: [path.join(__dirname, 'src/views/hbs/partials')],
           },
         },
       },
@@ -3704,9 +3933,10 @@ module.exports = {
 
 ---
 
-
 #### [↑ back to contents](#contents)
+
 <a id="recipe-split-chunks" name="recipe-split-chunks" href="#recipe-split-chunks"></a>
+
 ### How to config `splitChunks`
 
 Webpack tries to split every entry file, include template files, which completely breaks the compilation process in the plugin.
@@ -3735,17 +3965,18 @@ module.exports = {
 See details by [splitChunks.cacheGroups](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunkscachegroups).
 
 For example, in a template are used the scripts and styles from `node_modules`:
+
 ```html
 <html>
-<head>
-  <title>Home</title>
-  <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="bootstrap/dist/js/bootstrap.min.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <script src="./main.js"></script>
-</body>
+  <head>
+    <title>Home</title>
+    <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="bootstrap/dist/js/bootstrap.min.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <script src="./main.js"></script>
+  </body>
 </html>
 ```
 
@@ -3755,6 +3986,7 @@ For example, in a template are used the scripts and styles from `node_modules`:
 > in the order that Webpack generated.
 
 In this use case the `optimization.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
+
 ```js
 module.exports = {
   optimization: {
@@ -3779,12 +4011,13 @@ module.exports = {
 > Webpack can't differentiate CSS module from JS module, therefore you MUST match only JS files.
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-split-css" name="recipe-split-css" href="#recipe-split-css"></a>
+
 ### How to split CSS files
 
-
 > **Warning**
-> 
+>
 > Splitting CSS to many chunks is principal impossible. Splitting works only for JS files.
 
 Using the bundler plugin all your styles MUST be specified directly in template, not in Webpack entry.
@@ -3794,6 +4027,7 @@ Importing a style in JavaScript is a dirty hack, BAD practice.
 So far as the style files must be manually defined in the template, you can separate the styles into multiple bundles yourself.
 
 For example, there are style files used in your app:
+
 ```
 - components/banner/styles.scss 150 KB
 - components/button/styles.scss  50 KB
@@ -3802,15 +4036,18 @@ For example, there are style files used in your app:
 - components/panel/styles.scss  100 KB
 - styles/main.scss  250 KB
 ```
+
 We want to have a bundle file ~250 KB, then create the bundles manually:
 
 _styles/bundle01.scss_ 200 KB
+
 ```scss
 @use '../components/banner/styles.scss';
 @use '../components/button/styles.scss';
 ```
 
 _styles/bundle02.scss_ 250 KB
+
 ```scss
 @use '../components/menu/styles.scss';
 @use '../components/modal/styles.scss';
@@ -3821,57 +4058,60 @@ Add the bundles in the template:
 
 ```html
 <html>
-<head>
-  <title>Home</title>
-  <link href="./styles/bundle01.scss" rel="stylesheet">
-  <link href="./styles/bundle02.scss" rel="stylesheet">
-  <link href="./styles/main.scss" rel="stylesheet">
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <title>Home</title>
+    <link href="./styles/bundle01.scss" rel="stylesheet" />
+    <link href="./styles/bundle02.scss" rel="stylesheet" />
+    <link href="./styles/main.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
 If you use vendor styles in your style file, then vendor styles will not be saved to a separate file, because `sass-loader` generates one CSS bundle code.
 
 _styles.scss_
+
 ```scss
-@use "bootstrap/scss/bootstrap";
+@use 'bootstrap/scss/bootstrap';
 body {
   color: bootstrap.$primary;
 }
 // ...
 ```
 
-
 If you want save module styles separate from your styles, then load them in a template separately:
+
 ```html
 <html>
-<head>
-  <title>Home</title>
-  <!-- load module styles separately -->
-  <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- load your styles separately -->
-  <link href="./styles.scss" rel="stylesheet">
-</head>
-<body>
-  <h1>Hello World!</h1>
-  <script src="./main.js"></script>
-</body>
+  <head>
+    <title>Home</title>
+    <!-- load module styles separately -->
+    <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- load your styles separately -->
+    <link href="./styles.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <script src="./main.js"></script>
+  </body>
 </html>
 ```
-
 
 ---
 
 #### [↑ back to contents](#contents)
+
 <a id="recipe-split-chunks-keep-module-name" name="recipe-split-chunks-keep-module-name" href="#recipe-split-chunks-keep-module-name"></a>
+
 ### How to keep package name for split chunks from node_modules
 
 To save split chunks under a custom name use `optimization.cacheGroups.{cacheGroup}.name` as function.
 
 For example, many node modules are imported in the `main.js`:
+
 ```js
 import { Button } from 'bootstrap';
 import _, { map } from 'underscore';
@@ -3879,19 +4119,21 @@ import _, { map } from 'underscore';
 ```
 
 There is a template used the `main.js` _./src/views/index.html_:
+
 ```html
 <html>
-<head>
-  <!-- load source script -->
-  <script src="./main.js" defer="defer"></script>
-</head>
-<body>
-  <h1>Hello World!</h1>
-</body>
+  <head>
+    <!-- load source script -->
+    <script src="./main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
 </html>
 ```
 
 Then, use the `optimization.splitChunks.cacheGroups.{cacheGroup}.name` as following function:
+
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
@@ -3933,15 +4175,16 @@ module.exports = {
 ```
 
 > **Warning**
-> 
+>
 > The group name MUST be different from the script names used in the template.
 > Otherwise, a chunk name conflict occurs.
-> 
+>
 > For example,
 > if you are already using `main.js` in the template, the group name should not be `main`.
 > Take another name, e.g. `app`.
 
 The split files will be saved like this:
+
 ```
 dist/js/runtime.9cd0e0f9.js
 dist/js/npm.popperjs/core.f96a1152.js <- split chunks of node modules
@@ -3957,6 +4200,7 @@ dist/js/app-5fa74877.1aceb2db.js
 ---
 
 #### [↑ back to contents](#contents)
+
 ## Also See
 
 - [ansis][ansis] - The Node.js lib for ANSI color styling of text in terminal

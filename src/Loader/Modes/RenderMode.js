@@ -1,11 +1,11 @@
 const Resolver = require('../Resolver');
 const Collection = require('../../Plugin/Collection');
 const PluginService = require('../../Plugin/PluginService');
-const { hmrFile, injectBeforeEndHead } = require('../Utils');
+const { hotUpdateFile, injectBeforeEndHead } = require('../Utils');
 const { errorToHtml } = require('../Messages/Exeptions');
 
 /**
- * Render into HTML and export a JS module.
+ * Render into HTML and export as a JS module.
  */
 class RenderMode {
   constructor({ esModule, hot }) {
@@ -71,7 +71,7 @@ class RenderMode {
     const resolvedFile = Resolver.resolve(file, issuer, type);
     const result = this.encodeRequire(resolvedFile);
 
-    Collection.add({ type, resource: resolvedFile, issuer, entryId });
+    Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
     return result;
   }
@@ -89,7 +89,7 @@ class RenderMode {
     const resolvedFile = Resolver.resolve(file, issuer, type);
     const result = this.encodeRequire(resolvedFile);
 
-    Collection.add({ type, resource: resolvedFile, issuer, entryId });
+    Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
     return result;
   }
@@ -100,10 +100,10 @@ class RenderMode {
    * @param {string} content
    * @return {string}
    */
-  injectHmrFile(content) {
-    const hmrScript = `<script src="${this.encodeRequire(hmrFile)}" defer="defer"></script>`;
+  injectHotScript(content) {
+    const hotScript = `<script src="${this.encodeRequire(hotUpdateFile)}" defer="defer"></script>`;
 
-    return injectBeforeEndHead(content, hmrScript);
+    return injectBeforeEndHead(content, hotScript);
   }
 
   /**
@@ -117,8 +117,8 @@ class RenderMode {
   export(content, data, issuer) {
     /* istanbul ignore next: Webpack API no provide `loaderContext.hot` for testing */
     if (this.hot && PluginService.useHotUpdate()) {
-      content = this.injectHmrFile(content);
-      Collection.add({ type: 'script', resource: hmrFile, issuer });
+      content = this.injectHotScript(content);
+      Collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
     }
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";
@@ -135,8 +135,8 @@ class RenderMode {
     let content = errorToHtml(error);
 
     if (PluginService.useHotUpdate()) {
-      content = this.injectHmrFile(content);
-      Collection.add({ type: 'script', resource: hmrFile, issuer });
+      content = this.injectHotScript(content);
+      Collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
     }
 
     return this.exportCode + "'" + this.decodeReservedChars(content) + "';";

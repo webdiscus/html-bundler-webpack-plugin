@@ -1,0 +1,16 @@
+{
+  "description": "IMPORTANT: don't install webpack here because the Webpack instance MUST be one, otherwise appear the error: The 'compilation' argument must be an instance of Compilation.",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "start:prod": "webpack serve --mode production",
+    "watch": "webpack watch --mode development",
+    "build": "webpack --mode=production --progress"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.22.5",
+    "babel-loader": "^9.1.3",
+    "html-bundler-webpack-plugin": "file:../../..",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
