@@ -33,9 +33,10 @@ export const getCompareFileContents = function (receivedFile, expectedFile, filt
  * Compare the file list and content of files.
  *
  * @param {string} relTestCasePath The relative path to the test directory.
+ * @param {boolean} compareContent Whether the content of files should be compared too.
  * @return {Promise<void>}
  */
-export const compareFiles = (relTestCasePath) => {
+export const compareFiles = (relTestCasePath, compareContent = true) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
     webRootPath = path.join(absTestPath, PATHS.webRoot),
     expectedPath = path.join(absTestPath, PATHS.expected);
@@ -46,13 +47,16 @@ export const compareFiles = (relTestCasePath) => {
         const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
         expect(receivedFiles).toEqual(expectedFiles);
 
-        expectedFiles.forEach((file) => {
-          const { received, expected } = getCompareFileContents(
-            path.join(webRootPath, file),
-            path.join(expectedPath, file)
-          );
-          expect(received).toEqual(expected);
-        });
+        if (compareContent) {
+          expectedFiles.forEach((file) => {
+            const { received, expected } = getCompareFileContents(
+              path.join(webRootPath, file),
+              path.join(expectedPath, file)
+            );
+            expect(received).toEqual(expected);
+          });
+        }
+
         return Promise.resolve(true);
       })
       .catch((error) => {

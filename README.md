@@ -20,12 +20,8 @@
 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
-The plugin allows to specify template files as [entry points](#option-entry).
-You can use various templates such as HTML, PHTML, EJS, Eta, Handlebars, Nunjucks and others without additional loaders and plugins.
-
-The plugin resolves references in the HTML template and adds them to the Webpack compilation.
-Webpack will automatically process the source files and the plugin replace the references with their URLs to output files in the generated HTML.
-Using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options, you can inline JS and CSS into HTML.
+The plugin allows to use any [template](#template-engine) file as [entry point](#option-entry).
+In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 
 <table align="center">
 <tr><th>Entry point is HTML</th></tr>
@@ -38,33 +34,38 @@ Using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options, you
 </pre></td></tr>
 </table>
 
-In a HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
-
-- `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
-- `<link href="./styles.scss" rel="stylesheet">`
-- `<script src="./App.tsx" defer="defer"></script>`
-- `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
-
-### ⚙️ How works the plugin
-
-<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
+See the [simple example](#example), [install](#install) and [quick start](#contents).
 
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
-- Reference to source **scripts** and **styles** in HTML using `<script src="...">` and `<link href="...">`.
-- Resolves [source](#loader-option-sources) asset files specified in standard attributes `href` `src` `srcset` etc.
-- Inlines [JS](#recipe-inline-js), [CSS](#recipe-inline-css), [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
-- Support for [template engines](#recipe-template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
+- Allows to **include** **script** and **style** source files directly **in HTML**:
+  - `<link href="./styles.scss" rel="stylesheet">`
+  - `<script src="./app.tsx" defer="defer"></script>`
+- **Inlines** **JS** and **CSS** into HTML using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options.
+- **Resolves** [source asset files](#loader-option-sources) in attributes `href` `src` `srcset` etc. using **relative path** or **alias**:
+  - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
+  - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
+- **Inlines images**, e.g., [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
+- Support for [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
+- **Auto processing many HTML templates** using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
-- Automatically processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
-- Dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting.
-- Support for React.
+
+See the [full list of features](#features).
+
+### ⚙️ How works the plugin
+
+The plugin resolves references in the HTML template and adds them to the Webpack compilation.
+Webpack will automatically process the source files and the plugin replace the references with their output filenames in the generated HTML.
+See the [example](#example).
+
+<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
 ### ✅ Profit
 
-You can specify the script and style source files directly in an HTML template,
-no longer need to define them in the Webpack entry or import styles in JavaScript.
+You can specify script and style source files directly in an HTML template,
+and you no longer need to define them in Webpack entry or import styles in JavaScript.
+Use one powerful plugin instead of [many different plugins](#list-of-plugins).
 
 ### ❓Question / Feature Request / Bug
 
@@ -77,10 +78,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ## 🔆 What's New in v2
 
 - **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
-- **NEW:** added support for importing style files in JavaScript.\
-  **Note:** this feature was added for compatibility with `React` projects.\
-  The importing styles in JavaScript is the `bad practice`. This is the `wrong way`.\
-  In new projects you should specify style source files directly in HTML.
+- **NEW:** added importing style files in JavaScript.
 - **POTENTIAL BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
   If you use the `Eta` syntax, may be you need to update templates.
 
@@ -93,6 +91,8 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 > Support for the `'filesystem'` cache type is experimental and under development.
 
 ---
+
+<a id="example" name="example" href="#example"></a>
 
 ## Simple usage example
 
@@ -192,6 +192,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 
 ## Contents
 
+1. [Sponsors](#sponsors)
 1. [Features](#features)
 1. [Install and Quick start](#install)
 1. [Webpack options](#webpack-options)
@@ -229,7 +230,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [nunjucks](#loader-option-preprocessor-options-nunjucks)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
    - [data](#loader-option-data) (pass data into templates)
-1. [Using template engines](#recipe-template-engine)
+1. [Using template engines](#template-engine)
    - [Eta](#using-template-eta)
    - [EJS](#using-template-ejs)
    - [Handlebars](#using-template-handlebars)
@@ -264,16 +265,17 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Bootstrap with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
    - Tailwind CSS with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
    - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
+   - Extend Handlebars layout with blocks [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-bjtjvc?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars-layout/)
 
 <a id="features" name="features" href="#features"></a>
 
 ## Features
 
-- HTML template is the entry point for all resources
-- extracts CSS from the source style filename specified in HTML via a `<link>` tag
-- extracts JS from the source script filename specified in HTML via a `<script>` tag
-- resolves source filenames in the CSS `url()` and in HTML attributes
-- extracts resolved resources to output directory
+- HTML [template](#template-engine) is the [entry point](#option-entry) for all resources
+- [extracts JS](#option-js) from the source script filename specified in HTML via a `<script>` tag
+- [extracts CSS](#option-css) from the source style filename specified in HTML via a `<link>` tag
+- importing style files in JavaScript
+- resolves source asset files in HTML attributes and in the CSS `url()`
 - generated HTML contains output filenames
 - support the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
 - `inline CSS` in HTML
@@ -281,19 +283,20 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
 - `inline SVG` as SVG tag in HTML
 - `inline SVG` as `utf-8` data-URL in CSS
-- auto generation of `<link rel="preload">` to preload used assets
+- auto generation of `<link rel="preload">` to preload assets
 - support the `auto` publicPath
-- enable/disable extraction of comments to `*.LICENSE.txt` file
+- enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
 - supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
 - support for both `async` and `sync` preprocessor
-- dynamically loading template variables after changes using the [data](#loader-option-data) option
-- minification of generated HTML
-- support for importing style files in JavaScript (not recomended, because it is `bad practice`)
+- auto processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting
+- dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
+- [minification](#option-minify) of generated HTML
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
 (\*) - `asset/source` works currently for SVG only, in a next version will work for other files too
 
-Just one HTML bundler plugin replaces the most used functionality of the plugins and loaders:
+<a id="list-of-plugins" name="list-of-plugins" href="#list-of-plugins"></a>
+Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
 
 | Package                                                                                                 | Features                                                            |
 | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -388,12 +391,14 @@ module.exports = {
         },
       },
       js: {
-        // output filename of compiled JavaScript
+        // output filename of compiled JavaScript, used if `inline` option is false (defaults)
         filename: 'assets/js/[name].[contenthash:8].js',
+        //inline: true, // inlines JS into HTML
       },
       css: {
-        // output filename of extracted CSS
+        // output filename of extracted CSS, used if `inline` option is false (defaults)
         filename: 'assets/css/[name].[contenthash:8].css',
+        //inline: true, // inlines CSS into HTML
       },
     }),
   ],
@@ -426,7 +431,7 @@ The default templating engine is [Eta](https://eta.js.org).
 
 For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs).\
 For using the `Handlebars` see [Templating with Handlebars](#using-template-handlebars).\
-For other templates see [Template engines](#recipe-template-engine).
+For other templates see [Template engines](#template-engine).
 
 For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
 
@@ -1085,7 +1090,7 @@ For example:
 
 > **Warning**
 >
-> Don't import source styles in JavaScript. Styles must be specified directly in HTML.\
+> Don't import source styles in JavaScript. Styles should be specified directly in HTML.\
 > Don't define source JS files in Webpack entry. Scripts must be specified directly in HTML.
 
 The default CSS output filename is `[name].css`.
@@ -2275,7 +2280,7 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 {{ include 'teaser' }} {{ include 'menu/nav' }} {{ include 'menu/top/desktop' }} {{ include 'footer' }}
 ```
 
-The `include` helper automatically resolves `.hthm` and `.hbs` extensions, it can be omitted.
+The `include` helper automatically resolves `.html` and `.hbs` extensions, it can be omitted.
 
 **The `partials` option**
 
@@ -2380,6 +2385,41 @@ loaderOptions: {
   },
 },
 ```
+
+This plugin has own `build-in` helpers:
+
+- `include` - includes a template file relative to paths defined in `views` option, the default path is the project root path
+  ```hbs
+  {{include 'TEMPLATE_FILE'}}
+  ```
+- `assign` - creates a new named variable or override old.
+  You can define many variables. The variables are available in included partials.
+
+  ```hbs
+  {{assign title='Homepage' header='Home'}}
+  {{> layout}}
+  ```
+
+  _layout.hbs_
+
+  ```hbs
+  <title>{{title}}</title>
+  <h1>{{header}}</h1>
+  ```
+
+- `partial` and `block`:
+
+  `partial` - defines the block content
+
+  ```hbs
+  {{#partial 'BLOCK_NAME'}}BLOCK_CONTENT{{/partial}}
+  ```
+
+  `block` - outputs the block content, it can be used in another partial file, e.g. in a layout partial
+
+  ```hbs
+  {{#block 'BLOCK_NAME'}}default content or empty{{/block}}
+  ```
 
 For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
@@ -2521,7 +2561,7 @@ In the `./src/views/about.html` template are available following variables:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-template-engine" name="recipe-template-engine" href="#recipe-template-engine"></a>
+<a id="template-engine" name="template-engine" href="#template-engine"></a>
 
 ## Template engines
 
@@ -4198,6 +4238,22 @@ dist/js/app-5fa74877.1aceb2db.js
 ```
 
 ---
+
+#### [↑ back to contents](#contents)
+
+---
+
+<a id="sponsors" name="sponsors" href="#sponsors"></a>
+
+## Sponsors
+
+Support this project by becoming a sponsor!
+
+Thank you to our sponsors!
+
+| Sponsors                                                                                                                                                               |                                                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| <a href="https://www.jetbrains.com/"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="150" alt="JetBrains Logo"></a> | [JetBrains](https://www.jetbrains.com/) provides a free license of their IDEs for this OSS development. |
 
 #### [↑ back to contents](#contents)
 

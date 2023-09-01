@@ -1,21 +1,24 @@
 const { resolveFile } = require('../../../../Common/FileUtils');
 
+/** @typedef {import('handlebars')} Handlebars */
+/** @typedef {import('handlebars').HelperOptions} HelperOptions */
+
 /**
  * Return the include helper function.
  *
- * @param {FileSystem} fs The file system.
  * @param {Handlebars} Handlebars The instance of Handlebars module.
+ * @param {FileSystem} fs The file system.
  * @param {string} root The root path to template partials.
  * @param {Array<string>} views The paths of including partials.
  * @param {Array<string>} extensions The default extensions of including partials.
  * @return {function(filename: string, options: Object, args: Object): Handlebars.SafeString}
  */
-module.exports = ({ fs, Handlebars, root, views = [], extensions = [] }) => {
+module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
   /**
    * Include the partial file in a template.
    *
    * @param {string} filename The partial file name.
-   * @param {Object} options The options passed via tag attributes into a template.
+   * @param {HelperOptions} options The options passed via tag attributes into a template.
    * @param {Object} args The parent options passed using the `this` attribute.
    * @return {Handlebars.SafeString}
    */

@@ -1,8 +1,9 @@
 const path = require('path');
 const { loadModule } = require('../../../Common/FileUtils');
 
-const preprocessor = ({ rootContext, options }) => {
+const preprocessor = (loaderContext, options) => {
   const Eta = loadModule('eta', () => require('eta').Eta);
+  const { rootContext } = loaderContext;
   let views = options.views;
 
   if (!views) {

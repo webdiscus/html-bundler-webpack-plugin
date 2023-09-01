@@ -48,7 +48,7 @@ module.exports = {
     ],
   },
 
-  // enable HMR with live reload
+  // enable live reload
   devServer: {
     static: path.resolve(__dirname, 'dist'),
     watchFiles: {

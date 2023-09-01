@@ -69,9 +69,12 @@ class Options {
     const data = { ...loaderData, ...entryData, ...queryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
 
-    Preprocessor.init({ fileSystem: this.fileSystem, rootContext, watch: this.#watch });
     if (!Preprocessor.isReady(options.preprocessor)) {
-      options.preprocessor = Preprocessor.factory(options.preprocessor, options.preprocessorOptions);
+      options.preprocessor = Preprocessor.factory(loaderContext, {
+        preprocessor: options.preprocessor,
+        watch: this.#watch,
+        options: options.preprocessorOptions,
+      });
     }
 
     // clean loaderContext of artifacts

@@ -1,5 +1,5 @@
 import { compareFiles } from './utils/helpers';
-import { removeDirsSync } from './utils/file';
+//import { removeDirsSync } from './utils/file';
 
 // Remove all 'dist/' directories from tests, use it only for some local tests.
 //removeDirsSync(__dirname, /dist$/);
@@ -157,6 +157,12 @@ describe('loader preprocessor options', () => {
 
   test('simple multiple pages', () => compareFiles('loader-option-preprocessor-multipage'));
   test('multiple templating engines', () => compareFiles('loader-option-preprocessor-many-ejs-hbs'));
+});
+
+describe('handlebars', () => {
+  // test helpers
+  test('build-in `block` helper', () => compareFiles('preprocessor-handlebars-helper-block-buildIn'));
+  test('user `block` helper overrides build-in', () => compareFiles('preprocessor-handlebars-helper-block'));
 });
 
 describe('inline images', () => {

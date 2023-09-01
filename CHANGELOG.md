@@ -1,5 +1,11 @@
 # Change log
 
+## 2.10.0 (2023-09-01)
+
+- feat: add Handlebars helpers `assign`, `partial` and `block` to extend a template layout with blocks
+- chore: add `handlebars-layout` example
+- docs: update README
+
 ## 2.9.0 (2023-08-27)
 
 - feat(experimental): add support the Webpack `cache.type` as `filesystem`. This is yet an alpha version of the feature.

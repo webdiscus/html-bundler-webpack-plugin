@@ -1,0 +1,25 @@
+{
+  "name": "handlebars-layout",
+  "description": "Extend layout template with blocks.",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production",
+    "test": "npm run build"
+  },
+  "devDependencies": {
+    "css-loader": "^6.8.1",
+    "handlebars": "^4.7.8",
+    "html-bundler-webpack-plugin": "^2.10.0",
+    "sass": "^1.64.2",
+    "sass-loader": "^13.3.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}

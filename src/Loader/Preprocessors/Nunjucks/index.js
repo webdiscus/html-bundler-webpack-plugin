@@ -1,7 +1,8 @@
 const { loadModule } = require('../../../Common/FileUtils');
 
-const preprocessor = ({ watch, rootContext, options = {} }) => {
+const preprocessor = (loaderContext, options = {}, watch) => {
   const Nunjucks = loadModule('nunjucks');
+  const { rootContext } = loaderContext;
   const templatesPath = options.views || rootContext;
 
   if (watch === true) {

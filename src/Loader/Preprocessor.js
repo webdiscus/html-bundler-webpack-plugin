@@ -1,12 +1,8 @@
 const { unsupportedPreprocessorException } = require('./Messages/Exeptions');
 
-class Preprocessor {
-  static init({ fileSystem, rootContext, watch }) {
-    this.fileSystem = fileSystem;
-    this.rootContext = rootContext;
-    this.watch = watch;
-  }
+/** @typedef {import('webpack').LoaderContext} LoaderContext */
 
+class Preprocessor {
   /**
    * Whether the preprocessor is ready to use.
    *
@@ -39,40 +35,28 @@ class Preprocessor {
    * Factory preprocessor as a function.
    * The default preprocessor uses the Eta template engine.
    *
+   * @param {LoaderContext} loaderContext The loader context of Webpack.
    * @param {string|null|*} preprocessor The preprocessor value, should be a string
    * @param {Object} options The preprocessor options.
+   * @param {Function} watch The function called by watching.
    * @return {Function|Promise|Object}
    * @throws
    */
-  static factory(preprocessor, options = {}) {
+  static factory(loaderContext, { preprocessor, options = {}, watch }) {
     if (preprocessor == null) preprocessor = 'eta';
 
     switch (preprocessor) {
       case 'eta':
-        return require('./Preprocessors/Eta/index')({
-          rootContext: this.rootContext,
-          options,
-        });
+        return require('./Preprocessors/Eta/index')(loaderContext, options);
 
       case 'ejs':
-        return require('./Preprocessors/Ejs/index')({
-          rootContext: this.rootContext,
-          options,
-        });
+        return require('./Preprocessors/Ejs/index')(loaderContext, options);
 
       case 'handlebars':
-        return require('./Preprocessors/Handlebars/index')({
-          fs: this.fileSystem,
-          rootContext: this.rootContext,
-          options,
-        });
+        return require('./Preprocessors/Handlebars/index')(loaderContext, options);
 
       case 'nunjucks':
-        return require('./Preprocessors/Nunjucks/index')({
-          watch: this.watch,
-          rootContext: this.rootContext,
-          options,
-        });
+        return require('./Preprocessors/Nunjucks/index')(loaderContext, options, watch);
 
       default:
         unsupportedPreprocessorException(preprocessor);

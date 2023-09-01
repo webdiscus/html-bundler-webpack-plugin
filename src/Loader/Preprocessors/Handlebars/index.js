@@ -3,8 +3,10 @@ const Dependency = require('../../Dependency');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
-const preprocessor = ({ fs, rootContext, options }) => {
+const preprocessor = (loaderContext, options) => {
   const Handlebars = loadModule('handlebars');
+  const fs = loaderContext.fs.fileSystem;
+  const { rootContext } = loaderContext;
   const extensions = ['.html', '.hbs', '.handlebars'];
   const includeFiles = [/\.(html|hbs|handlebars)$/i];
   const root = options?.root || rootContext;
@@ -46,7 +48,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
   /**
    * Get actual partials.
    *
-   * @param {Array<string>|{}} options The partials option.
+   * @param {Array<string>|{}} options The partial's option.
    * @return {{}}
    */
   const getPartials = (options) => {
@@ -60,7 +62,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
   /**
    * Get actual helpers.
    *
-   * @param {Array<string>|{}} options The helpers option.
+   * @param {Array<string>|{}} options The helper's option.
    * @return {{}}
    */
   const getHelpers = (options) => {
@@ -91,8 +93,8 @@ const preprocessor = ({ fs, rootContext, options }) => {
     partials = actualPartials;
 
     // update content of actual partials
-    for (const partial in partials) {
-      const partialFile = partials[partial];
+    for (const name in partials) {
+      const partialFile = partials[name];
 
       // watch changes in a file (change/rename)
       Dependency.addFile(partialFile);
@@ -102,7 +104,7 @@ const preprocessor = ({ fs, rootContext, options }) => {
       }
 
       const template = fs.readFileSync(partialFile, 'utf8');
-      Handlebars.registerPartial(partial, template);
+      Handlebars.registerPartial(name, template);
     }
   };
 
@@ -125,8 +127,8 @@ const preprocessor = ({ fs, rootContext, options }) => {
 
     helpers = actualHelpers;
 
-    for (const helperName in helpers) {
-      const helperFile = helpers[helperName];
+    for (const name in helpers) {
+      const helperFile = helpers[name];
 
       // watch changes in a file (change/rename)
       Dependency.addFile(helperFile);
@@ -136,32 +138,37 @@ const preprocessor = ({ fs, rootContext, options }) => {
       }
 
       const helper = require(helperFile);
-      Handlebars.registerHelper(helperName, helper);
+      Handlebars.registerHelper(name, helper);
     }
   };
 
-  // build-in helpers
+  // first, register build-in helpers
   const buildInHelpers = {
+    assign: require('./helpers/assign')(Handlebars),
+    block: require('./helpers/block/block')(Handlebars),
+    partial: require('./helpers/block/partial')(Handlebars),
+
     include: require('./helpers/include')({
-      fs,
       Handlebars,
+      fs,
       root,
       views: Array.isArray(views) ? views : [views],
       extensions,
     }),
   };
-  for (const helper in buildInHelpers) {
-    Handlebars.registerHelper(helper, buildInHelpers[helper]);
+  for (const name in buildInHelpers) {
+    Handlebars.registerHelper(name, buildInHelpers[name]);
   }
 
+  // seconds, register user helpers, build-in helpers can be overridden with custom helpers
   if (options.helpers) {
     if (Array.isArray(options.helpers)) {
       updateHelpers();
     } else {
       // object of helper name => absolute path to helper file
       helpers = options.helpers;
-      for (const helper in helpers) {
-        Handlebars.registerHelper(helper, helpers[helper]);
+      for (const name in helpers) {
+        Handlebars.registerHelper(name, helpers[name]);
       }
     }
   }
@@ -173,12 +180,16 @@ const preprocessor = ({ fs, rootContext, options }) => {
   return {
     /**
      * Called to render each template page
+     *
      * @param {string} template The template content.
      * @param {string} resourcePath The request of template.
      * @param {object} data The data passed into template.
+     *  Note:
+     *  call compiled function with the argument as new object
+     *  to allow defining properties in `this` of some helpers.
      * @return {string}
      */
-    render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)(data),
+    render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)({ ...data }),
 
     /**
      * Called before each new compilation after changes, in the serve/watch mode.

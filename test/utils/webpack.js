@@ -23,11 +23,27 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
     context: testPath,
   };
 
+  if (Array.isArray(testConfig)) {
+    const finalConfig = [];
+
+    testConfig.forEach((config) => {
+      const commonConfig = require(commonConfigFile);
+
+      // remove module rules in common config when custom rules are defined by test config or options
+      if ((webpackOpts.module && webpackOpts.module.rules) || (config.module && config.module.rules)) {
+        commonConfig.module.rules = [];
+      }
+
+      finalConfig.push(merge(baseConfig, commonConfig, webpackOpts, config));
+    });
+
+    return finalConfig;
+  }
+
   // remove module rules in common config when custom rules are defined by test config or options
   if ((webpackOpts.module && webpackOpts.module.rules) || (testConfig.module && testConfig.module.rules)) {
     commonConfig.module.rules = [];
   }
-
   return merge(baseConfig, commonConfig, webpackOpts, testConfig);
 };
 

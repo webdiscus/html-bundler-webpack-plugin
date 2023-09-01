@@ -6,8 +6,8 @@
 <body>
   <h1>{{#bold}}Hello World{{/bold}}</h1>
   {{#italic}}italic{{/italic}}
-  <!-- test the helper with namespace `wrapper/span` -->
+  <!-- test the helper with namespace `#[wrapper/span]` -->
   {{#[wrapper/span]}}span{{/[wrapper/span]}}
-  {{ include '/src/views/includes/footer.html' }}
+  {{include '/src/views/includes/footer.html'}}
 </body>
 </html>
