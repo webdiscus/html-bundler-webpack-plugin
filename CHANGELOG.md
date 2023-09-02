@@ -1,5 +1,9 @@
 # Change log
 
+## 2.10.1 (2023-09-02)
+
+- fix: avoid generation of empty css files when source styles are imported in TS file
+
 ## 2.10.0 (2023-09-01)
 
 - feat: add Handlebars helpers `assign`, `partial` and `block` to extend a template layout with blocks

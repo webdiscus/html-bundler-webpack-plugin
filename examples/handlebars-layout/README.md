@@ -1,6 +1,6 @@
 # Using assign, blocks and layouts in Handlebars
 
-Using the `partial` and `block` build-in plugin helpers you can extend a template layout the many blocks.
+Using the `partial` and `block` build-in plugin helpers you can extend a template layout with many blocks.
 You can assign many variables, which will be available in a partial.
 
 Use the [HTML Builder Plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) for Webpack

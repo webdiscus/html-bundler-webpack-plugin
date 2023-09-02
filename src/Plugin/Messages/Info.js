@@ -21,10 +21,9 @@ const Dependency = require('../../Loader/Dependency');
 const PluginService = require('../PluginService');
 
 const gray = ansi256(244);
-
-const padLevel1 = 15;
+const padLevel1 = 19;
 const padLevel2 = padLevel1 + 10;
-const padChunks = padLevel1 + 4;
+const padChunks = padLevel1 + 2;
 
 /**
  * Get the compilation name styled based on the presence of an error.
@@ -44,7 +43,7 @@ const colorType = (item, pad) => {
   const color = inline ? yellowBright : ansi256(112);
 
   if (type === Collection.type.style && item.imports != null) {
-    type = inline ? `inline styles` : `import styles`;
+    type = inline ? `inline styles` : `import styles in`;
   } else if (inline) {
     type = `inline`;
   }
@@ -84,11 +83,10 @@ const renderAssets = (item) => {
     }
 
     for (let { inline, chunkFile, assetFile } of item.chunks) {
+      li = isSingleChunk ? '->' : '';
       if (inline) {
-        li = isSingleChunk ? '~>' : '~';
         str += `${li.padStart(padLen)} ${gray(path.basename(chunkFile))} ${yellow`(inline)`}\n`;
       } else {
-        li = isSingleChunk ? '->' : '-';
         str += `${li.padStart(padLen)} ${assetFile}\n`;
       }
     }
@@ -141,7 +139,7 @@ const verbose = () => {
 
     // assets
     if (resources.length > 0) {
-      str += green(`assets:`) + `\n`;
+      str += green`assets:` + `\n`;
     }
 
     for (const item of resources) {
@@ -168,10 +166,11 @@ const verbose = () => {
       }
 
       if (hasImports) {
+        str += `${''.padStart(padLevel1)} ${ansi256(214)`sources:`}\n`;
         for (const importedItem of item.imports) {
           let sourceFile = relativePathForView(importedItem.resource);
 
-          str += `${''.padStart(padLevel1)}` + ` ${cyanBright(sourceFile)}\n`;
+          str += `${''.padStart(padChunks)} ${ansi256(143)(sourceFile)}\n`;
           str += renderAssets(importedItem);
         }
       } else {

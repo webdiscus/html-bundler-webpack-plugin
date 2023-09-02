@@ -184,8 +184,9 @@ describe('inline styles & scripts', () => {
 });
 
 describe('import styles in JavaScript', () => {
-  test('js-import-css', () => compareFiles('js-import-css'));
-  test('js-import-scss', () => compareFiles('js-import-scss'));
+  test('import css in js', () => compareFiles('js-import-css'));
+  test('import css in ts', () => compareFiles('js-import-css-ts'));
+  test('import scss in js', () => compareFiles('js-import-scss'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));
   test('import css deep in js', () => compareFiles('js-import-css-deep'));

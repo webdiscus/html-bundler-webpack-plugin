@@ -673,8 +673,8 @@ class AssetCompiler {
     Collection.addEntry(entry);
 
     for (const module of chunkModules) {
-      const { _bundlerPluginMeta, buildInfo, resource, resourceResolveData } = module;
-      const { isScript, isImportedStyle, isDependencyUrl } = _bundlerPluginMeta || {};
+      const { buildInfo, resource, resourceResolveData } = module;
+      const { isScript, isImportedStyle } = resourceResolveData?._bundlerPluginMeta || {};
       let moduleType = module.type;
 
       if (
