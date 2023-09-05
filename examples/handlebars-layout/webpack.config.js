@@ -34,7 +34,7 @@ module.exports = {
       preprocessor: 'handlebars',
       // define handlebars options
       preprocessorOptions: {
-        //helpers: [path.join(__dirname, 'src/views/helpers')],
+        //helpers: [path.join(__dirname, 'src/views/helpers')], // enable to use own helpers
         partials: ['src/views/pages/', 'src/views/partials/'],
       },
       js: {

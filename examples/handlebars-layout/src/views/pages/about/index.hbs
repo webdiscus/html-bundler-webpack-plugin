@@ -1,16 +1,16 @@
 {{assign title='About' header='About'}}
 
-<!-- define the block with page-specific scripts -->
+{{! define the block with page-specific scripts }}
 {{#partial 'scripts'}}
   <script src="./about.js" defer="defer"></script>
 {{/partial}}
 
-<!-- define the block with page-specific styles -->
+{{! define the block with page-specific styles }}
 {{#partial 'styles'}}
   <link href="./about.scss" rel="stylesheet">
 {{/partial}}
 
-<!-- define block content: include the `home/content.hbs` partial -->
+{{! define block content: include the `home/content.hbs` partial }}
 {{#partial 'content'}}
   {{> about/content}}
 {{/partial}}
@@ -19,5 +19,5 @@
   <p class="custom">About custom block </p>
 {{/partial}}
 
-<!-- extends the layout template with blocks defined above -->
+{{! extends the layout template with blocks defined above }}
 {{> layout}}

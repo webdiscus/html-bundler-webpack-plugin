@@ -275,6 +275,7 @@ class Template {
 
       const source = content.slice(startPos, endPos);
       let type = 'asset';
+      let attrsAll = null;
 
       if (tag === 'script') {
         type = 'script';
@@ -290,8 +291,10 @@ class Template {
         let res = true;
 
         if (filter) {
-          // parse all attributes only when is the filter defined
-          const tagAttrs = this.parseAttrAll(source);
+          // when is the filter defined, parse all attributes once
+          if (!attrsAll) {
+            attrsAll = this.parseAttrAll(source);
+          }
           let value = attrValue.value;
 
           if (Array.isArray(value)) {
@@ -299,8 +302,8 @@ class Template {
             for (let item of value) values.push(item.value);
             value = values;
           }
-          tagAttrs[attribute] = value;
-          res = filter({ tag, attribute, value, attributes: tagAttrs, resourcePath }) !== false;
+          attrsAll[attribute] = value;
+          res = filter({ tag, attribute, value, attributes: attrsAll, resourcePath }) !== false;
         }
         res === true && attrValues.push(attrValue);
       }
@@ -315,6 +318,7 @@ class Template {
         source,
         type,
         attrs: attrValues,
+        attrsAll,
         startPos,
         endPos,
       });

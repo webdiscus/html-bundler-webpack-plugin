@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "2.10.1",
+  "version": "2.11.0",
   "description": "HTML bundler plugin for webpack handles a template as an entry point, extracts CSS and JS from their sources referenced in HTML, supports template engines like Eta, EJS, Handlebars, Nunjucks.",
   "keywords": [
     "html",
@@ -15,6 +15,7 @@
     "nunjucks",
     "eta",
     "hbs",
+    "integrity",
     "style",
     "javascript",
     "css",
@@ -71,7 +72,8 @@
     "liquidjs": ">=10.7.0",
     "mustache": ">=4.2.0",
     "nunjucks": ">=3.2.3",
-    "webpack": ">=5.32.0"
+    "webpack": ">=5.32.0",
+    "webpack-subresource-integrity": ">=5.1.0"
   },
   "peerDependenciesMeta": {
     "ejs": {
@@ -87,6 +89,9 @@
       "optional": true
     },
     "nunjucks": {
+      "optional": true
+    },
+    "webpack-subresource-integrity": {
       "optional": true
     }
   },
@@ -122,6 +127,7 @@
     "typescript": "5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "5.1.4",
-    "webpack-dev-server": "^4.15.1"
+    "webpack-dev-server": "^4.15.1",
+    "webpack-subresource-integrity": "5.1.0"
   }
 }

@@ -308,11 +308,11 @@ class Collection {
   /**
    * Whether the output filename is a template entrypoint.
    *
-   * @param {string} assetFIle The asset output file.
+   * @param {string} assetFile The asset output file.
    * @return {boolean}
    */
-  static isTemplate(assetFIle) {
-    const item = this.data.get(assetFIle);
+  static isTemplate(assetFile) {
+    const item = this.data.get(assetFile);
     return (item && item.entry.isTemplate) === true;
   }
 

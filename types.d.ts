@@ -35,6 +35,7 @@ declare namespace HtmlBundlerPlugin {
     minify?: 'auto' | boolean | MinifyOptions;
     minifyOptions?: MinifyOptions;
     extractComments?: boolean;
+    integrity?: 'auto' | boolean;
     watchFiles?: WatchFiles;
     hotUpdate?: boolean;
     verbose?: 'auto' | boolean;

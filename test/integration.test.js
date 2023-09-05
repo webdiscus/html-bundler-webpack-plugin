@@ -234,8 +234,6 @@ describe('import styles in JavaScript', () => {
   //test('js-import-css-debug-watch', () => compareFiles('js-import-css-debug-watch'));
 });
 
-// TODO: implement entryId via the query instead of layer to split all modules in separate files,
-//  currently modules are grouped by layer, that is not optimal
 describe('split chunks', () => {
   test('extract css and js w/o runtime code of css-loader', () => compareFiles('split-chunk-css-js'));
   test('import nested JS files', () => compareFiles('split-chunk-js-many-prod'));
@@ -265,8 +263,17 @@ describe('optimization', () => {
     compareFiles('optimization-inline-imported-css-inline-source-map'));
 });
 
+describe('entry', () => {
+  test('css', () => compareFiles('entry-css-single'));
+  // TODO: implement extracting form entry as array with many files
+  //test('js and css in the same entry name', () => compareFiles('entry-js-css'));
+});
+
 describe('special cases', () => {
-  test('extract-css-from-entry', () => compareFiles('extract-css-from-entry'));
+  test('integrity attr in script and link tags', () => compareFiles('integrity'));
+  test('integrity dynamic chunks', () => compareFiles('integrity-dynamic-chunks'));
+  test('integrity split chunks', () => compareFiles('integrity-split-chunks'));
+
   test('resolve values with invalid syntax', () => compareFiles('resolve-values-invalid-syntax'));
   test('resolve assets without extension', () => compareFiles('resolve-assets-without-ext'));
   test('resolve assets in entries with a query', () => compareFiles('resolve-in-entry-with-query'));

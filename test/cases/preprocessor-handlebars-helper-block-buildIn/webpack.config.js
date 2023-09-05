@@ -13,10 +13,8 @@ const config = {
           import: './src/views/pages/home/index.hbs',
           data: { title: 'Homepage' },
         },
-        about: {
-          import: './src/views/pages/about/index.hbs',
-          data: { title: 'About' },
-        },
+        // test: the `title` is defined using the `assign` helper
+        about: './src/views/pages/about/index.hbs',
       },
       preprocessor: 'handlebars',
       preprocessorOptions: {

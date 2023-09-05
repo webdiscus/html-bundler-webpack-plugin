@@ -2,14 +2,14 @@
 <html>
 <head>
   <title>{{ title }}</title>
-  <!-- reference to source image -->
+  {{! reference to source image }}
   <link href="@images/favicon.png" rel="shortcut icon" type="image/png">
 
-  <!-- common used source styles and scripts -->
+  {{! common used source styles and scripts }}
   <link href="@styles/styles.scss" rel="stylesheet">
   <script src="@scripts/main.js" defer="defer"></script>
 
-  <!-- blocks for page-specific styles and scripts -->
+  {{! blocks for page-specific styles and scripts }}
   {{#block 'styles'}}{{/block}}
   {{#block 'scripts'}}{{/block}}
 </head>
@@ -22,11 +22,11 @@
   </nav>
 
   <div class="container">
-    <!-- output content block defined in a parent template -->
+    {{! output content block defined in a parent template }}
     {{#block 'content'}}{{/block}}
   </div>
 
-  <!-- if the block is not defined in a parent template, then output default content -->
+  {{! if the block is not defined in a parent template, then output default content }}
   {{#block 'custom_block'}}<p class="custom">default block content</p>{{/block}}
 
   {{> footer }}

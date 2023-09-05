@@ -1,19 +1,19 @@
 {{assign title='Homepage' header='Home'}}
 
-<!-- define the block with page-specific scripts -->
+{{! define the block with page-specific scripts }}
 {{#partial 'scripts'}}
   <script src="./home.js" defer="defer"></script>
 {{/partial}}
 
-<!-- define the block with page-specific styles -->
+{{! define the block with page-specific styles }}
 {{#partial 'styles'}}
   <link href="./home.scss" rel="stylesheet">
 {{/partial}}
 
-<!-- define the block content: include the `home/content.hbs` partial -->
+{{! define the block content: include the `home/content.hbs` partial }}
 {{#partial 'content'}}
   {{> home/content}}
 {{/partial}}
 
-<!-- extends the layout template with blocks defined above -->
+{{! extends the layout template with blocks defined above }}
 {{> layout}}

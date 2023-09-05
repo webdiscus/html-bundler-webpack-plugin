@@ -20,6 +20,7 @@
 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
+This plugin is a simple all-in-one solution for generating HTML containing JS, CSS, images, fonts and other resources, from their source files.
 The plugin allows to use any [template](#template-engine) file as [entry point](#option-entry).
 In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 
@@ -216,6 +217,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [preload](#option-preload) (inject preload link tags)
    - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
    - [extractComments](#option-extract-comments)
+   - [integrity](#option-integrity) (enable [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity))
    - [verbose](#option-verbose)
    - [watchFiles](#option-watch-files)
    - [hotUpdate](#option-hot-update)
@@ -266,6 +268,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Tailwind CSS with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
    - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
    - Extend Handlebars layout with blocks [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-bjtjvc?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars-layout/)
+   - Auto generate integrity hash for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
 
 <a id="features" name="features" href="#features"></a>
 
@@ -277,19 +280,20 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - importing style files in JavaScript
 - resolves source asset files in HTML attributes and in the CSS `url()`
 - generated HTML contains output filenames
-- support the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
+- supports the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
 - `inline CSS` in HTML
 - `inline JavaScript` in HTML
 - `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
 - `inline SVG` as SVG tag in HTML
 - `inline SVG` as `utf-8` data-URL in CSS
 - auto generation of `<link rel="preload">` to preload assets
-- support the `auto` publicPath
+- supports the `auto` publicPath
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
 - supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
-- support for both `async` and `sync` preprocessor
+- supports both `async` and `sync` preprocessor
 - auto processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
+- supports [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-subresource-integrity) and include the [integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) to `link` and `script` tags
 - [minification](#option-minify) of generated HTML
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
@@ -385,7 +389,7 @@ module.exports = {
       entry: {
         // define templates here
         index: {
-          // => dist/index.html (key is output filename w/o '.html')
+          // => dist/index.html
           import: 'src/views/home.html', // template file
           data: { title: 'Homepage', name: 'Heisenberg' }, // pass variables into template
         },
@@ -1456,7 +1460,7 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
 
 ### `minify`
 
-Type: `Object|string|boolean` Default: `false`
+Type: `'auto'|boolean|Object` Default: `false`
 
 For minification generated HTML is used the [html-minifier-terser](https://github.com/terser/html-minifier-terser) with the following `default options`:
 
@@ -1505,6 +1509,91 @@ When using `splitChunks` optimization for node modules containing comments,
 Webpack extracts those comments into a separate text file.
 By default, the plugin doesn't create such unwanted text files.
 But if you want to extract files like `*.LICENSE.txt`, set this option to `true`.
+
+#### [↑ back to contents](#contents)
+
+<a id="option-integrity" name="option-integrity" href="#integrity"></a>
+
+### `integrity`
+
+Type: `'auto'|boolean` Default: `'auto'`
+
+Possible values:
+
+- `auto` - enable in `production` mode, disable in `development` mode
+- `true` - enable
+- `false` - disable
+
+The `html-bundler-webpack-plugin` automatically supports the [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-subresource-integrity) plugin
+if it is installed.
+To include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
+in `link` and `script` tags, you need to install the `webpack-subresource-integrity` plugin:
+
+```
+npm install -D webpack-subresource-integrity
+```
+
+Add this plugin in the Webpack config:
+
+```js
+const { SubresourceIntegrityPlugin } = require('webpack-subresource-integrity');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  output: {
+    // the following setting is required for SRI to work:
+    crossOriginLoading: 'anonymous',
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/views/index.html', // template where are included link and script tags
+      },
+      integrity: 'auto', // can be omitted, because the default value is 'auto'
+    }),
+    new SubresourceIntegrityPlugin(),
+  ],
+};
+```
+
+The source HTML template _src/views/index.html_:
+
+```html
+<html>
+  <head>
+    <!-- include source style -->
+    <link href="./style.scss" rel="stylesheet" />
+    <!-- include source script -->
+    <script src="./main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
+
+The generated HTML contains the integrity hashs:
+
+```html
+<html>
+  <head>
+    <link
+      href="assets/css/style.css"
+      rel="stylesheet"
+      integrity="sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E"
+      crossorigin="anonymous" />
+
+    <script
+      src="assets/js/main.js"
+      defer="defer"
+      integrity="sha384-E4IoJ3Xutt/6tUVDjvtPwDTTlCfU5oG199UoqWShFCNx6mb4tdpcPLu7sLzNc8Pe"
+      crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+  </body>
+</html>
+```
 
 #### [↑ back to contents](#contents)
 
@@ -1601,7 +1690,7 @@ If you already have a js file in html, this setting should be `false` as Webpack
 
 ### `verbose`
 
-Type: `string|boolean` Default: `false`
+Type: `'auto'|boolean` Default: `false`
 
 The verbose option allows displaying in the console the processing information about extracted resources.
 All resources are grouped by their issuers.
@@ -3221,7 +3310,7 @@ The template _index.html_ where is loaded the source style:
 <html>
   <head>
     <title>Demo</title>
-    <!-- load source style -->
+    <!-- include source style -->
     <link href="./styles.scss" rel="stylesheet" />
   </head>
   <body>
@@ -3749,10 +3838,10 @@ _src/views/pages/home/index.html_
 
 ```html
 {% extends "src/views/layouts/default.html" %} {% block styles %}
-<!-- load source style -->
+<!-- include source style -->
 <link href="./home.scss" rel="stylesheet" />
 {% endblock %} {% block scripts %}
-<!-- load source script -->
+<!-- include source script -->
 <script src="./home.js" defer="defer"></script>
 {% endblock %} {% block content %}
 <h1>{{ filmTitle }}</h1>
@@ -4128,9 +4217,9 @@ If you want save module styles separate from your styles, then load them in a te
 <html>
   <head>
     <title>Home</title>
-    <!-- load module styles separately -->
+    <!-- include module styles -->
     <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!-- load your styles separately -->
+    <!-- include your styles -->
     <link href="./styles.scss" rel="stylesheet" />
   </head>
   <body>
@@ -4163,7 +4252,7 @@ There is a template used the `main.js` _./src/views/index.html_:
 ```html
 <html>
   <head>
-    <!-- load source script -->
+    <!-- include source script -->
     <script src="./main.js" defer="defer"></script>
   </head>
   <body>
@@ -4246,8 +4335,6 @@ dist/js/app-5fa74877.1aceb2db.js
 <a id="sponsors" name="sponsors" href="#sponsors"></a>
 
 ## Sponsors
-
-Support this project by becoming a sponsor!
 
 Thank you to our sponsors!
 

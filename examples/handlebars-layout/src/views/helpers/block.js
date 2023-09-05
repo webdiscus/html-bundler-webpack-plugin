@@ -1,7 +1,5 @@
 'use strict';
 
-const Handlebars = require('handlebars');
-
 /** @typedef {import('handlebars').HelperOptions} HelperOptions */
 
 /**
@@ -17,13 +15,7 @@ const Handlebars = require('handlebars');
  * @return {string}
  */
 module.exports = function (name, options) {
-  const context = this;
-  let partial = context._blocks[name] || options.fn;
+  const partial = this._blocks[name] || options.fn;
 
-  if (typeof partial === 'string') {
-    partial = Handlebars.compile(partial);
-    context._blocks[name] = partial;
-  }
-
-  return partial(context, { data: options.hash });
+  return partial(this, { data: options.hash });
 };

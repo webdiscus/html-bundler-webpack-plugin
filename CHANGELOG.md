@@ -1,5 +1,10 @@
 # Change log
 
+## 2.11.0 (2023-09-05)
+
+- feat: add support for the `webpack-subresource-integrity` plugin to include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
+- feat: add the `integrity` option to enable/disable the support for `webpack-subresource-integrity` plugin
+
 ## 2.10.1 (2023-09-02)
 
 - fix: avoid generation of empty css files when source styles are imported in TS file
@@ -16,7 +21,7 @@
   You can try it, but if that doesn't work, just use the default `cache.type` as `memory`.
 - feat: remove the `json5` dependency, take only the parser code from this package, remove unused code from it and optimize it for use with the plugin
 - fix: resolve output asset filenames without the needless index `.1`, like `index.1.js`, when used the same base filename for template and js files.
-  For example, if source files with the same base name `src/index.html` and `src/index.js` were used, then `dist/index.html` and `dist/index.1.js` were created,
+  For example, if the source files with the same base name `src/index.html` and `src/index.js` were used, then `dist/index.html` and `dist/index.1.js` were created,
   because the entry name used for compilation must be unique. This case is fixed.
 - test: add tests for features and fixes
 - test: remove unused code in test suits

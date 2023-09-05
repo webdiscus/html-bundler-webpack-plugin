@@ -25,6 +25,7 @@ const AssetResource = require('./AssetResource');
 const AssetInline = require('./AssetInline');
 const AssetTrash = require('./AssetTrash');
 const VMScript = require('./VMScript');
+const Integrity = require('./Extras/Integrity');
 
 const { compilationName, verbose } = require('./Messages/Info');
 
@@ -1170,6 +1171,16 @@ class AssetCompiler {
       // allow watching for changes (add/remove/rename) of linked/missing scripts for static entry too.
       if (Options.isDynamicEntry()) {
         watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
+      }
+    } else {
+      // build mode
+      if (Options.isIntegrityEnabled()) {
+        Integrity.apply({
+          fs: this.fs,
+          stats,
+          Collection,
+          Options,
+        });
       }
     }
 

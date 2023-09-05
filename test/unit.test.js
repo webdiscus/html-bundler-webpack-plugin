@@ -265,6 +265,7 @@ describe('parse tags unit tests', () => {
             endPos: 18,
           },
         ],
+        attrsAll: null,
       },
     ];
     return expect(received).toEqual(expected);

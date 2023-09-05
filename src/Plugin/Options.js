@@ -21,6 +21,7 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
  *  This option enables/disable storing of *.LICENSE.txt file.
  *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
+ * @property {boolean} integrity Enable/disable support for `webpack-subresource-integrity` plugin.
  * @property {Object|string} entry The entry points.
  *  The key is route to output file w/o an extension, value is a template source file.
  *  When the entry is a string, this should be a relative or absolute path to pages.
@@ -187,6 +188,8 @@ class Options {
       js.outputPath = options.output.path;
     }
 
+    this.options.integrity = this.toBool(options.integrity, true, 'auto');
+
     // normalize minify options
     if (this.options.minify != null && typeof this.options.minify === 'object') {
       this.options.minifyOptions = this.options.minify;
@@ -202,7 +205,7 @@ class Options {
   static initWatchMode() {
     const { publicPath } = this.webpackOptions.output;
     if (publicPath == null || publicPath === 'auto') {
-      // By using watch/serve browsers not support an automatic publicPath in hot update script injected into inlined JS,
+      // Using watch/serve, browsers not support an automatic publicPath in the 'hot update' script injected into inlined JS,
       // the output.publicPath must be an empty string.
       this.webpackOptions.output.publicPath = '';
     }
@@ -267,6 +270,10 @@ class Options {
 
   static isExtractComments() {
     return this.options.extractComments === true;
+  }
+
+  static isIntegrityEnabled() {
+    return this.options.integrity !== false;
   }
 
   static isStyle(resource) {
@@ -366,11 +373,11 @@ class Options {
    *
    * @param {boolean|string|undefined} value The value one of the values: true, false, 'auto'.
    * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
-   * @param {boolean} defaultValue Returns default value when value is undefined.
+   * @param {boolean|string} defaultValue Returns default value when value is undefined.
    * @return {boolean}
    */
   static toBool(value, autoValue, defaultValue) {
-    if (value == null) return defaultValue;
+    if (value == null) value = defaultValue;
     // note: if a parameter is defined without a value or value is empty, then the value is true
     if (value === '' || value === 'true') return true;
     if (value === 'false') return false;
