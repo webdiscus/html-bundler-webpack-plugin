@@ -3,6 +3,8 @@ const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const LoaderOptions = require('../Loader/Options');
 const { postprocessException, afterProcessException } = require('./Messages/Exception');
 
+const pluginName = require('../config');
+
 /**
  * @typedef {Object} PluginOptions
  * @property {RegExp} test The search for a match of entry files.
@@ -21,7 +23,7 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
  *  This option enables/disable storing of *.LICENSE.txt file.
  *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
- * @property {boolean} integrity Enable/disable support for `webpack-subresource-integrity` plugin.
+ * @property {'auto'|boolean|IntegrityOptions} integrity Enable/disable the integrity attribute.
  * @property {Object|string} entry The entry points.
  *  The key is route to output file w/o an extension, value is a template source file.
  *  When the entry is a string, this should be a relative or absolute path to pages.
@@ -53,6 +55,7 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
  */
 
 class Options {
+  static pluginName = pluginName;
   /** @type {PluginOptions} */
   static options = {};
   /** @type {AssetEntry} */
@@ -188,7 +191,23 @@ class Options {
       js.outputPath = options.output.path;
     }
 
-    this.options.integrity = this.toBool(options.integrity, true, 'auto');
+    // normalize integrity options
+    const integrity =
+      this.options.integrity == null
+        ? {}
+        : typeof this.options.integrity === 'object'
+        ? { enabled: 'auto', ...this.options.integrity }
+        : { enabled: this.options.integrity };
+
+    integrity.enabled = this.toBool(integrity.enabled, true, false);
+    if (this.options.integrity?.hashFunctions != null) {
+      if (!Array.isArray(this.options.integrity.hashFunctions)) {
+        integrity.hashFunctions = [this.options.integrity.hashFunctions];
+      }
+    } else {
+      integrity.hashFunctions = ['sha384'];
+    }
+    this.options.integrity = integrity;
 
     // normalize minify options
     if (this.options.minify != null && typeof this.options.minify === 'object') {
@@ -273,7 +292,7 @@ class Options {
   }
 
   static isIntegrityEnabled() {
-    return this.options.integrity !== false;
+    return this.options.integrity.enabled !== false;
   }
 
   static isStyle(resource) {
@@ -415,6 +434,10 @@ class Options {
 
   static getPreload() {
     return this.options.preload == null ? false : this.options.preload;
+  }
+
+  static getIntegrity() {
+    return this.options.integrity;
   }
 
   static getStyleOptions(sourceFile) {

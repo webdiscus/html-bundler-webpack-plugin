@@ -1,1 +1,3 @@
-console.log('>> main');
+import './lib';
+
+console.log('>> main bootstrap');

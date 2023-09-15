@@ -9,6 +9,9 @@ const Preload = require('./Preload');
 const Dependency = require('../Loader/Dependency');
 const { noHeadException } = require('./Messages/Exception');
 
+const Integrity = require('./Extras/Integrity');
+const { HtmlParser, comparePos } = require('../Common/HtmlParser');
+
 /** @typedef {import('webpack').Compilation} Compilation */
 
 /**
@@ -804,6 +807,7 @@ class Collection {
     const { RawSource } = compilation.compiler.webpack.sources;
     const LF = Options.getLF();
     const hasCallback = typeof callback === 'function';
+    const isIntegrity = Options.isIntegrityEnabled();
 
     this.#prepareScriptData();
 
@@ -817,6 +821,9 @@ class Collection {
       const importedStyles = [];
       let hasInlineSvg = false;
       let content = rawSource.source();
+
+      const parseOptions = new Map();
+      const assetIntegrity = new Map();
 
       for (const asset of resources) {
         const { type, inline, imports, resource } = asset;
@@ -833,8 +840,44 @@ class Collection {
             } else if (inline) {
               content = this.#inlineStyle(content, resource, asset, LF) || content;
             }
+
+            // 1.1 compute CSS integrity
+            if (isIntegrity && !inline) {
+              const assetContent = compilation.assets[asset.assetFile].source();
+              asset.integrity = Integrity.getIntegrity(assetContent);
+              assetIntegrity.set(asset.assetFile, asset.integrity);
+
+              if (!parseOptions.has(type)) {
+                parseOptions.set(type, {
+                  tag: 'link',
+                  attributes: ['href'],
+                  filter: ({ attribute, attributes }) =>
+                    !attributes.hasOwnProperty('integrity') && attribute === 'href' && attributes.rel === 'stylesheet',
+                });
+              }
+            }
             break;
           case this.type.script:
+            // 1.2 compute JS integrity
+            if (isIntegrity) {
+              for (const chunk of asset.chunks) {
+                if (!chunk.inline) {
+                  const assetContent = compilation.assets[chunk.chunkFile].source();
+                  chunk.integrity = Integrity.getIntegrity(assetContent);
+                  assetIntegrity.set(chunk.chunkFile, chunk.integrity);
+
+                  if (!parseOptions.has(type)) {
+                    parseOptions.set(type, {
+                      tag: 'script',
+                      attributes: ['src'],
+                      filter: ({ attribute, attributes }) =>
+                        !attributes.hasOwnProperty('integrity') && attribute === 'src',
+                    });
+                  }
+                }
+              }
+            }
+
             content = this.#bindScript(content, resource, asset, LF) || content;
             break;
         }
@@ -854,6 +897,43 @@ class Collection {
 
       if (hasCallback) {
         content = callback(content, entry) || content;
+      }
+
+      // inject integrity
+      if (isIntegrity) {
+        // 2. parse generated html for `link` and `script` tags
+        const parsedResults = [];
+
+        for (const opts of parseOptions.values()) {
+          parsedResults.push(...HtmlParser.parseTag(content, opts));
+        }
+        parsedResults.sort(comparePos);
+
+        // 3. include the integrity attributes in the parsed tags
+        let pos = 0;
+        let output = '';
+
+        for (const { tag, attrs, attrsAll, startPos, endPos } of parsedResults) {
+          if (!attrsAll || attrs.length < 1) continue;
+
+          const assetFile = attrsAll.href || attrsAll.src;
+          const integrity = assetIntegrity.get(assetFile);
+
+          if (integrity) {
+            attrsAll.integrity = integrity;
+            attrsAll.crossorigin = Options.webpackOptions.output.crossOriginLoading || 'anonymous';
+
+            let attrsStr = '';
+            for (const attrName in attrsAll) {
+              attrsStr += ` ${attrName}="${attrsAll[attrName]}"`;
+            }
+
+            output += content.slice(pos, startPos) + `<${tag}${attrsStr}>`;
+            pos = endPos;
+          }
+        }
+        output += content.slice(pos);
+        content = output;
       }
 
       compilation.assets[entryFilename] = new RawSource(content);

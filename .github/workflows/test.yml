@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        node-version: [ 14, 16, 18, 20 ]
+        node-version: [16, 18, 20]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -40,6 +40,6 @@ jobs:
         with:
           flags: integration
           token: ${{ secrets.CODECOV_TOKEN }}
-
 # Note: test on Windows is impossible,
-# because test assets becomes diff filenames with content hash.
+# because test assets become diff filenames with content hash,
+# the same problem with node 14

@@ -186,7 +186,7 @@ class AssetCompiler {
     if (!Options.isEnabled()) return;
 
     const { webpack } = compiler;
-    const { NormalModule } = webpack;
+    const { NormalModule, Compilation } = webpack;
 
     this.fs = compiler.inputFileSystem.fileSystem;
     this.webpack = webpack;
@@ -197,6 +197,9 @@ class AssetCompiler {
     AssetResource.init(compiler);
 
     this.initialize(compiler);
+
+    // initialize integrity plugin
+    this.integrityPlugin = new Integrity(Options);
 
     // clear caches by tests for webpack serve/watch
     AssetEntry.clear();
@@ -255,6 +258,7 @@ class AssetCompiler {
       this.compilation = compilation;
 
       AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, collection: Collection });
+      AssetTrash.init(compilation);
       CssExtractModule.init(compilation);
       Collection.init(compilation);
 
@@ -281,8 +285,21 @@ class AssetCompiler {
       // render source code of modules
       compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
 
+      // Notes:
+      // - the TerserPlugin creates a `.LICENSE.txt` file at the PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage
+      // - the integrity hash will be created at the next stage, therefore,
+      //   the license file and the license banner must be removed before PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE
+      compilation.hooks.processAssets.tap(
+        { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1 },
+        (assets) => {
+          if (!Options.isExtractComments()) {
+            AssetTrash.removeComments();
+          }
+        }
+      );
+
       // after render module's sources
-      // note:
+      // Notes:
       // - only here is possible to modify an asset content via async function
       // - `Infinity` ensures that the process will be run after all optimizations
       compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) => {
@@ -298,7 +315,7 @@ class AssetCompiler {
       });
 
       // postprocess for the content of assets
-      compilation.hooks.afterProcessAssets.tap(pluginName, (assets) => {
+      compilation.hooks.afterProcessAssets.tap({ name: pluginName, stage: +1 }, (assets) => {
         // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
         try {
           this.afterProcessAssets(assets);
@@ -308,12 +325,12 @@ class AssetCompiler {
       });
     });
 
-    // after this compilation
-    compiler.hooks.afterCompile.tap(pluginName, (compilation, callback) => {});
-
     compiler.hooks.done.tap(pluginName, this.done);
     compiler.hooks.shutdown.tap(pluginName, this.shutdown);
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
+
+    // run integrity plugin
+    if (Options.isIntegrityEnabled()) this.integrityPlugin.apply(compiler);
   }
 
   /* istanbul ignore next: this method is called in watch mode after changes */
@@ -1033,9 +1050,10 @@ class AssetCompiler {
   /**
    * Called after the processAssets hook had finished without an error.
    *
-   * @note:
+   * Note:
    * This stage has the final hashed output js filename.
    * This is the last stage where is able to modify compiled assets.
+   * But you should not modify a JS file, because the integrity hash is already computed.
    *
    * @param {Object} assets
    */
@@ -1045,10 +1063,6 @@ class AssetCompiler {
     if (Object.keys(assets).length < 1) {
       // display original error when occur the resolveException
       return;
-    }
-
-    if (!Options.isExtractComments()) {
-      AssetTrash.removeComments(compilation);
     }
 
     /**
@@ -1074,7 +1088,7 @@ class AssetCompiler {
     // }
 
     // remove all unused assets from compilation
-    AssetTrash.clearCompilation(compilation);
+    AssetTrash.clearCompilation();
   }
 
   /**
@@ -1171,16 +1185,6 @@ class AssetCompiler {
       // allow watching for changes (add/remove/rename) of linked/missing scripts for static entry too.
       if (Options.isDynamicEntry()) {
         watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
-      }
-    } else {
-      // build mode
-      if (Options.isIntegrityEnabled()) {
-        Integrity.apply({
-          fs: this.fs,
-          stats,
-          Collection,
-          Options,
-        });
       }
     }
 

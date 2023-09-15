@@ -1,3 +1,4 @@
 // test the `js.chunkFilename` option using the dynamic import
-import('./dyn-module');
+import('./chunk');
+
 console.log('>> main.js');

@@ -4,7 +4,7 @@ module.exports = {
   stats: 'errors-warnings',
 
   output: {
-    // clean the output directory before emit
+    // clean the output directory before emitting
     clean: true,
 
     //asyncChunks: false,

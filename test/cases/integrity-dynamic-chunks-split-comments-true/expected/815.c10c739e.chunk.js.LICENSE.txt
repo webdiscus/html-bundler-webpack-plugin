@@ -1,0 +1,11 @@
+/*!
+ * Test fixture - JS module Lorem (https://github.com/webdiscus/test-fixtures-lorem)
+ * Copyleft 2022 @test-fixtures/lorem
+ * Licensed under ISC (https://github.com/webdiscus/test-fixtures-lorem/blob/master/LICENSE)
+ */
+
+/*!
+ * Test fixture - JS module with dependency (https://github.com/webdiscus/test-fixtures-js)
+ * Copyleft 2022 @test-fixtures/js
+ * Licensed under ISC (https://github.com/webdiscus/test-fixtures-js/blob/master/LICENSE)
+ */

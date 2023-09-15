@@ -62,7 +62,7 @@ describe('plugin options', () => {
   test('js.filename undefined', () => compareFiles('option-js-filename-undefined'));
   test('js.filename notset', () => compareFiles('option-js-filename-notset'));
   test('js.chunkFilename', () => compareFiles('option-js-chunkFilename'));
-  test('js.chunkFilename notset', () => compareFiles('option-js-chunkFilename-notset'));
+  test('js.chunkFilename not set', () => compareFiles('option-js-chunkFilename-notset'));
   test('js.chunkFilename as function', () => compareFiles('option-js-chunkFilename-function'));
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
@@ -96,6 +96,9 @@ describe('plugin options', () => {
 
   test('preprocessor', () => compareFiles('option-preprocessor'));
   test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+
+  test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
+  test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
@@ -270,10 +273,6 @@ describe('entry', () => {
 });
 
 describe('special cases', () => {
-  test('integrity attr in script and link tags', () => compareFiles('integrity'));
-  test('integrity dynamic chunks', () => compareFiles('integrity-dynamic-chunks'));
-  test('integrity split chunks', () => compareFiles('integrity-split-chunks'));
-
   test('resolve values with invalid syntax', () => compareFiles('resolve-values-invalid-syntax'));
   test('resolve assets without extension', () => compareFiles('resolve-assets-without-ext'));
   test('resolve assets in entries with a query', () => compareFiles('resolve-in-entry-with-query'));
@@ -292,6 +291,44 @@ describe('special cases', () => {
 
   // for debugging
   // test('resolve hmr file', () => watchCompareFileListAndContent(PATHS, 'resolve-hmr-file'));
+});
+
+describe('integrity', () => {
+  // TODO: implement and add tests for preload
+
+  test('attr in script and link tags', () => compareFiles('integrity'));
+  test('split chunks', () => compareFiles('integrity-split-chunks'));
+  test('import css', () => compareFiles('integrity-import-css-in-js'));
+  test('import css, sourceMap', () => compareFiles('integrity-import-css-in-js-source-map'));
+});
+
+describe('integrity, dynamic chunks', () => {
+  test('import chunk', () => compareFiles('integrity-dynamic-chunks'));
+  test('nested', () => compareFiles('integrity-dynamic-chunks-nested'));
+  test('nested cycles', () => compareFiles('integrity-dynamic-chunks-cycles'));
+  test('multiple parents', () => compareFiles('integrity-dynamic-chunks-multiple-parents'));
+  test('mutually dependencies', () => compareFiles('integrity-dynamic-chunks-mutually-dependencies'));
+
+  test('import assets in chunk, dev', () => compareFiles('integrity-dynamic-chunks-import-assets-dev'));
+  test('import assets in chunk, prod', () => compareFiles('integrity-dynamic-chunks-import-assets-prod'));
+
+  test('module, delete comments', () => compareFiles('integrity-dynamic-chunks-comments-false'));
+  test('module, extract comments', () => compareFiles('integrity-dynamic-chunks-comments-true'));
+
+  test('named chunkIds, delete comments', () => compareFiles('integrity-dynamic-chunks-named-ids-comments-false'));
+  test('named chunkIds, extract comments', () => compareFiles('integrity-dynamic-chunks-named-ids-comments-true'));
+
+  test('splitChunks, delete comments', () => compareFiles('integrity-dynamic-chunks-split-comments-false'));
+  test('splitChunks, extract comments', () => compareFiles('integrity-dynamic-chunks-split-comments-true'));
+
+  test('runtime', () => compareFiles('integrity-dynamic-chunks-runtime'));
+  test('deterministic', () => compareFiles('integrity-dynamic-chunks-ids-deterministic'));
+
+  test('sourceMap, delete comments', () => compareFiles('integrity-dynamic-chunks-sourceMap-comments-false'));
+  test('sourceMap, extract comments', () => compareFiles('integrity-dynamic-chunks-sourceMap-comments-true'));
+
+  // TODO: whether it make a sense?
+  //test('import css in dynamic chunk', () => compareFiles('integrity-import-css-in-dynamic-chunk'));
 });
 
 describe('extras: responsive images', () => {

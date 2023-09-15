@@ -3,8 +3,7 @@
 Use the [HTML Builder Plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) for Webpack
 to compile and bundle source Sass and JavaScript in HTML.
 
-This is the example how to include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) into `link` and `script` tags
-using the [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-subresource-integrity) plugin.
+This is the example how to include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) into `link` and `script` tags.
 
 ## View and edit in browser
 
@@ -16,11 +15,12 @@ using the [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-
 git clone https://github.com/webdiscus/html-bundler-webpack-plugin.git
 cd examples/integrity/
 npm install
-npm run build
+npm run app
 ```
 
 Open generated `dist/index.html`. The `link` and `script` tags will contain the `integrity` attribute with a hash.
 
-## Note
-
-The integrity hash is generated only in `build` mode. By `watch` or `serve` mode, it will not be generated.
+> **Note**
+>
+> The integrity hash is generated when using webpack `build` in the `production` mode.
+> When using webpack `watch` or `serve`, no hashes will be generated because it doesn't make sense.

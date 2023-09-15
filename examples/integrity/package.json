@@ -5,20 +5,22 @@
   "repository": "webdiscus/html-bundler-webpack-plugin",
   "license": "ISC",
   "stackblitz": {
-    "startCommand": "npm run build"
+    "startCommand": "npm run app"
   },
   "scripts": {
     "start": "webpack serve",
-    "build": "webpack build --mode=production"
+    "build": "webpack build --mode=production",
+    "app": "npm run build && http-server dist -og"
   },
   "devDependencies": {
+    "bootstrap": "^5.3.1",
     "css-loader": "^6.8.1",
-    "html-bundler-webpack-plugin": "^2.11.0",
+    "http-server": "^14.1.1",
+    "html-bundler-webpack-plugin": "^2.12.0",
     "sass": "^1.66.1",
     "sass-loader": "^13.3.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1",
-    "webpack-subresource-integrity": "5.1.0"
+    "webpack-dev-server": "^4.15.1"
   }
 }

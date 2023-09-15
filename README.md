@@ -21,7 +21,7 @@
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
 This plugin is a simple all-in-one solution for generating HTML containing JS, CSS, images, fonts and other resources, from their source files.
-The plugin allows to use any [template](#template-engine) file as [entry point](#option-entry).
+The plugin allows to use [any template](#template-engine) file as [entry point](#option-entry).
 In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 
 <table align="center">
@@ -78,6 +78,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v2
 
+- **NEW** added support the [integrity](#option-integrity).
 - **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
 - **NEW:** added importing style files in JavaScript.
 - **POTENTIAL BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
@@ -1503,12 +1504,15 @@ When the [minify](#option-minify) option is set to `auto`, you can configure min
 
 Type: `boolean` Default: `false`
 
-Enable/disable extracting comments from source scripts to the `*.LICENSE.txt` file.
+Whether comments shall be extracted to a separate file like the `*.LICENSE.txt`.
 
-When using `splitChunks` optimization for node modules containing comments,
-Webpack extracts those comments into a separate text file.
-By default, the plugin doesn't create such unwanted text files.
-But if you want to extract files like `*.LICENSE.txt`, set this option to `true`.
+By default, the built-in Webpack plugin `TerserWebpackPlugin` extracts the license banner from node modules into a separate `*.LICENSE.txt` file,
+although this is usually not necessary.
+
+Therefore, by default, the Bundler Plugin does not allow extracting comments.
+This has the same effect as explicitly defining the `extractComments: false` option of the TerserWebpackPlugin.
+
+If you want to allow extraction of `*.LICENSE.txt` files, set this option to `true`.
 
 #### [↑ back to contents](#contents)
 
@@ -1516,32 +1520,64 @@ But if you want to extract files like `*.LICENSE.txt`, set this option to `true`
 
 ### `integrity`
 
-Type: `'auto'|boolean` Default: `'auto'`
+Type: `'auto'|boolean|IntegrityOptions` Default: `false`
 
-Possible values:
+The [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) is a cryptographic value of the integrity attribute that used by a browser to verify that the content of an asset has not been manipulated.
+If the asset has been manipulated, the browser will never load it.
 
-- `auto` - enable in `production` mode, disable in `development` mode
+The Bundler Plugin adds the integrity attribute to the `link` and `script` tags when generating HTML.
+
+> No additional plugins required. This plugin computes integrity hashes itself.
+
+```ts
+type IntegrityOptions = {
+  enabled?: 'auto' | boolean;
+  hashFunctions?: HashFunctions | Array<HashFunctions>;
+};
+type HashFunctions = 'sha256' | 'sha384' | 'sha512';
+```
+
+If the `integrity` option is an object, then default options are:
+
+```js
+{
+  enabled: 'auto',
+  hashFunctions: 'sha384',
+}
+```
+
+> **Note**
+>
+> The [W3C recommends](https://www.w3.org/TR/2016/REC-SRI-20160623/#hash-collision-attacks) using the `SHA-384` hash algorithm.
+
+The `integrity` or `integrity.enabled` has one of values:
+
+- `auto` - enable the integrity when Webpack mode is `production` and disable it when mode is `development`
 - `true` - enable
 - `false` - disable
 
-The `html-bundler-webpack-plugin` automatically supports the [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-subresource-integrity) plugin
-if it is installed.
-To include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)
-in `link` and `script` tags, you need to install the `webpack-subresource-integrity` plugin:
+The `hashFunctions` option can be a string to specify a single hash function name,
+or an array to specify multiple hash functions for compatibility with many browsers.
 
-```
-npm install -D webpack-subresource-integrity
-```
+> **Warning**
+>
+> When used the `integrity` option:
+>
+> - the [`js.filename`](#option-js) and [`css.filename`](#option-css) options must contain the `contenthash`;
+> - the [`output.crossOriginLoading`](https://webpack.js.org/configuration/output/#outputcrossoriginloading) Webpack option must be specified;
+> - the [`optimization.realContentHash`](https://webpack.js.org/configuration/optimization/#optimizationrealcontenthash) Webpack option must be enabled, is enabled by default in production mode only.
+>
+> This requirement is necessary to avoid the case where the browser tries to load a contents of a file from the local cache since the filename has not changed, but the `integrity` value has changed on the server.
+> In this case, the browser will not load the file because the `integrity` of the cached file computed by the browser will not match the `integrity` attribute computed on the server.
 
-Add this plugin in the Webpack config:
+Add the `integrity` option in the Webpack config:
 
 ```js
-const { SubresourceIntegrityPlugin } = require('webpack-subresource-integrity');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
   output: {
-    // the following setting is required for SRI to work:
+    // required for `integrity` to work in the browser
     crossOriginLoading: 'anonymous',
   },
   plugins: [
@@ -1549,9 +1585,14 @@ module.exports = {
       entry: {
         index: 'src/views/index.html', // template where are included link and script tags
       },
-      integrity: 'auto', // can be omitted, because the default value is 'auto'
+      js: {
+        filename: '[name].[contenthash:8].js', // the filename must conttains a contenthash
+      },
+      css: {
+        filename: '[name].[contenthash:8].js', // the filename must conttains a contenthash
+      },
+      integrity: 'auto', // enable in `production`, disable in `development` mode
     }),
-    new SubresourceIntegrityPlugin(),
   ],
 };
 ```
@@ -1572,19 +1613,19 @@ The source HTML template _src/views/index.html_:
 </html>
 ```
 
-The generated HTML contains the integrity hashs:
+The generated HTML contains the integrity hashes:
 
 ```html
 <html>
   <head>
     <link
-      href="assets/css/style.css"
+      href="style.1234abcd.css"
       rel="stylesheet"
       integrity="sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E"
       crossorigin="anonymous" />
 
     <script
-      src="assets/js/main.js"
+      src="main.abcd1234.js"
       defer="defer"
       integrity="sha384-E4IoJ3Xutt/6tUVDjvtPwDTTlCfU5oG199UoqWShFCNx6mb4tdpcPLu7sLzNc8Pe"
       crossorigin="anonymous"></script>

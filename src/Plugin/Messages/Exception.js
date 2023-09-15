@@ -139,6 +139,17 @@ const afterProcessException = (error, file) => {
 };
 
 /**
+ * @param {Error} error
+ * @param {string} file
+ * @throws {Error}
+ */
+const missingCrossOriginForIntegrityException = () => {
+  const message = `When using the ${yellow`'integrity'`} plugin option, must be specified the Webpack option ${yellow`'output.crossOriginLoading'`}.`;
+
+  throw new PluginException(message);
+};
+
+/**
  * @param {string} sourceFile
  * @throws {Error}
  */
@@ -158,5 +169,6 @@ module.exports = {
   executeFunctionException,
   postprocessException,
   afterProcessException,
+  missingCrossOriginForIntegrityException,
   noHeadException,
 };

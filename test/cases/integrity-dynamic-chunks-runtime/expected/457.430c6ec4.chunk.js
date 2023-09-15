@@ -1,0 +1,1 @@
+(self.webpackChunk=self.webpackChunk||[]).push([[457],{457:()=>{console.log(">> chunk")}}]);

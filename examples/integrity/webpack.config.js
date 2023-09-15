@@ -1,5 +1,4 @@
 const path = require('path');
-const { SubresourceIntegrityPlugin } = require('webpack-subresource-integrity');
 //const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 const HtmlBundlerPlugin = require('../../');
 
@@ -28,8 +27,6 @@ module.exports = {
       },
       integrity: 'auto', // include integrity in production mode only
     }),
-    // this plugin generates the integrity hash
-    new SubresourceIntegrityPlugin(),
   ],
 
   module: {

@@ -1,1 +1,0 @@
-(self.webpackChunk=self.webpackChunk||[]).push([["src_chunk_js"],{457:()=>{console.log(">> chunk file")}}]);

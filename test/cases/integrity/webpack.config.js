@@ -1,6 +1,5 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
-const { SubresourceIntegrityPlugin } = require('webpack-subresource-integrity');
 
 module.exports = {
   //mode: 'development',
@@ -26,8 +25,9 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].bundle.css',
       },
+
+      integrity: true, // test the `true` value
     }),
-    new SubresourceIntegrityPlugin(), // test Subresource Integrity
   ],
 
   module: {

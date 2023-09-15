@@ -5,6 +5,7 @@ import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
 import Snapshot from '../src/Plugin/Snapshot';
 import Template from '../src/Loader/Template';
+import { HtmlParser } from '../src/Common/HtmlParser';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
 import Options from '../src/Plugin/Options';
 import Collection from '../src/Plugin/Collection';
@@ -155,18 +156,20 @@ describe('utils unit tests', () => {
 describe('parse attributes unit tests', () => {
   test('parseAttr without attr', () => {
     const source = '<img alt="apple">';
-    const received = Template.parseAttr(source, 'src');
+    const received = HtmlParser.parseAttr(source, 'src');
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('parseAttr empty value', () => {
     const source = '<img src="">';
-    const received = Template.parseAttr(source, 'src');
+    const received = HtmlParser.parseAttr(source, 'src', 'asset');
     const expected = {
+      type: 'asset',
       attr: 'src',
       startPos: 10,
       endPos: 10,
+      offset: 0,
       value: '',
     };
     return expect(received).toEqual(expected);
@@ -174,11 +177,13 @@ describe('parse attributes unit tests', () => {
 
   test('parseAttr value', () => {
     const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = Template.parseAttr(source, 'src');
+    const received = HtmlParser.parseAttr(source, 'src', 'asset', 0);
     const expected = {
+      type: 'asset',
       attr: 'src',
       startPos: 10,
       endPos: 18,
+      offset: 0,
       value: 'img1.png',
     };
     return expect(received).toEqual(expected);
@@ -186,16 +191,21 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset single value', () => {
     const source = '<source srcset="img1.png">';
-    const received = Template.parseAttr(source, 'srcset');
+    const received = HtmlParser.parseAttr(source, 'srcset', 'asset');
     const expected = {
       attr: 'srcset',
       startPos: 16,
       endPos: 24,
-      value: [
+      offset: 0,
+      value: ['img1.png'],
+      attrs: [
         {
-          startPos: 0,
-          endPos: 8,
+          type: 'asset',
+          attr: 'srcset',
           value: 'img1.png',
+          startPos: 16,
+          endPos: 24,
+          offset: 0,
         },
       ],
     };
@@ -204,15 +214,17 @@ describe('parse attributes unit tests', () => {
 
   test('parseSrcset multi values', () => {
     const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = Template.parseAttr(source, 'srcset');
+    const received = HtmlParser.parseAttr(source, 'srcset');
     const expected = {
       attr: 'srcset',
       startPos: 28,
       endPos: 66,
-      value: [
-        { startPos: 0, endPos: 8, value: 'img1.png' },
-        { startPos: 10, endPos: 18, value: 'img2.png' },
-        { startPos: 25, endPos: 33, value: 'img3.png' },
+      offset: 0,
+      value: ['img1.png', 'img2.png', 'img3.png'],
+      attrs: [
+        { type: 'asset', attr: 'srcset', startPos: 28, endPos: 36, offset: 0, value: 'img1.png' },
+        { type: 'asset', attr: 'srcset', startPos: 38, endPos: 46, offset: 0, value: 'img2.png' },
+        { type: 'asset', attr: 'srcset', startPos: 53, endPos: 61, offset: 0, value: 'img3.png' },
       ],
     };
     return expect(received).toEqual(expected);
@@ -246,10 +258,9 @@ describe('resolve parsed values', () => {
 });
 
 describe('parse tags unit tests', () => {
-  test('parse single tag img', () => {
-    //const html = `<img src="img1.png" alt="logo"><img src="img1.png" srcset="img2.png 100w, img3.png 500w, img4.png 1000w">`;
+  test('single tag img', () => {
     const html = `<img src="img1.png" alt="logo">`;
-    const received = Template.parseTag(html, { tag: 'img', attributes: ['src'] });
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
     const expected = [
       {
         tag: 'img',
@@ -259,10 +270,56 @@ describe('parse tags unit tests', () => {
         endPos: 31,
         attrs: [
           {
+            type: 'asset',
             attr: 'src',
             value: 'img1.png',
             startPos: 10,
             endPos: 18,
+            offset: 0,
+          },
+        ],
+        attrsAll: null,
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag img with srcset', () => {
+    const html = `<div><img src="img1.png" alt="logo" srcset="1.png, 2.png"></div>`;
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['srcset', 'src'] });
+
+    const expected = [
+      {
+        tag: 'img',
+        source: '<img src="img1.png" alt="logo" srcset="1.png, 2.png">',
+        type: 'asset',
+        startPos: 5,
+        endPos: 58,
+        attrs: [
+          {
+            type: 'asset',
+            attr: 'src',
+            value: 'img1.png',
+            startPos: 10,
+            endPos: 18,
+            offset: 5,
+          },
+          {
+            type: 'asset',
+            attr: 'srcset',
+            value: '1.png',
+            startPos: 39,
+            endPos: 44,
+            offset: 5,
+          },
+          {
+            type: 'asset',
+            attr: 'srcset',
+            value: '2.png',
+            startPos: 46,
+            endPos: 51,
+            offset: 5,
           },
         ],
         attrsAll: null,

@@ -1,5 +1,21 @@
 # Change log
 
+## 2.12.0 (2023-09-15)
+
+- feat: remove support for the `webpack-subresource-integrity` plugin,
+  because it works not optimized and contains Webpack deprecated code
+- feat: add support for `subresource integrity` independent of other plugins.
+  It was implemented own very compact, optimized and fast code to generate `integrity` for `link` and `script` tags.
+- feat(changed behavior): the `integrity` option defaults is now `false` (in v2.11.0 was `auto` using `webpack-subresource-integrity` plugin)
+- feat: extend the `integrity` option values with the object to pass additional `hashFunctions` option
+- refactor: optimize code and improve performance for html parsing
+- fix: remove comments of node module imported in dynamic imported chunks
+- fix: correct content hash in the output JS filename when license comment is removed
+- test: add tests for integrity
+- test: remove the test strategy for node 14 on GitHub because the generated hashed test filenames are different from nodes 16, 18, 20
+- chore: update dev dependencies
+- docs: update README
+
 ## 2.11.0 (2023-09-05)
 
 - feat: add support for the `webpack-subresource-integrity` plugin to include the [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity)

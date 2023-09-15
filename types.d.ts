@@ -35,7 +35,7 @@ declare namespace HtmlBundlerPlugin {
     minify?: 'auto' | boolean | MinifyOptions;
     minifyOptions?: MinifyOptions;
     extractComments?: boolean;
-    integrity?: 'auto' | boolean;
+    integrity?: 'auto' | boolean | IntegrityOptions;
     watchFiles?: WatchFiles;
     hotUpdate?: boolean;
     verbose?: 'auto' | boolean;
@@ -116,6 +116,12 @@ type CssOptions = {
   outputPath?: string;
   inline?: 'auto' | boolean;
 };
+
+type IntegrityOptions = {
+  enabled?: 'auto' | boolean;
+  hashFunctions?: HashFunctions | Array<HashFunctions>;
+};
+type HashFunctions = 'sha256' | 'sha384' | 'sha512';
 
 /**
  * Specifies the filename template of output files on disk. You must **not** specify an absolute path here, but the path may contain folders separated by '/'! The specified path is joined with the value of the 'output.path' option to determine the location on disk.

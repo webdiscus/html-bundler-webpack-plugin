@@ -6,6 +6,7 @@ _ignored
 coverage
 coverage.lcov
 node_modules
+!test/fixtures/node_modules
 dist
 test/output/
 test/**/package-lock.json

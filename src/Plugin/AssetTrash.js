@@ -1,50 +1,82 @@
+const path = require('path');
+
 /**
- * AssetTrash singleton.
+ * AssetTrash.
  * Accumulate and remove junk assets from compilation.
  */
+
+/** @typedef {import("webpack").Compilation} Compilation */
+/** @typedef {import('webpack-sources').ConcatSource} ConcatSource */
+
 class AssetTrash {
-  static trash = [];
-  static commentRegexp = /^\/\*!.+\.LICENSE\.txt\s*\*\/\s*/;
+  static compilation;
+  static trash = new Set();
+  static commentRegexp = /^\/\*!.+\.LICENSE\.txt\s*\*\//;
   static commentFileSuffix = '.LICENSE.txt';
 
   /**
-   * Add a junk asset file to trash.
+   * @param {Compilation} compilation The instance of the webpack compilation.
+   */
+  static init(compilation) {
+    this.compilation = compilation;
+  }
+
+  /**
+   * Add a junk asset file to trash for lazy removing them from compilation.
    *
    * @param {string} file
    */
   static add(file) {
-    this.trash.push(file);
+    this.trash.add(file);
   }
 
   /**
-   * Remove all trash files from compilation.
-   *
-   * @param {Compilation} compilation The instance of the webpack compilation.
+   * Remove all deleted files from the compilation.
    */
-  static clearCompilation(compilation) {
+  static clearCompilation() {
     this.trash.forEach((file) => {
-      compilation.deleteAsset(file);
+      this.compilation.deleteAsset(file);
     });
 
     this.reset();
   }
 
   /**
-   * @param {Compilation} compilation The instance of the webpack compilation.
+   * Remove files containing extracted license.
    */
-  static removeComments(compilation) {
+  static removeComments() {
+    const { compilation, commentFileSuffix: suffix } = this;
+
     if (!compilation.assets) return;
 
-    const { commentRegexp, commentFileSuffix: suffix } = this;
-    const { RawSource } = compilation.compiler.webpack.sources;
+    const { ConcatSource } = compilation.compiler.webpack.sources;
     const assets = Object.keys(compilation.assets);
     const licenseFiles = assets.filter((file) => file.endsWith(suffix));
+    let licenseFilename;
+
+    /**
+     * Remove the child sources containing the license comment.
+     *
+     * @param {ConcatSource} concatSource
+     * @return {ConcatSource}
+     */
+    const updateSource = (concatSource) => {
+      // reserved for a fallback if in future the comment will be changed
+      // const children = concatSource.getChildren().filter((child) => !this.commentRegexp.test(child.source()));
+      const comment = `/*! For license information please see ${licenseFilename} */`;
+      const children = concatSource.getChildren().filter((child) => !child.source().startsWith(comment));
+
+      return new ConcatSource(...children);
+    };
 
     for (let filename of licenseFiles) {
       const sourceFilename = filename.replace(suffix, '');
-      const source = compilation.assets[sourceFilename].source();
-      compilation.updateAsset(sourceFilename, new RawSource(source.replace(commentRegexp, '')));
-      this.add(filename);
+      licenseFilename = path.basename(filename);
+
+      compilation.updateAsset(sourceFilename, updateSource);
+      // immediately delete the license file, because when JS filename is hashed,
+      // then at the last stage the license filename will be another
+      compilation.deleteAsset(filename);
     }
   }
 
@@ -53,7 +85,7 @@ class AssetTrash {
    * Called before each new compilation after changes, in the serve/watch mode.
    */
   static reset() {
-    this.trash.length = 0;
+    this.trash.clear();
   }
 }
 

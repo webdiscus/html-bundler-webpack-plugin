@@ -151,6 +151,11 @@ describe('plugin exceptions', () => {
     return exceptionContain('msg-exception-plugin-option-afterProcess', containString);
   });
 
+  test('integrity crossOrigin', () => {
+    const containString = `must be specified the Webpack option 'output.crossOriginLoading'`;
+    return exceptionContain('msg-exception-integrity-dynamic-crossOrigin', containString);
+  });
+
   test('inject css in HTML w/o head', () => {
     const containString = "The imported style can't be injected in HTML";
     return exceptionContain('msg-exception-import-css-wo-head', containString);
