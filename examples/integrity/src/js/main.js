@@ -1,3 +1,4 @@
-import './lib';
+// dynamic import
+import('./chunk');
 
-console.log('>> main bootstrap');
+console.log('>> main');

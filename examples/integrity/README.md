@@ -15,7 +15,7 @@ This is the example how to include the [subresource integrity hash](https://deve
 git clone https://github.com/webdiscus/html-bundler-webpack-plugin.git
 cd examples/integrity/
 npm install
-npm run app
+npm run view
 ```
 
 Open generated `dist/index.html`. The `link` and `script` tags will contain the `integrity` attribute with a hash.

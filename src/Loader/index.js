@@ -8,6 +8,7 @@ const Options = require('./Options');
 const {
   notInitializedPluginError,
   initError,
+  beforePreprocessorError,
   preprocessorError,
   compileError,
   exportError,
@@ -46,12 +47,17 @@ const loader = function (content, map, meta) {
     Options.init(loaderContext);
     Loader.init(loaderContext);
 
+    const beforePreprocessor = Options.get().beforePreprocessor;
     const preprocessor = Options.getPreprocessor();
     let result;
 
+    if (beforePreprocessor != null) {
+      errorStage = 'beforePreprocessor';
+      result = beforePreprocessor(content, loaderContext);
+    }
     if (preprocessor != null) {
       errorStage = 'preprocessor';
-      result = preprocessor(content, loaderContext);
+      result = preprocessor(result != null ? result : content, loaderContext);
     }
     resolve(result != null ? result : content);
   })
@@ -75,6 +81,9 @@ const loader = function (content, map, meta) {
       switch (errorStage) {
         case 'init':
           error = initError(error, issuer);
+          break;
+        case 'beforePreprocessor':
+          error = beforePreprocessorError(error, issuer);
           break;
         case 'preprocessor':
           error = preprocessorError(error, issuer);

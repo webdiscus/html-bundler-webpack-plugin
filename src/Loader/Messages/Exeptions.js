@@ -151,6 +151,21 @@ const initError = (error, file) => {
  * @param {string} file
  * @returns {Error}
  */
+const beforePreprocessorError = (error, file) => {
+  return new LoaderException(
+    red`beforePreprocessor failed.` +
+      `\n` +
+      `File: ${cyan(file)}\n\n` +
+      `${yellow`If you see this message after fixing the error, try to reload your browser manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
+    error
+  );
+};
+
+/**
+ * @param {Error} error
+ * @param {string} file
+ * @returns {Error}
+ */
 const preprocessorError = (error, file) => {
   return new LoaderException(
     red`Preprocessor failed.` +
@@ -192,6 +207,7 @@ module.exports = {
   dataFileException,
   notInitializedPluginError,
   initError,
+  beforePreprocessorError,
   preprocessorError,
   compileError,
   exportError,

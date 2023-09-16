@@ -211,10 +211,11 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
+   - [beforePreprocessor](#loader-option-before-preprocessor) (🔗reference to `loaderOptions.beforePreprocessor`)
    - [preprocessor](#option-preprocessor) (🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
    - [preprocessorOptions](#option-preprocessor) (🔗reference to [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions))
-   - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
    - [postprocess](#option-postprocess)
+   - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
    - [preload](#option-preload) (inject preload link tags)
    - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
    - [extractComments](#option-extract-comments)
@@ -1213,7 +1214,7 @@ Please see the details below under the [data](#loader-option-data) loader option
 Type:
 
 ```ts
-type postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | null;
+type postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | undefined;
 
 type ResourceInfo = {
   verbose: boolean;
@@ -1245,7 +1246,7 @@ The `ResourceInfo` have the following properties:
 - `assetFile: string` - an output asset file relative to the `outputPath`
 
 Return new content as a `string`.
-If return `null`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
+If return `undefined`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
 #### [↑ back to contents](#contents)
 
@@ -1253,7 +1254,7 @@ If return `null`, the result processed via Webpack plugin is ignored and will be
 
 ### `preload`
 
-Type: `Preload` Default: `null`
+Type:
 
 ```ts
 type Preload = Array<{
@@ -1264,6 +1265,8 @@ type Preload = Array<{
   attributes?: {};
 }>;
 ```
+
+Default: `null`
 
 Generates and injects preload tags `<link rel="preload">` in the head before all `link` or `script` tags for all matching source assets resolved in templates and styles.
 
@@ -1586,10 +1589,10 @@ module.exports = {
         index: 'src/views/index.html', // template where are included link and script tags
       },
       js: {
-        filename: '[name].[contenthash:8].js', // the filename must conttains a contenthash
+        filename: '[name].[contenthash:8].js', // the filename must contains a contenthash
       },
       css: {
-        filename: '[name].[contenthash:8].js', // the filename must conttains a contenthash
+        filename: '[name].[contenthash:8].js', // the filename must contains a contenthash
       },
       integrity: 'auto', // enable in `production`, disable in `development` mode
     }),
@@ -2100,6 +2103,56 @@ Now you can use the `/` root path for the source assets:
 
 #### [↑ back to contents](#contents)
 
+<a id="loader-option-before-preprocessor" name="loader-option-before-preprocessor" href="#loader-option-before-preprocessor"></a>
+
+### `beforePreprocessor`
+
+Reference: `loaderOption.beforePreprocessor`
+
+Type:
+
+```ts
+type BeforePreprocessor =
+  | false
+  | ((
+      template: string,
+      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+    ) => string | undefined);
+```
+
+Default: `false`
+
+The `template` is the raw content of a template.
+
+The description of all `loaderContext` attributes see in the [Webpack documentation](https://webpack.js.org/api/loaders/#thisresourcepath).
+
+Returns the modified template. If you are not changing the template, you should return `undefined` or not use `return` at all.
+
+The callback function called right before the [preprocessor](#loader-option-preprocessor).
+This can be useful when using one of the predefined preprocessors and modifying the raw template or the data passed to the template.
+
+For example:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/pages/',
+  },
+  data: {
+    title: 'Welcome to [sitename] website',
+  },
+  beforePreprocessor: (template, { resourcePath, data }) => {
+    let sitename = 'Homepage';
+    if (resourcePath.includes('/about.html')) sitename = 'About';
+    data.title = data.title.replace('[sitename]', sitename); // modify template data
+    return template.replaceAll('{{old_var}}', '{{new_var}}'); // modify template content
+  },
+  preprocessor: 'handlebars', // use the templating engine
+});
+```
+
+#### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
 
 ### `preprocessor`
@@ -2116,10 +2169,10 @@ type Preprocessor =
   | ((
       template: string,
       loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-    ) => null | string | Promise<any>);
+    ) => string | Promise<any> | undefined);
 ```
 
-Default: `eta`
+Default: `'eta'`
 
 You can use the preprocessor as a `string` for supported template engines,
 or define your own preprocessor as a function to use any template engine.
@@ -2196,19 +2249,7 @@ To use any templating engine, you can define the `preprocessor` as a function.
 type Preprocessor = (
   template: string,
   loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-) => null | string | Promise<any>;
-```
-
-The default `preprocessor` is pre-configured as the following function:
-
-```js
-const { Eta } = require('eta');
-const eta = new Eta({
-  async: false, // defaults is false, wenn is true then must be used `await includeAsync()`
-  useWith: true, // allow to use variables in template without `it.` scope
-  views: process.cwd(), // directory that contains templates
-});
-preprocessor = (template, { data }) => eta.renderString(template, data);
+) => string | Promise<any> | undefined;
 ```
 
 The function arguments:
@@ -2225,8 +2266,8 @@ The preprocessor is called for each entry file, before processing of the content
 The function can be used to compile the template with any template engine,
 such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Mustache](https://github.com/janl/mustache.js), [Nunjucks](https://mozilla.github.io/nunjucks), [LiquidJS](https://github.com/harttle/liquidjs), etc.
 
-The function returns new content as a `string` for sync or `Promise` for async processing.
-When the function returns `null`, the contents of the template will not change.
+Returns new content as a `string` for sync or `Promise` for async processing.
+When the function returns `undefined`, the contents of the template will not change.
 
 The example for your own `sync` render function:
 
@@ -2246,6 +2287,18 @@ The example of using `Promise` for your own `async` render function:
       resolve(result);
     });
 }
+```
+
+The default `preprocessor` is pre-configured as the following function:
+
+```js
+const { Eta } = require('eta');
+const eta = new Eta({
+  async: false, // defaults is false, wenn is true then must be used `await includeAsync()`
+  useWith: true, // allow to use variables in template without `it.` scope
+  views: process.cwd(), // directory that contains templates
+});
+preprocessor = (template, { data }) => eta.renderString(template, data);
 ```
 
 > **Note**
@@ -3775,9 +3828,9 @@ The plugin automatically inlines images smaller then `maxSize`.
 
 <a id="recipe-preprocessor-php" name="recipe-preprocessor-php" href="#recipe-preprocessor-php"></a>
 
-## How to process a PHP template
+## How to process a PHP template (.phtml)
 
-The plugin can replace the source filenames of scripts, styles, images, etc. with output filenames in a PHP template.
+The plugin can replace the source filenames of scripts, styles, images, etc. with their output filenames in a template.
 
 For example, there is the PHP template _src/views/index.phtml_:
 
@@ -3818,13 +3871,13 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
-      preprocessor: false, // disable template compilation to HTML
+      preprocessor: false, // disable preprocessor
     }),
   ],
 };
 ```
 
-The processed PHP template:
+The processed PHP template _dist/index.phtml_:
 
 ```php
 <?php

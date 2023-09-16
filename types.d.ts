@@ -25,11 +25,14 @@ declare namespace HtmlBundlerPlugin {
     js?: JsOptions;
     css?: CssOptions;
     /**
-     * The reference to LoaderOptions.preprocessor.
+     * The references to LoaderOptions.
      * It's syntactic "sugar" to avoid the complicated structure of options.
      */
+    data?: { [k: string]: any } | string;
+    beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;
+    // plugin options
     postprocess?: Postprocess;
     preload?: Preload;
     minify?: 'auto' | boolean | MinifyOptions;
@@ -48,14 +51,14 @@ declare namespace HtmlBundlerPlugin {
 
   export interface LoaderOptions {
     root?: string | boolean;
+    beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;
     sources?: Sources;
     /**
-     * Global data for all templates passed into preprocessor as an object or the path to a file containing data.
-     * If the value is string, it should be an absolute or relative path to a JSON/JS file.
+     * Global data passed in all templates.
      */
-    data?: { [k: string]: any } | string;
+    data?: Data;
   }
 }
 
@@ -83,11 +86,16 @@ type EntryDescription = {
    */
   filename?: FilenameTemplate;
   /**
-   * The template data passed to the preprocessor as an object, or the path to a file that exports the data as an object.
-   * If the value is string, it should be an absolute or relative path to a JSON/JS file.
+   * The data passed to the imported template.
    */
-  data?: { [k: string]: any } | string;
+  data?: Data;
 };
+
+/**
+ * The template data passed to the preprocessor as an object, or the path to a file that exports the data as an object.
+ * If the value is string, it should be an absolute or relative path to a JSON/JS file.
+ */
+type Data = { [k: string]: any } | string;
 
 type JsOptions = {
   filename?: FilenameTemplate;
@@ -128,6 +136,13 @@ type HashFunctions = 'sha256' | 'sha384' | 'sha512';
  */
 type FilenameTemplate = string | ((pathData: PathData, assetInfo?: AssetInfo) => string);
 
+type BeforePreprocessor =
+  | false
+  | ((
+      template: string,
+      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+    ) => string | undefined);
+
 type Preprocessor =
   | false
   | 'eta'
@@ -137,9 +152,9 @@ type Preprocessor =
   | ((
       template: string,
       loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-    ) => null | string | Promise<any>);
+    ) => string | Promise<any> | undefined);
 
-type Postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | null;
+type Postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | undefined;
 
 type ResourceInfo = {
   verbose: boolean;

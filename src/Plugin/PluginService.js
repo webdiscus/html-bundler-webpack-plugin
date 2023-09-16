@@ -42,6 +42,16 @@ class PluginService {
     const pluginOptions = options.get();
     const loaderOptions = pluginOptions.loaderOptions || {};
 
+    // add reference for data to the loader options
+    if (pluginOptions.data && !loaderOptions.data) {
+      loaderOptions.data = pluginOptions.data;
+    }
+
+    // add reference for beforePreprocessor to the loader options
+    if (pluginOptions.beforePreprocessor && !loaderOptions.beforePreprocessor) {
+      loaderOptions.beforePreprocessor = pluginOptions.beforePreprocessor;
+    }
+
     // add reference for the preprocessor option into the loader options
     if (pluginOptions.preprocessor && !loaderOptions.preprocessor) {
       loaderOptions.preprocessor = pluginOptions.preprocessor;
@@ -49,11 +59,6 @@ class PluginService {
       if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
         loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
       }
-    }
-
-    // add reference for data to the loader options
-    if (pluginOptions.data && !loaderOptions.data) {
-      loaderOptions.data = pluginOptions.data;
     }
 
     this.#used = true;

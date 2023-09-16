@@ -7,6 +7,11 @@ beforeAll(() => {
 });
 
 describe('loader exceptions', () => {
+  test('exception beforePreprocessor', () => {
+    const containString = 'beforePreprocessor failed';
+    return exceptionContain('msg-exception-loader-beforePreprocessor', containString);
+  });
+
   test('exception sync preprocessor', () => {
     const containString = 'Preprocessor failed';
     return exceptionContain('msg-exception-loader-preprocessor', containString);

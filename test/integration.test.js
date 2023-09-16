@@ -94,6 +94,9 @@ describe('plugin options', () => {
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
+  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
+  test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
+
   test('preprocessor', () => compareFiles('option-preprocessor'));
   test('preprocessor data', () => compareFiles('option-preprocessor-data'));
 

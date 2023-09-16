@@ -20,6 +20,8 @@ module.exports = {
       js: {
         // output filename of compiled JavaScript
         filename: 'js/[name].[contenthash:8].js',
+        // output filename of dynamic imported chunks
+        chunkFilename: 'js/[name].[contenthash:8].chunk.js',
       },
       css: {
         // output filename of extracted CSS
@@ -43,16 +45,5 @@ module.exports = {
         },
       },
     ],
-  },
-
-  // enable live reload
-  devServer: {
-    static: path.resolve(__dirname, 'dist'),
-    watchFiles: {
-      paths: ['src/**/*.*'],
-      options: {
-        usePolling: true,
-      },
-    },
   },
 };

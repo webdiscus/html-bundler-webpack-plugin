@@ -1,5 +1,11 @@
 # Change log
 
+## 2.13.0 (2023-09-16)
+
+- feat: add the `beforePreprocessor` callback option, called right before the `preprocessor`
+- test: add tests for new option `beforePreprocessor`
+- docs: update README
+
 ## 2.12.0 (2023-09-15)
 
 - feat: remove support for the `webpack-subresource-integrity` plugin,

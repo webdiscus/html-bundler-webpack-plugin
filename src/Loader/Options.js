@@ -69,6 +69,12 @@ class Options {
     const data = { ...loaderData, ...entryData, ...queryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
 
+    // beforePreprocessor
+    if (typeof options.beforePreprocessor !== 'function') {
+      options.beforePreprocessor = null;
+    }
+
+    // preprocessor
     if (!Preprocessor.isReady(options.preprocessor)) {
       options.preprocessor = Preprocessor.factory(loaderContext, {
         preprocessor: options.preprocessor,

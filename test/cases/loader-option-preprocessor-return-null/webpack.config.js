@@ -38,7 +38,7 @@ module.exports = {
         },
       },
       loaderOptions: {
-        // test preprocessor return null, has the same effect as `preprocessor: false`
+        // test preprocessor return undefined, has the same effect as `preprocessor: false`
         preprocessor: (tmpl, loaderContext) => {
           // TODO: add test for loaderContext.entryName
           // console.log('### preprocessor: ', {
@@ -48,7 +48,9 @@ module.exports = {
           //   entryData: loaderContext.data,
           //   resourcePath: loaderContext.resourcePath,
           // });
-          return null;
+          //return;
+          //return null;
+          //return undefined;
         },
       },
     }),
