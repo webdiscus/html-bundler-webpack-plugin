@@ -35,8 +35,9 @@ In an HTML template can be referenced any source files, similar to how it works 
 </pre></td></tr>
 </table>
 
-See the [simple example](#example), [install](#install) and [quick start](#contents).
+#### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
 
+---
 ### 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
@@ -76,14 +77,14 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ### 📚 Read it
 
 - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
+- [Keep output directory structure in Webpack](https://dev.to/webdiscus/how-to-keep-the-folder-structure-of-source-templates-in-webpack-for-output-html-files-39bj)
+- [Auto generate an integrity hash for `link` and `script` tags](https://dev.to/webdiscus/webpack-auto-generate-an-integrity-hash-for-link-and-script-tags-in-an-html-template-48p5)
 
 ## 🔆 What's New in v2
 
 - **NEW** added support the [integrity](#option-integrity).
 - **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
 - **NEW:** added importing style files in JavaScript.
-- **POTENTIAL BREAKING CHANGE:** Upgrade the default [Eta](https://eta.js.org) templating engine from `v2` to `v3`.\
-  If you use the `Eta` syntax, may be you need to update templates.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
@@ -305,21 +306,22 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 <a id="list-of-plugins" name="list-of-plugins" href="#list-of-plugins"></a>
 Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
 
-| Package                                                                                                 | Features                                                            |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
-| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
-| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
-| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)           | inject preload link tags                                            |
-| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                               | inject preload link tags                                            |
-| [html-loader](https://github.com/webpack-contrib/html-loader)                                           | exports HTML                                                        |
+| Package                                                                                                | Features                                                            |
+| ------------------------------------------------------------------------------------------------------ |---------------------------------------------------------------------|
+| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                 | creates HTML and inject `script` tag for compiled JS file into HTML |
+| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                  | injects `link` tag for processed CSS file into HTML                 |
+| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)              | removes generated empty JS files                                    |
+| [html-loader](https://github.com/webpack-contrib/html-loader)                                          | exports HTML, resolving attributes                                  |
+| [style-loader](https://github.com/webpack-contrib/style-loader)                                        | injects an inline CSS into HTML                                     |
+| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)          | inject preload link tags                                            |
+| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                              | inject preload link tags                                            |
 | [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin) | inline JS and CSS into HTML                                         |
-| [html-inline-css-webpack-plugin](https://github.com/runjuu/html-inline-css-webpack-plugin)              | inline CSS into HTML                                                |
-| [style-loader](https://github.com/webpack-contrib/style-loader)                                         | injects an inline CSS into HTML                                     |
-| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                             | injects an inline SVG icon into HTML                                |
-| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
-| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
-| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
+| [html-inline-css-webpack-plugin](https://github.com/runjuu/html-inline-css-webpack-plugin)             | inline CSS into HTML                                                |
+| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                            | injects an inline SVG icon into HTML                                |
+| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                  | resolves a relative URL in CSS                                      |
+| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                         | encodes a SVG data-URL as utf8                                      |
+| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                       | renders handlebars templates                                        |
+| [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)          | enables Subresource Integrity                                       |
 
 <a id="install" name="install" href="#install"></a>
 
