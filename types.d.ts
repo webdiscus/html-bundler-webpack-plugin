@@ -1,6 +1,7 @@
 import { Compiler, Compilation, LoaderContext, WebpackPluginInstance } from 'webpack';
 import { PathData, AssetInfo } from 'webpack/lib/Compilation';
 import { Options as MinifyOptions } from 'html-minifier-terser';
+import { AsyncSeriesHook } from 'tapable';
 
 declare class HtmlBundlerPlugin implements WebpackPluginInstance {
   /**
@@ -8,11 +9,20 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
    */
   static loader: string;
 
+  static getHooks(compilation: Compilation): HtmlBundlerPlugin.Hooks;
+
   constructor(options?: HtmlBundlerPlugin.PluginOptions);
   apply(compiler: Compiler): void;
 }
 
 declare namespace HtmlBundlerPlugin {
+  export interface Hooks {
+    integrityHashes: AsyncSeriesHook<{
+      // the map of the output asset filename to its integrity hash
+      hashes: Map<string, string>;
+    }>;
+  }
+
   export interface PluginOptions {
     test?: RegExp;
     /**

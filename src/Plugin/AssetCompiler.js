@@ -1,9 +1,10 @@
 const path = require('path');
 
+const { AsyncSeriesHook } = require('tapable');
+const Compilation = require('webpack/lib/Compilation');
+const Cache = require('webpack/lib/Cache');
 //const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 //const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
-
-const Cache = require('webpack/lib/Cache');
 
 const { pluginName } = require('../config');
 const { baseUri, urlPathPrefix } = require('../Loader/Utils');
@@ -79,7 +80,7 @@ const cssLoader = {
 
 /**
  * @typedef {ModuleOptions} ModuleProps
- * @property {boolean} [`inline` = false] Whether inline CSS should contain an inline source map.
+ * @property {boolean} [inline = false] Whether inline CSS should contain an inline source map.
  */
 
 /**
@@ -98,6 +99,14 @@ const cssLoader = {
  * @property {string} resource The resource file, including a query.
  * @property {string|undefined} filename The output filename.
  */
+
+/**
+ * @typedef {Object} CompilationHooks
+ * @property {AsyncSeriesHook<[Map<string, string>]>} integrityHashes
+ */
+
+/** @type {WeakMap<Compilation, CompilationHooks>} */
+const compilationHooksMap = new WeakMap();
 
 let HotUpdateChunk;
 
@@ -120,6 +129,28 @@ class AssetCompiler {
 
   /** @type {Compilation} */
   compilation = null;
+
+  /**
+   * @param {Compilation} compilation the compilation
+   * @returns {CompilationHooks} the attached hooks
+   */
+  static getHooks(compilation) {
+    if (!(compilation instanceof Compilation)) {
+      throw new TypeError(`The 'compilation' argument must be an instance of Compilation`);
+    }
+
+    /** @type {CompilationHooks} */
+    let hooks = compilationHooksMap.get(compilation);
+
+    if (hooks == null) {
+      hooks = {
+        integrityHashes: new AsyncSeriesHook(['hashes']),
+      };
+      compilationHooksMap.set(compilation, hooks);
+    }
+
+    return hooks;
+  }
 
   /**
    * @param {PluginOptions|{}} options
@@ -323,6 +354,14 @@ class AssetCompiler {
           this.exceptions.add(error);
         }
       });
+    });
+
+    compiler.hooks.afterEmit.tap(pluginName, () => {
+      if (Options.isIntegrityEnabled()) {
+        const hooks = AssetCompiler.getHooks(this.compilation);
+        const hashes = Integrity.getAssetHashes();
+        hooks.integrityHashes.promise(hashes);
+      }
     });
 
     compiler.hooks.done.tap(pluginName, this.done);

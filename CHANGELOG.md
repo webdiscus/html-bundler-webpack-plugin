@@ -1,5 +1,11 @@
 # Change log
 
+## 2.14.0 (2023-09-17)
+
+- feat: add the `integrityHashes` hook to allow retrieving the integrity values
+- test: add tests for the `integrityHashes` hook
+- docs: update README
+
 ## 2.13.0 (2023-09-16)
 
 - feat: add the `beforePreprocessor` callback option, called right before the `preprocessor`

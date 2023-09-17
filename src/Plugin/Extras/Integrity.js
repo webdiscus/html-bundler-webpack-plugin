@@ -10,6 +10,14 @@ const hashesReference = '__webpack_require__.integrity';
 class Integrity {
   static hashFunctions = [];
 
+  // hash => [Set Iterator] of one asset filename,
+  // the `chunk.files` contains only one filename and will have the final value later, than we save it,
+  // therefore, we can save only reference to `chunk.files.values()`
+  static hashes = new Map();
+
+  // filename => hash, normalized map with final asset filenames
+  static assetHashes = null;
+
   constructor(options) {
     this.pluginName = 'html-bundler-integrity-plugin';
 
@@ -19,6 +27,7 @@ class Integrity {
     this.chunkChildChunksMap = new WeakMap();
     this.referencePlaceholders = new Map();
     this.placeholderByChunkId = new Map();
+    this.chunkByChunkId = new Map();
 
     this.setReferencePlaceholder = this.setReferencePlaceholder.bind(this);
     this.processAssets = this.processAssets.bind(this);
@@ -32,6 +41,19 @@ class Integrity {
       compiler.hooks.thisCompilation.tap({ name: pluginName, stage: -10000 }, (compilation) => {
         this.compilation = compilation;
         this.init();
+
+        // not documented feature for compatibility with the result of webpack-subresource-integrity plugin;
+        // use the comfort `integrityHashes` hook to get assets containing the integrity:
+        // HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync('myPlugin', (hashes) => {})
+        compilation.hooks.statsFactory.tap(pluginName, (statsFactory) => {
+          const assetHashes = Integrity.getAssetHashes();
+          statsFactory.hooks.extract.for('asset').tap(pluginName, (object, asset) => {
+            const integrity = assetHashes.get(asset.name);
+            if (integrity) {
+              object.integrity = integrity;
+            }
+          });
+        });
       });
     });
   }
@@ -79,15 +101,15 @@ class Integrity {
   updateHash(content, oldHash) {
     if (this.placeholderByChunkId.size === 0 || content.length !== 1) return undefined;
 
-    let chunkFile;
-    for (let [key, value] of this.placeholderByChunkId) {
-      if (oldHash === value) {
-        chunkFile = key;
+    let chunk;
+    for (let [chunkId, placeholder] of this.placeholderByChunkId) {
+      if (oldHash === placeholder) {
+        chunk = this.chunkByChunkId.get(chunkId);
         break;
       }
     }
 
-    return chunkFile ? Integrity.getIntegrity(content[0]) : undefined;
+    return chunk ? Integrity.getIntegrity(content[0], chunk) : undefined;
   }
 
   processAssets(assets) {
@@ -141,7 +163,7 @@ class Integrity {
           const pos = oldSource.indexOf(placeholder);
 
           if (pos >= 0) {
-            const integrity = Integrity.getIntegrity(assets[childChunkFile].buffer());
+            const integrity = Integrity.getIntegrity(assets[childChunkFile].buffer(), childChunkFile);
             const newAsset = new compiler.webpack.sources.ReplaceSource(assets[chunkFile], chunkFile);
             newAsset.replace(pos, pos + placeholder.length - 1, integrity, chunkFile);
             assets[chunkFile] = newAsset;
@@ -194,6 +216,7 @@ class Integrity {
       const placeholder = getPlaceholder(childChunk.id);
       placeholders[childChunk.id] = placeholder;
       this.placeholderByChunkId.set(childChunk.id, placeholder);
+      this.chunkByChunkId.set(childChunk.id, childChunk);
     }
 
     if (Object.keys(placeholders).length > 0) {
@@ -210,10 +233,13 @@ class Integrity {
    * Get integrity string.
    * @see https://www.w3.org/TR/SRI/
    *
-   * @param {string|*} data
+   * When the key is defined, the hash will be saved internal for stats.
+   *
+   * @param {string|*} data The string or a buffer content of the file.
+   * @param {string|Chunk?} key The output filename of the data or the Chunk to lazy get the final filename.
    * @return {string}
    */
-  static getIntegrity(data) {
+  static getIntegrity(data, key) {
     let integrity = '';
 
     if (typeof data !== 'string' && !Buffer.isBuffer(data)) {
@@ -226,7 +252,38 @@ class Integrity {
       integrity += `${funcName}-${hash}`;
     }
 
+    if (key) {
+      let value;
+
+      // keep the same reference type to the value for collection and for dynamic imported assets
+      if (typeof key === 'string') {
+        value = new Set([key]).values();
+      } else if (key.files != null) {
+        // the real filename will be set later, therefore, wir can bind the reference as the iterator
+        value = key.files.values();
+      }
+
+      if (value) this.hashes.set(integrity, value);
+    }
+
     return integrity;
+  }
+
+  /**
+   * Get integrity hashes.
+   *
+   * @return {Map}
+   */
+  static getAssetHashes() {
+    if (this.assetHashes == null) {
+      this.assetHashes = new Map();
+      for (const [hash, value] of this.hashes) {
+        const assetFile = value.next().value;
+        this.assetHashes.set(assetFile, hash);
+      }
+    }
+
+    return this.assetHashes;
   }
 }
 

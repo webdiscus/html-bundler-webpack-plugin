@@ -51,6 +51,7 @@ See the [simple example](#example), [install](#install) and [quick start](#conte
 - Support for [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
 - **Auto processing many HTML templates** using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
+- Supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
 
 See the [full list of features](#features).
 
@@ -295,7 +296,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - supports both `async` and `sync` preprocessor
 - auto processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
-- supports [webpack-subresource-integrity](https://www.npmjs.com/package/webpack-subresource-integrity) and include the [integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) to `link` and `script` tags
+- supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
 - [minification](#option-minify) of generated HTML
 
 <a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
@@ -1519,7 +1520,7 @@ If you want to allow extraction of `*.LICENSE.txt` files, set this option to `tr
 
 #### [↑ back to contents](#contents)
 
-<a id="option-integrity" name="option-integrity" href="#integrity"></a>
+<a id="option-integrity" name="option-integrity" href="#option-integrity"></a>
 
 ### `integrity`
 
@@ -1637,6 +1638,79 @@ The generated HTML contains the integrity hashes:
     <h1>Hello World!</h1>
   </body>
 </html>
+```
+
+#### `integrityHashes` hook
+
+```ts
+AsyncSeriesHook<{
+  hashes: Map<string, string>;
+}>;
+```
+
+Called after all assets have been processed and hashes have finite values and cannot be changed, at the `afterEmit` stage.
+This can be used to retrieve the integrity values for the asset files.
+
+The hook is async and can be called using the `tapAsync` method.
+
+Callback Parameter: `hashes` is the map of the output asset filename to its integrity hash.
+The map only contains JS and CSS assets that have a hash.
+
+You can write your own plugin, for example, to extract integrity values into the separate file:
+
+```js
+const fs = require('fs');
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  output: {
+    crossOriginLoading: 'anonymous', // required for Subresource Integrity
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+      js: {
+        filename: '[name].[contenthash:8].js',
+        chunkFilename: '[name].[contenthash:8].chunk.js',
+      },
+      css: {
+        filename: '[name].[contenthash:8].css',
+        chunkFilename: '[name].[contenthash:8].chunk.css',
+      },
+      integrity: 'auto',
+    }),
+    // your plugin to extract the integrity values
+    {
+      apply(compiler) {
+        compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
+          HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync(
+            'MyPlugin', 
+            (hashes) => {
+              if (hashes.size > 0) {
+                const saveAs = path.join(__dirname, 'dist/integrity.json');
+                const json = Object.fromEntries(hashes);
+                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
+                console.log(hashes); // => output to console
+              }
+            });
+          }
+        );
+      },
+    },
+  ],
+};
+```
+
+The content of the `dist/integrity.json` file looks like:
+```
+{
+  "815.49b3d882.chunk.js": "sha384-dBK6nNrKKk2KjQLYmHZu6tuWwp7kBzzEvdX+4Ni11UzxO2VHvP4A22E/+mmeduul",
+  "main.9c043cce.js": "sha384-AbfLh7mk6gCp0nhkXlAnOIzaHeJSB8fcV1/wT/FWBHIDV7Blg9A0sukZ4nS3xjtR"
+  "main.dc4ea4af.chunk.css": "sha384-W/pO0vwqqWBj4lq8nfe+kjrP8Z78smCBttkCvx1SYKrVI4WEdJa6W6i0I2hoc1t7",
+  "style.47f4da55.css": "sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E",
+}
 ```
 
 #### [↑ back to contents](#contents)

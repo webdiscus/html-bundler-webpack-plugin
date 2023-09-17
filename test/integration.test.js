@@ -303,6 +303,9 @@ describe('integrity', () => {
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));
   test('import css, sourceMap', () => compareFiles('integrity-import-css-in-js-source-map'));
+
+  test('hook-done', () => compareFiles('integrity-hook-done'));
+  test('hook-integrityHashes', () => compareFiles('integrity-hook-integrityHashes'));
 });
 
 describe('integrity, dynamic chunks', () => {
