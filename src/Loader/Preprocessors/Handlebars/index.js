@@ -147,7 +147,6 @@ const preprocessor = (loaderContext, options) => {
     assign: require('./helpers/assign')(Handlebars),
     block: require('./helpers/block/block')(Handlebars),
     partial: require('./helpers/block/partial')(Handlebars),
-
     include: require('./helpers/include')({
       Handlebars,
       fs,
@@ -156,20 +155,15 @@ const preprocessor = (loaderContext, options) => {
       extensions,
     }),
   };
-  for (const name in buildInHelpers) {
-    Handlebars.registerHelper(name, buildInHelpers[name]);
-  }
+
+  Handlebars.registerHelper(buildInHelpers);
 
   // seconds, register user helpers, build-in helpers can be overridden with custom helpers
   if (options.helpers) {
     if (Array.isArray(options.helpers)) {
       updateHelpers();
     } else {
-      // object of helper name => absolute path to helper file
-      helpers = options.helpers;
-      for (const name in helpers) {
-        Handlebars.registerHelper(name, helpers[name]);
-      }
+      Handlebars.registerHelper(options.helpers);
     }
   }
 

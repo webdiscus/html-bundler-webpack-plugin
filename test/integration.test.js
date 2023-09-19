@@ -169,6 +169,7 @@ describe('handlebars', () => {
   // test helpers
   test('build-in `block` helper', () => compareFiles('preprocessor-handlebars-helper-block-buildIn'));
   test('user `block` helper overrides build-in', () => compareFiles('preprocessor-handlebars-helper-block'));
+  test('handlebars-layouts helpers', () => compareFiles('preprocessor-handlebars-helper-layouts'));
 });
 
 describe('inline images', () => {
