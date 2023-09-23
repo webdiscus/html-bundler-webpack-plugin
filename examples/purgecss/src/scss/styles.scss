@@ -1,0 +1,33 @@
+@use 'bootstrap';
+
+/*! Common styles */
+body {
+  font-family: 'OpenSans', sans-serif;
+}
+
+h1 {
+  color: forestgreen;
+}
+
+// used in index.html
+.headline {
+  color: orangered;
+}
+
+// used in about.html
+.description {
+  color: midnightblue;
+}
+
+// used in Eta partial
+.my-footer {
+  padding: 20px 15px;
+  margin-top: 50px;
+  color: #fff;
+  background-color: purple;
+}
+
+// unused class must be removed via PurgeCSS plugin
+.remove-me {
+  color: red;
+}
