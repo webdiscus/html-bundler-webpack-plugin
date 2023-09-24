@@ -83,8 +83,8 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ## 🔆 What's New in v2
 
 - **NEW** added support the [integrity](#option-integrity).
-- **NEW:** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
-- **NEW:** added importing style files in JavaScript.
+- **NEW** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
+- **NEW** added importing style files in JavaScript.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
