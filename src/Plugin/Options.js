@@ -6,38 +6,6 @@ const { postprocessException, afterProcessException } = require('./Messages/Exce
 const pluginName = require('../config');
 
 /**
- * @typedef {Object} PluginOptions
- * @property {RegExp} test The search for a match of entry files.
- * @property {boolean} [enabled = true] Enable/disable the plugin.
- * @property {boolean|string} [verbose = false] Show the information at processing entry files.
- * @property {string} [sourcePath = options.context] The absolute path to sources.
- * @property {string} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
- *  See https://webpack.js.org/configuration/output/#outputfilename.
- *  Must be an absolute or a relative by the context path.
- * @property {CssOptions?} css The options for embedded plugin module to extract CSS.
- * @property {JsOptions?} js The options for embedded plugin module to extract CSS.
- * @property {function(string, ResourceInfo, Compilation): string|null ?} postprocess The post-process for extracted content from entry.
- * @property {function(content: string, {sourceFile: string, assetFile: string})} afterProcess Called after processing all plugins.
- * @property {boolean} [extractComments = false] Whether comments should be extracted to a separate file.
- *  If the original filename is foo.js, then the comments will be stored to foo.js.LICENSE.txt.
- *  This option enables/disable storing of *.LICENSE.txt file.
- *  For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
- * @property {'auto'|boolean|IntegrityOptions} integrity Enable/disable the integrity attribute.
- * @property {Object|string} entry The entry points.
- *  The key is route to output file w/o an extension, value is a template source file.
- *  When the entry is a string, this should be a relative or absolute path to pages.
- * @property {{paths: Array<string>, files: Array<RegExp>, ignore: Array<RegExp>}} watchFiles Paths and files to watch file changes.
- * @property {boolean?} [hotUpdate=false] Whether in serve/watch mode should be added hot-update.js file in html.
- *   Use it only if you don't have a referenced source file of a script in html.
- *   If you already have a js file, this setting should be false as Webpack automatically injects the hot update code into the compiled js file.
- * @property {Object?} loaderOptions Options defined in plugin but provided for the loader.
- * @property {Array<Object>|boolean?} preload Options to generate preload link tags for assets.
- * @property {boolean|Object|'auto'|null} [minify = false] Minify generated HTML.
- * @property {boolean|Object|'auto'|null} [minifyOptions = null] Minification options, it is used for auto minify.
- */
-
-/**
  * @typedef {Object} JsOptions
  * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The output filename of extracted JS.
@@ -60,7 +28,6 @@ class Options {
   static options = {};
   /** @type {AssetEntry} */
   static assetEntry = null;
-  static Collection = null; // TODO
   static webpackOptions = {};
   static productionMode = true;
   static dynamicEntry = false;
@@ -267,48 +234,83 @@ class Options {
     }
   }
 
+  /**
+   * @return {boolean}
+   */
   static isProduction() {
     return this.productionMode;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isDynamicEntry() {
     return this.dynamicEntry;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isEnabled() {
     return this.options.enabled !== false;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isMinify() {
     return this.options.minify;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isVerbose() {
-    return this.verbose;
+    return this.verbose === true;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isExtractComments() {
     return this.options.extractComments === true;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isIntegrityEnabled() {
     return this.options.integrity.enabled !== false;
   }
 
+  /**
+   * @param {string} resource
+   * @return {boolean}
+   */
   static isStyle(resource) {
     const [file] = resource.split('?', 1);
     return this.options.css.enabled && this.options.css.test.test(file);
   }
 
+  /**
+   * @param {string} resource
+   * @return {boolean}
+   */
   static isScript(resource) {
     const [file] = resource.split('?', 1);
     return this.options.js.enabled && this.options.js.test.test(file);
   }
 
+  /**
+   * @return {boolean}
+   */
   static isRealContentHash() {
     return this.webpackOptions.optimization.realContentHash === true;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isCacheable() {
     return this.cacheable;
   }
@@ -376,6 +378,9 @@ class Options {
     return this.options.preload != null && this.options.preload !== false;
   }
 
+  /**
+   * @return {boolean}
+   */
   static isAutoPublicPath() {
     return this.autoPublicPath === true;
   }
@@ -554,7 +559,7 @@ class Options {
 
   /**
    * @param {string} content A content of processed file.
-   * @param {ResourceInfo} info The resource info object.
+   * @param {TemplateInfo} info The resource info object.
    * @param {Compilation} compilation The Webpack compilation object.
    * @return {string}
    * @throws

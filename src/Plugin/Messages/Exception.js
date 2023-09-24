@@ -118,7 +118,7 @@ const executeFunctionException = (error, sourceFile) => {
 
 /**
  * @param {Error} error
- * @param {ResourceInfo} info
+ * @param {TemplateInfo} info
  * @throws {Error}
  */
 const postprocessException = (error, info) => {

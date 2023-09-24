@@ -1,5 +1,13 @@
 # Change log
 
+## 2.14.1 (2023-09-24)
+- fix: remove unused `isEntry` property from the `info` argument of the `postprocess` callback
+  the `isEntry` property was always true, because template is defined as an entrypoint
+- chore: code cleanup
+- chore: add examples of using `PureCSS` as a plugin for Webpack and for PostCSS
+- docs: fix formatting in readme
+- docs: fix some inaccuracies in readme
+
 ## 2.14.0 (2023-09-17)
 
 - feat: add the `integrityHashes` hook to allow retrieving the integrity values

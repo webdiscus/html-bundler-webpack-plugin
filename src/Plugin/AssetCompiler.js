@@ -74,23 +74,13 @@ const cssLoader = {
  * @property {string} [sourcePath = options.context] The absolute path to sources.
  * @property {string} [outputPath = options.output.path] The output directory for an asset.
  * @property {string|function(PathData, AssetInfo): string} filename The file name of output file.
- * @property {function(string, ResourceInfo, Compilation): string|null =} postprocess The postprocess for extracted content from entry.
+ * @property {function(string, TemplateInfo, Compilation): string|null =} postprocess The postprocess for rendered template.
  * @property {function(compilation: Compilation, {source: string, assetFile: string, inline: boolean} ): string|null =} extract
  */
 
 /**
  * @typedef {ModuleOptions} ModuleProps
  * @property {boolean} [inline = false] Whether inline CSS should contain an inline source map.
- */
-
-/**
- * @typedef {Object} ResourceInfo
- * @property {boolean} isEntry True if is the asset from entry, false if asset is required from template.
- * @property {boolean} verbose Whether information should be displayed.
- * @property {string|(function(PathData, AssetInfo): string)} filename The filename template or function.
- * @property {string} sourceFile The absolute path to source file.
- * @property {string} outputPath The absolute path to output directory of asset.
- * @property {string} assetFile The output asset file relative by outputPath.
  */
 
 /**
@@ -1170,17 +1160,16 @@ class AssetCompiler {
         break;
       case 'template':
         if (Options.hasPostprocess()) {
-          const resourceInfo = {
-            isEntry: true,
+          /**/
+          const info = {
             verbose: Options.isVerbose(),
-            inline,
+            filename,
             outputPath,
             sourceFile,
             assetFile,
-            filename,
           };
 
-          result = Options.postprocess(result, resourceInfo, this.compilation);
+          result = Options.postprocess(result, info, this.compilation);
         }
         break;
     }

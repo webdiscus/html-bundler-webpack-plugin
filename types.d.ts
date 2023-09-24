@@ -24,13 +24,17 @@ declare namespace HtmlBundlerPlugin {
   }
 
   export interface PluginOptions {
+    // match of entry template files
     test?: RegExp;
     /**
+     * The key is route to output file w/o an extension, value is a template source file.
      * If the value is string, it should be an absolute or relative path to templates.
      * If the entry is undefined, then must be defined the Webpack entry option.
      */
     entry?: EntryObject | string;
+    // defaults is options.output.path
     outputPath?: string;
+    // html output filename
     filename?: FilenameTemplate;
     js?: JsOptions;
     css?: CssOptions;
@@ -42,14 +46,27 @@ declare namespace HtmlBundlerPlugin {
     beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;
-    // plugin options
+    // postprocess of rendered template
     postprocess?: Postprocess;
+    // generates preload link tags for assets
     preload?: Preload;
     minify?: 'auto' | boolean | MinifyOptions;
     minifyOptions?: MinifyOptions;
+    /**
+     * Whether comments should be extracted to a separate file.
+     * If the file foo.js contains the license banner, then the comments will be stored to foo.js.LICENSE.txt.
+     * This option enables/disable storing of *.LICENSE.txt file.
+     * For more flexibility use terser-webpack-plugin https://webpack.js.org/plugins/terser-webpack-plugin/#extractcomments.
+     */
     extractComments?: boolean;
     integrity?: 'auto' | boolean | IntegrityOptions;
+    // paths and files to watch file changes
     watchFiles?: WatchFiles;
+    /**
+     * Whether in serve/watch mode should be added hot-update.js file in html.
+     * Use it only if you don't have a referenced source file of a script in html.
+     * If you already have a js file, this setting should be false as Webpack automatically injects the hot update code into the compiled js file.
+     */
     hotUpdate?: boolean;
     verbose?: 'auto' | boolean;
     /**
@@ -164,11 +181,14 @@ type Preprocessor =
       loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
     ) => string | Promise<any> | undefined);
 
-type Postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | undefined;
+/**
+ * Called after the template has been rendered, but not yet finalized,
+ * before the split chunks and inline assets are injected.
+ */
+type Postprocess = (content: string, info: TemplateInfo, compilation: Compilation) => string | undefined;
 
-type ResourceInfo = {
+type TemplateInfo = {
   verbose: boolean;
-  isEntry: boolean;
   filename: string | ((pathData: PathData) => string);
   outputPath: string;
   sourceFile: string;

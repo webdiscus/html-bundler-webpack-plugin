@@ -37,8 +37,16 @@ In an HTML template can be referenced any source files, similar to how it works 
 
 #### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
 
----
-### 💡 Highlights
+## ❤️ Sponsors
+
+<table>
+<tr>
+<td><a href="https://www.jetbrains.com/"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="100" alt="JetBrains Logo"></a></td>
+<td><a href="https://www.jetbrains.com/">JetBrains</a> provides a free license of their IDEs for this OSS development.</td>
+</tr>
+</table>
+
+## 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
 - Allows to **include** **script** and **style** source files directly **in HTML**:
@@ -56,29 +64,37 @@ In an HTML template can be referenced any source files, similar to how it works 
 
 See the [full list of features](#features).
 
-### ⚙️ How works the plugin
+## ⚙️ How works the plugin
 
 The plugin resolves references in the HTML template and adds them to the Webpack compilation.
-Webpack will automatically process the source files and the plugin replace the references with their output filenames in the generated HTML.
+Webpack will automatically process the source files, and the plugin replaces the references with their output filenames in the generated HTML.
 See the [example](#example).
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
-### ✅ Profit
+## ✅ Profit
 
-You can specify script and style source files directly in an HTML template,
+**Start from HTML**, not from JS. Define an **HTML** file as an **entry point**.
+
+Specify script and style **source files** directly in an **HTML** template,
 and you no longer need to define them in Webpack entry or import styles in JavaScript.
+
+Use **any template engine** without additional plugins and loaders.
+Most popular template engines supported "**out of the box**".
+
 Use one powerful plugin instead of [many different plugins](#list-of-plugins).
 
-### ❓Question / Feature Request / Bug
+## ❓Question / Feature Request / Bug
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
 
-### 📚 Read it
+## 📚 Read it
 
 - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
 - [Keep output directory structure in Webpack](https://dev.to/webdiscus/how-to-keep-the-folder-structure-of-source-templates-in-webpack-for-output-html-files-39bj)
 - [Auto generate an integrity hash for `link` and `script` tags](https://dev.to/webdiscus/webpack-auto-generate-an-integrity-hash-for-link-and-script-tags-in-an-html-template-48p5)
+- [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
+- [Comparison and Benchmarks of Node.js libraries to colorize text in terminal](https://dev.to/webdiscus/comparison-of-nodejs-libraries-to-colorize-text-in-terminal-4j3a) (_offtopic_)
 
 ## 🔆 What's New in v2
 
@@ -196,7 +212,6 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 
 ## Contents
 
-1. [Sponsors](#sponsors)
 1. [Features](#features)
 1. [Install and Quick start](#install)
 1. [Webpack options](#webpack-options)
@@ -894,7 +909,7 @@ If type is `string` then following substitutions (see [output.filename](https://
 If type is `Function` then following arguments are available in the function:
 
 - `@param {PathData} pathData` has the useful properties (see the [type PathData](https://webpack.js.org/configuration/output/#outputfilename)):
-  - `pathData.filename` the full path to source file
+  - `pathData.filename` the absolute path to source file
   - `pathData.chunk.name` the name of entry key
 - `@return {string}` The name or template string of output file.
 
@@ -1217,11 +1232,10 @@ Please see the details below under the [data](#loader-option-data) loader option
 Type:
 
 ```ts
-type postprocess = (content: string, info: ResourceInfo, compilation: Compilation) => string | undefined;
+type postprocess = (content: string, info: TemplateInfo, compilation: Compilation) => string | undefined;
 
-type ResourceInfo = {
+type TemplateInfo = {
   verbose: boolean;
-  isEntry: boolean;
   filename: string | ((pathData: PathData) => string);
   outputPath: string;
   sourceFile: string;
@@ -1231,22 +1245,21 @@ type ResourceInfo = {
 
 Default: `null`
 
-Called after a source of an asset module is rendered, but not yet processed by other plugins.
+Called after the template has been rendered, but not yet finalized, before the split chunks and inline assets are injected.
 
 The `postprocess` have the following arguments:
 
 - `content: string` - a content of processed file
-- `info: ResourceInfo` - info about current file
+- `info: TemplateInfo` - info about current file
 - `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
 
-The `ResourceInfo` have the following properties:
+The `TemplateInfo` have the following properties:
 
-- `verbose: boolean` - the value defined in the [`verbose`](#option-verbose) option
-- `isEntry: boolean` - if is `true`, the resource is the entry point, otherwise is a resource loaded in the entry point
-- `filename: string|function` - a filename of the resource, see [filename](https://webpack.js.org/configuration/output/#outputfilename)
-- `outputPath: string` - a full path of the output directory
-- `sourceFile: string` - a full path of the source file, without URL query
-- `assetFile: string` - an output asset file relative to the `outputPath`
+- `verbose: boolean` - the [`verbose`](#option-verbose) option
+- `filename: string|function` - the [`filename`](#option-filename) option of the template
+- `outputPath: string` - the absolute path of the output directory
+- `sourceFile: string` - the absolute path of the source file, without URL query
+- `assetFile: string` - the output file relative to the `outputPath`
 
 Return new content as a `string`.
 If return `undefined`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
@@ -2443,8 +2456,10 @@ src/views/partials/menu/top/desktop.html
 Include the partials in the `src/views/page/home.html` template with the `include()`:
 
 ```html
-<%~ include('teaser.html') %> <%~ include('menu/nav.html') %> <%~ include('menu/top/desktop.html') %> <%~
-include('footer.html') %>
+<%~ include('teaser.html') %>
+<%~ include('menu/nav.html') %>
+<%~ include('menu/top/desktop.html') %>
+<%~ include('footer.html') %>
 ```
 
 If partials have `.eta` extensions, then the extension can be omitted in the include argument.
@@ -2489,8 +2504,10 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 <%- include('/includes/gallery.html') %>
 
 <!-- views paths -->
-<%- include('teaser.html') %> <%- include('menu/nav.html') %> <%- include('menu/top/desktop.html') %> <%-
-include('footer.html') %>
+<%- include('menu/top/desktop.html') %>
+<%- include('menu/nav.html') %>
+<%- include('teaser.html') %>
+<%- include('footer.html') %>
 ```
 
 If you have partials with `.ejs` extensions, then the extension can be omitted.
@@ -2536,7 +2553,10 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 {{ include '/includes/gallery' }}
 
 <!-- views paths -->
-{{ include 'teaser' }} {{ include 'menu/nav' }} {{ include 'menu/top/desktop' }} {{ include 'footer' }}
+{{ include 'menu/top/desktop' }}
+{{ include 'menu/nav' }}
+{{ include 'teaser' }}
+{{ include 'footer' }}
 ```
 
 The `include` helper automatically resolves `.html` and `.hbs` extensions, it can be omitted.
@@ -2571,8 +2591,8 @@ loaderOptions: {
     preprocessorOptions: {
     // define partials manually
     partials: {
-      gallery: path.join(__dirname, 'src/views/includes/gallery.html'),
       teaser: path.join(__dirname, 'src/views/includes/teaser.html'),
+      gallery: path.join(__dirname, 'src/views/includes/gallery.html'),
       footer: path.join(__dirname, 'src/views/partials/footer.html'),
       'menu/nav': path.join(__dirname, 'src/views/partials/menu/nav.html'),
       'menu/top/desktop': path.join(__dirname, 'src/views/partials/menu/top/desktop.html'),
@@ -2584,7 +2604,11 @@ loaderOptions: {
 Include the partials in the `src/views/page/home.html` template:
 
 ```html
-{{> gallery }} {{> teaser }} {{> menu/nav }} {{> menu/top/desktop }} {{> footer }}
+{{> menu/top/desktop }}
+{{> menu/nav }}
+{{> teaser }}
+{{> gallery }}
+{{> footer }}
 ```
 
 **The `helpers` option**
@@ -4281,8 +4305,8 @@ For example, in a template are used the scripts and styles from `node_modules`:
 
 > **Note**
 >
-> In the generated HTML all script tags remain in their original places and split chunks will be added there,
-> in the order that Webpack generated.
+> In the generated HTML, all script tags remain in their original places, and the split chunks will be added there
+> in the order in which Webpack generated them.
 
 In this use case the `optimization.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
 
@@ -4317,13 +4341,13 @@ module.exports = {
 
 > **Warning**
 >
-> Splitting CSS to many chunks is principal impossible. Splitting works only for JS files.
+> Splitting CSS to many chunks is principally impossible. Splitting works only for JS files.
 
-Using the bundler plugin all your styles MUST be specified directly in template, not in Webpack entry.
-Unlike using the mini-css-extract-plugin and html-webpack-plugin, using the bundler plugin you cannot import a style in JavaScript.
-Importing a style in JavaScript is a dirty hack, BAD practice.
+Using the bundler plugin, all your style source files should be specified directly in the template.
+You can import style files in JavaScript, like it works using the `mini-css-extract-plugin` and `html-webpack-plugin`,
+but it is a **dirty hack**, **bad practice**, processing is **slow**, avoid it if possible.
 
-So far as the style files must be manually defined in the template, you can separate the styles into multiple bundles yourself.
+You can separate the styles into multiple bundles yourself.
 
 For example, there are style files used in your app:
 
@@ -4496,23 +4520,9 @@ dist/js/app-5fa74877.1aceb2db.js
 
 ```
 
----
-
 #### [↑ back to contents](#contents)
 
 ---
-
-<a id="sponsors" name="sponsors" href="#sponsors"></a>
-
-## Sponsors
-
-Thank you to our sponsors!
-
-| Sponsors                                                                                                                                                               |                                                                                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| <a href="https://www.jetbrains.com/"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="150" alt="JetBrains Logo"></a> | [JetBrains](https://www.jetbrains.com/) provides a free license of their IDEs for this OSS development. |
-
-#### [↑ back to contents](#contents)
 
 ## Also See
 
