@@ -1,0 +1,1 @@
+console.log(">> title: ",locales.title,{locales});

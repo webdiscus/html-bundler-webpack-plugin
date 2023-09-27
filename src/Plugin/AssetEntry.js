@@ -75,10 +75,12 @@ class AssetEntry {
   // the id to bind loader with data passed into template via entry.data
   static idIndex = 1;
   static entryIdKey = '_entryId';
+  // the regexp will be initialized in the init()
+  static entryIdRegexp = null;
   static entryNamePrefix = '__entry-BundlerPlugin_';
 
   /**
-   * Inject dependencies.
+   * Init the object, inject dependencies.
    *
    * @param {Compilation} compilation
    * @param {Object} entryLibrary
@@ -89,6 +91,7 @@ class AssetEntry {
     this.entryLibrary = entryLibrary;
     this.collection = collection;
     this.fs = compilation.compiler.inputFileSystem.fileSystem;
+    this.entryIdRegexp = new RegExp(`\\?${this.entryIdKey}=(\\d+)`);
   }
 
   static initEntry() {
@@ -278,15 +281,14 @@ class AssetEntry {
     return null;
   }
 
+  /**
+   * Get entry data.
+   *
+   * @param {string|Number} id The entry id.
+   * @return {Object}
+   */
   static getData(id) {
     return this.data.get(Number(id));
-  }
-
-  /**
-   * @param {Compilation} compilation The instance of the webpack compilation.
-   */
-  static setCompilation(compilation) {
-    this.compilation = compilation;
   }
 
   /**
@@ -309,26 +311,38 @@ class AssetEntry {
   }
 
   /**
+   * Retrieve `entryId` from request of the module.
+   * The request format is /path/to/loader/index.js?entryId=1!/path/to/template.
+   *
+   * @param {Module} module The Webpack module.
+   * @return {number|undefined}
+   */
+  static getEntryId(module) {
+    const [, entryId] = this.entryIdRegexp.exec(module.request);
+
+    return entryId ? Number(entryId) : undefined;
+  }
+
+  /**
    * @param {Module} module The Webpack module object.
    * @param {Object} resolveData The data object.
    */
   static connectEntryAndModule(module, resolveData) {
-    const { _bundlerPluginMeta } = module.resourceResolveData;
-
-    if (_bundlerPluginMeta == null) {
-      return;
-    }
-
-    const { entryId } = resolveData._bundlerPluginMeta;
-
-    _bundlerPluginMeta.entryId = entryId;
+    const { entryId, _bundlerPluginMeta: meta } = resolveData;
 
     if (entryId) {
-      // when used the same template file for many pages,
-      // add the unique entry id to the query of the loader url to be sure that module request is unique;
-      // when many Webpack entries have the same module request, then Webpack will not
-      module.request = module.request.replace(loader, loader + `?entryId=${entryId}`);
+      // When used the same template file for many pages,
+      // add the unique entry id to the query of the loader url to be sure that module request is unique.
+      // When many Webpack entries have the same module request, then Webpack will not create a new module.
+      module.request = module.request.replace(loader, loader + `?${this.entryIdKey}=${entryId}`);
     }
+
+    // Note: the module.resourceResolveData is cached in the serve mode,
+    // therefore, we can't save the entry id in the resourceResolveData.
+    // E.g.: when there are many entries with the same template file but with different data,
+    // then in serve/watch mode the resourceResolveData has the reference to the last object,
+    // which is unique by module.resource, not by module.request.
+    module.resourceResolveData._bundlerPluginMeta = meta;
   }
 
   /**
@@ -338,6 +352,13 @@ class AssetEntry {
   static setEntryId(id, entry) {
     // add the entry id as the query parameter
     entry.import[0] = addQueryParam(entry.import[0], this.entryIdKey, id);
+  }
+
+  /**
+   * @param {Compilation} compilation The instance of the webpack compilation.
+   */
+  static setCompilation(compilation) {
+    this.compilation = compilation;
   }
 
   /**

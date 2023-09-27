@@ -20,7 +20,7 @@
 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
-This plugin is a simple all-in-one solution for generating HTML containing JS, CSS, images, fonts and other resources, from their source files.
+This plugin is a modern solution for generating HTML containing JS, CSS, images, fonts and other resources, from their source files.
 The plugin allows to use [any template](#template-engine) file as [entry point](#option-entry).
 In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 
@@ -36,6 +36,11 @@ In an HTML template can be referenced any source files, similar to how it works 
 </table>
 
 #### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
+
+
+> **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
+> Don’t hesitate, switch to using this modern plugin too 😉.
+
 
 ## ❤️ Sponsors
 
@@ -74,15 +79,16 @@ See the [example](#example).
 
 ## ✅ Profit
 
-**Start from HTML**, not from JS. Define an **HTML** file as an **entry point**.
+- **Simplify Webpack config** using one powerful plugin instead of many [different plugins and loaders](#list-of-plugins).
 
-Specify script and style **source files** directly in an **HTML** template,
+- **Start from HTML**, not from JS. Define an **HTML** file as an **entry point**.
+
+- Specify script and style **source files** directly in an **HTML** template,
 and you no longer need to define them in Webpack entry or import styles in JavaScript.
 
-Use **any template engine** without additional plugins and loaders.
+- Use **any template engine** without additional plugins and loaders.
 Most popular template engines supported "**out of the box**".
 
-Use one powerful plugin instead of [many different plugins](#list-of-plugins).
 
 ## ❓Question / Feature Request / Bug
 

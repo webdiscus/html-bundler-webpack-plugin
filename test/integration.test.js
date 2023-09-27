@@ -1,4 +1,4 @@
-import { compareFiles } from './utils/helpers';
+import { compareFiles, watchCompareFiles } from './utils/helpers';
 //import { removeDirsSync } from './utils/file';
 
 // Remove all 'dist/' directories from tests, use it only for some local tests.
@@ -88,6 +88,11 @@ describe('plugin options', () => {
   test('afterProcess', () => compareFiles('option-afterProcess'));
   test('postprocess', () => compareFiles('option-postprocess'));
   test('entry', () => compareFiles('option-entry'));
+
+  test('entry data, multiple pages', () => compareFiles('entry-data-i18n-multipage'));
+  // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
+  //test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
+
   test('entry data file', () => compareFiles('option-entry-data-file'));
   test('entry path', () => compareFiles('option-entry-path'));
   test('preload', () => compareFiles('option-preload'));
@@ -294,7 +299,7 @@ describe('special cases', () => {
   test('import raw content of a file', () => compareFiles('import-raw-html'));
 
   // for debugging
-  // test('resolve hmr file', () => watchCompareFileListAndContent(PATHS, 'resolve-hmr-file'));
+  // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });
 
 describe('integrity', () => {

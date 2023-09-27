@@ -68,7 +68,6 @@ class Options {
     // merge plugin and loader data, the plugin data property overrides the same loader data property
     const data = { ...loaderData, ...entryData, ...queryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
-    //console.log('>> loaderObject', { loaderObject, data: loaderContext.data });
 
     // beforePreprocessor
     if (typeof options.beforePreprocessor !== 'function') {

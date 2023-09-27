@@ -1,6 +1,11 @@
 # Change log
 
+## 2.14.2 (2023-09-27)
+
+- fix: pass correct entry data in the template when the same template used for many pages with different data, in `serve` mode
+
 ## 2.14.1 (2023-09-24)
+- 
 - fix: remove unused `isEntry` property from the `info` argument of the `postprocess` callback
   the `isEntry` property was always true, because template is defined as an entrypoint
 - chore: code cleanup

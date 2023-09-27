@@ -28,10 +28,6 @@ class Integrity {
     this.referencePlaceholders = new Map();
     this.placeholderByChunkId = new Map();
     this.chunkByChunkId = new Map();
-
-    this.setReferencePlaceholder = this.setReferencePlaceholder.bind(this);
-    this.processAssets = this.processAssets.bind(this);
-    this.updateHash = this.updateHash.bind(this);
   }
 
   apply(compiler) {
@@ -72,7 +68,7 @@ class Integrity {
     // dynamically import a JS file
     mainTemplate.hooks.jsonpScript.tap(pluginName, (source) => this.addReference('script', source));
     mainTemplate.hooks.linkPreload.tap(pluginName, (source) => this.addReference('link', source));
-    mainTemplate.hooks.localVars.tap(pluginName, this.setReferencePlaceholder);
+    mainTemplate.hooks.localVars.tap(pluginName, this.setReferencePlaceholder.bind(this));
 
     compilation.hooks.beforeRuntimeRequirements.tap(pluginName, () => {
       this.placeholderByChunkId.clear();
@@ -80,13 +76,13 @@ class Integrity {
 
     compilation.hooks.processAssets.tap(
       { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE },
-      this.processAssets
+      this.processAssets.bind(this)
     );
 
     // the hook works in production mode only
     compilation.compiler.webpack.optimize.RealContentHashPlugin.getCompilationHooks(compilation).updateHash.tap(
       pluginName,
-      this.updateHash
+      this.updateHash.bind(this)
     );
   }
 
