@@ -42,14 +42,43 @@ In an HTML template can be referenced any source files, similar to how it works 
 > Don’t hesitate, switch to using this modern plugin too 😉.
 
 
-## ❤️ Sponsors
+## ❤️ Sponsors & Patrons
 
-<table>
-<tr>
-<td><a href="https://www.jetbrains.com/"><img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" width="100" alt="JetBrains Logo"></a></td>
-<td><a href="https://www.jetbrains.com/">JetBrains</a> provides a free license of their IDEs for this OSS development.</td>
-</tr>
+Thank you to all our sponsors and patrons!
+
+<table align="center">
+  <tr align="center" valign="top" style="border: 0">
+    <td style="border: 0"><a href="https://www.jetbrains.com/">
+      <img src="https://avatars.githubusercontent.com/u/878437?s=72&v=4" title="JetBrains" alt="JetBrains">
+      <p>JetBrains</p>
+    </a></td>
+    <td style="border: 0"><a href="https://github.com/getsentry">
+      <img src="https://avatars.githubusercontent.com/u/1396951?s=72&amp;v=4" title="Sentry" alt="Sentry">
+      <p>Sentry</p>
+    </a></td>
+    <td style="border: 0"><a href="https://github.com/stackaid">
+      <img src="https://avatars.githubusercontent.com/u/84366591?s=72&amp;v=4" title="StackAid" alt="StackAid">
+      <p>StackAid</p>
+    </a></td>
+    <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
+      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/96645548/020234154757463b939824efe62db137/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=GYnR3xvy7qBr2w1CihOfDOq87nOr4AbuW0ytvwg7Kgs%3D" width="72" title="Buckley Robinson" alt="patron" style="max-width: 100%;">
+      <p>Buckley Robinson</p>
+    </a></td>
+    <td style="border: 0"><a href="https://github.com/pirang">
+      <img src="https://avatars.githubusercontent.com/u/6986749?s=72&amp;v=4" title="Pirang" alt="Pirang">
+      <p>Pirang</p>
+    </a></td>
+    <td style="border: 0"><a href="https://github.com/MarcelRobitaille">
+      <img src="https://avatars.githubusercontent.com/u/8503756?s=72&amp;v=4" title="Marcel Robitaille" alt="Marcel Robitaille">
+      <p>Marcel Robitaille</p>
+    </a></td>
+    <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
+      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="72" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
+      <p>Raymond Ackloo</p>
+    </a></td>
+  </tr>
 </table>
+
 
 ## 💡 Highlights
 
