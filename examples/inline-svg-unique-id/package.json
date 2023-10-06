@@ -1,0 +1,22 @@
+{
+  "name": "inline-svg-unique-id",
+  "description": "Inline multiple SVG files w/o ID collision",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production"
+  },
+  "devDependencies": {
+    "css-loader": "^6.8.1",
+    "html-bundler-webpack-plugin": "^2.14.2",
+    "svgo-loader": "^4.0.0",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
