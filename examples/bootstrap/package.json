@@ -19,7 +19,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.14",
     "css-loader": "^6.8.1",
-    "html-bundler-webpack-plugin": "^2.5.1",
+    "html-bundler-webpack-plugin": "^2.14.2",
     "postcss-loader": "^7.3.3",
     "sass": "^1.64.2",
     "sass-loader": "^13.3.2",

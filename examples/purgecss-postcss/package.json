@@ -11,7 +11,7 @@
     "@fullhuman/postcss-purgecss": "^5.0.0",
     "bootstrap": "^5.3.2",
     "css-loader": "^6.8.1",
-    "html-bundler-webpack-plugin": "^2.14.0",
+    "html-bundler-webpack-plugin": "^2.14.2",
     "glob": "^10.3.6",
     "postcss": "^8.4.30",
     "postcss-loader": "^7.3.3",

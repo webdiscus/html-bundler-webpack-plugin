@@ -20,9 +20,11 @@
 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
-This plugin is a modern solution for generating HTML containing JS, CSS, images, fonts and other resources, from their source files.
-The plugin allows to use [any template](#template-engine) file as [entry point](#option-entry).
-In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
+The HTML Bundler Plugin generates static HTML from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
+The plugin allows to use a template file as [entry point](#option-entry).
+
+This plugin is a modern replacement of the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and [many others](#list-of-plugins) plugins and loaders.\
+This plugin is much easier and cleaner to use than html-webpack-plugin.
 
 <!--
 <table align="center">
@@ -37,24 +39,15 @@ In an HTML template can be referenced any source files, similar to how it works 
 </table>
 -->
 
-```mermaid
-graph TD
-    *(Entrypoint) ==>|Start from HTML|A[HTML]
-    A -->|source style file in HTML|D[CSS]
-    A -->|source image file in HTML|E[img]
-    A -->|source script file in HTML|F[JS]
-    D -.->|source image file in style|G[img]
-    D -.->|source font file in style|J[font]
-    F -.->K[JS]
-    F -.->|import style file in JS|L[CSS]
-    F -.->M[img]
-```
+<center>
+  <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
+</center>
 
 #### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
 
 
 > **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
-> Don’t hesitate, switch to using this modern plugin too 😉.
+> Don’t hesitate, switch to using this modern plugin too.
 
 
 ## ❤️ Sponsors & Patrons
@@ -131,7 +124,7 @@ See the [example](#example).
 and you no longer need to define them in Webpack entry or import styles in JavaScript.
 
 - Use **any template engine** without additional plugins and loaders.
-Most popular template engines supported "**out of the box**".
+Most popular [template engines](#template-engine) supported "**out of the box**".
 
 
 ## ❓Question / Feature Request / Bug
@@ -162,9 +155,11 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 ---
 
-<a id="example" name="example" href="#example"></a>
+<a id="example" name="example"></a>
 
-## Simple usage example
+### Simple usage example
+
+
 
 Start with an HTML template. Add the `<link>` and `<script>` tags.
 You can directly include asset source files such as SCSS, JS, images, and other media files in an HTML template.
@@ -258,7 +253,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 </tr>
 </table>
 
-<a id="contents" name="contents" href="#contents"></a>
+<a id="contents" name="contents"></a>
 
 ## Contents
 
@@ -340,7 +335,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Auto generate integrity hash for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
    - Inline multiple SVG files w/o ID collision [View in browser](https://stackblitz.com/edit/inline-svg-wo-ids-collision?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/inline-svg-unique-id/)
 
-<a id="features" name="features" href="#features"></a>
+<a id="features" name="features"></a>
 
 ## Features
 
@@ -366,10 +361,10 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
 - [minification](#option-minify) of generated HTML
 
-<a id="note-asset-source" name="note-asset-source" href="#note-asset-source"></a>
+<a id="note-asset-source" name="note-asset-source"></a>
 (\*) - `asset/source` works currently for SVG only, in a next version will work for other files too
 
-<a id="list-of-plugins" name="list-of-plugins" href="#list-of-plugins"></a>
+<a id="list-of-plugins" name="list-of-plugins"></a>
 Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
 
 | Package                                                                                                | Features                                                            |
@@ -389,7 +384,7 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 | [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                       | renders handlebars templates                                        |
 | [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)          | enables Subresource Integrity                                       |
 
-<a id="install" name="install" href="#install"></a>
+<a id="install" name="install"></a>
 
 ## Install and Quick start
 
@@ -449,7 +444,7 @@ For example, there is a template _./src/views/home/index.html_:
 
 To compile this template use the following Webpack configuration:
 
-<a id="simple-webpack-config" name="simple-webpack-config" href="#simple-webpack-config"></a>
+<a id="simple-webpack-config" name="simple-webpack-config"></a>
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -514,14 +509,14 @@ For custom templates, you can use the [preprocessor](#loader-option-preprocessor
 
 #### [↑ back to contents](#contents)
 
-<a id="webpack-options" name="webpack-options" href="#webpack-options"></a>
+<a id="webpack-options" name="webpack-options"></a>
 
 ## Webpack options
 
 Important Webpack options used to properly configure this plugin.
 
-<a id="webpack-option-output" name="webpack-options-output" href="#webpack-options-output"></a>
-<a id="webpack-option-output-path" name="webpack-options-output-path" href="#webpack-options-output-path"></a>
+<a id="webpack-option-output" name="webpack-options-output"></a>
+<a id="webpack-option-output-path" name="webpack-options-output-path"></a>
 
 ### `output.path`
 
@@ -530,7 +525,7 @@ Type: `string` Default: `path.join(process.cwd(), 'dist')`
 The root output directory for all processed files, as an absolute path.\
 You can omit this option, then all generated files will be saved under `dist/` in your project directory.
 
-<a id="webpack-option-output-publicpath" name="webpack-options-output-publicpath" href="#webpack-options-output-publicpath"></a>
+<a id="webpack-option-output-publicpath" name="webpack-options-output-publicpath"></a>
 
 ### `output.publicPath`
 
@@ -549,7 +544,7 @@ The possible values:
 - `publicPath: '//cdn.example.com/'` - an external URL with the same protocol (`http://` or `https://`)
 - `publicPath: 'https://cdn.example.com/'` - an external URL with the `https://` protocol only
 
-<a id="webpack-option-output-filename" name="webpack-options-output-filename" href="#webpack-options-output-filename"></a>
+<a id="webpack-option-output-filename" name="webpack-options-output-filename"></a>
 
 ### `output.filename`
 
@@ -580,7 +575,7 @@ module.exports = {
 };
 ```
 
-<a id="webpack-option-entry" name="webpack-options-entry" href="#webpack-options-entry"></a>
+<a id="webpack-option-entry" name="webpack-options-entry"></a>
 
 ### `entry`
 
@@ -600,11 +595,11 @@ For details see the [plugin option `entry`](#option-entry).
 
 #### [↑ back to contents](#contents)
 
-<a id="plugin-options" name="plugin-options" href="#plugin-options"></a>
+<a id="plugin-options" name="plugin-options"></a>
 
 ## Plugin options
 
-<a id="option-test" name="option-test" href="#option-test"></a>
+<a id="option-test" name="option-test"></a>
 
 ### `test`
 
@@ -623,7 +618,7 @@ One of the next features will be the processing scripts and styles as entry poin
 To do this, the plugin must differentiate between a template entry point and a script/style entry point.
 This plugin can completely replace the functionality of mini-css-extract-plugin and webpack-remove-empty-scripts in future.
 
-<a id="option-entry" name="option-entry" href="#option-entry"></a>
+<a id="option-entry" name="option-entry"></a>
 
 ### `entry`
 
@@ -660,7 +655,7 @@ For example:
 }
 ```
 
-<a id="option-entry-advanced" name="option-entry-advanced" href="#option-entry-advanced"></a>
+<a id="option-entry-advanced" name="option-entry-advanced"></a>
 
 #### Advanced syntax
 
@@ -736,7 +731,7 @@ The example above is equivalent to the simple syntax:
 }
 ```
 
-<a id="option-entry-data" name="option-entry-data" href="#option-entry-data"></a>
+<a id="option-entry-data" name="option-entry-data"></a>
 
 ##### `data`
 
@@ -794,7 +789,7 @@ To pass global variables in all templates use the [data](#loader-option-data) lo
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
 > But the `data` property can only be defined in the `entry` option of the plugin.
 
-<a id="option-entry-path" name="option-entry-path" href="#option-entry-path"></a>
+<a id="option-entry-path" name="option-entry-path"></a>
 
 #### Entry as a path to templates
 
@@ -860,7 +855,7 @@ new HtmlBundlerPlugin({
 
 #### [↑ back to contents](#contents)
 
-<a id="option-outputpath" name="option-outputpath" href="#option-outputpath"></a>
+<a id="option-outputpath" name="option-outputpath"></a>
 
 ### `outputPath`
 
@@ -942,7 +937,7 @@ The generated _dist/example/index.html_:
 >
 > The `outputPath` is NOT used for output assets (js, css, images, etc.).
 
-<a id="option-filename" name="option-filename" href="#option-filename"></a>
+<a id="option-filename" name="option-filename"></a>
 
 ### `filename`
 
@@ -966,7 +961,7 @@ If type is `Function` then following arguments are available in the function:
 
 #### [↑ back to contents](#contents)
 
-<a id="option-js" name="option-js" href="#option-js"></a>
+<a id="option-js" name="option-js"></a>
 
 ### `js`
 
@@ -1117,7 +1112,7 @@ Also see [How to keep package name for split chunks from **node_modules**](#reci
 
 #### [↑ back to contents](#contents)
 
-<a id="option-css" name="option-css" href="#option-css"></a>
+<a id="option-css" name="option-css"></a>
 
 ### `css`
 
@@ -1198,7 +1193,7 @@ If you want to have a different output filename, you can use the `filename` opti
 
 #### [↑ back to contents](#contents)
 
-<a id="option-preprocessor" name="option-preprocessor" href="#option-preprocessor"></a>
+<a id="option-preprocessor" name="option-preprocessor"></a>
 
 ### `preprocessor` and `preprocessorOptions`
 
@@ -1238,7 +1233,7 @@ Please see the details below under the [preprocessor](#loader-option-preprocesso
 
 #### [↑ back to contents](#contents)
 
-<a id="option-data" name="option-data" href="#option-data"></a>
+<a id="option-data" name="option-data"></a>
 
 ### `data`
 
@@ -1276,7 +1271,7 @@ Please see the details below under the [data](#loader-option-data) loader option
 
 #### [↑ back to contents](#contents)
 
-<a id="option-postprocess" name="option-postprocess" href="#option-postprocess"></a>
+<a id="option-postprocess" name="option-postprocess"></a>
 
 ### `postprocess`
 
@@ -1317,7 +1312,7 @@ If return `undefined`, the result processed via Webpack plugin is ignored and wi
 
 #### [↑ back to contents](#contents)
 
-<a id="option-preload" name="option-preload" href="#option-preload"></a>
+<a id="option-preload" name="option-preload"></a>
 
 ### `preload`
 
@@ -1527,7 +1522,7 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
 
 #### [↑ back to contents](#contents)
 
-<a id="option-minify" name="option-minify" href="#option-minify"></a>
+<a id="option-minify" name="option-minify"></a>
 
 ### `minify`
 
@@ -1558,7 +1553,7 @@ Possible values:
 - `{}` - enable minification with custom options, this object are merged with `default options`\
   see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
 
-<a id="option-minify-options" name="option-minify-options" href="#option-minify-options"></a>
+<a id="option-minify-options" name="option-minify-options"></a>
 
 ### `minifyOptions`
 
@@ -1568,7 +1563,7 @@ When the [minify](#option-minify) option is set to `auto`, you can configure min
 
 #### [↑ back to contents](#contents)
 
-<a id="option-extract-comments" name="option-extract-comments" href="#option-extract-comments"></a>
+<a id="option-extract-comments" name="option-extract-comments"></a>
 
 ### `extractComments`
 
@@ -1586,7 +1581,7 @@ If you want to allow extraction of `*.LICENSE.txt` files, set this option to `tr
 
 #### [↑ back to contents](#contents)
 
-<a id="option-integrity" name="option-integrity" href="#option-integrity"></a>
+<a id="option-integrity" name="option-integrity"></a>
 
 ### `integrity`
 
@@ -1781,7 +1776,7 @@ The content of the `dist/integrity.json` file looks like:
 
 #### [↑ back to contents](#contents)
 
-<a id="option-watch-files" name="option-watch-files" href="#option-watch-files"></a>
+<a id="option-watch-files" name="option-watch-files"></a>
 
 ### `watchFiles`
 
@@ -1859,7 +1854,7 @@ This option has the prio over paths and files.
 
 #### [↑ back to contents](#contents)
 
-<a id="option-hot-update" name="option-hot-update" href="#option-hot-update"></a>
+<a id="option-hot-update" name="option-hot-update"></a>
 
 ### `hotUpdate`
 
@@ -1870,7 +1865,7 @@ Use this options only if you don't have a referenced source file of a script in 
 
 If you already have a js file in html, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
 
-<a id="option-verbose" name="option-verbose" href="#option-verbose"></a>
+<a id="option-verbose" name="option-verbose"></a>
 
 ### `verbose`
 
@@ -1891,7 +1886,7 @@ Possible values:
 
 #### [↑ back to contents](#contents)
 
-<a id="option-loader-options" name="option-loader-options" href="#option-loader-options"></a>
+<a id="option-loader-options" name="option-loader-options"></a>
 
 ### `loaderOptions`
 
@@ -1962,11 +1957,11 @@ An example see by [How to use some different template engines](#recipe-diff-temp
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-options" name="loader-options" href="#loader-options"></a>
+<a id="loader-options" name="loader-options"></a>
 
 ## Loader options
 
-<a id="default-loader" name="default-loader" href="#default-loader"></a>
+<a id="default-loader" name="default-loader"></a>
 The `default loader`:
 
 ```js
@@ -1992,7 +1987,7 @@ The default loader handels HTML files and `EJS`-like templates.
 > Do not use another loader.
 > This loader replaces the functionality of `html-loader` and many other template loaders.
 
-<a id="loader-option-sources" name="loader-option-sources" href="#loader-option-sources"></a>
+<a id="loader-option-sources" name="loader-option-sources"></a>
 
 ### `sources`
 
@@ -2018,7 +2013,7 @@ Default: `true`
 
 The `sources` option allow to specify a tag attribute that should be resolved.
 
-<a id="loader-option-sources-default" name="loader-option-sources-default" href="#loader-option-sources-default"></a>
+<a id="loader-option-sources-default" name="loader-option-sources-default"></a>
 
 #### Default attributes
 
@@ -2061,7 +2056,7 @@ By default, resolves source files in the following tags and attributes:
 > - `src="data:image/png; ..."`
 > - `src="javascript: ..."`
 
-<a id="loader-option-sources-filter" name="loader-option-sources-filter" href="#loader-option-sources-filter"></a>
+<a id="loader-option-sources-filter" name="loader-option-sources-filter"></a>
 
 #### Filter function
 
@@ -2191,7 +2186,7 @@ new HtmlBundlerPlugin({
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-option-root" name="loader-option-root" href="#loader-option-root"></a>
+<a id="loader-option-root" name="loader-option-root"></a>
 
 ### `root`
 
@@ -2243,7 +2238,7 @@ Now you can use the `/` root path for the source assets:
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-option-before-preprocessor" name="loader-option-before-preprocessor" href="#loader-option-before-preprocessor"></a>
+<a id="loader-option-before-preprocessor" name="loader-option-before-preprocessor"></a>
 
 ### `beforePreprocessor`
 
@@ -2293,7 +2288,7 @@ new HtmlBundlerPlugin({
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-option-preprocessor" name="loader-option-preprocessor" href="#loader-option-preprocessor"></a>
+<a id="loader-option-preprocessor" name="loader-option-preprocessor"></a>
 
 ### `preprocessor`
 
@@ -2379,7 +2374,7 @@ module.exports = {
 > };
 > ```
 
-<a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom" href="#loader-option-preprocessor-custom"></a>
+<a id="loader-option-preprocessor-custom" name="loader-option-preprocessor-custom"></a>
 
 #### Custom templating engine
 
@@ -2445,7 +2440,7 @@ preprocessor = (template, { data }) => eta.renderString(template, data);
 >
 > The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
 
-<a id="loader-option-preprocessor-disable" name="loader-option-preprocessor-disable" href="#loader-option-preprocessor-disable"></a>
+<a id="loader-option-preprocessor-disable" name="loader-option-preprocessor-disable"></a>
 
 #### Disable templating engine
 
@@ -2464,7 +2459,7 @@ See [How to process a PHP template](#recipe-preprocessor-php).
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-option-preprocessorOptions" name="loader-option-preprocessorOptions" href="#loader-option-preprocessorOptions"></a>
+<a id="loader-option-preprocessorOptions" name="loader-option-preprocessorOptions"></a>
 
 ### `preprocessorOptions`
 
@@ -2475,7 +2470,7 @@ Each preprocessor has its own options, depend on using template engine.
 
 > This loader option is referenced as the [preprocessorOptions](#option-preprocessor) plugin option to simplify the config.
 
-<a id="loader-option-preprocessor-options-eta" name="loader-option-preprocessor-options-eta" href="#loader-option-preprocessor-options-eta"></a>
+<a id="loader-option-preprocessor-options-eta" name="loader-option-preprocessor-options-eta"></a>
 
 #### Options for `preprocessor: 'eta'` (default)
 
@@ -2515,7 +2510,7 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 If partials have `.eta` extensions, then the extension can be omitted in the include argument.
 
-<a id="loader-option-preprocessor-options-ejs" name="loader-option-preprocessor-options-ejs" href="#loader-option-preprocessor-options-ejs"></a>
+<a id="loader-option-preprocessor-options-ejs" name="loader-option-preprocessor-options-ejs"></a>
 
 #### Options for `preprocessor: 'ejs'`
 
@@ -2563,7 +2558,7 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 If you have partials with `.ejs` extensions, then the extension can be omitted.
 
-<a id="loader-option-preprocessor-options-handlebars" name="loader-option-preprocessor-options-handlebars" href="#loader-option-preprocessor-options-handlebars"></a>
+<a id="loader-option-preprocessor-options-handlebars" name="loader-option-preprocessor-options-handlebars"></a>
 
 #### Options for `preprocessor: 'handlebars'`
 
@@ -2757,7 +2752,7 @@ This plugin has own `build-in` helpers:
 
 For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
-<a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks" href="#loader-option-preprocessor-options-nunjucks"></a>
+<a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks"></a>
 
 #### Options for `preprocessor: 'nunjucks'`
 
@@ -2787,7 +2782,7 @@ For all available options, see the [Nunjucks API configure](https://mozilla.gith
 
 #### [↑ back to contents](#contents)
 
-<a id="loader-option-data" name="loader-option-data" href="#loader-option-data"></a>
+<a id="loader-option-data" name="loader-option-data"></a>
 
 ### `data`
 
@@ -2895,7 +2890,7 @@ In the `./src/views/about.html` template are available following variables:
 
 #### [↑ back to contents](#contents)
 
-<a id="template-engine" name="template-engine" href="#template-engine"></a>
+<a id="template-engine" name="template-engine"></a>
 
 ## Template engines
 
@@ -2914,7 +2909,7 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
 > This plugin works on the same codebase but has additional Pug-specific options and features.
 
-<a id="using-template-eta" name="using-template-eta" href="#using-template-eta"></a>
+<a id="using-template-eta" name="using-template-eta"></a>
 
 ### Using the Eta
 
@@ -2975,7 +2970,7 @@ new HtmlBundlerPlugin({
 
 For the `eta` preprocessor options see [here](#loader-option-preprocessor-options-eta).
 
-<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs" href="#eta-compatibilty-with-ejs"></a>
+<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs"></a>
 
 > **Warning**
 >
@@ -2984,7 +2979,7 @@ For the `eta` preprocessor options see [here](#loader-option-preprocessor-option
 
 #### [↑ back to contents](#contents)
 
-<a id="using-template-ejs" name="using-template-ejs" href="#using-template-ejs"></a>
+<a id="using-template-ejs" name="using-template-ejs"></a>
 
 ### Using the EJS
 
@@ -3039,7 +3034,7 @@ For the `ejs` preprocessor options see [here](#loader-option-preprocessor-option
 
 #### [↑ back to contents](#contents)
 
-<a id="using-template-handlebars" name="using-template-handlebars" href="#using-template-handlebars"></a>
+<a id="using-template-handlebars" name="using-template-handlebars"></a>
 
 ### Using the Handlebars
 
@@ -3115,7 +3110,7 @@ For the `handlebars` preprocessor options see [here](#loader-option-preprocessor
 
 #### [↑ back to contents](#contents)
 
-<a id="using-template-mustache" name="using-template-mustache" href="#using-template-mustache"></a>
+<a id="using-template-mustache" name="using-template-mustache"></a>
 
 ### Using the Mustache
 
@@ -3166,7 +3161,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="using-template-nunjucks" name="using-template-nunjucks" href="#using-template-nunjucks"></a>
+<a id="using-template-nunjucks" name="using-template-nunjucks"></a>
 
 ### Using the Nunjucks
 
@@ -3219,7 +3214,7 @@ For the `nunjucks` preprocessor options see [here](#loader-option-preprocessor-o
 
 #### [↑ back to contents](#contents)
 
-<a id="using-template-liquidjs" name="using-template-liquidjs" href="#using-template-liquidjs"></a>
+<a id="using-template-liquidjs" name="using-template-liquidjs"></a>
 
 ### Using the LiquidJS
 
@@ -3276,7 +3271,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="setup-live-reload" name="setup-live-reload" href="#setup-live-reload"></a>
+<a id="setup-live-reload" name="setup-live-reload"></a>
 
 ## Setup Live Reload
 
@@ -3301,7 +3296,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-keep-folder-structure-html" name="recipe-keep-folder-structure-html" href="#recipe-keep-folder-structure-html"></a>
+<a id="recipe-keep-folder-structure-html" name="recipe-keep-folder-structure-html"></a>
 
 ## How to keep source directory structure for HTML
 
@@ -3310,7 +3305,7 @@ For details, see the [entry path](#option-entry-path).
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-keep-folder-structure-assets" name="recipe-keep-folder-structure-assets" href="#recipe-keep-folder-structure-assets"></a>
+<a id="recipe-keep-folder-structure-assets" name="recipe-keep-folder-structure-assets"></a>
 
 ## How to keep source directory structure for assets
 
@@ -3378,7 +3373,7 @@ The example to keep original directory structure for images:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-use-images-in-html" name="recipe-use-images-in-html" href="#recipe-use-images-in-html"></a>
+<a id="recipe-use-images-in-html" name="recipe-use-images-in-html"></a>
 
 ## How to use source image files in HTML
 
@@ -3442,7 +3437,7 @@ The generated HTML contains hashed output images filenames:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-responsive-images" name="recipe-responsive-images" href="#recipe-responsive-images"></a>
+<a id="recipe-responsive-images" name="recipe-responsive-images"></a>
 
 ## How to resize and generate responsive images
 
@@ -3524,7 +3519,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-preload-fonts" name="recipe-preload-fonts" href="#recipe-preload-fonts"></a>
+<a id="recipe-preload-fonts" name="recipe-preload-fonts"></a>
 
 ## How to preload fonts
 
@@ -3644,7 +3639,7 @@ The generated HTML contains the preload tag with the font:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-inline-css" name="recipe-inline-css" href="#recipe-inline-css"></a>
+<a id="recipe-inline-css" name="recipe-inline-css"></a>
 
 ## How to inline CSS in HTML
 
@@ -3791,7 +3786,7 @@ The generated HTML contains inline CSS already processed via Webpack:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-inline-js" name="recipe-inline-js" href="#recipe-inline-js"></a>
+<a id="recipe-inline-js" name="recipe-inline-js"></a>
 
 ## How to inline JS in HTML
 
@@ -3931,7 +3926,7 @@ The generated HTML contains inline JS already compiled via Webpack:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-inline-image" name="recipe-inline-image" href="#recipe-inline-image"></a>
+<a id="recipe-inline-image" name="recipe-inline-image"></a>
 
 ## How to inline SVG, PNG images in HTML
 
@@ -3977,7 +3972,7 @@ The plugin automatically inlines images smaller then `maxSize`.
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-preprocessor-php" name="recipe-preprocessor-php" href="#recipe-preprocessor-php"></a>
+<a id="recipe-preprocessor-php" name="recipe-preprocessor-php"></a>
 
 ## How to process a PHP template (.phtml)
 
@@ -4050,7 +4045,7 @@ The processed PHP template _dist/index.phtml_:
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates" href="#recipe-pass-data-to-templates"></a>
+<a id="recipe-pass-data-to-templates" name="recipe-pass-data-to-templates"></a>
 
 ## How to pass data into multiple templates
 
@@ -4246,7 +4241,7 @@ The generated _dist/about.html_
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-diff-templates" name="recipe-diff-templates" href="#recipe-diff-templates"></a>
+<a id="recipe-diff-templates" name="recipe-diff-templates"></a>
 
 ## How to use some different template engines
 
@@ -4309,7 +4304,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-split-chunks" name="recipe-split-chunks" href="#recipe-split-chunks"></a>
+<a id="recipe-split-chunks" name="recipe-split-chunks"></a>
 
 ### How to config `splitChunks`
 
@@ -4386,7 +4381,7 @@ module.exports = {
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-split-css" name="recipe-split-css" href="#recipe-split-css"></a>
+<a id="recipe-split-css" name="recipe-split-css"></a>
 
 ### How to split CSS files
 
@@ -4478,7 +4473,7 @@ If you want save module styles separate from your styles, then load them in a te
 
 #### [↑ back to contents](#contents)
 
-<a id="recipe-split-chunks-keep-module-name" name="recipe-split-chunks-keep-module-name" href="#recipe-split-chunks-keep-module-name"></a>
+<a id="recipe-split-chunks-keep-module-name" name="recipe-split-chunks-keep-module-name"></a>
 
 ### How to keep package name for split chunks from node_modules
 

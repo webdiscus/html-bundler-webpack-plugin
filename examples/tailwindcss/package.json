@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "css-loader": "^6.8.1",
-    "html-bundler-webpack-plugin": "2.5.1",
+    "html-bundler-webpack-plugin": "^2.14.2",
     "postcss": "^8.4.27",
     "postcss-loader": "^7.3.3",
     "postcss-preset-env": "^9.1.0",

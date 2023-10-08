@@ -1,5 +1,10 @@
 # Change log
 
+## 2.14.3 (2023-10-08)
+
+- chore: update dependencies in examples
+- docs: update readme
+
 ## 2.14.2 (2023-09-27)
 
 - fix: pass correct entry data in the template when the same template used for many pages with different data, in `serve` mode
