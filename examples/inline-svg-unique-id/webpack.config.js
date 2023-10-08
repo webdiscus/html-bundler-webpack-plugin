@@ -37,7 +37,7 @@ module.exports = {
               params: {
                 // disable prefix as filename
                 prefix: false,
-                // enable unique ID for multiple inlining of the same SVG file containing IDs
+                // enable unique ID to avoid ID collision by inline multiple SVG files
                 uniqueId: true,
               },
             },

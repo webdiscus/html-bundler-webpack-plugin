@@ -24,6 +24,7 @@ This plugin is a modern solution for generating HTML containing JS, CSS, images,
 The plugin allows to use [any template](#template-engine) file as [entry point](#option-entry).
 In an HTML template can be referenced any source files, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 
+<!--
 <table align="center">
 <tr><th>Entry point is HTML</th></tr>
 <tr><td><pre>
@@ -34,6 +35,20 @@ In an HTML template can be referenced any source files, similar to how it works 
  img   font        js  css  img
 </pre></td></tr>
 </table>
+-->
+
+```mermaid
+graph TD
+    *(Entrypoint) ==>|Start from HTML|A[HTML]
+    A -->|source style file in HTML|D[CSS]
+    A -->|source image file in HTML|E[img]
+    A -->|source script file in HTML|F[JS]
+    D -.->|source image file in style|G[img]
+    D -.->|source font file in style|J[font]
+    F -.->K[JS]
+    F -.->|import style file in JS|L[CSS]
+    F -.->M[img]
+```
 
 #### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
 
