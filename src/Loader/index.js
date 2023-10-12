@@ -20,9 +20,11 @@ const {
  * @param {any} meta
  */
 const loader = function (content, map, meta) {
+  /** @type {BundlerPluginLoaderContext} */
   const loaderContext = this;
   const loaderCallback = loaderContext.async();
-  const { rootContext, resource, resourcePath, entryName, entryId, entryData } = loaderContext;
+  const { rootContext, resource, resourcePath, entryId } = loaderContext;
+  const hooks = PluginService.getHooks();
   let errorStage = '';
 
   const callback = (error, result = null) => {
@@ -46,21 +48,32 @@ const loader = function (content, map, meta) {
     errorStage = 'init';
     Options.init(loaderContext);
     Loader.init(loaderContext);
-
-    const beforePreprocessor = Options.get().beforePreprocessor;
-    const preprocessor = Options.getPreprocessor();
-    let result;
-
-    if (beforePreprocessor != null) {
-      errorStage = 'beforePreprocessor';
-      result = beforePreprocessor(content, loaderContext);
-    }
-    if (preprocessor != null) {
-      errorStage = 'preprocessor';
-      result = preprocessor(result != null ? result : content, loaderContext);
-    }
-    resolve(result != null ? result : content);
+    resolve();
   })
+    .then(() => {
+      errorStage = 'beforePreprocessor';
+      return hooks.beforePreprocessor.promise(content, loaderContext);
+    })
+    .then((value) => {
+      const beforePreprocessor = Options.get().beforePreprocessor;
+      if (beforePreprocessor != null) {
+        errorStage = 'beforePreprocessor';
+        return beforePreprocessor(value, loaderContext) || value;
+      }
+      return value;
+    })
+    .then((value) => {
+      errorStage = 'preprocessor';
+      return hooks.preprocessor.promise(value, loaderContext);
+    })
+    .then((value) => {
+      const preprocessor = Options.getPreprocessor();
+      if (preprocessor != null) {
+        errorStage = 'preprocessor';
+        return preprocessor(value, loaderContext) || value;
+      }
+      return value;
+    })
     .then((value) => {
       errorStage = 'compile';
       return Template.compile(value, resource, entryId);

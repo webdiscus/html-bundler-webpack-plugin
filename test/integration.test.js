@@ -85,10 +85,8 @@ describe('plugin options', () => {
 
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));
-  test('afterProcess', () => compareFiles('option-afterProcess'));
-  test('postprocess', () => compareFiles('option-postprocess'));
-  test('entry', () => compareFiles('option-entry'));
 
+  test('entry', () => compareFiles('option-entry'));
   test('entry data, multiple pages', () => compareFiles('entry-data-i18n-multipage'));
   // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
   //test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
@@ -112,6 +110,9 @@ describe('plugin options', () => {
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
   test('verbose', () => compareFiles('option-verbose'));
+
+  // for debug only
+  test('verbose output', () => compareFiles('option-verbose-output'));
 });
 
 describe('plugin minify option', () => {
@@ -126,12 +127,35 @@ describe('plugin minify option', () => {
   // test('minify HTML with "<" char', () => compareFiles('option-minify-html-chars'));
 });
 
+describe('plugin callback options', () => {
+  test('postprocess', () => compareFiles('option-postprocess'));
+
+  // TODO: yet experimental, undocumented
+  test('beforeEmit', () => compareFiles('option-beforeEmit'));
+});
+
+describe('hooks', () => {
+  test('preprocessor hooks and callbacks', () => compareFiles('hook-callback-beforePreprocessor-preprocessor'));
+
+  test('beforePreprocessor', () => compareFiles('hook-beforePreprocessor'));
+  test('preprocessor', () => compareFiles('hook-preprocessor'));
+
+  // TODO: implement postprocess hook (rename to afterPreprocessor?)
+  //test('postprocess', () => compareFiles('hook-postprocess'));
+
+  test('beforeEmit', () => compareFiles('hook-beforeEmit'));
+  test('afterEmit', () => compareFiles('hook-afterEmit'));
+});
+
 describe('loader options common', () => {
   test('defaults, when in module.rules is not defined', () => compareFiles('loader-option-defaults'));
   test('disable parsing for all tags and attributes', () => compareFiles('loader-option-sources-false'));
+
   test('add custom tags and attributes', () => compareFiles('loader-option-sources-attrs'));
-  test('filter tags and attributes', () => compareFiles('loader-option-sources-attrs-filter'));
-  test('filter property attribute', () => compareFiles('loader-option-sources-attrs-filter-property'));
+  test('filter tags and attributes', () => compareFiles('loader-option-sources-filter'));
+  test('filter property attribute', () => compareFiles('loader-option-sources-filter-property'));
+  test('filter, parsedValues', () => compareFiles('loader-option-sources-filter-parsedValues'));
+
   test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
   test('preprocessor null', () => compareFiles('loader-option-preprocessor-return-null'));
@@ -197,7 +221,7 @@ describe('inline styles & scripts', () => {
 
 describe('import styles in JavaScript', () => {
   test('import css in js', () => compareFiles('js-import-css'));
-  test('import css in ts', () => compareFiles('js-import-css-ts'));
+  test('import css in ts, verbose', () => compareFiles('js-import-css-ts'));
   test('import scss in js', () => compareFiles('js-import-scss'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));
@@ -244,6 +268,11 @@ describe('import styles in JavaScript', () => {
   // debug
   //test('js-import-sass-map-bug', () => compareFiles('js-import-sass-map-bug'));
   //test('js-import-css-debug-watch', () => compareFiles('js-import-css-debug-watch'));
+});
+
+describe('import lazy styles in JavaScript', () => {
+  // TODO: yet experimental, undocumented
+  test('js-import-css-lazy', () => compareFiles('js-import-css-lazy'));
 });
 
 describe('split chunks', () => {
@@ -343,15 +372,15 @@ describe('integrity, dynamic chunks', () => {
   //test('import css in dynamic chunk', () => compareFiles('integrity-import-css-in-dynamic-chunk'));
 });
 
+describe('use template in js', () => {
+  // TODO: avoid to call 2x the same template
+  test('require default template in js', () => compareFiles('require-tmpl-in-js'));
+});
+
 describe('extras: responsive images', () => {
   test('images in template, publicPath="auto"', () => compareFiles('responsive-images'));
   test('images in template and in style', () => compareFiles('responsive-images-html-css'));
   test('images in template, in style an in js', () => compareFiles('responsive-images-html-css-js'));
   test('duplicate images in template and styles', () => compareFiles('responsive-images-many-duplicates'));
   test('images in template, publicPath="/"', () => compareFiles('responsive-images-publicPath-root'));
-});
-
-describe('use template in js', () => {
-  // TODO: avoid to call 2x the same template
-  test('require default template in js', () => compareFiles('require-tmpl-in-js'));
 });

@@ -1,13 +1,16 @@
 const path = require('path');
 
-const { AsyncSeriesHook } = require('tapable');
+const { AsyncSeriesHook, AsyncSeriesWaterfallHook, SyncWaterfallHook } = require('tapable');
 const Compilation = require('webpack/lib/Compilation');
 const Cache = require('webpack/lib/Cache');
+
+const AssetParser = require('webpack/lib/asset/AssetParser');
+const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
 //const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 //const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
 const { pluginName } = require('../config');
-const { baseUri, urlPathPrefix } = require('../Loader/Utils');
+const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { isDir } = require('../Common/FileUtils');
 const createPersistentCache = require('./createPersistentCache');
 const PersistentCache = require('./PersistentCache');
@@ -43,6 +46,8 @@ const cssLoader = {
   options: undefined,
   ident: undefined,
 };
+
+/** @typedef {import('../../types').CompileOptions} CompileOptions */
 
 /** @typedef {import('webpack/declarations/WebpackOptions').Output} WebpackOutputOptions */
 /** @typedef {import('webpack').Compiler} Compiler */
@@ -90,12 +95,7 @@ const cssLoader = {
  * @property {string|undefined} filename The output filename.
  */
 
-/**
- * @typedef {Object} CompilationHooks
- * @property {AsyncSeriesHook<[Map<string, string>]>} integrityHashes
- */
-
-/** @type {WeakMap<Compilation, CompilationHooks>} */
+/** @type {WeakMap<Compilation, HtmlBundlerPlugin.Hooks>} */
 const compilationHooksMap = new WeakMap();
 
 let HotUpdateChunk;
@@ -120,20 +120,29 @@ class AssetCompiler {
   /** @type {Compilation} */
   compilation = null;
 
+  /** @type {Array<Promise>} */
+  promises = [];
+
   /**
-   * @param {Compilation} compilation the compilation
-   * @returns {CompilationHooks} the attached hooks
+   * @param {Compilation} compilation The compilation.
+   * @returns {HtmlBundlerPlugin.Hooks} The attached hooks.
    */
   static getHooks(compilation) {
     if (!(compilation instanceof Compilation)) {
       throw new TypeError(`The 'compilation' argument must be an instance of Compilation`);
     }
 
-    /** @type {CompilationHooks} */
     let hooks = compilationHooksMap.get(compilation);
 
     if (hooks == null) {
       hooks = {
+        // use a bail or waterfall hook when the hook returns something
+        beforePreprocessor: new AsyncSeriesWaterfallHook(['content', 'loaderContext']),
+        preprocessor: new AsyncSeriesWaterfallHook(['content', 'loaderContext']),
+        // TODO: implement
+        //postprocess: new SyncWaterfallHook(['content', 'templateInfo']),
+        beforeEmit: new SyncWaterfallHook(['content', 'entry', 'options']),
+        afterEmit: new AsyncSeriesHook(['entries', 'options']),
         integrityHashes: new AsyncSeriesHook(['hashes']),
       };
       compilationHooksMap.set(compilation, hooks);
@@ -218,6 +227,7 @@ class AssetCompiler {
     AssetResource.init(compiler);
 
     this.initialize(compiler);
+    this.promises = [];
 
     // initialize integrity plugin
     this.integrityPlugin = new Integrity(Options);
@@ -243,7 +253,6 @@ class AssetCompiler {
         });
       });
 
-      //compiler.hooks.afterCompile.tap({ name: pluginName }, () => {
       compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
         if (!isCached) {
           const cacheData = persistentCache.getData();
@@ -278,10 +287,14 @@ class AssetCompiler {
 
       this.compilation = compilation;
 
+      // TODO: refactor
+      PluginService.plugin = AssetCompiler;
+      PluginService.compilation = compilation;
+
       AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, collection: Collection });
       AssetTrash.init(compilation);
       CssExtractModule.init(compilation);
-      Collection.init(compilation);
+      Collection.init(compilation, AssetCompiler.getHooks(compilation));
 
       Resolver.init({
         fs,
@@ -294,6 +307,29 @@ class AssetCompiler {
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
       normalModuleFactory.hooks.afterResolve.tap(pluginName, this.afterResolve);
       contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
+
+      // TODO: reserved for next major version supported Webpack 5.81+
+      //  - add support for lazy load CSS in JavaScript, see js-import-css-lazy
+      //  - move the code from afterCreateModule to here
+      //  - replace the 'javascript/auto' with constant from webpack
+      // normalModuleFactory.hooks.createModuleClass.for('javascript/auto').tap(pluginName, (createData, resolveData) => {
+      //   const {
+      //     _bundlerPluginMeta: { isImportedStyle },
+      //   } = resolveData;
+      //   const query = createData.resourceResolveData?.query || '';
+      //   const isLazy = query.includes('lazy');
+      //
+      //   if (isImportedStyle && isLazy && !query.includes(cssLoaderName)) {
+      //     const dataUrlOptions = undefined;
+      //     const filename = Options.getCss().filename;
+      //     createData.settings.type = 'asset/resource';
+      //     createData.type = 'asset/resource';
+      //     createData.binary = true;
+      //     createData.parser = new AssetParser(false);
+      //     createData.generator = new AssetGenerator(dataUrlOptions, filename);
+      //     //console.log('\n #### createModuleClass:', { createData, resolveData });
+      //   }
+      // });
 
       // build modules
       normalModuleFactory.hooks.module.tap(pluginName, this.afterCreateModule);
@@ -329,32 +365,68 @@ class AssetCompiler {
         // - issues by parsing the inlined js/css code with the html minification module
         const result = this.afterRenderModules(compilation);
 
-        // TODO: calc real content hash for js and css, currently it is impossible
-        // if (Options.isRealContentHash()) {}
-
-        return Promise.resolve(result);
+        //return Promise.resolve(result);
+        return Promise.resolve(result)
+          .then(() => {
+            this.afterProcessAssets(compilation.assets);
+          })
+          .catch((error) => {
+            // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
+            this.exceptions.add(error);
+          });
       });
 
-      // postprocess for the content of assets
-      compilation.hooks.afterProcessAssets.tap({ name: pluginName, stage: +1 }, (assets) => {
-        // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
-        try {
-          this.afterProcessAssets(assets);
-        } catch (error) {
-          this.exceptions.add(error);
-        }
-      });
+      // after process assets
+      // TODO: keep the code as fallback for a potential issue when another plugin will change a html in afterProcessAssets
+      // compilation.hooks.afterProcessAssets.tap({ name: pluginName, stage: +1 }, (assets) => {
+      //   // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
+      //   try {
+      //     this.afterProcessAssets(assets);
+      //   } catch (error) {
+      //     this.exceptions.add(error);
+      //   }
+      // });
     });
 
-    compiler.hooks.afterEmit.tap(pluginName, () => {
+    compiler.hooks.afterEmit.tapPromise(pluginName, () => {
+      const hooks = AssetCompiler.getHooks(this.compilation);
+      let result = Promise.resolve();
+
       if (Options.isIntegrityEnabled()) {
-        const hooks = AssetCompiler.getHooks(this.compilation);
         const hashes = Integrity.getAssetHashes();
-        hooks.integrityHashes.promise(hashes);
+        result = hooks.integrityHashes.promise(hashes);
       }
+
+      result.then(() => {
+        const entries = [];
+
+        /** @type {CompileOptions} */
+        const options = {
+          verbose: Options.isVerbose(),
+          outputPath: Options.getWebpackOutputPath(),
+        };
+
+        // prepare the CompileEntries for the hook
+        for (const [, { entry, assets }] of Collection.data) {
+          /** @type {CompileEntry} */
+          const compileEntry = {
+            name: entry.originalName,
+            resource: entry.resource,
+            assetFile: entry.filename,
+            assets,
+          };
+          entries.push(compileEntry);
+        }
+
+        hooks.afterEmit.promise(entries, options);
+      });
+
+      this.promises.push(result);
+
+      return result;
     });
 
-    compiler.hooks.done.tap(pluginName, this.done);
+    compiler.hooks.done.tapPromise(pluginName, this.done);
     compiler.hooks.shutdown.tap(pluginName, this.shutdown);
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
 
@@ -607,6 +679,19 @@ class AssetCompiler {
   afterCreateModule(module, createData, resolveData) {
     const { _bundlerPluginMeta: meta } = resolveData;
     const { rawRequest, resource } = createData;
+    const query = module.resourceResolveData?.query || '';
+    const isLazy = query.includes('lazy');
+
+    // TODO: undocumented experimental support for lazy load a source style file (with `?lazy` query) in JavaScript
+    if (meta.isImportedStyle && isLazy && !query.includes(cssLoaderName)) {
+      const dataUrlOptions = undefined;
+      const filename = Options.getCss().filename;
+
+      module.type = 'asset/resource';
+      module.binary = true;
+      module.parser = new AssetParser(false);
+      module.generator = new AssetGenerator(dataUrlOptions, filename);
+    }
 
     AssetEntry.connectEntryAndModule(module, resolveData);
     // for debug only, don't use this id as real entryId, because the module.resourceResolveData is cached in serve mode
@@ -905,6 +990,8 @@ class AssetCompiler {
   /**
    * Render styles imported in JavaScript.
    *
+   * TODO: preload for images from imported styles
+   *
    * @param {Array<Object>} result
    * @param {Object} chunk
    */
@@ -924,6 +1011,7 @@ class AssetCompiler {
 
       const issuerEntry = AssetEntry.getByResource(issuer);
       const sources = [];
+      const resources = [];
       const imports = [];
       let cssHash = '';
 
@@ -931,19 +1019,59 @@ class AssetCompiler {
       const modules = Collection.findImportedModules(entry.id, issuer, chunk);
 
       // 2. squash styles from all nested files into one file
-      modules.forEach((module) => {
-        const data = {
-          type: Collection.type.style,
-          imported: true,
-          inline: undefined,
+      for (const module of modules) {
+        const isLazy = module.resourceResolveData?.query.includes('lazy');
+        const importData = {
           resource: module.resource,
-          assetFile: undefined,
+          assets: [],
         };
+
+        // note: webpack self replaces inlined images in imported style, do nothing for it
+        const { assetsInfo } = module.buildInfo;
+
+        if (assetsInfo) {
+          for (const [assetFile2, asset] of assetsInfo) {
+            const sourceFilename = asset.sourceFilename;
+            const stylePath = path.dirname(module.resource);
+
+            const data = {
+              type: Collection.type.resource,
+              inline: false,
+              resource: path.resolve(stylePath, sourceFilename),
+              assetFile: assetFile2,
+              issuer: {
+                resource: module.resource,
+              },
+            };
+
+            importData.assets.push(data);
+          }
+        }
+
+        if (isLazy) {
+          // TODO: add support for lazy load CSS in JavaScript, see js-import-css-lazy
+          Collection.setData(
+            entry,
+            { resource: issuer },
+            {
+              type: Collection.type.style,
+              // lazy file can't be inlined, it makes no sense
+              inline: false,
+              lazy: true,
+              resource: module.resource,
+              assetFile: module.buildInfo.filename,
+            }
+          );
+          //console.log('\n### LAZY CSS: ', importData, module);
+          continue;
+        }
 
         cssHash += module.buildInfo.hash;
         sources.push(...module._cssSource);
-        imports.push(data);
-      });
+
+        imports.push(importData);
+        resources.push(module.resource);
+      }
 
       if (sources.length === 0) continue;
 
@@ -961,6 +1089,7 @@ class AssetCompiler {
         resource: issuer,
         useChunkFilename: true,
       });
+
       const assetFile = inline ? this.getInlineStyleAsseFile(filename, entryFilename) : filename;
       const outputFilename = inline ? assetFile : Options.getAssetOutputFile(assetFile, entryFilename);
 
@@ -970,10 +1099,11 @@ class AssetCompiler {
         {
           type: Collection.type.style,
           inline,
-          imports,
-          // if exists imports then resource must be null
-          resource: null,
+          imported: true,
+          // if style is imported then resource is the array of imported source files
+          resource: resources,
           assetFile: outputFilename,
+          imports,
         }
       );
 
@@ -985,35 +1115,10 @@ class AssetCompiler {
       // 4. extracts CSS content from squashed sources
       const issuerFilename = inline ? entryFilename : assetFile;
 
-      const resolveAssetFiles = (match, file) => {
-        const outputFilename = isAutoPublicPath
-          ? Options.getAssetOutputFile(file, issuerFilename)
-          : path.posix.join(publicPath, file);
+      const resolveAssetFile = (match, file) =>
+        isAutoPublicPath ? Options.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
 
-        // note: Webpack itself embeds the asset/inline resources,
-        // here will be processed asset/resource only
-
-        for (const module of modules) {
-          const assetsInfo = module.buildInfo.assetsInfo?.get(file);
-
-          if (!assetsInfo) continue;
-
-          Collection.setData(
-            entry,
-            { resource: module.resource },
-            {
-              type: Collection.type.resource,
-              inline: undefined,
-              resource: assetsInfo.sourceFilename,
-              assetFile: outputFilename,
-            }
-          );
-        }
-
-        return outputFilename;
-      };
-
-      const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFiles));
+      const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFile));
 
       // 5. add extracted CSS file into compilation
       const fileManifest = {
@@ -1099,9 +1204,10 @@ class AssetCompiler {
     /**
      * @param {string} content
      * @param {AssetEntryOptions} entry
+     * @param {Array<Object>} assets
      * @return {string|null}
      */
-    const callback = (content, entry) => {
+    const callback = (content, entry, assets) => {
       content =
         this.afterProcess(compilation, {
           sourceFile: entry.resource,
@@ -1109,14 +1215,10 @@ class AssetCompiler {
           content,
         }) || content;
 
-      return Options.afterProcess(content, { sourceFile: entry.resource, assetFile: entry.filename }) || content;
+      return content;
     };
 
     Collection.render(callback);
-
-    // if (Options.isRealContentHash()) {
-    //   // TODO: calc real content hash for js and css
-    // }
 
     // remove all unused assets from compilation
     AssetTrash.clearCompilation();
@@ -1128,17 +1230,17 @@ class AssetCompiler {
    * @param {string} type The type of module, one of the values: template, style.
    * @param {boolean} inline Whether the resource should be inlined.
    * @param {Object} source The Webpack source.
+   * @param {string} resource The full path of source file, including a query.
    * @param {string} sourceFile The full path of source file w/o a query.
-   * @param {string} sourceRequest The full path of source file, including a query.
    * @param {string} assetFile
    * @param {string} outputPath
    * @param {string|function} filename The filename template.
    * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
-  renderModule({ type, inline, source, sourceFile, resource: sourceRequest, assetFile, outputPath, filename }) {
+  renderModule({ type, inline, source, sourceFile, resource, assetFile, outputPath, filename }) {
     /** @type  FileInfo */
     const issuer = {
-      resource: sourceRequest,
+      resource,
       filename: assetFile,
     };
     Resolver.setContext(this.currentEntryPoint, issuer);
@@ -1162,16 +1264,21 @@ class AssetCompiler {
         break;
       case 'template':
         if (Options.hasPostprocess()) {
-          /**/
-          const info = {
+          /** @type {TemplateInfo} */
+          const templateInfo = {
             verbose: Options.isVerbose(),
+            // TODO: deprecate the filename and sourceFile properties
             filename,
-            outputPath,
             sourceFile,
+            outputPath,
+            resource,
             assetFile,
           };
 
-          result = Options.postprocess(result, info, this.compilation);
+          // TODO:
+          //  - create the `postprocess` hook, right after template rendering into HTML string
+
+          result = Options.postprocess(result, templateInfo, this.compilation);
         }
         break;
     }
@@ -1188,6 +1295,8 @@ class AssetCompiler {
    * Reset initial settings and caches by webpack serve/watch, display verbose.
    *
    * @param {Object} stats
+   * @return {Promise}
+   * @async
    */
   done(stats) {
     const { compilation } = this;
@@ -1218,20 +1327,24 @@ class AssetCompiler {
       }
     }
 
-    if (this.exceptions.size > 0) {
-      const messages = Array.from(this.exceptions).join('\n\n');
-      this.exceptions.clear();
-      throw new Error(messages);
-    }
+    // do something on done in the promise
+    return Promise.all(this.promises).then(() => {
+      //return Promise.resolve(() => true).then(() => {
+      if (this.exceptions.size > 0) {
+        const messages = Array.from(this.exceptions).join('\n\n');
+        this.exceptions.clear();
+        throw new Error(messages);
+      }
 
-    if (Options.isVerbose()) verbose();
+      if (Options.isVerbose()) verbose();
 
-    Asset.reset();
-    AssetEntry.reset();
-    AssetTrash.reset();
-    Collection.reset();
-    PluginService.reset();
-    Resolver.reset();
+      Asset.reset();
+      AssetEntry.reset();
+      AssetTrash.reset();
+      Collection.reset();
+      PluginService.reset();
+      Resolver.reset();
+    });
   }
 
   /**

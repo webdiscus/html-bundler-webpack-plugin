@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { getFileExtension, replaceAll } from '../src/Common/Helpers';
+import { findPlugin, getFileExtension, replaceAll } from '../src/Common/Helpers';
 import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
@@ -171,40 +171,44 @@ describe('parse attributes unit tests', () => {
       endPos: 10,
       offset: 0,
       value: '',
+      parsedValue: [''],
     };
     return expect(received).toEqual(expected);
   });
 
   test('parseAttr value', () => {
-    const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
+    const source = '<img src="img1.png?size=800" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
     const received = HtmlParser.parseAttr(source, 'src', 'asset', 0);
     const expected = {
       type: 'asset',
       attr: 'src',
       startPos: 10,
-      endPos: 18,
+      endPos: 27,
       offset: 0,
-      value: 'img1.png',
+      value: 'img1.png?size=800',
+      parsedValue: ['img1.png'],
     };
     return expect(received).toEqual(expected);
   });
 
   test('parseSrcset single value', () => {
-    const source = '<source srcset="img1.png">';
+    const source = '<source srcset="img1.png?size=200 w200">';
     const received = HtmlParser.parseAttr(source, 'srcset', 'asset');
     const expected = {
       attr: 'srcset',
       startPos: 16,
-      endPos: 24,
+      endPos: 38,
       offset: 0,
-      value: ['img1.png'],
+      value: 'img1.png?size=200 w200',
+      parsedValue: ['img1.png'],
       attrs: [
         {
           type: 'asset',
           attr: 'srcset',
-          value: 'img1.png',
+          // TODO: test with a plugin which resizes images via a query param
+          value: 'img1.png?size=200',
           startPos: 16,
-          endPos: 24,
+          endPos: 33,
           offset: 0,
         },
       ],
@@ -220,7 +224,8 @@ describe('parse attributes unit tests', () => {
       startPos: 28,
       endPos: 66,
       offset: 0,
-      value: ['img1.png', 'img2.png', 'img3.png'],
+      value: 'img1.png, img2.png 100w, img3.png 1.5x',
+      parsedValue: ['img1.png', 'img2.png', 'img3.png'],
       attrs: [
         { type: 'asset', attr: 'srcset', startPos: 28, endPos: 36, offset: 0, value: 'img1.png' },
         { type: 'asset', attr: 'srcset', startPos: 38, endPos: 46, offset: 0, value: 'img2.png' },
@@ -273,6 +278,7 @@ describe('parse tags unit tests', () => {
             type: 'asset',
             attr: 'src',
             value: 'img1.png',
+            parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
             offset: 0,
@@ -285,22 +291,23 @@ describe('parse tags unit tests', () => {
   });
 
   test('parseTag img with srcset', () => {
-    const html = `<div><img src="img1.png" alt="logo" srcset="1.png, 2.png"></div>`;
+    const html = `<div><img src="img1.png" alt="logo" srcset="1.png?s=200 200w, 2.png"></div>`;
     // test sorting of parsed attrs, filter
     const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['srcset', 'src'] });
 
     const expected = [
       {
         tag: 'img',
-        source: '<img src="img1.png" alt="logo" srcset="1.png, 2.png">',
+        source: '<img src="img1.png" alt="logo" srcset="1.png?s=200 200w, 2.png">',
         type: 'asset',
         startPos: 5,
-        endPos: 58,
+        endPos: 69,
         parsedAttrs: [
           {
             type: 'asset',
             attr: 'src',
             value: 'img1.png',
+            parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
             offset: 5,
@@ -308,17 +315,17 @@ describe('parse tags unit tests', () => {
           {
             type: 'asset',
             attr: 'srcset',
-            value: '1.png',
+            value: '1.png?s=200',
             startPos: 39,
-            endPos: 44,
+            endPos: 50,
             offset: 5,
           },
           {
             type: 'asset',
             attr: 'srcset',
             value: '2.png',
-            startPos: 46,
-            endPos: 51,
+            startPos: 57,
+            endPos: 62,
             offset: 5,
           },
         ],
@@ -604,6 +611,17 @@ describe('misc tests', () => {
     const received = replaceAll('begin replace_me and replace_me and', 'replace_me', 'A');
     const expected = 'begin A and A and';
     return expect(received).toEqual(expected);
+  });
+
+  test('findPlugin', () => {
+    class MyPlugin {
+      constructor() {}
+    }
+
+    const myPluginInstance = new MyPlugin();
+    const plugins = [myPluginInstance];
+    const received = findPlugin(plugins, 'MyPlugin');
+    return expect(received).toBeInstanceOf(MyPlugin);
   });
 
   test('Collection.findStyleInsertPos OK', () => {

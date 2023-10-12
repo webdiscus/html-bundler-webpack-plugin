@@ -111,7 +111,7 @@ class Preload {
       // determine the order of the attributes in the link tag
       const attrs = { rel: 'preload', href: undefined, as, type: undefined, ...(conf.attributes || {}) };
 
-      // override attributes with main properties
+      // override attributes with the main properties
       if (conf.rel) attrs.rel = conf.rel;
       if (conf.type) attrs.type = conf.type;
 
@@ -126,9 +126,10 @@ class Preload {
     }
 
     // prepare a flat array with preload assets
-    for (let item of data.resources) {
+    for (let item of data.assets) {
       if (item.inline) continue;
-      const assets = item?.ref?.assets ? item.ref.assets : item.assets;
+
+      const assets = item.assets;
       const conf = options.find(({ test }) => test.test(item.resource));
 
       if (conf) {

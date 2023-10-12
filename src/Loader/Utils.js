@@ -3,6 +3,7 @@ const path = require('path');
 // constants used for imported styles in JavaScript
 const baseUri = 'webpack://';
 const urlPathPrefix = '/__HTML_BUNDLER_PLUGIN__/';
+const cssLoaderName = 'HTMLBundlerCSSLoader';
 
 /**
  * Inject a string before closing </head> tag.
@@ -48,6 +49,7 @@ const injectBefore = (content, string, before = []) => {
 module.exports = {
   baseUri,
   urlPathPrefix,
+  cssLoaderName,
   hotUpdateFile: path.join(__dirname, 'Hmr/hot-update.js'),
   injectBeforeEndHead,
   injectBeforeEndBody,

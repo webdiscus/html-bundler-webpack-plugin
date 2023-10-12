@@ -1,5 +1,36 @@
 # Change log
 
+## 2.16.0-beta.0 (2023-10-21)
+
+- feat(EXPERIMENTAL): add possibility to get output CSS filename in JS via import a style file with the `lazy` query.\
+  **DON'T use it for production, it is just EXPERIMENTAL undocumented feature!**\
+  This feature allows to lazy load the extracted CSS, for example:
+  ```js
+  // your code to add the CSS file dynamically
+  function lazyLoad(outputFilename) {
+    const style = document.createElement('link');
+    style.rel = 'stylesheet';
+    style.href = outputFilename;
+    document.head.appendChild(style);
+  }
+
+  lazyLoad(require('./style-dynamic.scss?lazy')); // <= lazy load the source style file with `lazy` query
+  ```
+- feat(EXPERIMENTAL): add `beforePreprocessor` hook, undocumented
+- feat(EXPERIMENTAL): add `beforePreprocessor` callback, undocumented
+- feat(EXPERIMENTAL): add `preprocessor` hook, undocumented
+- feat(EXPERIMENTAL, BREAKING CHANGE): rename `undocumented` experimental `afterCompile` callback to `beforeEmit`
+- feat(EXPERIMENTAL): add `beforeEmit` hook, undocumented
+- feat(EXPERIMENTAL): add `afterEmit` hook, undocumented
+- fix: disable preprocessor when the value of the `preprocessor` plugin option is `false`
+
+## 2.15.0 (2023-10-18)
+
+- feat: add `parsedValue` argument as an array of parsed filenames w/o URL query, in the `filter()` function of the `sources`
+- fix(BREAKING CHANGE): for `srcset` attribute the type of the `value` argument is now `string` (was as `Array<string>`), in the `filter()` function of the `sources`\
+  Note: for `srcset` attribute you can use the `parsedValue` as an array instead of the `value`, the `value` contains now an original string
+- docs: fix attributes type
+
 ## 2.14.4 (2023-10-12)
 
 - fix: correct attributes type in the `filter()` function of the `sources` loader option
@@ -16,7 +47,7 @@
 - fix: pass correct entry data in the template when the same template used for many pages with different data, in `serve` mode
 
 ## 2.14.1 (2023-09-24)
-- 
+
 - fix: remove unused `isEntry` property from the `info` argument of the `postprocess` callback
   the `isEntry` property was always true, because template is defined as an entrypoint
 - chore: code cleanup

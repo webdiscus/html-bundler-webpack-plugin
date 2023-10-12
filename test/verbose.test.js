@@ -5,11 +5,12 @@ beforeAll(() => {
   process.env.NODE_ENV_TEST = 'true';
 });
 
-describe('verbose output into console', () => {
+describe('build', () => {
   test('verbose output', () => stdoutSnapshot('option-verbose-output'));
+  //test('import css with images in js', () => stdoutSnapshot('js-import-css-images'));
 });
 
-describe('watchFiles output into console', () => {
+describe('watch', () => {
   test('watchFiles.files', () => watchStdoutSnapshot('option-watchFiles-files'));
   test('watchFiles.ignore', () => watchStdoutSnapshot('option-watchFiles-ignore'));
   test('watchFiles.paths', () => watchStdoutSnapshot('option-watchFiles-paths'));

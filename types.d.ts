@@ -1,7 +1,6 @@
-import { Compiler, Compilation, LoaderContext, WebpackPluginInstance } from 'webpack';
-import { PathData, AssetInfo } from 'webpack/lib/Compilation';
+import { Compiler, Compilation, LoaderContext, WebpackPluginInstance, PathData, AssetInfo } from 'webpack';
 import { Options as MinifyOptions } from 'html-minifier-terser';
-import { AsyncSeriesHook } from 'tapable';
+import { AsyncSeriesHook, AsyncSeriesWaterfallHook, SyncWaterfallHook } from 'tapable';
 
 declare class HtmlBundlerPlugin implements WebpackPluginInstance {
   /**
@@ -16,13 +15,6 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
 }
 
 declare namespace HtmlBundlerPlugin {
-  export interface Hooks {
-    integrityHashes: AsyncSeriesHook<{
-      // the map of the output asset filename to its integrity hash
-      hashes: Map<string, string>;
-    }>;
-  }
-
   export interface PluginOptions {
     // match of entry template files
     test?: RegExp;
@@ -42,12 +34,13 @@ declare namespace HtmlBundlerPlugin {
      * The references to LoaderOptions.
      * It's syntactic "sugar" to avoid the complicated structure of options.
      */
-    data?: { [k: string]: any } | string;
+    data?: { [key: string]: any } | string;
     beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;
-    // postprocess of rendered template
+    // postprocess of rendered template, called after js template was compiled into html
     postprocess?: Postprocess;
+    beforeEmit?: BeforeEmit;
     // generates preload link tags for assets
     preload?: Preload;
     minify?: 'auto' | boolean | MinifyOptions;
@@ -87,7 +80,44 @@ declare namespace HtmlBundlerPlugin {
      */
     data?: Data;
   }
+
+  export interface Hooks {
+    beforePreprocessor: AsyncSeriesWaterfallHook<
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => undefined]
+    >;
+
+    preprocessor: AsyncSeriesWaterfallHook<
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => undefined]
+    >;
+
+    postprocess: SyncWaterfallHook<[content: string, compileInfo: TemplateInfo]>;
+
+    beforeEmit: SyncWaterfallHook<[content: string, entry: CompileEntry, options: CompileOptions]>;
+
+    afterEmit: AsyncSeriesHook<
+      [
+        entries: CompileEntries,
+        options: CompileOptions,
+        // only for tapAsync
+        callback?: (error: Error | null) => undefined,
+      ]
+    >;
+
+    integrityHashes: AsyncSeriesHook<
+      [
+        // the map of the output asset filename to its integrity hash
+        hashes: Map<string, string>,
+        // only for tapAsync
+        callback?: (error: Error | null) => undefined,
+      ]
+    >;
+  }
 }
+
+/**
+ * Context of bundler loader.
+ */
+type BundlerPluginLoaderContext = LoaderContext<Object> & { data: { [key: string]: any } | string };
 
 /**
  * Multiple entry bundles are created. The key is the entry name. The value can be a string or an entry description object.
@@ -109,7 +139,7 @@ type EntryDescription = {
    */
   import: string;
   /**
-   * Specifies the filename of the output file on disk. You must **not** specify an absolute path here, but the path may contain folders separated by '/'! The specified path is joined with the value of the 'output.path' option to determine the location on disk.
+   * The output filename template.
    */
   filename?: FilenameTemplate;
   /**
@@ -122,7 +152,7 @@ type EntryDescription = {
  * The template data passed to the preprocessor as an object, or the path to a file that exports the data as an object.
  * If the value is string, it should be an absolute or relative path to a JSON/JS file.
  */
-type Data = { [k: string]: any } | string;
+type Data = { [key: string]: any } | string;
 
 type JsOptions = {
   filename?: FilenameTemplate;
@@ -159,16 +189,13 @@ type IntegrityOptions = {
 type HashFunctions = 'sha256' | 'sha384' | 'sha512';
 
 /**
- * Specifies the filename template of output files on disk. You must **not** specify an absolute path here, but the path may contain folders separated by '/'! The specified path is joined with the value of the 'output.path' option to determine the location on disk.
+ * Specifies the filename template of output files on disk.
+ * You must **not** specify an absolute path here, but the path may contain folders separated by '/'!
+ * The specified path is joined with the value of the 'output.path' option to determine the location on the disk.
  */
 type FilenameTemplate = string | ((pathData: PathData, assetInfo?: AssetInfo) => string);
 
-type BeforePreprocessor =
-  | false
-  | ((
-      template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-    ) => string | undefined);
+type BeforePreprocessor = false | ((template: string, loaderContext: BundlerPluginLoaderContext) => string | undefined);
 
 type Preprocessor =
   | false
@@ -176,31 +203,76 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
-  | ((
-      template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
-    ) => string | Promise<any> | undefined);
+  | ((template: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 
 /**
- * Called after the template has been rendered, but not yet finalized,
+ * Called after the template has been compiled into html string, but not yet finalized,
  * before the split chunks and inline assets are injected.
  */
-type Postprocess = (content: string, info: TemplateInfo, compilation: Compilation) => string | undefined;
+type Postprocess = (content: string, templateInfo: TemplateInfo, compilation: Compilation) => string | undefined;
 
+/**
+ * The object is argument of the postprocess hook.
+ */
+// TODO: use CompileEntry + CompileOptions instead of TemplateInfo
 type TemplateInfo = {
   verbose: boolean;
-  filename: string | ((pathData: PathData) => string);
+  // TODO: deprecate the filename as filenameTemplate, because it will be never used
+  //filename: string | ((pathData: PathData) => string);
+  // the source filename including a query
+  // TODO: deprecate sourceFile, because is already the `resource`
+  //sourceFile: string;
   outputPath: string;
-  sourceFile: string;
+  resource: string;
   assetFile: string;
 };
+
+/**
+ * Called after the processAssets hook had finished without an error, before emit.
+ * At this stage, all resources are processed with plugins and have final output filenames.
+ * This hook is called for each compiled template defined in the entry option.
+ */
+type BeforeEmit = (
+  content: string,
+  entry: CompileEntry,
+  options: CompileOptions,
+  compilation: Compilation
+) => string | undefined;
+
+type CompileOptions = {
+  verbose: boolean;
+  // webpack output path
+  outputPath: string;
+};
+
+/**
+ * The object is argument of hooks.
+ */
+type CompileEntry = {
+  // the entry name
+  name: string;
+  // the source filename including a query
+  resource: string;
+  // the output asset filename relative to output path
+  assetFile: string;
+  // assets used in html
+  assets: Array<CompileAsset>;
+};
+
+type CompileEntries = Array<CompileEntry>;
+
+type CompileAsset = AssetScript | AssetStyle | AssetResource;
+// TODO: define types AssetScript, AssetStyle, AssetResource
+type AssetScript = {};
+type AssetStyle = {};
+type AssetResource = {};
 
 type Preload = Array<{
   test: RegExp;
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: { [k: string]: string | boolean };
+  attributes?: { [attributeName: string]: string | boolean };
 }>;
 
 type Sources =
@@ -211,8 +283,11 @@ type Sources =
       filter?: (props: {
         tag: string;
         attribute: string;
+        // original value string
         value: string;
-        attributes: { [k: string]: string };
+        // parsed value, useful for srcset attribute with many filenames
+        parsedValue: Array<string>;
+        attributes: { [attributeName: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;

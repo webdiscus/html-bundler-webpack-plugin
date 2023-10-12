@@ -470,6 +470,9 @@ class Options {
     return { verbose, filename, sourcePath, outputPath };
   }
 
+  /**
+   * @return {string}
+   */
   static getWebpackOutputPath() {
     return this.webpackOptions.output.path;
   }
@@ -554,12 +557,14 @@ class Options {
   }
 
   static hasPostprocess() {
-    return this.options.postprocess != null;
+    return typeof this.options.postprocess === 'function';
   }
 
   /**
+   * Called after js template is compiled into html string.
+   *
    * @param {string} content A content of processed file.
-   * @param {TemplateInfo} info The resource info object.
+   * @param {TemplateInfo} info The resource info object. TODO: rename info into entryInfo?
    * @param {Compilation} compilation The Webpack compilation object.
    * @return {string}
    * @throws
@@ -572,24 +577,30 @@ class Options {
     }
   }
 
+  static hasBeforeEmit() {
+    return typeof this.options.beforeEmit === 'function';
+  }
+
   /**
-   * TODO:
-   *  - add dependencies (entry-point => all assets used in the template) as argument
-   *  - test not yet documented experimental feature
+   * Called after processing all plugins, before emit.
+   *
+   * TODO: test not yet documented experimental feature
    *
    * @param {string} content
-   * @param {string} sourceFile
-   * @param {string} assetFile
+   * @param {CompileEntry} entry
+   * @param {CompileOptions} options
+   * @param {Compilation} compilation
    * @return {string|null}
    * @throws
    */
-  static afterProcess(content, { sourceFile, assetFile }) {
-    if (!this.options.afterProcess || !this.isEntry(sourceFile)) return null;
+  static beforeEmit(content, entry, options, compilation) {
+    const { resource } = entry;
+    if (!this.options.beforeEmit || !this.isEntry(resource)) return null;
 
     try {
-      return this.options.afterProcess(content, { sourceFile, assetFile });
+      return this.options.beforeEmit(content, entry, options, compilation);
     } catch (error) {
-      return afterProcessException(error, sourceFile);
+      return afterProcessException(error, resource);
     }
   }
 

@@ -30,7 +30,6 @@ module.exports = {
             tag: 'img-ng',
             attributes: ['data-src-one', 'data-src-two'],
           },
-
           {
             tag: 'link',
             attributes: ['data-source'],

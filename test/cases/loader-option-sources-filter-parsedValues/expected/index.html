@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test</title>
+  </head>
+  <body>
+    <!-- this data-srcset should be resolved  -->
+    <img src="assets/img/apple.02a7c382.png" data-srcset="assets/img/fig.c6809878.png, assets/img/fig2.c6809878.png 100w, assets/img/fig3.c6809878.png 1.5x">
+    <!-- this data-srcset should not be resolved  -->
+    <img src="@images/pear.png?size=300" data-srcset="@images/lemon.png?size=200, @images/lemon2.png 100w, @images/lemon3.png 1.5x">
+  </body>
+</html>

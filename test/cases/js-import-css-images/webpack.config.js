@@ -36,6 +36,25 @@ module.exports = {
 
       verbose: true,
     }),
+
+    {
+      apply(compiler) {
+        const pluginName = 'myPlugin';
+        compiler.hooks.compilation.tap(pluginName, (compilation) => {
+          const hooks = HtmlBundlerPlugin.getHooks(compilation);
+
+          // test hook afterEmit with imported styles in js
+          hooks.afterEmit.tapAsync(pluginName, (entries, options) => {
+            //console.log('\n *** ASSETS: ', compilation.assetsInfo);
+            const { outputPath } = options;
+            entries.forEach((entry) => {
+              // TODO: generate manifest.json as flat map
+              //console.dir({ _: '\n ### HOOK afterEmit: ', entry }, { depth: 5 });
+            });
+          });
+        });
+      },
+    },
   ],
 
   module: {

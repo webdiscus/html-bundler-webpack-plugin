@@ -1,0 +1,9 @@
+h1 {
+  color: red;
+}
+
+.bg-style {
+  background-image: url(img/pear.6b9b072a.png);
+  width: 160px;
+  height: 130px;
+}

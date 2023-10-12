@@ -304,6 +304,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [Nunjucks](#using-template-nunjucks)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
+1. Hooks
+   - [integrityHashes](#hook-integrity-hashes)
 1. [Setup Live Reload](#setup-live-reload)
 1. [Recipes](#recipes)
    - [How to keep source directory structure for HTML](#recipe-keep-folder-structure-html)
@@ -635,7 +637,7 @@ The plugin automatically extracts JS and CSS whose source files are specified in
 
 ```ts
 type EntryObject = {
-  [key: string]: EntryDescription | string;
+  [name: string]: EntryDescription | string;
 };
 ```
 
@@ -675,7 +677,7 @@ type EntryDescription = {
   /**
    * The template data.
    */
-  data?: { [k: string]: any } | string;
+  data?: { [key: string]: any } | string;
 };
 
 type FilenameTemplate =
@@ -1324,7 +1326,7 @@ type Preload = Array<{
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: { [k: string]: string | boolean };
+  attributes?: { [attributeName: string]: string | boolean };
 }>;
 ```
 
@@ -1701,18 +1703,22 @@ The generated HTML contains the integrity hashes:
 </html>
 ```
 
+<a id="hook-integrity-hashes" name="hook-integrity-hashes"></a>
 #### `integrityHashes` hook
 
 ```ts
 AsyncSeriesHook<{
+  // the map of the output asset filename to its integrity hash
   hashes: Map<string, string>;
+  // only for tapAsync
+  callback?: (error: Error | null) => undefined;
 }>;
 ```
 
 Called after all assets have been processed and hashes have finite values and cannot be changed, at the `afterEmit` stage.
 This can be used to retrieve the integrity values for the asset files.
 
-The hook is async and can be called using the `tapAsync` method.
+The hook is async and can be called using the `tapAsync` or `tapPromise` method.
 
 Callback Parameter: `hashes` is the map of the output asset filename to its integrity hash.
 The map only contains JS and CSS assets that have a hash.
@@ -1748,14 +1754,15 @@ module.exports = {
         compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
           HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync(
             'MyPlugin', 
-            (hashes) => {
-              if (hashes.size > 0) {
-                const saveAs = path.join(__dirname, 'dist/integrity.json');
-                const json = Object.fromEntries(hashes);
-                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
-                console.log(hashes); // => output to console
-              }
-            });
+            (hashes) => Promise.resolve().then(() => {
+                if (hashes.size > 0) {
+                  const saveAs = path.join(__dirname, 'dist/integrity.json');
+                  const json = Object.fromEntries(hashes);
+                  fs.writeFileSync(saveAs, JSON.stringify(json, null, '  ')); // => save to file
+                  console.log(hashes); // => output to console
+                }
+              })
+            );
           }
         );
       },
@@ -2003,7 +2010,8 @@ type Sources =
         tag: string;
         attribute: string;
         value: string;
-        attributes: { [k: string]: string };
+        parsedValue: Array<string>;
+        attributes: { [attributeName: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;
@@ -2058,15 +2066,24 @@ By default, resolves source files in the following tags and attributes:
 
 <a id="loader-option-sources-filter" name="loader-option-sources-filter"></a>
 
-#### Filter function
+#### `filter` function
+
+Using the `filter` function, you can enable/disable resolving of specific assets by tags and attributes.
 
 The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
 The argument is an object containing the properties:
 
 - `tag: string` - a name of the HTML tag
 - `attribute: string` - a name of the HTML attribute
-- `value: string` - a value of the HTML attribute
-- `attributes: string` - all attributes of the tag
+- `value: string` - an original value of the HTML attribute
+- `parsedValue: Array<string>` - an array of filenames w/o URL query, parsed in the value\
+   it's useful for the `srcset` attribute containing many image files, e.g.:
+   ```html
+   <img src="image.png?size=800" srcset="image1.png?size=200 200w, image2.png 400w">
+   ```
+   the `parsedValue` for the `src` is `['image.png']`, the array with one parsed filename\
+   the `parsedValue` for the `srcset` is `['image1.png', 'image2.png']`
+- `attributes: { [attributeName: string]: string }` - all attributes of the tag
 - `resourcePath: string` - a path of the HTML template
 
 The processing of an attribute can be ignored by returning `false`.
@@ -2091,7 +2108,7 @@ Examples of using argument properties:
 
 The default sources can be extended with new tags and attributes.
 
-For example, add the processing of the `data-src` and `data-srcset` attributes to the `img` tag:
+For example, enable the processing for the non-standard `data-src` and `data-srcset` attributes in the `img` tag:
 
 ```js
 new HtmlBundlerPlugin({
@@ -2152,7 +2169,7 @@ new HtmlBundlerPlugin({
         // when the 'property' attribute contains one of: 'og:image', 'og:video'
         filter: ({ attributes }) => {
           const attrName = 'property';
-          const attrValues = ['og:image', 'og:video'];
+          const attrValues = ['og:image', 'og:video']; // allowed values of the property
           if (attributes[attrName] && attrValues.indexOf(attributes[attrName]) < 0) {
             return false; // return false to disable processing
           }
@@ -2251,7 +2268,7 @@ type BeforePreprocessor =
   | false
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | undefined);
 ```
 
@@ -2303,7 +2320,7 @@ type Preprocessor =
   | 'nunjucks'
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | Promise<any> | undefined);
 ```
 
@@ -2383,7 +2400,7 @@ To use any templating engine, you can define the `preprocessor` as a function.
 ```ts
 type Preprocessor = (
   template: string,
-  loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+  loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
 ) => string | Promise<any> | undefined;
 ```
 

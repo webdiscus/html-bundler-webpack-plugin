@@ -8,6 +8,10 @@ const Preprocessor = require('../Loader/Preprocessor');
 /** @typedef {import('Options')} PluginOptionInstance */
 
 class PluginService {
+  // TODO: add methods to set this properties
+  static plugin;
+  static compilation;
+
   /** @type PluginOptionInstance Provide to use the plugin option instance in the loader. */
   static #options = {};
 
@@ -48,12 +52,12 @@ class PluginService {
     }
 
     // add reference for beforePreprocessor to the loader options
-    if (pluginOptions.beforePreprocessor && !loaderOptions.beforePreprocessor) {
+    if (pluginOptions.beforePreprocessor != null && loaderOptions.beforePreprocessor == null) {
       loaderOptions.beforePreprocessor = pluginOptions.beforePreprocessor;
     }
 
     // add reference for the preprocessor option into the loader options
-    if (pluginOptions.preprocessor && !loaderOptions.preprocessor) {
+    if (pluginOptions.preprocessor != null && loaderOptions.preprocessor == null) {
       loaderOptions.preprocessor = pluginOptions.preprocessor;
 
       if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
@@ -87,6 +91,13 @@ class PluginService {
     for (const [id, options] of this.#loaderCache) {
       Preprocessor.watchRun(options);
     }
+  }
+
+  /**
+   * @returns {HtmlBundlerPlugin.Hooks} The plugin hooks.
+   */
+  static getHooks() {
+    return this.plugin.getHooks(this.compilation);
   }
 
   /**

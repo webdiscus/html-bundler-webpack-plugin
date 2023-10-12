@@ -143,14 +143,14 @@ class HtmlParser {
         let res = true;
 
         if (filter) {
-          let value = parsedAttr.value;
+          const { value, parsedValue } = parsedAttr;
 
           // when is the filter defined, parse all attributes once
           if (!attrs) {
             attrs = this.parseAttrAll(source);
           }
 
-          res = filter({ tag, attribute, value, attributes: attrs, resourcePath }) !== false;
+          res = filter({ tag, attribute, value, parsedValue, attributes: attrs, resourcePath }) !== false;
         }
 
         if (res === true) {
@@ -223,7 +223,7 @@ class HtmlParser {
    * @param {string} attr The attribute to parse value.
    * @param {string} type The type of attribute value.
    * @param {Number} offset The absolute tag offset in the content.
-   * @return {{attr: string, attrs?: Array, value: string|Array<string>, startPos: number, endPos: number}|boolean}
+   * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number}|boolean}
    */
   static parseAttr(content, attr, type = 'asset', offset = 0) {
     const open = `${attr}="`;
@@ -248,14 +248,15 @@ class HtmlParser {
       return {
         attr,
         attrs,
-        value: values,
+        value,
+        parsedValue: values,
         startPos,
         endPos,
         offset,
       };
     }
 
-    return { type, attr, value, startPos, endPos, offset };
+    return { type, attr, value, parsedValue: [value.split('?', 1)[0]], startPos, endPos, offset };
   }
 
   /**
@@ -282,6 +283,7 @@ class HtmlParser {
     // support for 'responsive-loader' value, e.g.: image.png?{sizes: [100,200,300], format: 'jpg'}
     if (srcsetValue.indexOf('?{') > 0) {
       return {
+        // TODO: parse this complex non-standard use case
         values: [srcsetValue],
         attrs: [
           { type, attr: 'srcset', value: srcsetValue, startPos: valueOffset, endPos: valueOffset + lastPos, offset },
@@ -309,7 +311,7 @@ class HtmlParser {
         endPos = currentPos;
       }
 
-      values.push(value);
+      values.push(value.split('?', 1)[0]);
 
       attrs.push({
         type,
