@@ -268,7 +268,7 @@ describe('parse tags unit tests', () => {
         type: 'asset',
         startPos: 0,
         endPos: 31,
-        attrs: [
+        parsedAttrs: [
           {
             type: 'asset',
             attr: 'src',
@@ -278,7 +278,7 @@ describe('parse tags unit tests', () => {
             offset: 0,
           },
         ],
-        attrsAll: null,
+        attrs: null,
       },
     ];
     return expect(received).toEqual(expected);
@@ -296,7 +296,7 @@ describe('parse tags unit tests', () => {
         type: 'asset',
         startPos: 5,
         endPos: 58,
-        attrs: [
+        parsedAttrs: [
           {
             type: 'asset',
             attr: 'src',
@@ -322,7 +322,7 @@ describe('parse tags unit tests', () => {
             offset: 5,
           },
         ],
-        attrsAll: null,
+        attrs: null,
       },
     ];
     return expect(received).toEqual(expected);

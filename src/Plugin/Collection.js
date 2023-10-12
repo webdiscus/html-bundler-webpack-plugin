@@ -913,19 +913,19 @@ class Collection {
         let pos = 0;
         let output = '';
 
-        for (const { tag, attrs, attrsAll, startPos, endPos } of parsedResults) {
-          if (!attrsAll || attrs.length < 1) continue;
+        for (const { tag, parsedAttrs, attrs, startPos, endPos } of parsedResults) {
+          if (!attrs || parsedAttrs.length < 1) continue;
 
-          const assetFile = attrsAll.href || attrsAll.src;
+          const assetFile = attrs.href || attrs.src;
           const integrity = assetIntegrity.get(assetFile);
 
           if (integrity) {
-            attrsAll.integrity = integrity;
-            attrsAll.crossorigin = Options.webpackOptions.output.crossOriginLoading || 'anonymous';
+            attrs.integrity = integrity;
+            attrs.crossorigin = Options.webpackOptions.output.crossOriginLoading || 'anonymous';
 
             let attrsStr = '';
-            for (const attrName in attrsAll) {
-              attrsStr += ` ${attrName}="${attrsAll[attrName]}"`;
+            for (const attrName in attrs) {
+              attrsStr += ` ${attrName}="${attrs[attrName]}"`;
             }
 
             output += content.slice(pos, startPos) + `<${tag}${attrsStr}>`;

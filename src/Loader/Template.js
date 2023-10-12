@@ -32,8 +32,8 @@ class Template {
     let output = '';
     let pos = 0;
 
-    for (let { type, attrs } of parsedTags) {
-      for (let { startPos, endPos, value: file, offset } of attrs) {
+    for (let { type, parsedAttrs } of parsedTags) {
+      for (let { startPos, endPos, value: file, offset } of parsedAttrs) {
         const resolvedFile = this.resolve({ isBasedir, type, file, issuer, entryId });
         // skip not resolvable value, e.g. URL
         if (!resolvedFile) continue;

@@ -116,7 +116,7 @@ class HtmlParser {
     let endPos = 0;
 
     while ((startPos = content.indexOf(open, startPos)) >= 0) {
-      let attrValues = [];
+      const parsedAttrs = [];
       endPos = indexOfChar(close, content, startPos, '<');
 
       if (endPos < 1) {
@@ -127,7 +127,7 @@ class HtmlParser {
 
       const source = content.slice(startPos, endPos);
       let type = 'asset';
-      let attrsAll = null;
+      let attrs = null;
 
       if (tag === 'script') {
         type = 'script';
@@ -137,42 +137,42 @@ class HtmlParser {
       }
 
       for (let attribute of attributes) {
-        const attrValue = this.parseAttr(source, attribute, type, startPos);
-        if (attrValue === false) continue;
+        const parsedAttr = this.parseAttr(source, attribute, type, startPos);
+        if (parsedAttr === false) continue;
 
         let res = true;
 
         if (filter) {
-          let value = attrValue.value;
+          let value = parsedAttr.value;
 
           // when is the filter defined, parse all attributes once
-          if (!attrsAll) {
-            attrsAll = this.parseAttrAll(source);
+          if (!attrs) {
+            attrs = this.parseAttrAll(source);
           }
 
-          res = filter({ tag, attribute, value, attributes: attrsAll, resourcePath }) !== false;
+          res = filter({ tag, attribute, value, attributes: attrs, resourcePath }) !== false;
         }
 
         if (res === true) {
-          if (attrValue.attrs) {
-            attrValues.push(...attrValue.attrs);
+          if (parsedAttr.attrs) {
+            parsedAttrs.push(...parsedAttr.attrs);
           } else {
-            attrValues.push(attrValue);
+            parsedAttrs.push(parsedAttr);
           }
         }
       }
 
       // sort attributes by pos
-      if (attrValues.length > 1) {
-        attrValues.sort(comparePos);
+      if (parsedAttrs.length > 1) {
+        parsedAttrs.sort(comparePos);
       }
 
       result.push({
         tag,
         source,
         type,
-        attrs: attrValues,
-        attrsAll,
+        parsedAttrs,
+        attrs,
         startPos,
         endPos,
       });
@@ -187,7 +187,7 @@ class HtmlParser {
    * Parse all attributes in the tag.
    *
    * @param {string} content The HTML tag.
-   * @return {{}}
+   * @return {{ [k: string]: string }}
    */
   static parseAttrAll(content) {
     let attrs = {};

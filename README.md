@@ -1324,7 +1324,7 @@ type Preload = Array<{
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: {};
+  attributes?: { [k: string]: string | boolean };
 }>;
 ```
 
@@ -1375,7 +1375,7 @@ preload: [
 ],
 ```
 
-The generated preload tag like following:
+The generated preload tag like the following:
 
 ```html
 <link rel="preload" href="css/styles.1f4faaff.css" as="style" />
@@ -1392,7 +1392,7 @@ preload: [
 ],
 ```
 
-The generated preload tag like following:
+The generated preload tag like the following:
 
 ```html
 <link rel="preload" href="js/main.c608b1cd.js" as="script" />
@@ -1411,7 +1411,7 @@ preload: [
 ],
 ```
 
-The generated preload tags like following:
+The generated preload tags like the following:
 
 ```html
 <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png" />
@@ -2003,7 +2003,7 @@ type Sources =
         tag: string;
         attribute: string;
         value: string;
-        attributes: string;
+        attributes: { [k: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;

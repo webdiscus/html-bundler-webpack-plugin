@@ -200,7 +200,7 @@ type Preload = Array<{
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: {};
+  attributes?: { [k: string]: string | boolean };
 }>;
 
 type Sources =
@@ -212,7 +212,7 @@ type Sources =
         tag: string;
         attribute: string;
         value: string;
-        attributes: string;
+        attributes: { [k: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;

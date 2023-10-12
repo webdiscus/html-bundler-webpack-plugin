@@ -1,5 +1,11 @@
 # Change log
 
+## 2.14.4 (2023-10-12)
+
+- fix: correct attributes type in the `filter()` function of the `sources` loader option
+- refactor: improve code
+- docs: fix attributes type
+
 ## 2.14.3 (2023-10-08)
 
 - chore: update dependencies in examples
