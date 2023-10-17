@@ -2008,7 +2008,7 @@ type Sources =
       filter?: (props: {
         tag: string;
         attribute: string;
-        value: string;
+        value: string | Array<string>;
         attributes: { [k: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
@@ -2071,7 +2071,9 @@ The argument is an object containing the properties:
 
 - `tag: string` - a name of the HTML tag
 - `attribute: string` - a name of the HTML attribute
-- `value: string` - a value of the HTML attribute
+- `value: string | Array<string>` - a value of the HTML attribute;\
+   for `srcset` the `value` argument is an array of parsed filenames,\
+   an original srcset value as string is available via `attributes.srcset`
 - `attributes: string` - all attributes of the tag
 - `resourcePath: string` - a path of the HTML template
 
@@ -2097,7 +2099,7 @@ Examples of using argument properties:
 
 The default sources can be extended with new tags and attributes.
 
-For example, add the processing of the `data-src` and `data-srcset` attributes to the `img` tag:
+For example, enable the processing for the non-standard `data-src` and `data-srcset` attributes in the `img` tag:
 
 ```js
 new HtmlBundlerPlugin({
@@ -2158,7 +2160,7 @@ new HtmlBundlerPlugin({
         // when the 'property' attribute contains one of: 'og:image', 'og:video'
         filter: ({ attributes }) => {
           const attrName = 'property';
-          const attrValues = ['og:image', 'og:video'];
+          const attrValues = ['og:image', 'og:video']; // allowed values of the property
           if (attributes[attrName] && attrValues.indexOf(attributes[attrName]) < 0) {
             return false; // return false to disable processing
           }

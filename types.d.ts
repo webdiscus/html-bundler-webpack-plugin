@@ -211,7 +211,7 @@ type Sources =
       filter?: (props: {
         tag: string;
         attribute: string;
-        value: string;
+        value: string | Array<string>;
         attributes: { [k: string]: string };
         resourcePath: string;
       }) => boolean | undefined;

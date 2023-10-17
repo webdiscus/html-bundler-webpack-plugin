@@ -30,7 +30,16 @@ module.exports = {
             tag: 'img-ng',
             attributes: ['data-src-one', 'data-src-two'],
           },
-
+          // TODO: in next major version
+          //    - change the value as original string
+          //    - add the values argument containing array of parsed in srcset filenames
+          // {
+          //   tag: 'img',
+          //   attributes: ['srcset'],
+          //   filter: ({ attribute, value, values }) => {
+          //     console.log('\n### ATTR: ', { attribute, value, values });
+          //   },
+          // },
           {
             tag: 'link',
             attributes: ['data-source'],

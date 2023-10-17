@@ -1,5 +1,9 @@
 # Change log
 
+## 2.14.5 (2023-10-17)
+
+- fix: correct the type of the `value` argument in the `filter()` function of the `sources` loader option
+
 ## 2.14.4 (2023-10-12)
 
 - fix: correct attributes type in the `filter()` function of the `sources` loader option
