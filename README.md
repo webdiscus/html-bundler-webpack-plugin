@@ -80,11 +80,17 @@ Thank you to all our sponsors and patrons!
       <img src="https://avatars.githubusercontent.com/u/8503756?s=72&amp;v=4" title="Marcel Robitaille" alt="Marcel Robitaille">
       <p>Marcel Robitaille</p>
     </a></td>
+  </tr>
+  <tr align="center" valign="top" style="border: 0">
+    <td style="border: 0"><a href="https://github.com/kannwism">
+      <img src="https://avatars.githubusercontent.com/u/18029781?s=72&amp;v=4" width="72" title="Marian Kannwischer (kannwism)" alt="patron" style="max-width: 100%;">
+      <p>Marian Kannwischer</p>
+    </a></td>
     <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
       <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="72" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
       <p>Raymond Ackloo</p>
     </a></td>
-  </tr>
+    </tr>
 </table>
 
 
