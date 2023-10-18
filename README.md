@@ -641,7 +641,7 @@ The plugin automatically extracts JS and CSS whose source files are specified in
 
 ```ts
 type EntryObject = {
-  [key: string]: EntryDescription | string;
+  [name: string]: EntryDescription | string;
 };
 ```
 
@@ -681,7 +681,7 @@ type EntryDescription = {
   /**
    * The template data.
    */
-  data?: { [k: string]: any } | string;
+  data?: { [key: string]: any } | string;
 };
 
 type FilenameTemplate =
@@ -1330,7 +1330,7 @@ type Preload = Array<{
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: { [k: string]: string | boolean };
+  attributes?: { [attributeName: string]: string | boolean };
 }>;
 ```
 
@@ -2008,8 +2008,9 @@ type Sources =
       filter?: (props: {
         tag: string;
         attribute: string;
-        value: string | Array<string>;
-        attributes: { [k: string]: string };
+        value: string;
+        parsedValue: Array<string>;
+        attributes: { [attributeName: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;
@@ -2071,10 +2072,15 @@ The argument is an object containing the properties:
 
 - `tag: string` - a name of the HTML tag
 - `attribute: string` - a name of the HTML attribute
-- `value: string | Array<string>` - a value of the HTML attribute;\
-   for `srcset` the `value` argument is an array of parsed filenames,\
-   an original srcset value as string is available via `attributes.srcset`
-- `attributes: string` - all attributes of the tag
+- `value: string` - an original value of the HTML attribute
+- `parsedValue: Array<string>` - an array of filenames w/o URL query, parsed in the value\
+   it's useful for the `srcset` attribute containing many image files, e.g.:
+   ```html
+   <img src="image.png?size=800" srcset="image1.png?size=200 200w, image2.png 400w">
+   ```
+   the `parsedValue` for the `src` is `['image.png']`, the array with one parsed filename\
+   the `parsedValue` for the `srcset` is `['image1.png', 'image2.png']`
+- `attributes: { [attributeName: string]: string }` - all attributes of the tag
 - `resourcePath: string` - a path of the HTML template
 
 The processing of an attribute can be ignored by returning `false`.
@@ -2259,7 +2265,7 @@ type BeforePreprocessor =
   | false
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | undefined);
 ```
 
@@ -2311,7 +2317,7 @@ type Preprocessor =
   | 'nunjucks'
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | Promise<any> | undefined);
 ```
 
@@ -2391,7 +2397,7 @@ To use any templating engine, you can define the `preprocessor` as a function.
 ```ts
 type Preprocessor = (
   template: string,
-  loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+  loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
 ) => string | Promise<any> | undefined;
 ```
 

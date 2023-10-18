@@ -20,6 +20,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
+        // test a relative image path
         'pages/home': './src/views/index.html',
       },
       js: {

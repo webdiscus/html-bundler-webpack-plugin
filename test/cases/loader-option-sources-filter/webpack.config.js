@@ -48,9 +48,9 @@ module.exports = {
           // add filter to default tag
           {
             tag: 'img',
-            filter: ({ tag, attribute, value, attributes, resourcePath }) => {
+            filter: ({ tag, attribute, value, parsedValue, attributes, resourcePath }) => {
               if (attribute === 'src' && !value.endsWith('lemon.png')) return false;
-              if (attribute === 'srcset' && !value.find((item) => item.endsWith('fig3.png'))) return false;
+              if (attribute === 'srcset' && !parsedValue.find((item) => item.endsWith('fig3.png'))) return false;
             },
           },
 

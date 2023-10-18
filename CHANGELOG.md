@@ -1,8 +1,11 @@
 # Change log
 
-## 2.14.5 (2023-10-17)
+## 2.15.0 (2023-10-18)
 
-- fix: correct the type of the `value` argument in the `filter()` function of the `sources` loader option
+- feat: add `parsedValue` argument as an array of parsed filenames w/o URL query, in the `filter()` function of the `sources`
+- fix(BREAKING CHANGE): for `srcset` attribute the type of the `value` argument is now `string` (was as `Array<string>`), in the `filter()` function of the `sources`\
+  Note: for `srcset` attribute you can use the `parsedValue` as an array instead of the `value`, the `value` contains now an original string
+- docs: fix attributes type
 
 ## 2.14.4 (2023-10-12)
 
@@ -20,7 +23,7 @@
 - fix: pass correct entry data in the template when the same template used for many pages with different data, in `serve` mode
 
 ## 2.14.1 (2023-09-24)
-- 
+
 - fix: remove unused `isEntry` property from the `info` argument of the `postprocess` callback
   the `isEntry` property was always true, because template is defined as an entrypoint
 - chore: code cleanup

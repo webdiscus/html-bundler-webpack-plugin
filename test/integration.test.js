@@ -129,9 +129,12 @@ describe('plugin minify option', () => {
 describe('loader options common', () => {
   test('defaults, when in module.rules is not defined', () => compareFiles('loader-option-defaults'));
   test('disable parsing for all tags and attributes', () => compareFiles('loader-option-sources-false'));
+
   test('add custom tags and attributes', () => compareFiles('loader-option-sources-attrs'));
-  test('filter tags and attributes', () => compareFiles('loader-option-sources-attrs-filter'));
-  test('filter property attribute', () => compareFiles('loader-option-sources-attrs-filter-property'));
+  test('filter tags and attributes', () => compareFiles('loader-option-sources-filter'));
+  test('filter property attribute', () => compareFiles('loader-option-sources-filter-property'));
+  test('filter, parsedValues', () => compareFiles('loader-option-sources-filter-parsedValues'));
+
   test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
   test('preprocessor null', () => compareFiles('loader-option-preprocessor-return-null'));

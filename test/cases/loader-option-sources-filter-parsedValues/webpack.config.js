@@ -21,30 +21,16 @@ module.exports = {
       },
       loaderOptions: {
         sources: [
-          // add filter to default tag
           {
             tag: 'img',
-            attributes: ['data-src', 'data-srcset', 'data-resolve-src'],
+            attributes: ['data-srcset'],
+            // test parsedValue
+            filter: ({ attribute, value, parsedValue }) => {
+              //console.log('\n### filter attributes: ', { attribute, value, parsedValue });
+              if (attribute === 'src' && parsedValue.includes('@images/pear.png')) return false;
+              if (attribute === 'data-srcset' && parsedValue.includes('@images/lemon.png')) return false;
+            },
           },
-          {
-            tag: 'img-ng',
-            attributes: ['data-src-one', 'data-src-two'],
-          },
-          {
-            tag: 'link',
-            attributes: ['data-source'],
-          },
-
-          // image in SVG
-          // {
-          //   tag: 'image',
-          //   attributes: ['href'],
-          // },
-          // // SVG image fragment
-          // {
-          //   tag: 'use',
-          //   attributes: ['href'], // note: 'xlink:href' is deprecated and not supported in browsers, but a graphics editor
-          // },
         ],
       },
     }),

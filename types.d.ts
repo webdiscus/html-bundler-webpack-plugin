@@ -42,11 +42,11 @@ declare namespace HtmlBundlerPlugin {
      * The references to LoaderOptions.
      * It's syntactic "sugar" to avoid the complicated structure of options.
      */
-    data?: { [k: string]: any } | string;
+    data?: { [key: string]: any } | string;
     beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;
-    // postprocess of rendered template
+    // postprocess of rendered template, called after js template was compiled into html
     postprocess?: Postprocess;
     // generates preload link tags for assets
     preload?: Preload;
@@ -109,7 +109,7 @@ type EntryDescription = {
    */
   import: string;
   /**
-   * Specifies the filename of the output file on disk. You must **not** specify an absolute path here, but the path may contain folders separated by '/'! The specified path is joined with the value of the 'output.path' option to determine the location on disk.
+   * The output filename template.
    */
   filename?: FilenameTemplate;
   /**
@@ -122,7 +122,7 @@ type EntryDescription = {
  * The template data passed to the preprocessor as an object, or the path to a file that exports the data as an object.
  * If the value is string, it should be an absolute or relative path to a JSON/JS file.
  */
-type Data = { [k: string]: any } | string;
+type Data = { [key: string]: any } | string;
 
 type JsOptions = {
   filename?: FilenameTemplate;
@@ -159,7 +159,9 @@ type IntegrityOptions = {
 type HashFunctions = 'sha256' | 'sha384' | 'sha512';
 
 /**
- * Specifies the filename template of output files on disk. You must **not** specify an absolute path here, but the path may contain folders separated by '/'! The specified path is joined with the value of the 'output.path' option to determine the location on disk.
+ * Specifies the filename template of output files on disk.
+ * You must **not** specify an absolute path here, but the path may contain folders separated by '/'!
+ * The specified path is joined with the value of the 'output.path' option to determine the location on the disk.
  */
 type FilenameTemplate = string | ((pathData: PathData, assetInfo?: AssetInfo) => string);
 
@@ -167,7 +169,7 @@ type BeforePreprocessor =
   | false
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | undefined);
 
 type Preprocessor =
@@ -178,15 +180,18 @@ type Preprocessor =
   | 'nunjucks'
   | ((
       template: string,
-      loaderContext: LoaderContext<Object> & { data: { [k: string]: any } | string }
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | Promise<any> | undefined);
 
 /**
- * Called after the template has been rendered, but not yet finalized,
+ * Called after the template has been compiled into html string, but not yet finalized,
  * before the split chunks and inline assets are injected.
  */
-type Postprocess = (content: string, info: TemplateInfo, compilation: Compilation) => string | undefined;
+type Postprocess = (content: string, templateInfo: TemplateInfo, compilation: Compilation) => string | undefined;
 
+/**
+ * The object is argument of the postprocess hook.
+ */
 type TemplateInfo = {
   verbose: boolean;
   filename: string | ((pathData: PathData) => string);
@@ -200,7 +205,7 @@ type Preload = Array<{
   as?: string;
   rel?: string;
   type?: string;
-  attributes?: { [k: string]: string | boolean };
+  attributes?: { [attributeName: string]: string | boolean };
 }>;
 
 type Sources =
@@ -211,8 +216,11 @@ type Sources =
       filter?: (props: {
         tag: string;
         attribute: string;
-        value: string | Array<string>;
-        attributes: { [k: string]: string };
+        // original value string
+        value: string;
+        // parsed value, useful for srcset attribute with many filenames
+        parsedValue: Array<string>;
+        attributes: { [attributeName: string]: string };
         resourcePath: string;
       }) => boolean | undefined;
     }>;
