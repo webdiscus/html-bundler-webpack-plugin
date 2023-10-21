@@ -1,0 +1,29 @@
+{
+  "name": "image-minimizer",
+  "description": "Using image-minimizer-webpack-plugin",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production"
+  },
+  "devDependencies": {
+    "css-loader": "^6.8.1",
+    "html-bundler-webpack-plugin": "^2.15.0",
+    "image-minimizer-webpack-plugin": "^3.2.3",
+    "imagemin": "^8.0.1",
+    "imagemin-mozjpeg": "^10.0.0",
+    "imagemin-pngquant": "^9.0.2",
+    "imagemin-svgo": "^10.0.1",
+    "sharp": "^0.32.6",
+    "sass": "^1.64.2",
+    "sass-loader": "^13.3.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
