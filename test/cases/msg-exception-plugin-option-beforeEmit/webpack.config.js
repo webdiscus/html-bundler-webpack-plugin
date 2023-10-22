@@ -20,8 +20,8 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].[contenthash:8].css',
       },
-      afterProcess: (content, { sourceFile, assetFile }) => {
-        throw new Error('Custom after process failed!');
+      beforeEmit: (content) => {
+        throw new Error('beforeEmit failed!');
       },
     }),
   ],

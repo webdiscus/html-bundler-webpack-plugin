@@ -30,8 +30,6 @@ module.exports = {
         const pluginName = 'myPlugin';
         compiler.hooks.compilation.tap(pluginName, (compilation) => {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
-          console.log('\n ### HOOK compilation: ');
-
           // test hook
           // TODO: add postprocess hook
           // hooks.postprocess.tap(pluginName, (content, { entry, assets, outputPath }) => {
@@ -39,7 +37,7 @@ module.exports = {
           //   content = content.replace('Hello World!', 'Hi Webpack!');
           //   console.dir({ _: '\n ### HOOK postprocess: ', entry, assets }, { depth: 5 }, content);
           //
-          //   //console.log('\n ### HOOK afterProcess: ');
+          //   //console.log('\n ### HOOK: ');
           //   // if (hashes.size > 0) {
           //   //   const saveAs = path.join(__dirname, 'dist/integrity.json');
           //   //   const json = Object.fromEntries(hashes);

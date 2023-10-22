@@ -238,25 +238,25 @@ describe('parse attributes unit tests', () => {
 
 describe('resolve parsed values', () => {
   test('https://example.com/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('http://example.com/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('//style.css', () => {
-    const received = Template.resolve({ type: 'style', file: '//style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', file: '//style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: '/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', file: '/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });

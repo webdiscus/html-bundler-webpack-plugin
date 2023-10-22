@@ -38,7 +38,7 @@ module.exports = {
           // test hook
           hooks.beforePreprocessor.tap(pluginName, (content) => {
             const placeholder = '<!-- PLACEHOLDER_FAVICON -->';
-            const replacement = ['<link href="@images/favicon.ico" rel="icon" />'];
+            const replacement = '<link href="@images/favicon.ico" rel="icon" />';
 
             return content.replace(placeholder, replacement);
           });

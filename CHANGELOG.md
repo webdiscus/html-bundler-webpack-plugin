@@ -1,5 +1,17 @@
 # Change log
 
+## 2.16.0-beta.2 (2023-10-24)
+
+- fix: compute integrity for the current compilation only to isolate them by async tests
+- fix: output exceptions for new callbacks
+- test: add test for `beforePreprocessor` hook
+- test: add test for `beforePreprocessor` callback
+- test: add test for `preprocessor` hook
+- test: add test for `beforeEmit` hook
+- test: add test for `beforeEmit` callback
+- test: add test for `afterEmit` hook
+- test: add test for `afterEmit` callback
+
 ## 2.16.0-beta.1 (2023-10-23)
 
 - feat: add `js.inline.keepAttributes` option to allow keep some original script tag attributes when JS is inlined

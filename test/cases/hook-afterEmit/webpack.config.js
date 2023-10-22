@@ -2,6 +2,76 @@ const fs = require('fs');
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 
+/**
+ * @param {CompileEntries} entries
+ * @return {Array<{resource: string, assetFile: string | Array<string>}>}
+ */
+const manifest = (entries) => {
+  const relPath = (file) => path.relative(__dirname, file);
+  const assets = [];
+
+  //console.dir({ entries }, { depth: 7 });
+
+  for (let entry of entries) {
+    assets.push({
+      resource: relPath(entry.resource),
+      assetFile: entry.assetFile,
+    });
+
+    for (let asset of entry.assets) {
+      let assetItem;
+
+      switch (asset.type) {
+        case 'script':
+          assetItem = {
+            resource: relPath(asset.resource),
+            assetFile: [],
+          };
+
+          let chunkFiles = [];
+          asset.chunks.forEach((item) => {
+            chunkFiles.push(item.chunkFile || item.assetFile);
+          });
+          if (chunkFiles.length === 1) {
+            assetItem.assetFile = chunkFiles[0];
+          } else {
+            assetItem.assetFile = chunkFiles;
+          }
+
+          if (asset.integrity) assetItem.integrity = asset.integrity;
+
+          break;
+        case 'style':
+          let resource = Array.isArray(asset.resource)
+            ? asset.resource.map((file) => relPath(file))
+            : relPath(asset.resource);
+
+          assetItem = {
+            resource,
+            assetFile: asset.assetFile,
+          };
+
+          if (asset.integrity) assetItem.integrity = asset.integrity;
+
+          break;
+        case 'resource':
+          assetItem = {
+            resource: relPath(asset.resource),
+            assetFile: asset.assetFile,
+          };
+
+          break;
+      }
+
+      assets.push(assetItem);
+    }
+  }
+
+  //console.log(assets);
+
+  return assets;
+};
+
 module.exports = {
   mode: 'production',
 
@@ -41,14 +111,36 @@ module.exports = {
         compiler.hooks.compilation.tap(pluginName, (compilation) => {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
 
-          // test hook
-          hooks.afterEmit.tapAsync(pluginName, (entries, options) => {
-            const { outputPath } = options;
-            entries.forEach((entry) => {
-              // TODO: generate manifest.json
-              //console.dir({ _: '\n ### HOOK afterEmit: ', entry }, { depth: 5 });
-            });
+          // test sync hook - ok
+          hooks.afterEmit.tap(pluginName, (entries, options) => {
+            const saveAs = path.join(__dirname, 'dist/assets.json');
+            const assets = manifest(entries);
+            const data = JSON.stringify(assets, null, '  ');
+
+            fs.writeFileSync(saveAs, data);
           });
+
+          // test issue: the file is created but the content is saved after test is done
+          // hooks.afterEmit.tapAsync(pluginName, (entries, options, cb) => {
+          //   const saveAs = path.join(__dirname, 'dist/assets.json');
+          //   const assets = manifest(entries);
+          //   const data = JSON.stringify(assets, null, '  ');
+          //
+          //   fs.writeFile(saveAs, data, { flush: true }, cb);
+          // });
+
+          // test issue: the file is created but the content is saved (by promises.writeFile) after test is done
+          // hooks.afterEmit.tapPromise(
+          //   pluginName,
+          //   (entries, options) =>
+          //     new Promise((resolve, reject) => {
+          //       const saveAs = path.join(__dirname, 'dist/assets.json');
+          //       const assets = manifest(entries);
+          //       const data = JSON.stringify(assets, null, '  ');
+          //
+          //       resolve(fs.promises.writeFile(saveAs, data, { flush: true }));
+          //     })
+          // );
         });
       },
     },

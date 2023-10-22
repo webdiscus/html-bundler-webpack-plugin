@@ -1,0 +1,31 @@
+[
+  {
+    "resource": "src/index.html?lang=en",
+    "assetFile": "index.html"
+  },
+  {
+    "resource": "src/style.css",
+    "assetFile": "style.5f6a8236.css",
+    "integrity": "sha384-L4ZxY6EorKIpuov40WP0Bp6Mrls5TyMrOWsy4oXOp9i/FGeqnyJU+PWwIzWn3T3z"
+  },
+  {
+    "resource": "../../fixtures/images/apple.png",
+    "assetFile": "img/apple.02a7c382.png"
+  },
+  {
+    "resource": [
+      "src/app1.css",
+      "src/app2.css"
+    ],
+    "assetFile": "app.5b01e96e.chunk.css",
+    "integrity": "sha384-kIzKP4FS1ZRJP0kja2MyyxIn2yEXD6AGd9bLgi5ftWXzbrKpzzTRX3lAgebd7swV"
+  },
+  {
+    "resource": "src/main.js",
+    "assetFile": "main.5317c1f6.js"
+  },
+  {
+    "resource": "src/app.js",
+    "assetFile": "app.ffec14fb.js"
+  }
+]

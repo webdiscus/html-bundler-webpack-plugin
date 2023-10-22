@@ -132,15 +132,23 @@ const postprocessException = (error, info) => {
  * @param {string} file
  * @throws {Error}
  */
-const afterProcessException = (error, file) => {
-  const message = `After process failed. Check you 'afterProcess' option.\nSource file: ${cyan(file)}.`;
+const beforeEmitException = (error, file) => {
+  const message = `Before emit failed. Check you 'beforeEmit' option.\nSource file: ${cyan(file)}.`;
 
   throw new PluginException(message, error);
 };
 
 /**
  * @param {Error} error
- * @param {string} file
+ * @return {PluginException} Return the error for promise.
+ */
+const afterEmitException = (error) => {
+  const message = `After emit failed. Check you 'afterEmit' option.`;
+
+  return new PluginException(message, error);
+};
+
+/**
  * @throws {Error}
  */
 const missingCrossOriginForIntegrityException = () => {
@@ -168,7 +176,8 @@ module.exports = {
   resolveException,
   executeFunctionException,
   postprocessException,
-  afterProcessException,
+  beforeEmitException,
+  afterEmitException,
   missingCrossOriginForIntegrityException,
   noHeadException,
 };

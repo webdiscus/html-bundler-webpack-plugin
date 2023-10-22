@@ -42,8 +42,8 @@ module.exports = {
                 const saveAs = path.join(__dirname, 'dist/integrity.json');
                 const json = Object.fromEntries(hashes);
 
-                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  ')); // => save to file
-                //console.log(hashes); // => output to console
+                //console.log(hashes);
+                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
               }
             })
           );
@@ -54,7 +54,7 @@ module.exports = {
           //     const saveAs = path.join(__dirname, 'dist/integrity.json');
           //     const json = Object.fromEntries(hashes);
           //
-          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  ')); // => save to file
+          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
           //     //console.log(hashes); // => output to console
           //
           //     // tapAsync requires call of the callback()
@@ -68,8 +68,8 @@ module.exports = {
           //     const saveAs = path.join(__dirname, 'dist/integrity.json');
           //     const json = Object.fromEntries(hashes);
           //
-          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  ')); // => save to file
           //     //console.log(hashes); // => output to console
+          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
           //   }
           // });
         });

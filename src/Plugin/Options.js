@@ -1,7 +1,7 @@
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const LoaderOptions = require('../Loader/Options');
-const { postprocessException, afterProcessException } = require('./Messages/Exception');
+const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 
 const pluginName = require('../config');
 
@@ -63,8 +63,9 @@ class Options {
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
 
-    this.options.afterProcess = isFunction(options.afterProcess) ? options.afterProcess : null;
-    this.options.postprocess = isFunction(options.postprocess) ? options.postprocess : null;
+    if (!isFunction(options.postprocess)) this.options.postprocess = null;
+    if (!isFunction(options.beforeEmit)) this.options.beforeEmit = null;
+    if (!isFunction(options.afterEmit)) this.options.afterEmit = null;
 
     if (!options.watchFiles) this.options.watchFiles = {};
     this.options.hotUpdate = this.options.hotUpdate === true;
@@ -389,6 +390,18 @@ class Options {
     return this.autoPublicPath === true;
   }
 
+  static hasPostprocess() {
+    return this.options.postprocess != null;
+  }
+
+  static hasBeforeEmit() {
+    return this.options.beforeEmit != null;
+  }
+
+  static hasAfterEmit() {
+    return this.options.afterEmit != null;
+  }
+
   /**
    * @return {string}
    */
@@ -560,18 +573,6 @@ class Options {
     return this.dynamicEntry ? this.options.entry : null;
   }
 
-  static hasPostprocess() {
-    return typeof this.options.postprocess === 'function';
-  }
-
-  static hasBeforeEmit() {
-    return typeof this.options.beforeEmit === 'function';
-  }
-
-  static hasAfterEmit() {
-    return typeof this.options.afterEmit === 'function';
-  }
-
   /**
    * Called after js template is compiled into html string.
    *
@@ -608,8 +609,7 @@ class Options {
     try {
       return this.options.beforeEmit(content, entry, options, compilation);
     } catch (error) {
-      // TODO: rename exception into beforeEmitException
-      return afterProcessException(error, resource);
+      return beforeEmitException(error, resource);
     }
   }
 
@@ -621,16 +621,13 @@ class Options {
    * @param {CompileEntries} entries
    * @param {CompileOptions} options
    * @param {Compilation} compilation
-   * @throws
+   * @return {Promise}
+   * @async
    */
   static afterEmit(entries, options, compilation) {
-    try {
-      this.options.afterEmit(entries, options, compilation);
-    } catch (error) {
-      // TODO: add exception afterEmitException
-      throw new Error(error);
-      //return afterEmitException(error);
-    }
+    return new Promise((resolve) => {
+      resolve(this.options.afterEmit(entries, options, compilation));
+    });
   }
 
   /**

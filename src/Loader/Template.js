@@ -12,7 +12,7 @@ class Template {
    * @return {string}
    */
 
-  static compile(content, issuer, entryId) {
+  static resolve(content, issuer, entryId) {
     const sources = Options.getSources();
 
     if (sources === false) {
@@ -34,7 +34,7 @@ class Template {
 
     for (let { type, parsedAttrs } of parsedTags) {
       for (let { startPos, endPos, value: file, offset } of parsedAttrs) {
-        const resolvedFile = this.resolve({ isBasedir, type, file, issuer, entryId });
+        const resolvedFile = this.resolveFile({ isBasedir, type, file, issuer, entryId });
         // skip not resolvable value, e.g. URL
         if (!resolvedFile) continue;
 
@@ -71,7 +71,7 @@ class Template {
    * @param {string|number} entryId The entry id where is loaded the resource.
    * @return {string|boolean} Return a resolved full path of source file or false.
    */
-  static resolve({ isBasedir, type, file, issuer, entryId }) {
+  static resolveFile({ isBasedir, type, file, issuer, entryId }) {
     file = file.trim();
 
     if (

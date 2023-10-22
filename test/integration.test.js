@@ -99,12 +99,6 @@ describe('plugin options', () => {
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
-  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
-  test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
-
-  test('preprocessor', () => compareFiles('option-preprocessor'));
-  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
-
   test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
@@ -129,14 +123,7 @@ describe('plugin minify option', () => {
   // test('minify HTML with "<" char', () => compareFiles('option-minify-html-chars'));
 });
 
-describe('plugin callback options', () => {
-  test('postprocess', () => compareFiles('option-postprocess'));
-
-  // TODO: yet experimental, undocumented
-  test('beforeEmit', () => compareFiles('option-beforeEmit'));
-});
-
-describe('hooks', () => {
+describe('plugin hooks', () => {
   test('preprocessor hooks and callbacks', () => compareFiles('hook-callback-beforePreprocessor-preprocessor'));
 
   test('beforePreprocessor', () => compareFiles('hook-beforePreprocessor'));
@@ -146,7 +133,21 @@ describe('hooks', () => {
   //test('postprocess', () => compareFiles('hook-postprocess'));
 
   test('beforeEmit', () => compareFiles('hook-beforeEmit'));
+
+  // TODO: add an arfument as flat map of assets, w/o tree, to create a manifest
   test('afterEmit', () => compareFiles('hook-afterEmit'));
+});
+
+describe('plugin callbacks', () => {
+  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
+  test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
+
+  test('preprocessor', () => compareFiles('option-preprocessor'));
+  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+
+  // TODO: yet experimental, undocumented
+  test('beforeEmit', () => compareFiles('option-beforeEmit'));
+  test('afterEmit', () => compareFiles('option-afterEmit'));
 });
 
 describe('loader options common', () => {

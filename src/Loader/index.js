@@ -10,7 +10,7 @@ const {
   initError,
   beforePreprocessorError,
   preprocessorError,
-  compileError,
+  resolveError,
   exportError,
 } = require('./Messages/Exeptions');
 
@@ -75,8 +75,9 @@ const loader = function (content, map, meta) {
       return value;
     })
     .then((value) => {
-      errorStage = 'compile';
-      return Template.compile(value, resource, entryId);
+      errorStage = 'resolve';
+      // TODO: this is possible in 'render' (html) mode only, skip it in 'compile' (js template) mode
+      return Template.resolve(value, resource, entryId);
     })
     .then((value) => {
       errorStage = 'export';
@@ -101,8 +102,8 @@ const loader = function (content, map, meta) {
         case 'preprocessor':
           error = preprocessorError(error, issuer);
           break;
-        case 'compile':
-          error = compileError(error, issuer);
+        case 'resolve':
+          error = resolveError(error, issuer);
           break;
         case 'export':
           error = exportError(error, issuer);

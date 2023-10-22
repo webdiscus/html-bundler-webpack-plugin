@@ -75,7 +75,6 @@ class Options {
     }
 
     // preprocessor
-
     if (!Preprocessor.isReady(options.preprocessor)) {
       options.preprocessor = Preprocessor.factory(loaderContext, {
         preprocessor: options.preprocessor,

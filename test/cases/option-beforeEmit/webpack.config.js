@@ -20,7 +20,6 @@ module.exports = {
         filename: 'assets/css/[name].bundle.css',
       },
       beforeEmit: (content, entry, options, compilation) => {
-        //console.log('\n### beforeEmit:', info);
         return content.replace('REPLACE ME', 'The new replaced content.');
       },
     }),

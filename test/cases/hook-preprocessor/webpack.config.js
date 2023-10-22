@@ -20,7 +20,12 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/index.html?lang=en',
+        index: {
+          import: './src/index.html?lang=en',
+          data: {
+            title: 'Test',
+          },
+        },
       },
 
       js: {
@@ -40,13 +45,11 @@ module.exports = {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
 
           // test hook
-          hooks.preprocessor.tap(pluginName, (template) => {
+          hooks.preprocessor.tap(pluginName, (content, loaderContext) => {
             const search = '<!-- PLACEHOLDER_FAVICON -->';
             const replacement = ['<link href="@images/favicon.ico" rel="icon" />'];
 
-            //console.log('\n ### preprocessor\n', content);
-
-            return render(template, search, replacement);
+            return render(content, search, replacement);
           });
         });
       },

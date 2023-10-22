@@ -86,11 +86,11 @@ declare namespace HtmlBundlerPlugin {
 
   export interface Hooks {
     beforePreprocessor: AsyncSeriesWaterfallHook<
-      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => undefined]
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => void]
     >;
 
     preprocessor: AsyncSeriesWaterfallHook<
-      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => undefined]
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => void]
     >;
 
     // TODO: implement
@@ -103,7 +103,7 @@ declare namespace HtmlBundlerPlugin {
         entries: CompileEntries,
         options: CompileOptions,
         // only for tapAsync
-        callback?: (error: Error | null) => undefined,
+        callback?: (error: Error | null) => void,
       ]
     >;
 
@@ -112,7 +112,7 @@ declare namespace HtmlBundlerPlugin {
         // the map of the output asset filename to its integrity hash
         hashes: Map<string, string>,
         // only for tapAsync
-        callback?: (error: Error | null) => undefined,
+        callback?: (error: Error | null) => void,
       ]
     >;
   }
@@ -181,7 +181,7 @@ type JsInlineOptions = {
     attribute: string;
     value: string;
     attributes: { [attributeName: string]: string };
-  }) => boolean | undefined;
+  }) => boolean | void;
 };
 
 type CssOptions = {
@@ -253,7 +253,7 @@ type BeforeEmit = (
   compilation: Compilation
 ) => string | undefined;
 
-type AfterEmit = (entries: CompileEntries, options: CompileOptions, compilation: Compilation) => string | undefined;
+type AfterEmit = (entries: CompileEntries, options: CompileOptions, compilation: Compilation) => Promise<void> | void;
 
 type CompileOptions = {
   verbose: boolean;

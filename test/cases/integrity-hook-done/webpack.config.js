@@ -36,7 +36,7 @@ module.exports = {
 
         // test promise hook - OK
         compiler.hooks.done.tapPromise(pluginName, (stats) => {
-          return Promise.resolve().then(() => {
+          return new Promise((resolve) => {
             const saveAs = path.join(__dirname, 'dist/integrity.json');
             const hashes = {};
 
@@ -45,6 +45,7 @@ module.exports = {
             }
 
             fs.writeFileSync(saveAs, JSON.stringify(hashes, null, '  '));
+            resolve();
           });
         });
 

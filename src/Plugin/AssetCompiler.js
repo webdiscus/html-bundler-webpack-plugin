@@ -32,6 +32,7 @@ const VMScript = require('./VMScript');
 const Integrity = require('./Extras/Integrity');
 
 const { compilationName, verbose } = require('./Messages/Info');
+const { afterEmitException } = require('./Messages/Exception');
 
 /** @typedef {import("enhanced-resolve/lib/Resolver")} Resolver */
 /** @typedef {import("../CacheFacade").ItemCacheFacade} ItemCacheFacade */
@@ -171,6 +172,7 @@ class AssetCompiler {
     this.renderManifest = this.renderManifest.bind(this);
     this.afterProcessAssets = this.afterProcessAssets.bind(this);
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
+    this.afterEmit = this.afterEmit.bind(this);
     this.done = this.done.bind(this);
   }
 
@@ -388,50 +390,7 @@ class AssetCompiler {
       // });
     });
 
-    compiler.hooks.afterEmit.tapPromise(pluginName, () => {
-      const hooks = AssetCompiler.getHooks(this.compilation);
-      let result = Promise.resolve();
-
-      if (Options.isIntegrityEnabled()) {
-        const hashes = Integrity.getAssetHashes();
-        result = hooks.integrityHashes.promise(hashes);
-      }
-
-      const entries = [];
-
-      /** @type {CompileOptions} */
-      const options = {
-        verbose: Options.isVerbose(),
-        outputPath: Options.getWebpackOutputPath(),
-      };
-
-      result
-        .then(() => {
-          // prepare the CompileEntries for the hook
-          for (const [, { entry, assets }] of Collection.data) {
-            /** @type {CompileEntry} */
-            const compileEntry = {
-              name: entry.originalName,
-              resource: entry.resource,
-              assetFile: entry.filename,
-              assets,
-            };
-            entries.push(compileEntry);
-          }
-
-          return hooks.afterEmit.promise(entries, options);
-        })
-        .then(() => {
-          if (Options.hasAfterEmit()) {
-            Options.afterEmit(entries, options, this.compilation);
-          }
-        });
-
-      this.promises.push(result);
-
-      return result;
-    });
-
+    compiler.hooks.afterEmit.tapPromise(pluginName, this.afterEmit);
     compiler.hooks.done.tapPromise(pluginName, this.done);
     compiler.hooks.shutdown.tap(pluginName, this.shutdown);
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
@@ -1294,8 +1253,67 @@ class AssetCompiler {
     return result;
   }
 
+  /**
+   * @param {number} entryId
+   */
   beforeProcessTemplate(entryId) {
     Collection.beforeProcessTemplate(entryId);
+  }
+
+  /**
+   * @param {Compilation} compilation
+   * @return {Promise<void>}
+   */
+  afterEmit(compilation) {
+    const hooks = AssetCompiler.getHooks(compilation);
+    /** @type {CompileEntries} */
+    const entries = [];
+
+    /** @type {CompileOptions} */
+    const options = {
+      verbose: Options.isVerbose(),
+      outputPath: Options.getWebpackOutputPath(),
+    };
+
+    const promise = Promise.resolve();
+
+    if (Options.isIntegrityEnabled()) {
+      promise.then(() => {
+        const hashes = Integrity.getAssetHashes(compilation);
+        return hooks.integrityHashes.promise(hashes);
+      });
+    }
+
+    promise
+      .then(() => {
+        // prepare the CompileEntries for the hook
+        for (const [, { entry, assets }] of Collection.data) {
+          /** @type {CompileEntry} */
+          const compileEntry = {
+            name: entry.originalName,
+            resource: entry.resource,
+            assetFile: entry.filename,
+            assets,
+          };
+          entries.push(compileEntry);
+        }
+
+        return hooks.afterEmit.promise(entries, options);
+      })
+      .then(() => {
+        if (Options.hasAfterEmit()) {
+          return Options.afterEmit(entries, options, compilation).catch((error) => {
+            this.exceptions.add(afterEmitException(error));
+          });
+        }
+      })
+      .catch((error) => {
+        this.exceptions.add(error);
+      });
+
+    this.promises.push(promise);
+
+    return promise;
   }
 
   /**
@@ -1308,9 +1326,6 @@ class AssetCompiler {
    */
   done(stats) {
     const { compilation } = this;
-    const hasError = compilation.errors.length > 0 || this.exceptions.size > 0;
-
-    compilation.name = compilationName(hasError);
 
     if (PluginService.isWatchMode()) {
       const watchDirs = Options.getRootSourcePaths();
@@ -1336,23 +1351,33 @@ class AssetCompiler {
     }
 
     // do something on done in the promise
-    return Promise.all(this.promises).then(() => {
-      //return Promise.resolve(() => true).then(() => {
-      if (this.exceptions.size > 0) {
-        const messages = Array.from(this.exceptions).join('\n\n');
-        this.exceptions.clear();
-        throw new Error(messages);
-      }
+    return Promise.all(this.promises)
+      .then(() => {
+        // do nothing, it required to call finally
+      })
+      .catch((error) => {
+        // do nothing, it required to call finally
+      })
+      .finally(() => {
+        const hasError = compilation.errors.length > 0 || this.exceptions.size > 0;
 
-      if (Options.isVerbose()) verbose();
+        compilation.name = compilationName(hasError);
 
-      Asset.reset();
-      AssetEntry.reset();
-      AssetTrash.reset();
-      Collection.reset();
-      PluginService.reset();
-      Resolver.reset();
-    });
+        if (this.exceptions.size > 0) {
+          const messages = Array.from(this.exceptions).join('\n\n');
+          this.exceptions.clear();
+          throw new Error(messages);
+        }
+
+        if (Options.isVerbose()) verbose();
+
+        Asset.reset();
+        AssetEntry.reset();
+        AssetTrash.reset();
+        Collection.reset();
+        PluginService.reset();
+        Resolver.reset();
+      });
   }
 
   /**

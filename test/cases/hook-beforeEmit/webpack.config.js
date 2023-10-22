@@ -31,10 +31,10 @@ module.exports = {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
 
           // test hook
-          hooks.beforeEmit.tap(pluginName, (content, { entry, assets, outputPath }) => {
+          hooks.beforeEmit.tap(pluginName, (content, entry, options) => {
             // test modify generated HTML
             content = content.replace('Hello World!', 'Hi Webpack!');
-            //console.dir({ _: '\n ### HOOK beforeEmit: ', entry, assets }, { depth: 5 }, content);
+            //console.dir({ hook: 'beforeEmit', options, entry }, { depth: 5 }, content);
 
             return content;
           });

@@ -884,7 +884,7 @@ class Collection {
             // 1.1 compute CSS integrity
             if (isIntegrity && !inline) {
               const assetContent = compilation.assets[asset.assetFile].source();
-              asset.integrity = Integrity.getIntegrity(assetContent, asset.assetFile);
+              asset.integrity = Integrity.getIntegrity(compilation, assetContent, asset.assetFile);
               assetIntegrity.set(asset.assetFile, asset.integrity);
 
               if (!parseOptions.has(type)) {
@@ -903,7 +903,7 @@ class Collection {
               for (const chunk of asset.chunks) {
                 if (!chunk.inline) {
                   const assetContent = compilation.assets[chunk.chunkFile].source();
-                  chunk.integrity = Integrity.getIntegrity(assetContent, chunk.chunkFile);
+                  chunk.integrity = Integrity.getIntegrity(compilation, assetContent, chunk.chunkFile);
                   assetIntegrity.set(chunk.chunkFile, chunk.integrity);
 
                   if (!parseOptions.has(type)) {
