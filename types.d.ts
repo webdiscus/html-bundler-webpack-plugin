@@ -16,6 +16,15 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
 
 declare namespace HtmlBundlerPlugin {
   export interface PluginOptions {
+    // callbacks
+    beforePreprocessor?: BeforePreprocessor;
+    preprocessor?: Preprocessor;
+    preprocessorOptions?: Object;
+    // postprocess of rendered template, called after js template was compiled into html
+    postprocess?: Postprocess;
+    beforeEmit?: BeforeEmit;
+    afterEmit?: AfterEmit;
+
     // match of entry template files
     test?: RegExp;
     /**
@@ -35,12 +44,6 @@ declare namespace HtmlBundlerPlugin {
      * It's syntactic "sugar" to avoid the complicated structure of options.
      */
     data?: { [key: string]: any } | string;
-    beforePreprocessor?: BeforePreprocessor;
-    preprocessor?: Preprocessor;
-    preprocessorOptions?: Object;
-    // postprocess of rendered template, called after js template was compiled into html
-    postprocess?: Postprocess;
-    beforeEmit?: BeforeEmit;
     // generates preload link tags for assets
     preload?: Preload;
     minify?: 'auto' | boolean | MinifyOptions;
@@ -90,7 +93,8 @@ declare namespace HtmlBundlerPlugin {
       [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => undefined]
     >;
 
-    postprocess: SyncWaterfallHook<[content: string, compileInfo: TemplateInfo]>;
+    // TODO: implement
+    //postprocess: SyncWaterfallHook<[content: string, info: TemplateInfo]>;
 
     beforeEmit: SyncWaterfallHook<[content: string, entry: CompileEntry, options: CompileOptions]>;
 
@@ -172,6 +176,12 @@ type JsInlineOptions = {
   chunk?: RegExp | Array<RegExp>;
   // Inlines all chunks when source filename matches a regular expression(s).
   source?: RegExp | Array<RegExp>;
+  // Filter function to keep/remove attributes for inlined script tag. If undefined, remove all attributes.
+  keepAttributes?: (props: {
+    attribute: string;
+    value: string;
+    attributes: { [attributeName: string]: string };
+  }) => boolean | undefined;
 };
 
 type CssOptions = {
@@ -195,7 +205,7 @@ type HashFunctions = 'sha256' | 'sha384' | 'sha512';
  */
 type FilenameTemplate = string | ((pathData: PathData, assetInfo?: AssetInfo) => string);
 
-type BeforePreprocessor = false | ((template: string, loaderContext: BundlerPluginLoaderContext) => string | undefined);
+type BeforePreprocessor = false | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | undefined);
 
 type Preprocessor =
   | false
@@ -203,7 +213,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
-  | ((template: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
+  | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 
 /**
  * Called after the template has been compiled into html string, but not yet finalized,
@@ -214,16 +224,20 @@ type Postprocess = (content: string, templateInfo: TemplateInfo, compilation: Co
 /**
  * The object is argument of the postprocess hook.
  */
-// TODO: use CompileEntry + CompileOptions instead of TemplateInfo
+// TODO: update readme for TemplateInfo
 type TemplateInfo = {
   verbose: boolean;
+  outputPath: string;
   // TODO: deprecate the filename as filenameTemplate, because it will be never used
   //filename: string | ((pathData: PathData) => string);
   // the source filename including a query
   // TODO: deprecate sourceFile, because is already the `resource`
   //sourceFile: string;
-  outputPath: string;
+  // the entry name
+  name: string;
+  // the source filename including a query
   resource: string;
+  // the output asset filename relative to output path
   assetFile: string;
 };
 
@@ -238,6 +252,8 @@ type BeforeEmit = (
   options: CompileOptions,
   compilation: Compilation
 ) => string | undefined;
+
+type AfterEmit = (entries: CompileEntries, options: CompileOptions, compilation: Compilation) => string | undefined;
 
 type CompileOptions = {
   verbose: boolean;

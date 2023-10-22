@@ -79,6 +79,8 @@ describe('plugin options', () => {
   //test('js.inline auto, dev', () => compareFiles('option-js-inline-auto-dev'));
   //test('js.inline auto, prod', () => compareFiles('option-js-inline-auto-prod'));
 
+  test('js.inline.keepAttributes', () => compareFiles('option-js-inline-keepAttributes'));
+
   test('js.inline.source', () => compareFiles('option-js-inline-source'));
   test('js.inline.chunk', () => compareFiles('option-js-inline-chunk'));
   test('js.inline source and chunk', () => compareFiles('option-js-inline-source-chunk'));
@@ -272,7 +274,7 @@ describe('import styles in JavaScript', () => {
 
 describe('import lazy styles in JavaScript', () => {
   // TODO: yet experimental, undocumented
-  test('js-import-css-lazy', () => compareFiles('js-import-css-lazy'));
+  test('lazy url in js', () => compareFiles('js-import-css-lazy-url'));
 });
 
 describe('split chunks', () => {

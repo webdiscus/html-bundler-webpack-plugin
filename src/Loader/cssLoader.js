@@ -26,7 +26,7 @@ const pitchLoader = async function (remaining) {
   // TODO: find the module from this._compilation, because this._module is deprecated
   const { resource, resourcePath, _module: module } = this;
   const options = this.getOptions() || {};
-  const isLazy = module.resourceResolveData?.query.includes('lazy');
+  const isUrl = module.resourceResolveData?.query.includes('url');
 
   remaining += resource.includes('?') ? '&' : '?';
 
@@ -44,8 +44,8 @@ const pitchLoader = async function (remaining) {
   module._cssSource = esModule ? result.default : result;
   Collection.setImportStyleEsModule(esModule);
 
-  // support for lazy load CSS in JavaScript, see js-import-css-lazy
-  return '/* extracted by HTMLBundler CSSLoader */' + (isLazy ? module._cssSource : '');
+  // support for lazy load CSS in JavaScript, see js-import-css-lazy-url
+  return '/* extracted by HTMLBundler CSSLoader */' + (isUrl ? module._cssSource : '');
 };
 
 module.exports = loader;

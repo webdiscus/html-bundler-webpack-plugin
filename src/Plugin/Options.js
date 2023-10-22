@@ -120,11 +120,15 @@ class Options {
       if (js.inline.source && !Array.isArray(js.inline.source)) {
         js.inline.source = [js.inline.source];
       }
+      if (typeof js.inline.keepAttributes !== 'function') {
+        js.inline.keepAttributes = undefined;
+      }
     } else {
       js.inline = {
         enabled: this.toBool(js.inline, false, this.js.inline),
         chunk: undefined,
         source: undefined,
+        keepAttributes: undefined,
       };
     }
 
@@ -560,6 +564,14 @@ class Options {
     return typeof this.options.postprocess === 'function';
   }
 
+  static hasBeforeEmit() {
+    return typeof this.options.beforeEmit === 'function';
+  }
+
+  static hasAfterEmit() {
+    return typeof this.options.afterEmit === 'function';
+  }
+
   /**
    * Called after js template is compiled into html string.
    *
@@ -575,10 +587,6 @@ class Options {
     } catch (error) {
       postprocessException(error, info);
     }
-  }
-
-  static hasBeforeEmit() {
-    return typeof this.options.beforeEmit === 'function';
   }
 
   /**
@@ -600,7 +608,28 @@ class Options {
     try {
       return this.options.beforeEmit(content, entry, options, compilation);
     } catch (error) {
+      // TODO: rename exception into beforeEmitException
       return afterProcessException(error, resource);
+    }
+  }
+
+  /**
+   * Called after emit.
+   *
+   * TODO: test not yet documented experimental feature
+   *
+   * @param {CompileEntries} entries
+   * @param {CompileOptions} options
+   * @param {Compilation} compilation
+   * @throws
+   */
+  static afterEmit(entries, options, compilation) {
+    try {
+      this.options.afterEmit(entries, options, compilation);
+    } catch (error) {
+      // TODO: add exception afterEmitException
+      throw new Error(error);
+      //return afterEmitException(error);
     }
   }
 

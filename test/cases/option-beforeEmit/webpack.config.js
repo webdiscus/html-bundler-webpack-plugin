@@ -19,8 +19,8 @@ module.exports = {
       css: {
         filename: 'assets/css/[name].bundle.css',
       },
-      beforeEmit: (content, compileInfo, compilation) => {
-        //console.log('\n### afterCompile:', compileInfo);
+      beforeEmit: (content, entry, options, compilation) => {
+        //console.log('\n### beforeEmit:', info);
         return content.replace('REPLACE ME', 'The new replaced content.');
       },
     }),

@@ -168,9 +168,11 @@ class Collection {
     let pos = content.indexOf(resource);
     if (pos < 0) return false;
 
+    const { keepAttributes } = Options.getJs().inline;
+
     const sources = this.compilation.assets;
     const { chunks } = asset;
-    const openTag = '<script>';
+    let openTag = '<script>';
     const closeTag = '</script>';
 
     let srcStartPos = pos;
@@ -188,6 +190,7 @@ class Collection {
     }
 
     while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
+    let tagEndPos2 = content.indexOf(closeTag, tagEndPos);
     tagEndPos = content.indexOf(closeTag, tagEndPos) + closeTag.length;
 
     let beforeTagSrc = content.slice(tagStartPos, srcStartPos);
@@ -198,6 +201,25 @@ class Collection {
 
       if (inline) {
         const code = sources[chunkFile].source();
+
+        if (keepAttributes) {
+          let tag = content.slice(tagStartPos, tagEndPos2);
+          const attributes = HtmlParser.parseAttrAll(tag);
+          let attrsStr = '';
+
+          for (const [attribute, value] of Object.entries(attributes)) {
+            if (keepAttributes({ attributes, attribute, value }) === true) {
+              if (attrsStr) attrsStr += ' ';
+              attrsStr += attribute;
+              if (value != null) attrsStr += `="${value}"`;
+            }
+          }
+
+          if (attrsStr) {
+            openTag = `<script ${attrsStr}>`;
+          }
+        }
+
         replacement += openTag + code + closeTag;
         AssetTrash.add(chunkFile);
       } else {
@@ -307,7 +329,7 @@ class Collection {
 
   /**
    * @param {Compilation} compilation
-   * @param {CompilationHooks} hooks
+   * @param {HtmlBundlerPlugin.Hooks} hooks
    */
   static init(compilation, hooks) {
     this.compilation = compilation;

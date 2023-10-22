@@ -336,6 +336,113 @@ describe('parse tags unit tests', () => {
   });
 });
 
+describe('parseAttrAll', () => {
+  test('tag end 01', () => {
+    const source = '<script src="file.js">';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 02', () => {
+    const source = '<script src="file.js" >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 03', () => {
+    const source = '<script defer=true>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 04', () => {
+    const source = '<script defer=true/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 05', () => {
+    const source = '<script defer=true >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 06', () => {
+    const source = '<script defer>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 07', () => {
+    const source = '<script defer/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 08', () => {
+    const source = '<script defer >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 11', () => {
+    const source = '<script src="file.js"/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 12', () => {
+    const source = '<script src="file.js"  />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 31', () => {
+    const source = '<br>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 32', () => {
+    const source = '<br/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 33', () => {
+    const source = '<br />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 34', () => {
+    const source = '<br attr />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { attr: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('all possible values of attribute', () => {
+    const source = `<script  defer data-text="text with spaces"  enabled=true empty="" src='file.js'  />`;
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined, 'data-text': 'text with spaces', enabled: 'true', empty: '', src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+});
+
 describe('AssetEntry unit tests', () => {
   test('reset', () => {
     AssetEntry.compilationEntryNames = new Set(['home', 'about']);

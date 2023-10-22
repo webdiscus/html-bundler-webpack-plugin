@@ -1,6 +1,9 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 
+// custom sync preprocessor function
+const render = (template, search, replacement) => template.replace(search, replacement);
+
 module.exports = {
   mode: 'production',
 
@@ -36,20 +39,14 @@ module.exports = {
         compiler.hooks.compilation.tap(pluginName, (compilation) => {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
 
-          // TODO: DEPRECATED!!! instead of this you can use:
-          //  - beforePreprocessor
-          //  - postprocess => afterPreprocessor
-          //  - afterCompile => beforeEmit
           // test hook
-          hooks.beforePreprocessor.tap(pluginName, (content) => {
-            const placeholder = '<!-- PLACEHOLDER_FAVICON -->';
+          hooks.preprocessor.tap(pluginName, (template) => {
+            const search = '<!-- PLACEHOLDER_FAVICON -->';
             const replacement = ['<link href="@images/favicon.ico" rel="icon" />'];
 
-            //console.log('\n ### beforePreprocessor\n', content);
+            //console.log('\n ### preprocessor\n', content);
 
-            content = content.replace(placeholder, replacement);
-
-            return content;
+            return render(template, search, replacement);
           });
         });
       },

@@ -1,5 +1,12 @@
 # Change log
 
+## 2.16.0-beta.1 (2023-10-23)
+
+- feat: add `js.inline.keepAttributes` option to allow keep some original script tag attributes when JS is inlined
+- feat(EXPERIMENTAL): add `afterEmit` callback, undocumented
+- fix(EXPERIMENTAL, BREAKING CHANGE): rename `lazy` query to `url` to get output URL of CSS
+- chore: add usage example of image-minimizer-webpack-plugin
+
 ## 2.16.0-beta.0 (2023-10-21)
 
 - feat(EXPERIMENTAL): add possibility to get output CSS filename in JS via import a style file with the `lazy` query.\

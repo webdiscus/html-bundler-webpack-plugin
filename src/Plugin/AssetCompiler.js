@@ -309,7 +309,7 @@ class AssetCompiler {
       contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
 
       // TODO: reserved for next major version supported Webpack 5.81+
-      //  - add support for lazy load CSS in JavaScript, see js-import-css-lazy
+      //  - add support for lazy load CSS in JavaScript, see js-import-css-lazy-url
       //  - move the code from afterCreateModule to here
       //  - replace the 'javascript/auto' with constant from webpack
       // normalModuleFactory.hooks.createModuleClass.for('javascript/auto').tap(pluginName, (createData, resolveData) => {
@@ -317,9 +317,9 @@ class AssetCompiler {
       //     _bundlerPluginMeta: { isImportedStyle },
       //   } = resolveData;
       //   const query = createData.resourceResolveData?.query || '';
-      //   const isLazy = query.includes('lazy');
+      //   const isUrl = query.includes('url');
       //
-      //   if (isImportedStyle && isLazy && !query.includes(cssLoaderName)) {
+      //   if (isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
       //     const dataUrlOptions = undefined;
       //     const filename = Options.getCss().filename;
       //     createData.settings.type = 'asset/resource';
@@ -397,29 +397,35 @@ class AssetCompiler {
         result = hooks.integrityHashes.promise(hashes);
       }
 
-      result.then(() => {
-        const entries = [];
+      const entries = [];
 
-        /** @type {CompileOptions} */
-        const options = {
-          verbose: Options.isVerbose(),
-          outputPath: Options.getWebpackOutputPath(),
-        };
+      /** @type {CompileOptions} */
+      const options = {
+        verbose: Options.isVerbose(),
+        outputPath: Options.getWebpackOutputPath(),
+      };
 
-        // prepare the CompileEntries for the hook
-        for (const [, { entry, assets }] of Collection.data) {
-          /** @type {CompileEntry} */
-          const compileEntry = {
-            name: entry.originalName,
-            resource: entry.resource,
-            assetFile: entry.filename,
-            assets,
-          };
-          entries.push(compileEntry);
-        }
+      result
+        .then(() => {
+          // prepare the CompileEntries for the hook
+          for (const [, { entry, assets }] of Collection.data) {
+            /** @type {CompileEntry} */
+            const compileEntry = {
+              name: entry.originalName,
+              resource: entry.resource,
+              assetFile: entry.filename,
+              assets,
+            };
+            entries.push(compileEntry);
+          }
 
-        hooks.afterEmit.promise(entries, options);
-      });
+          return hooks.afterEmit.promise(entries, options);
+        })
+        .then(() => {
+          if (Options.hasAfterEmit()) {
+            Options.afterEmit(entries, options, this.compilation);
+          }
+        });
 
       this.promises.push(result);
 
@@ -680,10 +686,10 @@ class AssetCompiler {
     const { _bundlerPluginMeta: meta } = resolveData;
     const { rawRequest, resource } = createData;
     const query = module.resourceResolveData?.query || '';
-    const isLazy = query.includes('lazy');
+    const isUrl = query.includes('url');
 
-    // TODO: undocumented experimental support for lazy load a source style file (with `?lazy` query) in JavaScript
-    if (meta.isImportedStyle && isLazy && !query.includes(cssLoaderName)) {
+    // TODO: undocumented experimental support for url load a source style file (with `?url` query) in JavaScript
+    if (meta.isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
       const dataUrlOptions = undefined;
       const filename = Options.getCss().filename;
 
@@ -882,9 +888,9 @@ class AssetCompiler {
   }
 
   /**
-   * @param {Object} entry The entry point of the chunk.
-   * @param {Object} chunk The chunk of an asset.
-   * @param {Object} module The module of the chunk.
+   * @param {AssetEntryOptions} entry The entry point of the chunk.
+   * @param {Chunk} chunk The chunk of an asset.
+   * @param {Module} module The module of the chunk.
    * @return {Object|null|boolean} assetModule Returns the asset module object.
    *   If returns undefined, then skip processing of the module.
    *   If returns null, then break the hook processing to show the original error, occurs by an inner error.
@@ -938,6 +944,7 @@ class AssetCompiler {
         return;
       }
 
+      assetModule.name = entry.originalName;
       assetModule.outputPath = entry.outputPath;
       assetModule.filename = entry.filenameTemplate;
       assetModule.assetFile = assetFile;
@@ -1020,7 +1027,7 @@ class AssetCompiler {
 
       // 2. squash styles from all nested files into one file
       for (const module of modules) {
-        const isLazy = module.resourceResolveData?.query.includes('lazy');
+        const isUrl = module.resourceResolveData?.query.includes('url');
         const importData = {
           resource: module.resource,
           assets: [],
@@ -1048,8 +1055,8 @@ class AssetCompiler {
           }
         }
 
-        if (isLazy) {
-          // TODO: add support for lazy load CSS in JavaScript, see js-import-css-lazy
+        if (isUrl) {
+          // TODO: add support for lazy load CSS in JavaScript, see js-import-css-lazy-url
           Collection.setData(
             entry,
             { resource: issuer },
@@ -1057,7 +1064,7 @@ class AssetCompiler {
               type: Collection.type.style,
               // lazy file can't be inlined, it makes no sense
               inline: false,
-              lazy: true,
+              lazyUrl: true,
               resource: module.resource,
               assetFile: module.buildInfo.filename,
             }
@@ -1228,7 +1235,7 @@ class AssetCompiler {
    * Render the module source code generated by a loader.
    *
    * @param {string} type The type of module, one of the values: template, style.
-   * @param {boolean} inline Whether the resource should be inlined.
+   * @param {string?} name The entry name. Used for template entry only.
    * @param {Object} source The Webpack source.
    * @param {string} resource The full path of source file, including a query.
    * @param {string} sourceFile The full path of source file w/o a query.
@@ -1237,7 +1244,7 @@ class AssetCompiler {
    * @param {string|function} filename The filename template.
    * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
-  renderModule({ type, inline, source, sourceFile, resource, assetFile, outputPath, filename }) {
+  renderModule({ type, name, source, sourceFile, resource, assetFile, outputPath, filename }) {
     /** @type  FileInfo */
     const issuer = {
       resource,
@@ -1266,13 +1273,14 @@ class AssetCompiler {
         if (Options.hasPostprocess()) {
           /** @type {TemplateInfo} */
           const templateInfo = {
-            verbose: Options.isVerbose(),
-            // TODO: deprecate the filename and sourceFile properties
+            name,
+            // TODO: deprecate the filename property
             filename,
-            sourceFile,
             outputPath,
+            sourceFile,
             resource,
             assetFile,
+            verbose: Options.isVerbose(),
           };
 
           // TODO:
