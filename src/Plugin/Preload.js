@@ -1,5 +1,5 @@
 const path = require('path');
-const Options = require('./Options');
+const Option = require('./Option');
 const { detectIndent, getFileExtension } = require('../Common/Helpers');
 const { optionPreloadAsException } = require('./Messages/Exception');
 
@@ -67,7 +67,7 @@ class Preload {
       // recovery preload output file of an asset relative by entry point
       const issuerDir = path.dirname(issuer.filename);
       const webRootPath = path.posix.join(issuerDir, assetFile);
-      assetFile = Options.getAssetOutputFile(webRootPath, entry.filename);
+      assetFile = Option.getAssetOutputFile(webRootPath, entry.filename);
     }
 
     return assetFile;
@@ -85,7 +85,7 @@ class Preload {
     const data = collection.get(entryAsset);
     if (!data) return;
 
-    const options = Options.getPreload();
+    const options = Option.getPreload();
     if (!options || !content) return;
 
     const insertPos = this.#findInsertPos(content);
@@ -95,7 +95,7 @@ class Preload {
     }
 
     const preloadAssets = new Map();
-    const LF = Options.getLF();
+    const LF = Option.getLF();
     const indent = LF + detectIndent(content, insertPos - 1);
     const groupBy = {};
 

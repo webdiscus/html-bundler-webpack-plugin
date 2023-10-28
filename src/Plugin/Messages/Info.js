@@ -11,7 +11,7 @@ const {
   yellowBright,
   bgAnsi,
   yellow,
-} = require('ansis/colors');
+} = require('ansis');
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { relativePathForView } = require('../../Common/FileUtils');

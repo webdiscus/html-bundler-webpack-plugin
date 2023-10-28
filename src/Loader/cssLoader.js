@@ -8,7 +8,7 @@ const Collection = require('../Plugin/Collection');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('./Utils');
 
 /**
- * @this {import("webpack").LoaderContext<LoaderOptions>}
+ * @this {import("webpack").LoaderContext<LoaderOption>}
  * @param {string} content
  */
 const loader = function (content) {
@@ -19,7 +19,7 @@ const loader = function (content) {
 };
 
 /**
- * @this {import("webpack").LoaderContext<LoaderOptions>}
+ * @this {import("webpack").LoaderContext<LoaderOption>}
  * @param {string} remaining
  */
 const pitchLoader = async function (remaining) {

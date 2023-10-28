@@ -1,7 +1,7 @@
 const path = require('path');
 const AssetInline = require('./AssetInline');
 const Collection = require('./Collection');
-const Options = require('./Options');
+const Option = require('./Option');
 const { resolveException } = require('./Messages/Exception');
 const Snapshot = require('./Snapshot');
 const AssetEntry = require('./AssetEntry');
@@ -177,7 +177,7 @@ class Resolver {
     let outputFilename;
 
     if (originalFilename != null) {
-      outputFilename = Options.getAssetOutputFile(originalFilename, realIssuer.filename);
+      outputFilename = Option.getAssetOutputFile(originalFilename, realIssuer.filename);
     } else if (resolve != null) {
       // resolve asset filename processed via external loader, e.g. `responsive-loader`
       outputFilename = resolve(realIssuer);
@@ -255,7 +255,7 @@ class Resolver {
     // if is used the filename like `./main.js`, then the resource is an absolute file
     // if is used the filename like `../js/main.js`, then the resource is null and the rawRequest is an absolute file
     const file = resource || rawRequest;
-    if (Options.js.test.test(file) && AssetEntry.isEntryResource(issuer.resource)) {
+    if (Option.js.test.test(file) && AssetEntry.isEntryResource(issuer.resource)) {
       // occur after rename/delete of a js file when the entry module was already rebuilt
       Snapshot.addMissingFile(issuer.resource, file);
 

@@ -5,7 +5,7 @@
 
 const Preprocessor = require('../Loader/Preprocessor');
 
-/** @typedef {import('Options')} PluginOptionInstance */
+/** @typedef {import('Option')} PluginOptionInstance */
 
 class PluginService {
   // TODO: add methods to set this properties
@@ -40,7 +40,7 @@ class PluginService {
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
-   * @param {Options} options The plugin options instance.
+   * @param {Option} options The plugin options instance.
    */
   static init(options) {
     const pluginOptions = options.get();

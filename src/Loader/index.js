@@ -4,7 +4,7 @@ const Template = require('./Template');
 const Loader = require('./Loader');
 const RenderMode = require('./Modes/RenderMode');
 const Dependency = require('./Dependency');
-const Options = require('./Options');
+const Option = require('./Option');
 const {
   notInitializedPluginError,
   initError,
@@ -46,7 +46,7 @@ const loader = function (content, map, meta) {
   new Promise((resolve) => {
     // the options must be initialized before others
     errorStage = 'init';
-    Options.init(loaderContext);
+    Option.init(loaderContext);
     Loader.init(loaderContext);
     resolve();
   })
@@ -55,7 +55,7 @@ const loader = function (content, map, meta) {
       return hooks.beforePreprocessor.promise(content, loaderContext);
     })
     .then((value) => {
-      const beforePreprocessor = Options.get().beforePreprocessor;
+      const beforePreprocessor = Option.get().beforePreprocessor;
       if (beforePreprocessor != null) {
         errorStage = 'beforePreprocessor';
         return beforePreprocessor(value, loaderContext) || value;
@@ -67,17 +67,30 @@ const loader = function (content, map, meta) {
       return hooks.preprocessor.promise(value, loaderContext);
     })
     .then((value) => {
-      const preprocessor = Options.getPreprocessor();
+      const preprocessor = Option.getPreprocessor();
       if (preprocessor != null) {
         errorStage = 'preprocessor';
         return preprocessor(value, loaderContext) || value;
       }
       return value;
     })
+    // TODO: implement and docs
+    // .then((value) => {
+    //   errorStage = 'afterPreprocessor';
+    //   return hooks.afterPreprocessor.promise(value, loaderContext);
+    // })
+    // .then((value) => {
+    //   const afterPreprocessor = Option.get().afterPreprocessor;
+    //   if (afterPreprocessor != null) {
+    //     errorStage = 'afterPreprocessor';
+    //     return afterPreprocessor(value, loaderContext) || value;
+    //   }
+    //   return value;
+    // })
     .then((value) => {
       errorStage = 'resolve';
       // TODO: this is possible in 'render' (html) mode only, skip it in 'compile' (js template) mode
-      return Template.resolve(value, resource, entryId);
+      return Template.resolve(value, resource, entryId, hooks);
     })
     .then((value) => {
       errorStage = 'export';

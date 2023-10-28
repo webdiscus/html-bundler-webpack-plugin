@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis/colors');
+const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis');
 const { pluginName } = require('../../config');
+
+const PluginError = new Set();
 
 class PluginException extends Error {
   /**
@@ -18,6 +20,8 @@ class PluginException extends Error {
     super();
     this.name = this.constructor.name;
     this.message = message;
+
+    PluginError.add(this);
   }
 }
 
@@ -170,6 +174,7 @@ const noHeadException = (sourceFile) => {
 };
 
 module.exports = {
+  PluginError,
   PluginException,
   optionEntryPathException,
   optionPreloadAsException,

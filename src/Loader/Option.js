@@ -12,7 +12,7 @@ const { watchPathsException, dataFileNotFoundException, dataFileException } = re
  * @property {Function?} filter
  */
 
-class Options {
+class Option {
   /** The file system used by Webpack */
   static fileSystem = null;
   static #watchFiles = {};
@@ -282,4 +282,4 @@ class Options {
   }
 }
 
-module.exports = Options;
+module.exports = Option;

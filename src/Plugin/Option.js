@@ -1,28 +1,11 @@
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
-const LoaderOptions = require('../Loader/Options');
+const LoaderOption = require('../Loader/Option');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 
 const pluginName = require('../config');
 
-/**
- * @typedef {Object} JsOptions
- * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].js'] The output filename of extracted JS.
- * @property {string|function(PathData, AssetInfo): string} [chunkFilename = '[id].js'] The output filename of non-initial chunk files.
- * @property {boolean|string} [inline = false] Whether the compiled JS should be inlined.
- */
-
-/**
- * @typedef {Object} CssOptions
- * @property {RegExp} test RegEx to match style files.
- * @property {string|null} [outputPath = options.output.path] The output directory for an asset.
- * @property {string|function(PathData, AssetInfo): string} [filename = '[name].css'] The file name of output file.
- * @property {string|function(PathData, AssetInfo): string} [chunkFilename = filename] The output filename of non-initial chunk files, e.g., styles imported in js.
- * @property {boolean|string} [inline = false] Whether the compiled CSS should be inlined.
- */
-
-class Options {
+class Option {
   static pluginName = pluginName;
   /** @type {PluginOptions} */
   static options = {};
@@ -53,7 +36,7 @@ class Options {
   /**
    * Initialize plugin options.
    *
-   * @param {Object} options The plugin options.
+   * @param {PluginOptions} options The plugin options.
    * @param {AssetEntry} assetEntry The instance of the AssetEntry class.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
@@ -83,7 +66,7 @@ class Options {
 
     this.webpackOptions = options;
     this.productionMode = options.mode == null || options.mode === 'production';
-    this.verbose = this.toBool(this.options.verbose, false, false);
+    this.options.verbose = this.toBool(this.options.verbose, false, false);
     this.context = options.context;
     this.cacheable = options.cache?.type === 'filesystem';
 
@@ -121,15 +104,15 @@ class Options {
       if (js.inline.source && !Array.isArray(js.inline.source)) {
         js.inline.source = [js.inline.source];
       }
-      if (typeof js.inline.keepAttributes !== 'function') {
-        js.inline.keepAttributes = undefined;
+      if (typeof js.inline.attributeFilter !== 'function') {
+        js.inline.attributeFilter = undefined;
       }
     } else {
       js.inline = {
         enabled: this.toBool(js.inline, false, this.js.inline),
         chunk: undefined,
         source: undefined,
-        keepAttributes: undefined,
+        attributeFilter: undefined,
       };
     }
 
@@ -181,6 +164,19 @@ class Options {
     }
     this.options.integrity = integrity;
 
+    // https://github.com/terser/html-minifier-terser#options-quick-reference
+    const defaultMinifyOptions = {
+      collapseWhitespace: true,
+      keepClosingSlash: true,
+      removeComments: true,
+      removeRedundantAttributes: false, // prevents styling bug when input "type=text" is removed
+      removeScriptTypeAttributes: true,
+      removeStyleLinkTypeAttributes: true,
+      useShortDoctype: true,
+      minifyCSS: true,
+      minifyJS: true,
+    };
+
     // normalize minify options
     if (this.options.minify != null && typeof this.options.minify === 'object') {
       this.options.minifyOptions = this.options.minify;
@@ -191,6 +187,7 @@ class Options {
       }
       this.options.minify = this.toBool(this.options.minify, true, false);
     }
+    this.options.minifyOptions = { ...defaultMinifyOptions, ...this.options.minifyOptions };
   }
 
   static initWatchMode() {
@@ -227,6 +224,7 @@ class Options {
 
     this.autoPublicPath = false;
     this.isUrlPublicPath = false;
+    this.rootPublicPath = false;
     this.isRelativePublicPath = false;
     this.webpackPublicPath = publicPath;
 
@@ -236,6 +234,8 @@ class Options {
       this.isUrlPublicPath = true;
     } else if (!publicPath.startsWith('/')) {
       this.isRelativePublicPath = true;
+    } else if (publicPath.startsWith('/')) {
+      this.rootPublicPath = true;
     }
   }
 
@@ -264,14 +264,14 @@ class Options {
    * @return {boolean}
    */
   static isMinify() {
-    return this.options.minify;
+    return this.options.minify === true;
   }
 
   /**
    * @return {boolean}
    */
   static isVerbose() {
-    return this.verbose === true;
+    return this.options.verbose === true;
   }
 
   /**
@@ -383,11 +383,12 @@ class Options {
     return this.options.preload != null && this.options.preload !== false;
   }
 
-  /**
-   * @return {boolean}
-   */
   static isAutoPublicPath() {
     return this.autoPublicPath === true;
+  }
+
+  static isRootPublicPath() {
+    return this.rootPublicPath === true;
   }
 
   static hasPostprocess() {
@@ -427,10 +428,18 @@ class Options {
     return value === 'auto' && this.productionMode === autoValue;
   }
 
+  /**
+   * @return {PluginOptions}
+   */
   static get() {
     return this.options;
   }
 
+  /**
+   * Return LF when minify is disabled and return empty string when minify is enabled.
+   *
+   * @return {string}
+   */
   static getLF() {
     return this.isMinify() ? '' : '\n';
   }
@@ -442,32 +451,55 @@ class Options {
     return this.options.test;
   }
 
+  /**
+   * @return {JsOptions}
+   */
   static getJs() {
     return this.options.js;
   }
 
+  /**
+   * @return {CssOptions}
+   */
   static getCss() {
     return this.options.css;
   }
 
+  /**
+   * @return {WatchFiles}
+   */
   static getWatchFiles() {
     return this.options.watchFiles;
   }
 
+  /**
+   * @return {boolean|Preload}
+   */
   static getPreload() {
     return this.options.preload == null ? false : this.options.preload;
   }
 
+  /**
+   * @return {"auto" | boolean | IntegrityOptions}
+   */
   static getIntegrity() {
     return this.options.integrity;
   }
 
+  /**
+   * @param {string} sourceFile
+   * @return {CssOptions|null}
+   */
   static getStyleOptions(sourceFile) {
     if (!this.isStyle(sourceFile)) return null;
 
     return this.options.css;
   }
 
+  /**
+   * @param {string} sourceFile
+   * @return {{filename: FilenameTemplate, outputPath: string, sourcePath: (*|string), verbose: boolean}|null}
+   */
   static getEntryOptions(sourceFile) {
     const isEntry = this.isEntry(sourceFile);
     const isStyle = this.isStyle(sourceFile);
@@ -475,7 +507,7 @@ class Options {
     if (!isEntry && !isStyle) return null;
 
     let { filename, sourcePath, outputPath } = this.options;
-    let verbose = Options.isVerbose();
+    let verbose = Option.isVerbose();
 
     if (isStyle) {
       const cssOptions = this.options.css;
@@ -559,7 +591,7 @@ class Options {
    * @return {Array<string>}
    */
   static getRootSourcePaths() {
-    const watchDirs = LoaderOptions.getWatchPaths();
+    const watchDirs = LoaderOption.getWatchPaths();
 
     return watchDirs || [];
   }
@@ -577,7 +609,7 @@ class Options {
    * Called after js template is compiled into html string.
    *
    * @param {string} content A content of processed file.
-   * @param {TemplateInfo} info The resource info object. TODO: rename info into entryInfo?
+   * @param {TemplateInfo} info The resource info object.
    * @param {Compilation} compilation The Webpack compilation object.
    * @return {string}
    * @throws
@@ -597,36 +629,34 @@ class Options {
    *
    * @param {string} content
    * @param {CompileEntry} entry
-   * @param {CompileOptions} options
    * @param {Compilation} compilation
    * @return {string|null}
    * @throws
    */
-  static beforeEmit(content, entry, options, compilation) {
+  static beforeEmit(content, entry, compilation) {
     const { resource } = entry;
     if (!this.options.beforeEmit || !this.isEntry(resource)) return null;
 
     try {
-      return this.options.beforeEmit(content, entry, options, compilation);
+      return this.options.beforeEmit(content, entry, compilation);
     } catch (error) {
       return beforeEmitException(error, resource);
     }
   }
 
   /**
-   * Called after emit.
+   * Called after emitting.
    *
    * TODO: test not yet documented experimental feature
    *
    * @param {CompileEntries} entries
-   * @param {CompileOptions} options
    * @param {Compilation} compilation
    * @return {Promise}
    * @async
    */
-  static afterEmit(entries, options, compilation) {
+  static afterEmit(entries, compilation) {
     return new Promise((resolve) => {
-      resolve(this.options.afterEmit(entries, options, compilation));
+      resolve(this.options.afterEmit(entries, compilation));
     });
   }
 
@@ -660,4 +690,4 @@ class Options {
   }
 }
 
-module.exports = Options;
+module.exports = Option;

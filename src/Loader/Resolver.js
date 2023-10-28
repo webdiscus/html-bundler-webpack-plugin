@@ -2,7 +2,7 @@ const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
 
-const Options = require('./Options');
+const Option = require('./Option');
 const PluginService = require('../Plugin/PluginService');
 const Snapshot = require('../Plugin/Snapshot');
 const { resolveException } = require('./Messages/Exeptions');
@@ -18,12 +18,12 @@ class Resolver {
    * @param {Object} loaderContext
    */
   static init(loaderContext) {
-    const options = Options.getWebpackResolve();
+    const options = Option.getWebpackResolve();
 
     this.fs = loaderContext.fs.fileSystem;
     this.loaderContext = loaderContext;
     this.rootContext = loaderContext.rootContext;
-    this.basedir = Options.getBasedir();
+    this.basedir = Option.getBasedir();
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;
     this.hasPlugins = options.plugins && Object.keys(options.plugins).length > 0;

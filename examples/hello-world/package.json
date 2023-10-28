@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "css-loader": "^6.8.1",
-    "html-bundler-webpack-plugin": "^2.14.2",
+    "html-bundler-webpack-plugin": "^2.15.0",
     "sass": "^1.64.2",
     "sass-loader": "^13.3.2",
     "webpack": "^5.88.2",

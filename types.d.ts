@@ -8,6 +8,8 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
    */
   static loader: string;
 
+  static option: HtmlBundlerPlugin.OptionPluginInterface;
+
   static getHooks(compilation: Compilation): HtmlBundlerPlugin.Hooks;
 
   constructor(options?: HtmlBundlerPlugin.PluginOptions);
@@ -15,6 +17,25 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
 }
 
 declare namespace HtmlBundlerPlugin {
+  export interface OptionPluginInterface {
+    isEnabled: () => boolean;
+    isProduction: () => boolean;
+    isVerbose: () => boolean;
+
+    /**
+     * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
+     *
+     * @param {boolean|string|undefined} value The value one of the values: true, false, 'auto'.
+     * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
+     * @param {boolean|string} defaultValue Returns default value when value is undefined.
+     * @return {boolean}
+     */
+    toBool: (value: boolean | string | undefined, autoValue: boolean, defaultValue: boolean | string) => boolean;
+
+    get: () => PluginOptions;
+    getWebpackOutputPath: () => string;
+  }
+
   export interface PluginOptions {
     // callbacks
     beforePreprocessor?: BeforePreprocessor;
@@ -93,26 +114,30 @@ declare namespace HtmlBundlerPlugin {
       [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => void]
     >;
 
-    // TODO: implement
-    //postprocess: SyncWaterfallHook<[content: string, info: TemplateInfo]>;
+    // TODO: implement afterPreprocessor when will be required the feature
+    //afterPreprocessor: AsyncSeriesWaterfallHook<[content: string, loaderContext: BundlerPluginLoaderContext]>;
 
-    beforeEmit: SyncWaterfallHook<[content: string, entry: CompileEntry, options: CompileOptions]>;
-
-    afterEmit: AsyncSeriesHook<
+    /**
+     * Called after resolve of a source attribute defined by loaderOptions.source.
+     * Return a string to override the resolved value of the attribute.
+     */
+    resolveSource: SyncWaterfallHook<
       [
-        entries: CompileEntries,
-        options: CompileOptions,
-        // only for tapAsync
-        callback?: (error: Error | null) => void,
+        source: string,
+        info: { type: string; tag: string; attribute: string; value: string; resolvedFile: string; issuer: string },
       ]
     >;
+
+    postprocess: AsyncSeriesWaterfallHook<[content: string, info: TemplateInfo]>;
+
+    beforeEmit: AsyncSeriesWaterfallHook<[content: string, entry: CompileEntry]>;
+
+    afterEmit: AsyncSeriesHook<[entries: CompileEntries]>;
 
     integrityHashes: AsyncSeriesHook<
       [
         // the map of the output asset filename to its integrity hash
         hashes: Map<string, string>,
-        // only for tapAsync
-        callback?: (error: Error | null) => void,
       ]
     >;
   }
@@ -159,9 +184,13 @@ type EntryDescription = {
 type Data = { [key: string]: any } | string;
 
 type JsOptions = {
+  // The output filename of extracted JavaScript. Defaults `[name].js`.
   filename?: FilenameTemplate;
+  // The output filename of non-initial chunk file. Defaults `[id].js`.
   chunkFilename?: FilenameTemplate;
+  // The output directory for an asset. Defaults, `webpack.output.path`.
   outputPath?: string;
+  // Whether the compiled JavaScript should be inlined. Defaults, `false`.
   inline?: 'auto' | boolean | JsInlineOptions;
 };
 
@@ -176,8 +205,8 @@ type JsInlineOptions = {
   chunk?: RegExp | Array<RegExp>;
   // Inlines all chunks when source filename matches a regular expression(s).
   source?: RegExp | Array<RegExp>;
-  // Filter function to keep/remove attributes for inlined script tag. If undefined, remove all attributes.
-  keepAttributes?: (props: {
+  // Filter function to keep/remove attributes for inlined script tag.  If undefined, all attributes will be removed.
+  attributeFilter?: (props: {
     attribute: string;
     value: string;
     attributes: { [attributeName: string]: string };
@@ -185,10 +214,15 @@ type JsInlineOptions = {
 };
 
 type CssOptions = {
+  // RegEx to match style files.
   test?: RegExp;
+  // The output filename of extracted CSS.
   filename?: FilenameTemplate;
+  // The output filename of non-initial chunk file, e.g., a style file imported in JavaScript.
   chunkFilename?: FilenameTemplate;
+  // The output directory for an asset. Defaults, `webpack.output.path`.
   outputPath?: string;
+  // Whether the compiled JavaScript should be inlined. Defaults, `false`.
   inline?: 'auto' | boolean;
 };
 
@@ -222,55 +256,49 @@ type Preprocessor =
 type Postprocess = (content: string, templateInfo: TemplateInfo, compilation: Compilation) => string | undefined;
 
 /**
- * The object is argument of the postprocess hook.
+ * The object is argument of the hooks and callbacks.
  */
-// TODO: update readme for TemplateInfo
 type TemplateInfo = {
-  verbose: boolean;
-  outputPath: string;
-  // TODO: deprecate the filename as filenameTemplate, because it will be never used
-  //filename: string | ((pathData: PathData) => string);
-  // the source filename including a query
-  // TODO: deprecate sourceFile, because is already the `resource`
-  //sourceFile: string;
   // the entry name
   name: string;
-  // the source filename including a query
-  resource: string;
   // the output asset filename relative to output path
   assetFile: string;
+  // the source file without a query
+  sourceFile: string;
+  // the source file including a query
+  resource: string;
+  // output path of assetFile
+  outputPath: string;
 };
 
 /**
- * Called after the processAssets hook had finished without an error, before emit.
+ * Called after the processAssets hook had finished without an error, before emitting.
  * At this stage, all resources are processed with plugins and have final output filenames.
  * This hook is called for each compiled template defined in the entry option.
  */
-type BeforeEmit = (
-  content: string,
-  entry: CompileEntry,
-  options: CompileOptions,
-  compilation: Compilation
-) => string | undefined;
+type BeforeEmit = (content: string, entry: CompileEntry, compilation: Compilation) => string | undefined;
 
-type AfterEmit = (entries: CompileEntries, options: CompileOptions, compilation: Compilation) => Promise<void> | void;
-
-type CompileOptions = {
-  verbose: boolean;
-  // webpack output path
-  outputPath: string;
-};
+type AfterEmit = (entries: CompileEntries, compilation: Compilation) => Promise<void> | void;
 
 /**
- * The object is argument of hooks.
+ * The object is argument of hooks and callbacks.
  */
-type CompileEntry = {
+type CompileEntry2 = {
   // the entry name
   name: string;
-  // the source filename including a query
-  resource: string;
   // the output asset filename relative to output path
   assetFile: string;
+  // the source filename without a query, optional
+  sourceFile: string | undefined;
+  // the source filename including a query
+  resource: string;
+  // output path of assetFile
+  outputPath: string;
+  // assets used in html
+  assets: Array<CompileAsset>;
+};
+
+type CompileEntry = TemplateInfo & {
   // assets used in html
   assets: Array<CompileAsset>;
 };

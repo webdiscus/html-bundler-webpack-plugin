@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const HtmlBundlerPlugin = require('../../../');
 
@@ -14,43 +13,38 @@ module.exports = {
       entry: {
         index: './src/index.html?lang=en',
       },
-
       js: {
         filename: '[name].[contenthash:8].js',
         chunkFilename: '[name].[contenthash:8].chunk.js',
       },
-
       css: {
         filename: '[name].[contenthash:8].css',
         chunkFilename: '[name].[contenthash:8].chunk.css',
       },
+      // 2. test postprocess callback, called after postprocess hook
+      postprocess: (content, info) => {
+        return content.replace('Postprocess hook!', 'Hi Webpack!');
+      },
     }),
+    // test custom plugin using the postprocess hook
     {
       apply(compiler) {
         const pluginName = 'myPlugin';
         compiler.hooks.compilation.tap(pluginName, (compilation) => {
           const hooks = HtmlBundlerPlugin.getHooks(compilation);
-          // test hook
-          // TODO: add postprocess hook
-          // hooks.postprocess.tap(pluginName, (content, { entry, assets, outputPath }) => {
-          //   // test modify generated HTML
-          //   content = content.replace('Hello World!', 'Hi Webpack!');
-          //   console.dir({ _: '\n ### HOOK postprocess: ', entry, assets }, { depth: 5 }, content);
-          //
-          //   //console.log('\n ### HOOK: ');
-          //   // if (hashes.size > 0) {
-          //   //   const saveAs = path.join(__dirname, 'dist/integrity.json');
-          //   //   const json = Object.fromEntries(hashes);
-          //   //   fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
-          //   // }
-          //
+
+          // 1. test async hook
+          hooks.postprocess.tapPromise(pluginName, (content, info) => {
+            content = content.replace('Hello World!', 'Postprocess hook!');
+            return Promise.resolve(content);
+          });
+
+          // 1. test sync hook
+          // hooks.postprocess.tap(pluginName, (content, info) => {
+          //   content = content.replace('Hello World!', 'Postprocess hook!');
+          //   console.log('\n ### HOOK postprocess: ', { info, content });
           //   return content;
           // });
-
-          // test hook
-          hooks.afterEmit.tapAsync(pluginName, (data) => {
-            //console.log('\n ### HOOK afterEmit: ', data);
-          });
         });
       },
     },

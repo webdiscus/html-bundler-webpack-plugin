@@ -129,12 +129,10 @@ describe('plugin hooks', () => {
   test('beforePreprocessor', () => compareFiles('hook-beforePreprocessor'));
   test('preprocessor', () => compareFiles('hook-preprocessor'));
 
-  // TODO: implement postprocess hook (rename to afterPreprocessor?)
-  //test('postprocess', () => compareFiles('hook-postprocess'));
-
+  test('postprocess', () => compareFiles('hook-postprocess'));
   test('beforeEmit', () => compareFiles('hook-beforeEmit'));
 
-  // TODO: add an arfument as flat map of assets, w/o tree, to create a manifest
+  // TODO: add an argument as flat map of assets, w/o tree, to create a manifest
   test('afterEmit', () => compareFiles('hook-afterEmit'));
 });
 
@@ -144,6 +142,8 @@ describe('plugin callbacks', () => {
 
   test('preprocessor', () => compareFiles('option-preprocessor'));
   test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+
+  test('postprocess', () => compareFiles('option-postprocess'));
 
   // TODO: yet experimental, undocumented
   test('beforeEmit', () => compareFiles('option-beforeEmit'));
@@ -169,6 +169,7 @@ describe('resole entry name', () => {
   test('entry as string', () => compareFiles('resolve-entry-name-string'));
   test('entry as object', () => compareFiles('resolve-entry-name-obj'));
   test('entry as path', () => compareFiles('resolve-entry-name-path'));
+  test('same entry name for html, js, css', () => compareFiles('entry-name-html-js-css'));
 });
 
 describe('loader preprocessor options', () => {
@@ -307,6 +308,13 @@ describe('optimization', () => {
     compareFiles('optimization-inline-imported-css-inline-source-map'));
 });
 
+describe('custom plugins', () => {
+  test('favicons', () => compareFiles('plugin-favicons'));
+  test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
+  test('favicons used on one of many pages', () => compareFiles('plugin-favicons-oneof-pages'));
+  test('favicons used on many pages', () => compareFiles('plugin-favicons-multi-pages'));
+});
+
 describe('entry', () => {
   test('css', () => compareFiles('entry-css-single'));
   // TODO: implement extracting form entry as array with many files
@@ -337,7 +345,10 @@ describe('special cases', () => {
 describe('integrity', () => {
   // TODO: implement and add tests for preload
 
-  test('attr in script and link tags', () => compareFiles('integrity'));
+  test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
+  test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
+  test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
+
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));
   test('import css, sourceMap', () => compareFiles('integrity-import-css-in-js-source-map'));

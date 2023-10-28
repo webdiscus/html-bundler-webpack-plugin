@@ -1,6 +1,6 @@
 const path = require('path');
 const { replaceAll } = require('../Common/Helpers');
-const Options = require('./Options');
+const Option = require('./Option');
 const AssetEntry = require('./AssetEntry');
 const CssExtractModule = require('./Modules/CssExtractModule');
 const AssetInline = require('./AssetInline');
@@ -11,6 +11,7 @@ const { noHeadException } = require('./Messages/Exception');
 
 const Integrity = require('./Extras/Integrity');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
+const { minify } = require('html-minifier-terser');
 
 /** @typedef {import('webpack').Compilation} Compilation */
 
@@ -80,7 +81,7 @@ class Collection {
     const entry = {
       name,
       importFile: resource,
-      filenameTemplate: Options.getJs().filename,
+      filenameTemplate: Option.getJs().filename,
       context: path.dirname(issuer),
       issuer,
     };
@@ -168,7 +169,7 @@ class Collection {
     let pos = content.indexOf(resource);
     if (pos < 0) return false;
 
-    const { keepAttributes } = Options.getJs().inline;
+    const { attributeFilter } = Option.getJs().inline;
 
     const sources = this.compilation.assets;
     const { chunks } = asset;
@@ -202,13 +203,13 @@ class Collection {
       if (inline) {
         const code = sources[chunkFile].source();
 
-        if (keepAttributes) {
+        if (attributeFilter) {
           let tag = content.slice(tagStartPos, tagEndPos2);
           const attributes = HtmlParser.parseAttrAll(tag);
           let attrsStr = '';
 
           for (const [attribute, value] of Object.entries(attributes)) {
-            if (keepAttributes({ attributes, attribute, value }) === true) {
+            if (attributeFilter({ attributes, attribute, value }) === true) {
               if (attrsStr) attrsStr += ' ';
               attrsStr += attribute;
               if (value != null) attrsStr += `="${value}"`;
@@ -294,8 +295,8 @@ class Collection {
             injectedChunks.add(chunkFile);
           }
 
-          const assetFile = Options.getAssetOutputFile(chunkFile, entryFile);
-          const inline = Options.isInlineJs(resource, chunkFile);
+          const assetFile = Option.getAssetOutputFile(chunkFile, entryFile);
+          const inline = Option.isInlineJs(resource, chunkFile);
 
           splitChunkFiles.add(chunkFile);
           data.chunks.push({ inline, chunkFile, assetFile });
@@ -343,8 +344,8 @@ class Collection {
    * @return {boolean}
    */
   static isTemplate(assetFile) {
-    const item = this.data.get(assetFile);
-    return (item && item.entry.isTemplate) === true;
+    const data = this.data.get(assetFile);
+    return data?.entry.isTemplate === true;
   }
 
   /**
@@ -399,6 +400,18 @@ class Collection {
    */
   static setImportStyleEsModule(state) {
     this.importStyleEsModule = state === true;
+  }
+
+  /**
+   * Get entry data by output asset filename.
+   *
+   * @param {string} assetFile The output asset filename.
+   * @return {{entry: AssetEntryOptions, assets: Array<{}>}}
+   */
+  static getEntry(assetFile) {
+    const data = this.data.get(assetFile);
+
+    return data?.entry.isTemplate === true ? data : null;
   }
 
   /**
@@ -664,7 +677,7 @@ class Collection {
         break;
 
       case this.type.style:
-        inline = Options.isInlineCss(resource);
+        inline = Option.isInlineCss(resource);
         break;
 
       default:
@@ -769,7 +782,6 @@ class Collection {
         }
       }
     }
-    //console.dir({ _: '\n ### normalizeData: ', data: this.data }, { depth: 15 });
   }
 
   /**
@@ -840,14 +852,16 @@ class Collection {
    * Render all resolved assets in contents.
    * Inline JS, CSS, substitute output JS filenames.
    *
-   * @param {Function} callback A callback that allows content to be modified using an external function.
+   * @return {Promise<Awaited<unknown>[]>|Promise<unknown>}
    */
-  static render(callback) {
+  static render() {
     const compilation = this.compilation;
     const { RawSource } = compilation.compiler.webpack.sources;
-    const LF = Options.getLF();
-    const hasCallback = typeof callback === 'function';
-    const isIntegrity = Options.isIntegrityEnabled();
+    const LF = Option.getLF();
+    const isIntegrity = Option.isIntegrityEnabled();
+
+    const hooks = this.hooks;
+    const promises = [];
 
     this.#normalizeData();
     this.#prepareScriptData();
@@ -857,123 +871,181 @@ class Collection {
     for (const [entryFilename, { entry, assets }] of this.data) {
       const rawSource = compilation.assets[entryFilename];
 
-      if (!rawSource) return;
+      if (!rawSource) {
+        // the asset in which the compilation error occurred is missing in the compilation.assets
+        // in this case return resolved promise to keep the original error message
+        return Promise.resolve();
+      }
 
+      const entryDirname = path.dirname(entryFilename);
       const importedStyles = [];
       const parseOptions = new Map();
       const assetIntegrity = new Map();
       let hasInlineSvg = false;
       let content = rawSource.source();
 
-      for (const asset of assets) {
-        const { type, inline, imported, resource } = asset;
+      /** @type {CompileEntry} */
+      const compileEntry = {
+        name: entry.originalName,
+        assetFile: entry.filename,
+        sourceFile: entry.sourceFile,
+        resource: entry.resource,
+        outputPath: entry.outputPath,
+        assets,
+      };
 
-        if (inline && type === this.type.inlineSvg) {
-          hasInlineSvg = true;
-          continue;
-        }
+      /** @type {TemplateInfo} */
+      const templateInfo = {
+        name: entry.originalName,
+        assetFile: entry.filename,
+        resource: entry.resource,
+        sourceFile: entry.sourceFile,
+        outputPath: entry.outputPath,
+      };
 
-        switch (type) {
-          case this.type.style:
-            if (imported) {
-              importedStyles.push(asset);
-            } else if (inline) {
-              content = this.#inlineStyle(content, resource, asset, LF) || content;
-            }
+      // 1. postprocess hook
+      let promise = Promise.resolve(content).then((value) => hooks.postprocess.promise(value, templateInfo) || value);
 
-            // 1.1 compute CSS integrity
-            if (isIntegrity && !inline) {
-              const assetContent = compilation.assets[asset.assetFile].source();
-              asset.integrity = Integrity.getIntegrity(compilation, assetContent, asset.assetFile);
-              assetIntegrity.set(asset.assetFile, asset.integrity);
+      // 2. postprocess callback
+      if (Option.hasPostprocess()) {
+        // TODO:  update readme for postprocess
+        promise = promise.then((value) => Option.postprocess(value, templateInfo, this.compilation) || value);
+      }
 
-              if (!parseOptions.has(type)) {
-                parseOptions.set(type, {
-                  tag: 'link',
-                  attributes: ['href'],
-                  filter: ({ attribute, attributes }) =>
-                    !attributes.hasOwnProperty('integrity') && attribute === 'href' && attributes.rel === 'stylesheet',
-                });
+      // 3. minify HTML before inlining JS and CSS to avoid:
+      //    - needles minification already minified assets in production mode
+      //    - issues by parsing the inlined JS/CSS code with the html minification module
+      if (Option.isMinify()) {
+        promise = promise.then((value) => minify(value, Option.get().minifyOptions));
+      }
+
+      // 4. inline JS and CSS
+      promise = promise.then((content) => {
+        // TODO:
+        //  - style: rename output filename `assetFile` into filename or assetFilename
+        //  - style: add additional filed - assetFile as asset path relative to output.path, not to issuer
+        //  - script: rename assetFile -> assetFilename; chunkFile -> assetFile
+        for (const asset of assets) {
+          const { type, inline, imported, resource } = asset;
+
+          if (inline && type === this.type.inlineSvg) {
+            hasInlineSvg = true;
+            continue;
+          }
+
+          switch (type) {
+            case this.type.style:
+              if (imported) {
+                importedStyles.push(asset);
+              } else if (inline) {
+                content = this.#inlineStyle(content, resource, asset, LF) || content;
               }
-            }
-            break;
-          case this.type.script:
-            // 1.2 compute JS integrity
-            if (isIntegrity) {
-              for (const chunk of asset.chunks) {
-                if (!chunk.inline) {
-                  const assetContent = compilation.assets[chunk.chunkFile].source();
-                  chunk.integrity = Integrity.getIntegrity(compilation, assetContent, chunk.chunkFile);
-                  assetIntegrity.set(chunk.chunkFile, chunk.integrity);
 
-                  if (!parseOptions.has(type)) {
-                    parseOptions.set(type, {
-                      tag: 'script',
-                      attributes: ['src'],
-                      filter: ({ attribute, attributes }) =>
-                        !attributes.hasOwnProperty('integrity') && attribute === 'src',
-                    });
+              // 1.1 compute CSS integrity
+              if (isIntegrity && !inline) {
+                // path to asset relative by output.path
+                let pathname = asset.assetFile;
+                if (Option.isAutoPublicPath()) {
+                  pathname = path.join(entryDirname, pathname);
+                } else if (Option.isRootPublicPath()) {
+                  pathname = pathname.slice(1);
+                }
+
+                const assetContent = compilation.assets[pathname].source();
+                asset.integrity = Integrity.getIntegrity(compilation, assetContent, pathname);
+                assetIntegrity.set(asset.assetFile, asset.integrity);
+
+                if (!parseOptions.has(type)) {
+                  parseOptions.set(type, {
+                    tag: 'link',
+                    attributes: ['href'],
+                    filter: ({ attribute, attributes }) =>
+                      !attributes.hasOwnProperty('integrity') &&
+                      attribute === 'href' &&
+                      attributes.rel === 'stylesheet',
+                  });
+                }
+              }
+              break;
+            case this.type.script:
+              // 1.2 compute JS integrity
+              if (isIntegrity) {
+                for (const chunk of asset.chunks) {
+                  if (!chunk.inline) {
+                    const assetContent = compilation.assets[chunk.chunkFile].source();
+                    chunk.integrity = Integrity.getIntegrity(compilation, assetContent, chunk.chunkFile);
+                    assetIntegrity.set(chunk.assetFile, chunk.integrity);
+
+                    if (!parseOptions.has(type)) {
+                      parseOptions.set(type, {
+                        tag: 'script',
+                        attributes: ['src'],
+                        filter: ({ attribute, attributes }) =>
+                          !attributes.hasOwnProperty('integrity') && attribute === 'src',
+                      });
+                    }
                   }
                 }
               }
-            }
 
-            content = this.#bindScript(content, resource, asset, LF) || content;
-            break;
-        }
-      }
-
-      if (importedStyles.length > 0) {
-        content = this.#bindImportedStyles(content, entry, importedStyles, LF) || content;
-      }
-
-      if (hasInlineSvg) {
-        content = AssetInline.inlineSvg(content, entryFilename);
-      }
-
-      if (Options.isPreload()) {
-        content = Preload.insertPreloadAssets(content, entry.filename, this.data) || content;
-      }
-
-      if (hasCallback) {
-        content = callback(content, entry, assets) || content;
-      }
-
-      // inject integrity
-      if (isIntegrity) {
-        // 2. parse generated html for `link` and `script` tags
-        const parsedResults = [];
-
-        for (const opts of parseOptions.values()) {
-          parsedResults.push(...HtmlParser.parseTag(content, opts));
-        }
-        parsedResults.sort(comparePos);
-
-        // 3. include the integrity attributes in the parsed tags
-        let pos = 0;
-        let output = '';
-
-        for (const { tag, parsedAttrs, attrs, startPos, endPos } of parsedResults) {
-          if (!attrs || parsedAttrs.length < 1) continue;
-
-          const assetFile = attrs.href || attrs.src;
-          const integrity = assetIntegrity.get(assetFile);
-
-          if (integrity) {
-            attrs.integrity = integrity;
-            attrs.crossorigin = Options.webpackOptions.output.crossOriginLoading || 'anonymous';
-
-            let attrsStr = '';
-            for (const attrName in attrs) {
-              attrsStr += ` ${attrName}="${attrs[attrName]}"`;
-            }
-
-            output += content.slice(pos, startPos) + `<${tag}${attrsStr}>`;
-            pos = endPos;
+              content = this.#bindScript(content, resource, asset, LF) || content;
+              break;
           }
         }
-        output += content.slice(pos);
-        content = output;
+
+        return content;
+      });
+
+      // 5. inject styles imported in JS
+      promise = promise.then((content) =>
+        importedStyles.length > 0 ? this.#bindImportedStyles(content, entry, importedStyles, LF) || content : content
+      );
+
+      // 6. inline SVG
+      promise = promise.then((content) => (hasInlineSvg ? AssetInline.inlineSvg(content, entryFilename) : content));
+
+      // 7. inject preloads
+      if (Option.isPreload()) {
+        promise = promise.then((content) => Preload.insertPreloadAssets(content, entry.filename, this.data) || content);
+      }
+
+      // 8. inject integrity
+      if (isIntegrity) {
+        promise = promise.then((content) => {
+          // 2. parse generated html for `link` and `script` tags
+          const parsedResults = [];
+
+          for (const opts of parseOptions.values()) {
+            parsedResults.push(...HtmlParser.parseTag(content, opts));
+          }
+          parsedResults.sort(comparePos);
+
+          // 3. include the integrity attributes in the parsed tags
+          let pos = 0;
+          let output = '';
+
+          for (const { tag, parsedAttrs, attrs, startPos, endPos } of parsedResults) {
+            if (!attrs || parsedAttrs.length < 1) continue;
+
+            const assetFile = attrs.href || attrs.src;
+            const integrity = assetIntegrity.get(assetFile);
+
+            if (integrity) {
+              attrs.integrity = integrity;
+              attrs.crossorigin = Option.webpackOptions.output.crossOriginLoading || 'anonymous';
+
+              let attrsStr = '';
+              for (const attrName in attrs) {
+                attrsStr += ` ${attrName}="${attrs[attrName]}"`;
+              }
+
+              output += content.slice(pos, startPos) + `<${tag}${attrsStr}>`;
+              pos = endPos;
+            }
+          }
+
+          return output + content.slice(pos);
+        });
       }
 
       // TODO: add hook for addHeadTags: beforeStyles, beforeScripts, endHead
@@ -981,7 +1053,7 @@ class Collection {
       // if (res && Array.isArray(res.tags)) {
       //   let headTags = res.tags;
       //   let pos = res.pos;
-      //   let sep = Options.isMinify() ? '' : '\n';
+      //   let sep = Option.isMinify() ? '' : '\n';
       //   let headBlock = headTags.join(sep);
       //
       //   let startPos;
@@ -1011,32 +1083,26 @@ class Collection {
       //   }
       // }
 
-      // beforeEmit hook
+      // 9. beforeEmit hook allows plugins to change the html after chunks and inlined assets are injected
+      promise = promise.then((content) => hooks.beforeEmit.promise(content, compileEntry) || content);
 
-      /** @type {CompileEntry} */
-      const compileEntry = {
-        name: entry.originalName,
-        resource: entry.resource,
-        assetFile: entry.filename,
-        assets,
-      };
-
-      /** @type {CompileOptions} */
-      const options = {
-        verbose: Options.isVerbose(),
-        outputPath: Options.getWebpackOutputPath(),
-      };
-
-      // allow plugins to change the html after chunks and inlined assets are injected
-      content = this.hooks.beforeEmit.call(content, compileEntry, options) || content;
-
-      // use it for debugging or small features
-      if (Options.hasBeforeEmit()) {
-        content = Options.beforeEmit(content, compileEntry, options, compilation) || content;
+      // TODO: add in readme: use callbacks for debugging or small features
+      // 10. beforeEmit callback
+      if (Option.hasBeforeEmit()) {
+        promise = promise.then((content) => Option.beforeEmit(content, compileEntry, compilation) || content);
       }
 
-      compilation.assets[entryFilename] = new RawSource(content);
+      // update HTML content
+      promise = promise.then((content) => {
+        if (typeof content === 'string') {
+          compilation.updateAsset(entryFilename, new RawSource(content));
+        }
+      });
+
+      promises.push(promise);
     }
+
+    return Promise.all(promises);
   }
 
   /**

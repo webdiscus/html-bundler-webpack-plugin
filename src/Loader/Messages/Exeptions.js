@@ -5,7 +5,7 @@ const makeSerializable = require('webpack/lib/util/makeSerializable');
 /** @typedef {import("webpack/lib/serialization/ObjectMiddleware").ObjectSerializerContext} ObjectSerializerContext */
 
 const ansis = require('ansis');
-const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis/colors');
+const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis');
 const { pluginName } = require('../../config');
 
 const redBright = ansi256(203);

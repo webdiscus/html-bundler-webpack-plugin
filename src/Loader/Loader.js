@@ -1,5 +1,5 @@
 const PluginService = require('../Plugin/PluginService');
-const Options = require('./Options');
+const Option = require('./Option');
 const Resolver = require('./Resolver');
 const RenderMode = require('./Modes/RenderMode');
 
@@ -11,7 +11,7 @@ class Loader {
    */
   static init(loaderContext) {
     const { rootContext, hot } = loaderContext;
-    const { data, esModule, mode, self: useSelf } = Options.get();
+    const { data, esModule, mode, self: useSelf } = Option.get();
 
     this.data = data;
 

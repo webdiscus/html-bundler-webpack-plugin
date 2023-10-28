@@ -10,7 +10,7 @@ module.exports = {
       },
       js: {
         inline: {
-          keepAttributes: ({ attributes, attribute, value }) => {
+          attributeFilter: ({ attributes, attribute, value }) => {
             if (attribute === 'type' && value === 'text/javascript') return true;
             if (attribute === 'id' && attributes?.type === 'text/javascript') return true;
             if (attribute === 'defer') return true;
