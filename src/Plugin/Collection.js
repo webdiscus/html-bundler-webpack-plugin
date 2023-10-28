@@ -818,6 +818,7 @@ class Collection {
 
       if (!rawSource) return;
 
+      const entryDirname = path.dirname(entryFilename);
       const importedStyles = [];
       let hasInlineSvg = false;
       let content = rawSource.source();
@@ -843,8 +844,16 @@ class Collection {
 
             // 1.1 compute CSS integrity
             if (isIntegrity && !inline) {
-              const assetContent = compilation.assets[asset.assetFile].source();
-              asset.integrity = Integrity.getIntegrity(assetContent, asset.assetFile);
+              // path to asset relative by output.path
+              let pathname = asset.assetFile;
+              if (Options.isAutoPublicPath()) {
+                pathname = path.join(entryDirname, pathname);
+              } else if (Options.isRootPublicPath()) {
+                pathname = pathname.slice(1);
+              }
+
+              const assetContent = compilation.assets[pathname].source();
+              asset.integrity = Integrity.getIntegrity(assetContent, pathname);
               assetIntegrity.set(asset.assetFile, asset.integrity);
 
               if (!parseOptions.has(type)) {
@@ -864,7 +873,7 @@ class Collection {
                 if (!chunk.inline) {
                   const assetContent = compilation.assets[chunk.chunkFile].source();
                   chunk.integrity = Integrity.getIntegrity(assetContent, chunk.chunkFile);
-                  assetIntegrity.set(chunk.chunkFile, chunk.integrity);
+                  assetIntegrity.set(chunk.assetFile, chunk.integrity);
 
                   if (!parseOptions.has(type)) {
                     parseOptions.set(type, {

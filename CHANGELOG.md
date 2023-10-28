@@ -1,5 +1,9 @@
 # Change log
 
+## 2.15.1 (2023-10-28)
+
+- fix: error when used integrity with root publicPath, #42, #43
+
 ## 2.15.0 (2023-10-18)
 
 - feat: add `parsedValue` argument as an array of parsed filenames w/o URL query, in the `filter()` function of the `sources`

@@ -308,7 +308,10 @@ describe('special cases', () => {
 describe('integrity', () => {
   // TODO: implement and add tests for preload
 
-  test('attr in script and link tags', () => compareFiles('integrity'));
+  test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
+  test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
+  test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
+
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));
   test('import css, sourceMap', () => compareFiles('integrity-import-css-in-js-source-map'));

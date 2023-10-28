@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+
+  <!-- load source style -->
+  <link href="../assets/css/style.bundle.css" rel="stylesheet" integrity="sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E" crossorigin="use-credentials">
+
+  <!-- load source script -->
+  <script src="../assets/js/main.bundle.js" defer="defer" integrity="sha384-E4IoJ3Xutt/6tUVDjvtPwDTTlCfU5oG199UoqWShFCNx6mb4tdpcPLu7sLzNc8Pe" crossorigin="use-credentials"></script>
+
+  <!-- test: mixed order of css and js files -->
+  <link href="../assets/css/vendor.bundle.css" rel="stylesheet" integrity="sha384-S5He9W/ycWxLrmqRI+6B4V1TOIe0rK0NKdUpD8M61yjawdrgmpxiC/EwmNGkUkcd" crossorigin="use-credentials">
+  <script src="../assets/js/vendor.bundle.js" defer="defer" integrity="sha384-KOHLjGo0rQ+C8SOiWbOw8KN2r6NlfN+E6Jlre5dqkZJLv2NCk3EzaQClYi7qJBtc" crossorigin="use-credentials"></script>
+
+  <!-- test: already exists integrity attribute -->
+  <script src="../assets/js/no-integrity.bundle.js" integrity="ignore me" defer="defer"></script>
+
+  <!-- test: not processed script, because the attribute is invalid -->
+  <script x-src="./not-processed-script.js" defer="defer"></script>
+
+  <!-- test: not processed script, because it's loaded via url -->
+  <script src="//cdn-script.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+
+  <!-- load source image -->
+  <img src="../assets/img/image.697ef306.png">
+</body>
+</html>

@@ -222,6 +222,7 @@ class Options {
 
     this.autoPublicPath = false;
     this.isUrlPublicPath = false;
+    this.rootPublicPath = false;
     this.isRelativePublicPath = false;
     this.webpackPublicPath = publicPath;
 
@@ -231,6 +232,8 @@ class Options {
       this.isUrlPublicPath = true;
     } else if (!publicPath.startsWith('/')) {
       this.isRelativePublicPath = true;
+    } else if (publicPath.startsWith('/')) {
+      this.rootPublicPath = true;
     }
   }
 
@@ -378,11 +381,12 @@ class Options {
     return this.options.preload != null && this.options.preload !== false;
   }
 
-  /**
-   * @return {boolean}
-   */
   static isAutoPublicPath() {
     return this.autoPublicPath === true;
+  }
+
+  static isRootPublicPath() {
+    return this.rootPublicPath === true;
   }
 
   /**

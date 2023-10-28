@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+
+  <!-- load source style -->
+  <link href="./style.css" rel="stylesheet">
+
+  <!-- load source script -->
+  <script src="./main.js" defer="defer"></script>
+
+  <!-- test: mixed order of css and js files -->
+  <link href="./vendor.css" rel="stylesheet">
+  <script src="./vendor.js" defer="defer"></script>
+
+  <!-- test: already exists integrity attribute -->
+  <script src="./no-integrity.js" integrity="ignore me" defer="defer"></script>
+
+  <!-- test: not processed script, because the attribute is invalid -->
+  <script x-src="./not-processed-script.js" defer="defer"></script>
+
+  <!-- test: not processed script, because it's loaded via url -->
+  <script src="//cdn-script.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+
+  <!-- load source image -->
+  <img src="./image.png">
+</body>
+</html>
