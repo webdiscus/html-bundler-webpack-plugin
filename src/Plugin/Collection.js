@@ -849,7 +849,7 @@ class Collection {
               if (Options.isAutoPublicPath()) {
                 pathname = path.join(entryDirname, pathname);
               } else if (Options.isRootPublicPath()) {
-                pathname = pathname.slice(1);
+                pathname = pathname.slice(Options.getPublicPath().length);
               }
 
               const assetContent = compilation.assets[pathname].source();

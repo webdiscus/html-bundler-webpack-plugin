@@ -1,5 +1,9 @@
 # Change log
 
+## 2.15.2 (2023-10-31)
+
+- fix: error when used integrity with complex root publicPath, #45 ( @SteffenBlake )
+
 ## 2.15.1 (2023-10-28)
 
 - fix: error when used integrity with root publicPath, #42, #43

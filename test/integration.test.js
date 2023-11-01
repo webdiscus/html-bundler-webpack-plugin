@@ -310,6 +310,7 @@ describe('integrity', () => {
 
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
+  test('script, link, publicPath="/test/"', () => compareFiles('integrity-publicPath-root-complex'));
   test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
 
   test('split chunks', () => compareFiles('integrity-split-chunks'));
