@@ -79,16 +79,16 @@ describe('plugin options', () => {
   //test('js.inline auto, dev', () => compareFiles('option-js-inline-auto-dev'));
   //test('js.inline auto, prod', () => compareFiles('option-js-inline-auto-prod'));
 
+  test('js.inline.keepAttributes', () => compareFiles('option-js-inline-keepAttributes'));
+
   test('js.inline.source', () => compareFiles('option-js-inline-source'));
   test('js.inline.chunk', () => compareFiles('option-js-inline-chunk'));
   test('js.inline source and chunk', () => compareFiles('option-js-inline-source-chunk'));
 
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));
-  test('afterProcess', () => compareFiles('option-afterProcess'));
-  test('postprocess', () => compareFiles('option-postprocess'));
-  test('entry', () => compareFiles('option-entry'));
 
+  test('entry', () => compareFiles('option-entry'));
   test('entry data, multiple pages', () => compareFiles('entry-data-i18n-multipage'));
   // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
   //test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
@@ -99,12 +99,6 @@ describe('plugin options', () => {
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
 
-  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
-  test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
-
-  test('preprocessor', () => compareFiles('option-preprocessor'));
-  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
-
   test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
@@ -112,6 +106,9 @@ describe('plugin options', () => {
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
   test('verbose', () => compareFiles('option-verbose'));
+
+  // for debug only
+  test('verbose output', () => compareFiles('option-verbose-output'));
 });
 
 describe('plugin minify option', () => {
@@ -124,6 +121,33 @@ describe('plugin minify option', () => {
   // minify parse error when used the "<" char in text
   // https://github.com/terser/html-minifier-terser/issues/28
   // test('minify HTML with "<" char', () => compareFiles('option-minify-html-chars'));
+});
+
+describe('plugin hooks', () => {
+  test('preprocessor hooks and callbacks', () => compareFiles('hook-callback-beforePreprocessor-preprocessor'));
+
+  test('beforePreprocessor', () => compareFiles('hook-beforePreprocessor'));
+  test('preprocessor', () => compareFiles('hook-preprocessor'));
+
+  test('postprocess', () => compareFiles('hook-postprocess'));
+  test('beforeEmit', () => compareFiles('hook-beforeEmit'));
+
+  // TODO: add an argument as flat map of assets, w/o tree, to create a manifest
+  test('afterEmit', () => compareFiles('hook-afterEmit'));
+});
+
+describe('plugin callbacks', () => {
+  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
+  test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
+
+  test('preprocessor', () => compareFiles('option-preprocessor'));
+  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+
+  test('postprocess', () => compareFiles('option-postprocess'));
+
+  // TODO: yet experimental, undocumented
+  test('beforeEmit', () => compareFiles('option-beforeEmit'));
+  test('afterEmit', () => compareFiles('option-afterEmit'));
 });
 
 describe('loader options common', () => {
@@ -145,6 +169,7 @@ describe('resole entry name', () => {
   test('entry as string', () => compareFiles('resolve-entry-name-string'));
   test('entry as object', () => compareFiles('resolve-entry-name-obj'));
   test('entry as path', () => compareFiles('resolve-entry-name-path'));
+  test('same entry name for html, js, css', () => compareFiles('entry-name-html-js-css'));
 });
 
 describe('loader preprocessor options', () => {
@@ -200,7 +225,7 @@ describe('inline styles & scripts', () => {
 
 describe('import styles in JavaScript', () => {
   test('import css in js', () => compareFiles('js-import-css'));
-  test('import css in ts', () => compareFiles('js-import-css-ts'));
+  test('import css in ts, verbose', () => compareFiles('js-import-css-ts'));
   test('import scss in js', () => compareFiles('js-import-scss'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
   test('simple import ESM', () => compareFiles('js-import-css-esm'));
@@ -249,6 +274,11 @@ describe('import styles in JavaScript', () => {
   //test('js-import-css-debug-watch', () => compareFiles('js-import-css-debug-watch'));
 });
 
+describe('import lazy styles in JavaScript', () => {
+  // TODO: yet experimental, undocumented
+  test('lazy url in js', () => compareFiles('js-import-css-lazy-url'));
+});
+
 describe('split chunks', () => {
   test('extract css and js w/o runtime code of css-loader', () => compareFiles('split-chunk-css-js'));
   test('import nested JS files', () => compareFiles('split-chunk-js-many-prod'));
@@ -276,6 +306,13 @@ describe('optimization', () => {
   test('inline imported css, source-map', () => compareFiles('optimization-inline-imported-css-source-map'));
   test('inline imported css, inline-source-map', () =>
     compareFiles('optimization-inline-imported-css-inline-source-map'));
+});
+
+describe('custom plugins', () => {
+  test('favicons', () => compareFiles('plugin-favicons'));
+  test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
+  test('favicons used on one of many pages', () => compareFiles('plugin-favicons-oneof-pages'));
+  test('favicons used on many pages', () => compareFiles('plugin-favicons-multi-pages'));
 });
 
 describe('entry', () => {
@@ -310,7 +347,6 @@ describe('integrity', () => {
 
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
-  test('script, link, publicPath="/test/"', () => compareFiles('integrity-publicPath-root-complex'));
   test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
 
   test('split chunks', () => compareFiles('integrity-split-chunks'));
@@ -350,15 +386,15 @@ describe('integrity, dynamic chunks', () => {
   //test('import css in dynamic chunk', () => compareFiles('integrity-import-css-in-dynamic-chunk'));
 });
 
+describe('use template in js', () => {
+  // TODO: avoid to call 2x the same template
+  test('require default template in js', () => compareFiles('require-tmpl-in-js'));
+});
+
 describe('extras: responsive images', () => {
   test('images in template, publicPath="auto"', () => compareFiles('responsive-images'));
   test('images in template and in style', () => compareFiles('responsive-images-html-css'));
   test('images in template, in style an in js', () => compareFiles('responsive-images-html-css-js'));
   test('duplicate images in template and styles', () => compareFiles('responsive-images-many-duplicates'));
   test('images in template, publicPath="/"', () => compareFiles('responsive-images-publicPath-root'));
-});
-
-describe('use template in js', () => {
-  // TODO: avoid to call 2x the same template
-  test('require default template in js', () => compareFiles('require-tmpl-in-js'));
 });

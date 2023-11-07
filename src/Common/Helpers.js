@@ -18,6 +18,15 @@ const pathToPosix = (value) => value.replace(/\\/g, '/');
 
 const isFunction = (value) => typeof value === 'function';
 
+/**
+ * Find a webpack plugin by instance name.
+ *
+ * @param {Array<Object>} plugins The webpack compiler.options.plugins.
+ * @param {string} name The class name of the plugin.
+ * @return {Object|null}
+ */
+const findPlugin = (plugins, name) => plugins.find((item) => item.constructor.name === name);
+
 const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 /**
@@ -118,6 +127,7 @@ const replaceAll = (str, search, replace) => {
 module.exports = {
   isWin,
   isFunction,
+  findPlugin,
   pathToPosix,
   getFileExtension,
   parseQuery: (request) => parseRequest(request).query,

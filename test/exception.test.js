@@ -7,52 +7,32 @@ beforeAll(() => {
 });
 
 describe('loader exceptions', () => {
-  test('exception beforePreprocessor', () => {
-    const containString = 'beforePreprocessor failed';
-    return exceptionContain('msg-exception-loader-beforePreprocessor', containString);
-  });
-
-  test('exception sync preprocessor', () => {
-    const containString = 'Preprocessor failed';
-    return exceptionContain('msg-exception-loader-preprocessor', containString);
-  });
-
-  test('exception unsupported preprocessor value', () => {
-    const containString = 'Unsupported preprocessor';
-    return exceptionContain('msg-exception-loader-preprocessor-unsupported', containString);
-  });
-
-  test('exception async preprocessor', () => {
-    const containString = 'Preprocessor failed';
-    return exceptionContain('msg-exception-loader-preprocessor-async', containString);
-  });
-
-  test('exception compile: missing the closing', () => {
+  test('exception resolve: missing the closing', () => {
     const containString = `missing the closing '>' char`;
     return exceptionContain('msg-exception-loader-compile-close-tag', containString);
   });
 
-  test('exception compile: missing the closing at eof', () => {
+  test('exception resolve: missing the closing at eof', () => {
     const containString = `missing the closing '>' char`;
     return exceptionContain('msg-exception-loader-compile-close-tag-eof', containString);
   });
 
-  test('exception compile: resolve file', () => {
+  test('exception resolve: resolve file', () => {
     const containString = `Can't resolve`;
     return exceptionContain('msg-exception-loader-resolve-file', containString);
   });
 
-  test('exception compile: resolve css file via enhanced-resolve', () => {
+  test('exception resolve: resolve css file via enhanced-resolve', () => {
     const containString = `Can't resolve`;
     return exceptionContain('msg-exception-loader-resolve-file-enhanced', containString);
   });
 
-  test('exception compile: resolve js file', () => {
+  test('exception resolve: resolve js file', () => {
     const containString = `Can't resolve`;
     return exceptionContain('msg-exception-loader-resolve-js', containString);
   });
 
-  test('exception compile: resolve js file via enhanced-resolve', () => {
+  test('exception resolve: resolve js file via enhanced-resolve', () => {
     const containString = `Can't resolve`;
     return exceptionContain('msg-exception-loader-resolve-js-enhanced', containString);
   });
@@ -141,21 +121,6 @@ describe('plugin exceptions', () => {
     return exceptionContain('msg-exception-plugin-resolve-asset', containString);
   });
 
-  test('preload option: missing `as` property ', () => {
-    const containString = `Missing the 'as' property in the plugin option preload`;
-    return exceptionContain('msg-exception-plugin-option-preload-as', containString);
-  });
-
-  test('preload option: invalid `as` property', () => {
-    const containString = `Invalid value of the 'as' property in the plugin option preload`;
-    return exceptionContain('msg-exception-plugin-option-preload-as-invalid', containString);
-  });
-
-  test('option afterProcess', () => {
-    const containString = 'After process failed';
-    return exceptionContain('msg-exception-plugin-option-afterProcess', containString);
-  });
-
   test('integrity crossOrigin', () => {
     const containString = `must be specified the Webpack option 'output.crossOriginLoading'`;
     return exceptionContain('msg-exception-integrity-dynamic-crossOrigin', containString);
@@ -164,6 +129,48 @@ describe('plugin exceptions', () => {
   test('inject css in HTML w/o head', () => {
     const containString = "The imported style can't be injected in HTML";
     return exceptionContain('msg-exception-import-css-wo-head', containString);
+  });
+});
+
+describe('plugin option exceptions', () => {
+  test('exception beforePreprocessor', () => {
+    const containString = 'beforePreprocessor failed';
+    return exceptionContain('msg-exception-loader-beforePreprocessor', containString);
+  });
+
+  test('exception sync preprocessor', () => {
+    const containString = 'Preprocessor failed';
+    return exceptionContain('msg-exception-loader-preprocessor', containString);
+  });
+
+  test('exception unsupported preprocessor value', () => {
+    const containString = 'Unsupported preprocessor';
+    return exceptionContain('msg-exception-loader-preprocessor-unsupported', containString);
+  });
+
+  test('exception async preprocessor', () => {
+    const containString = 'Preprocessor failed';
+    return exceptionContain('msg-exception-loader-preprocessor-async', containString);
+  });
+
+  test('preload: missing `as` property ', () => {
+    const containString = `Missing the 'as' property in the plugin option preload`;
+    return exceptionContain('msg-exception-plugin-option-preload-as', containString);
+  });
+
+  test('preload: invalid `as` property', () => {
+    const containString = `Invalid value of the 'as' property in the plugin option preload`;
+    return exceptionContain('msg-exception-plugin-option-preload-as-invalid', containString);
+  });
+
+  test('beforeEmit', () => {
+    const containString = 'Before emit failed';
+    return exceptionContain('msg-exception-plugin-option-beforeEmit', containString);
+  });
+
+  test('afterEmit', () => {
+    const containString = 'After emit failed';
+    return exceptionContain('msg-exception-plugin-option-afterEmit', containString);
   });
 });
 

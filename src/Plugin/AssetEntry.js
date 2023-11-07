@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const Options = require('./Options');
+const Option = require('./Option');
 const PluginService = require('./PluginService');
 const { isFunction, addQueryParam, deleteQueryParam, getQueryParam } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
@@ -30,7 +30,7 @@ const loader = require.resolve('../Loader');
  *  The template strings support only these substitutions:
  *  [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
  *  See https://webpack.js.org/configuration/output/#outputfilename
- *
+ * TODO: remove filename or assetFile, currently the assetFile is undeined (unused?)
  * @property {string=} assetFile The output asset file with the relative path by webpack output path.
  *   Note: the method compilation.emitAsset() use this file as the key of an asset object
  *   and save the file relative by output path, defined in webpack.options.output.path.
@@ -77,7 +77,12 @@ class AssetEntry {
   static entryIdKey = '_entryId';
   // the regexp will be initialized in the init()
   static entryIdRegexp = null;
-  static entryNamePrefix = '__entry-BundlerPlugin_';
+
+  // the entry name prefix of html entries to avoid a collision with the same name of a js entrypoint,
+  // e.g., index.html and index.js have the same base name `index`,
+  // but must be defined in entry as two different entries, because each type of entry have own options:
+  // entry: { __prefix__index: './index.html', index: './index.js' }
+  static entryNamePrefix = '__bundler-plugin-entry__';
 
   /**
    * Init the object, inject dependencies.
@@ -95,23 +100,23 @@ class AssetEntry {
   }
 
   static initEntry() {
-    const { entry } = Options.webpackOptions;
+    const { entry } = Option.webpackOptions;
     let pluginEntry;
 
-    if (Options.isDynamicEntry()) {
+    if (Option.isDynamicEntry()) {
       pluginEntry = this.getDynamicEntry();
-      Options.webpackOptions.entry = { ...entry, ...pluginEntry };
+      Option.webpackOptions.entry = { ...entry, ...pluginEntry };
       return;
     }
 
-    pluginEntry = { ...entry, ...Options.options.entry };
+    pluginEntry = { ...entry, ...Option.get().entry };
 
     for (let name in pluginEntry) {
       const entry = pluginEntry[name];
       const entryName = `${this.entryNamePrefix}${name}`;
 
       if (entry.import == null) {
-        if (Options.isEntry(entry)) {
+        if (Option.isEntry(entry)) {
           delete pluginEntry[name];
           name = entryName;
         }
@@ -125,13 +130,13 @@ class AssetEntry {
         entry.import = [entry.import];
       }
 
-      if (Options.isEntry(entry.import[0])) {
+      if (Option.isEntry(entry.import[0])) {
         pluginEntry[entryName] = entry;
         delete pluginEntry[name];
       }
     }
 
-    Options.webpackOptions.entry = pluginEntry;
+    Option.webpackOptions.entry = pluginEntry;
   }
 
   /**
@@ -142,7 +147,7 @@ class AssetEntry {
    */
   static getDynamicEntry() {
     //const { fs } = this; // TODO: fix error with injected fs
-    const dir = Options.options.entry;
+    const dir = Option.get().entry;
 
     try {
       if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
@@ -150,7 +155,7 @@ class AssetEntry {
       optionEntryPathException(dir);
     }
 
-    const files = readDirRecursiveSync(dir, { fs, includes: [Options.options.test] });
+    const files = readDirRecursiveSync(dir, { fs, includes: [Option.get().test] });
     const entry = {};
 
     files.forEach((file) => {
@@ -245,7 +250,7 @@ class AssetEntry {
   static get(name) {
     const entry = this.entries.get(name);
 
-    if (entry && PluginService.isWatchMode() && Options.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
+    if (entry && PluginService.isWatchMode() && Option.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
       // delete artifacts from compilation in serve/watch mode
       // TODO: reproduce the use case
       AssetTrash.add(entry.filename);
@@ -403,7 +408,7 @@ class AssetEntry {
       const importFile = entry.import[0];
       let resource = importFile;
       let [sourceFile] = resource.split('?', 1);
-      let options = Options.getEntryOptions(sourceFile);
+      let options = Option.getEntryOptions(sourceFile);
 
       if (options == null) continue;
 
@@ -451,8 +456,8 @@ class AssetEntry {
         publicPath: '',
         library: entry.library,
         verbose,
-        isTemplate: Options.isEntry(sourceFile),
-        isStyle: Options.isStyle(sourceFile),
+        isTemplate: Option.isEntry(sourceFile),
+        isStyle: Option.isStyle(sourceFile),
       };
 
       this.#add(entry, assetEntryOptions);
@@ -468,11 +473,12 @@ class AssetEntry {
    * @param {string} file
    */
   static addEntry(file) {
-    const context = Options.options.sourcePath;
-    const entryDir = Options.options.entry;
+    const pluginOptions = Option.get();
+    const context = pluginOptions.sourcePath;
+    const entryDir = pluginOptions.entry;
 
     if (!path.isAbsolute(file)) {
-      file = path.join(Options.context, file);
+      file = path.join(Option.context, file);
     }
 
     let outputFile = path.relative(entryDir, file);
@@ -487,7 +493,7 @@ class AssetEntry {
 
     entries[name] = entrypoint;
     this.addEntries(entries);
-    Options.webpackOptions.entry = { ...Options.webpackOptions.entry, ...entries };
+    Option.webpackOptions.entry = { ...Option.webpackOptions.entry, ...entries };
 
     // important: the library must be null
     entrypoint.library = null;
@@ -573,7 +579,7 @@ class AssetEntry {
       importFile,
       sourceFile,
       sourcePath: context,
-      outputPath: Options.getWebpackOutputPath(),
+      outputPath: Option.getWebpackOutputPath(),
       verbose: false,
       isTemplate: false,
     };
@@ -607,7 +613,7 @@ class AssetEntry {
     const { name, filenameTemplate, outputPath } = assetEntryOptions;
 
     if (path.isAbsolute(outputPath)) {
-      assetEntryOptions.publicPath = path.relative(Options.getWebpackOutputPath(), outputPath);
+      assetEntryOptions.publicPath = path.relative(Option.getWebpackOutputPath(), outputPath);
     }
 
     entry.filename = (pathData, assetInfo) => {

@@ -1,7 +1,7 @@
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const PluginService = require('../Plugin/PluginService');
 const AssetEntry = require('../Plugin/AssetEntry');
-const Options = require('./Options');
+const Option = require('./Option');
 
 /**
  * Dependencies in code for watching a changes.
@@ -21,7 +21,7 @@ class Dependency {
     PluginService.setDependencyInstance(this);
     this.loaderContext = loaderContext;
     this.fileSystem = loaderContext.fs.fileSystem;
-    this.watchFiles = Options.getWatchFiles();
+    this.watchFiles = Option.getWatchFiles();
     this.#entryFiles = AssetEntry.getEntryFiles();
     this.addFile = this.addFile.bind(this);
 
@@ -33,7 +33,7 @@ class Dependency {
       files.forEach(this.addFile);
     }
 
-    const customWatchFiles = Options.getCustomWatchFiles();
+    const customWatchFiles = Option.getCustomWatchFiles();
     if (customWatchFiles.length > 0) customWatchFiles.forEach(this.addFile);
   }
 

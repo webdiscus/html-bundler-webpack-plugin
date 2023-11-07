@@ -3,6 +3,8 @@ const { missingCrossOriginForIntegrityException } = require('../Messages/Excepti
 
 const hashesReference = '__webpack_require__.integrity';
 
+/** @typedef {import('webpack').Compilation} Compilation */
+
 /**
  * Integrity.
  * This class is needed for dynamically imported JS files only.
@@ -13,10 +15,10 @@ class Integrity {
   // hash => [Set Iterator] of one asset filename,
   // the `chunk.files` contains only one filename and will have the final value later, than we save it,
   // therefore, we can save only reference to `chunk.files.values()`
-  static hashes = new Map();
+  static hashes = new WeakMap();
 
   // filename => hash, normalized map with final asset filenames
-  static assetHashes = null;
+  static assetHashes = new WeakMap();
 
   constructor(options) {
     this.pluginName = 'html-bundler-integrity-plugin';
@@ -42,7 +44,8 @@ class Integrity {
         // use the comfort `integrityHashes` hook to get assets containing the integrity:
         // HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync('myPlugin', (hashes) => {})
         compilation.hooks.statsFactory.tap(pluginName, (statsFactory) => {
-          const assetHashes = Integrity.getAssetHashes();
+          const assetHashes = Integrity.getAssetHashes(compilation);
+
           statsFactory.hooks.extract.for('asset').tap(pluginName, (object, asset) => {
             const integrity = assetHashes.get(asset.name);
             if (integrity) {
@@ -105,7 +108,7 @@ class Integrity {
       }
     }
 
-    return chunk ? Integrity.getIntegrity(content[0], chunk) : undefined;
+    return chunk ? Integrity.getIntegrity(this.compilation, content[0], chunk) : undefined;
   }
 
   processAssets(assets) {
@@ -127,7 +130,6 @@ class Integrity {
 
       for (const childChunk of childChunks) {
         if (childChunk.id == null) {
-          // TODO: test this case
           continue;
         }
 
@@ -159,7 +161,7 @@ class Integrity {
           const pos = oldSource.indexOf(placeholder);
 
           if (pos >= 0) {
-            const integrity = Integrity.getIntegrity(assets[childChunkFile].buffer(), childChunkFile);
+            const integrity = Integrity.getIntegrity(this.compilation, assets[childChunkFile].buffer(), childChunkFile);
             const newAsset = new compiler.webpack.sources.ReplaceSource(assets[chunkFile], chunkFile);
             newAsset.replace(pos, pos + placeholder.length - 1, integrity, chunkFile);
             assets[chunkFile] = newAsset;
@@ -231,22 +233,13 @@ class Integrity {
    *
    * When the key is defined, the hash will be saved internal for stats.
    *
+   * @param {Compilation} compilation
    * @param {string|*} data The string or a buffer content of the file.
    * @param {string|Chunk?} key The output filename of the data or the Chunk to lazy get the final filename.
    * @return {string}
    */
-  static getIntegrity(data, key) {
-    let integrity = '';
-
-    if (typeof data !== 'string' && !Buffer.isBuffer(data)) {
-      data = data.toString();
-    }
-
-    for (const funcName of this.hashFunctions) {
-      const hash = crypto.createHash(funcName).update(data).digest('base64');
-      if (integrity) integrity += ' ';
-      integrity += `${funcName}-${hash}`;
-    }
+  static getIntegrity(compilation, data, key) {
+    const integrity = this.computeIntegrity(data);
 
     if (key) {
       let value;
@@ -259,7 +252,35 @@ class Integrity {
         value = key.files.values();
       }
 
-      if (value) this.hashes.set(integrity, value);
+      if (value) {
+        let hashes = this.hashes.get(compilation);
+        if (!hashes) {
+          hashes = new Map();
+          this.hashes.set(compilation, hashes);
+        }
+
+        hashes.set(integrity, value);
+      }
+    }
+
+    return integrity;
+  }
+
+  /**
+   * @param {string} data The string or a buffer content of the file.
+   * @return {string}
+   */
+  static computeIntegrity(data) {
+    let integrity = '';
+
+    if (typeof data !== 'string' && !Buffer.isBuffer(data)) {
+      data = data.toString();
+    }
+
+    for (const funcName of this.hashFunctions) {
+      const hash = crypto.createHash(funcName).update(data).digest('base64');
+      if (integrity) integrity += ' ';
+      integrity += `${funcName}-${hash}`;
     }
 
     return integrity;
@@ -268,18 +289,23 @@ class Integrity {
   /**
    * Get integrity hashes.
    *
+   * @param {Compilation} compilation
    * @return {Map}
    */
-  static getAssetHashes() {
-    if (this.assetHashes == null) {
-      this.assetHashes = new Map();
-      for (const [hash, value] of this.hashes) {
+  static getAssetHashes(compilation) {
+    let assetHashes = this.assetHashes.get(compilation);
+    if (assetHashes == null) {
+      assetHashes = new Map();
+      this.assetHashes.set(compilation, assetHashes);
+      const hashes = this.hashes.get(compilation);
+
+      for (const [hash, value] of hashes) {
         const assetFile = value.next().value;
-        this.assetHashes.set(assetFile, hash);
+        assetHashes.set(assetFile, hash);
       }
     }
 
-    return this.assetHashes;
+    return assetHashes;
   }
 }
 
@@ -293,7 +319,7 @@ class Integrity {
 const getPlaceholder = (chunkId) => {
   // the prefix must be exact 7 chars, the same length as a hash function name, e.g. 'sha256-'
   const placeholderPrefix = '___TMP-';
-  const hash = Integrity.getIntegrity(chunkId);
+  const hash = Integrity.computeIntegrity(chunkId);
 
   return placeholderPrefix + hash.slice(placeholderPrefix.length);
 };

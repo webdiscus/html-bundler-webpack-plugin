@@ -1,5 +1,5 @@
 const Loader = require('./Loader');
-const Options = require('./Options');
+const Option = require('./Option');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
 
 class Template {
@@ -9,11 +9,12 @@ class Template {
    * @param {string} content The HTML string.
    * @param {string} issuer The template file.
    * @param {string|number} entryId The entry id where is loaded the resource.
+   * @param { HtmlBundlerPlugin.Hooks} hooks The plugin hooks.
    * @return {string}
    */
 
-  static compile(content, issuer, entryId) {
-    const sources = Options.getSources();
+  static resolve(content, issuer, entryId, hooks) {
+    const sources = Option.getSources();
 
     if (sources === false) {
       return content;
@@ -28,17 +29,31 @@ class Template {
     parsedTags = parsedTags.sort(comparePos);
 
     // resolve resources in html
-    const isBasedir = Options.getBasedir() !== false;
+    const isBasedir = Option.getBasedir() !== false;
     let output = '';
     let pos = 0;
 
-    for (let { type, parsedAttrs } of parsedTags) {
-      for (let { startPos, endPos, value: file, offset } of parsedAttrs) {
-        const resolvedFile = this.resolve({ isBasedir, type, file, issuer, entryId });
-        // skip not resolvable value, e.g. URL
-        if (!resolvedFile) continue;
+    for (let { tag, source, parsedAttrs } of parsedTags) {
+      for (let { type, attr, startPos, endPos, value, offset } of parsedAttrs) {
+        const result = this.resolveFile({ isBasedir, type, value, issuer, entryId });
 
-        output += content.slice(pos, startPos + offset) + resolvedFile;
+        // skip not resolvable value, e.g., URL
+        if (!result) continue;
+
+        const { resolvedFile, encodedRequire } = result;
+        const hookResult = hooks.resolveSource.call(source, {
+          type,
+          tag,
+          attribute: attr,
+          value,
+          resolvedFile,
+          issuer,
+        });
+
+        // note: if the hook returns `undefined` then the hookResult contains the value of the first argument
+        const resolvedValue = hookResult && hookResult !== source ? hookResult : encodedRequire;
+
+        output += content.slice(pos, startPos + offset) + resolvedValue;
         pos = endPos + offset;
       }
     }
@@ -66,31 +81,31 @@ class Template {
    *
    * @param {boolean} isBasedir Whether is used the `root` option.
    * @param {string} type The type of source: 'style', 'script', 'asset'.
-   * @param {string} file The source file of resource.
+   * @param {string} value The attribute value to resolve as an absolute file path.
    * @param {string} issuer The issuer of source file.
    * @param {string|number} entryId The entry id where is loaded the resource.
-   * @return {string|boolean} Return a resolved full path of source file or false.
+   * @return {{encodedRequire: string, resolvedFile: string}|boolean} Return a resolved full path of source file or false.
    */
-  static resolve({ isBasedir, type, file, issuer, entryId }) {
-    file = file.trim();
+  static resolveFile({ isBasedir, type, value, issuer, entryId }) {
+    value = value.trim();
 
     if (
-      (!isBasedir && file.startsWith('/')) ||
-      file.startsWith('//') ||
-      file.startsWith('#') ||
-      (file.indexOf(':') > 0 && file.indexOf('?{') < 0)
+      (!isBasedir && value.startsWith('/')) ||
+      value.startsWith('//') ||
+      value.startsWith('#') ||
+      (value.indexOf(':') > 0 && value.indexOf('?{') < 0)
     ) {
       return false;
     }
 
     switch (type) {
       case 'style':
-        return Loader.compiler.loaderRequireStyle(file, issuer, entryId);
+        return Loader.compiler.loaderRequireStyle(value, issuer, entryId);
       case 'script':
-        return Loader.compiler.loaderRequireScript(file, issuer, entryId);
+        return Loader.compiler.loaderRequireScript(value, issuer, entryId);
     }
 
-    return Loader.compiler.loaderRequire(file, issuer, entryId);
+    return Loader.compiler.loaderRequire(value, issuer, entryId);
   }
 }
 

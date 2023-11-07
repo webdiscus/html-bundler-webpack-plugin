@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis/colors');
+const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis');
 const { pluginName } = require('../../config');
+
+const PluginError = new Set();
 
 class PluginException extends Error {
   /**
@@ -18,6 +20,8 @@ class PluginException extends Error {
     super();
     this.name = this.constructor.name;
     this.message = message;
+
+    PluginError.add(this);
   }
 }
 
@@ -132,15 +136,23 @@ const postprocessException = (error, info) => {
  * @param {string} file
  * @throws {Error}
  */
-const afterProcessException = (error, file) => {
-  const message = `After process failed. Check you 'afterProcess' option.\nSource file: ${cyan(file)}.`;
+const beforeEmitException = (error, file) => {
+  const message = `Before emit failed. Check you 'beforeEmit' option.\nSource file: ${cyan(file)}.`;
 
   throw new PluginException(message, error);
 };
 
 /**
  * @param {Error} error
- * @param {string} file
+ * @return {PluginException} Return the error for promise.
+ */
+const afterEmitException = (error) => {
+  const message = `After emit failed. Check you 'afterEmit' option.`;
+
+  return new PluginException(message, error);
+};
+
+/**
  * @throws {Error}
  */
 const missingCrossOriginForIntegrityException = () => {
@@ -162,13 +174,15 @@ const noHeadException = (sourceFile) => {
 };
 
 module.exports = {
+  PluginError,
   PluginException,
   optionEntryPathException,
   optionPreloadAsException,
   resolveException,
   executeFunctionException,
   postprocessException,
-  afterProcessException,
+  beforeEmitException,
+  afterEmitException,
   missingCrossOriginForIntegrityException,
   noHeadException,
 };

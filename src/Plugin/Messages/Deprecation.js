@@ -1,4 +1,4 @@
-const { red, green, black } = require('ansis/colors');
+const { red, green, black } = require('ansis');
 const { pluginName } = require('../../config');
 const { outToConsole } = require('../../Common/Helpers');
 

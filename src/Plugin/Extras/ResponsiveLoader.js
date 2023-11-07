@@ -1,5 +1,5 @@
 const vm = require('vm');
-const Options = require('../Options');
+const Option = require('../Option');
 const { isWin, parseQuery } = require('../../Common/Helpers');
 
 class ResponsiveLoader {
@@ -88,7 +88,7 @@ class ResponsiveLoader {
 
       if (source) {
         const contextObject = vm.createContext({
-          __webpack_public_path__: Options.getAssetOutputPath(issuer.filename),
+          __webpack_public_path__: Option.getAssetOutputPath(issuer.filename),
           module: { exports: {} },
         });
         const script = new vm.Script(source, { filename: sourceFile });
@@ -108,10 +108,10 @@ class ResponsiveLoader {
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];
 
     if (assets.length === 1) {
-      asset = Options.getAssetOutputFile(assets[0], issuer.filename);
+      asset = Option.getAssetOutputFile(assets[0], issuer.filename);
     } else if (assets.length > 1 && sizes.length > 1) {
       asset = assets
-        .map((assetFile, index) => Options.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`)
+        .map((assetFile, index) => Option.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`)
         .join(',');
     }
 

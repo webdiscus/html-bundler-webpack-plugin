@@ -31,14 +31,47 @@ module.exports = {
     {
       apply(compiler) {
         const pluginName = 'extract-integrity';
+
         compiler.hooks.compilation.tap(pluginName, (compilation) => {
-          HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync(pluginName, (hashes) => {
-            if (hashes.size > 0) {
-              const saveAs = path.join(__dirname, 'dist/integrity.json');
-              const json = Object.fromEntries(hashes);
-              fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
-            }
-          });
+          const hooks = HtmlBundlerPlugin.getHooks(compilation);
+
+          // test promise - OK
+          hooks.integrityHashes.tapPromise(pluginName, (hashes) =>
+            Promise.resolve().then(() => {
+              if (hashes.size > 0) {
+                const saveAs = path.join(__dirname, 'dist/integrity.json');
+                const json = Object.fromEntries(hashes);
+
+                //console.log(hashes);
+                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
+              }
+            })
+          );
+
+          // test async - OK
+          // hooks.integrityHashes.tapAsync(pluginName, (hashes, callback) => {
+          //   if (hashes.size > 0) {
+          //     const saveAs = path.join(__dirname, 'dist/integrity.json');
+          //     const json = Object.fromEntries(hashes);
+          //
+          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
+          //     //console.log(hashes); // => output to console
+          //
+          //     // tapAsync requires call of the callback()
+          //     callback();
+          //   }
+          // });
+
+          // test sync - OK
+          // hooks.integrityHashes.tap(pluginName, (hashes) => {
+          //   if (hashes.size > 0) {
+          //     const saveAs = path.join(__dirname, 'dist/integrity.json');
+          //     const json = Object.fromEntries(hashes);
+          //
+          //     //console.log(hashes); // => output to console
+          //     fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
+          //   }
+          // });
         });
       },
     },

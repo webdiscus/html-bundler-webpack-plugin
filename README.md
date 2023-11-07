@@ -18,6 +18,8 @@
 
 ## HTML template as entry point
 
+> Bundle your source files of scripts, styles, images and assets with HTML template.
+> 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
 
 The HTML Bundler Plugin generates static HTML from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
@@ -43,11 +45,13 @@ This plugin is much easier and cleaner to use than html-webpack-plugin.
   <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
 </center>
 
-#### See: [install and quick start](#install) | [contents](#contents) | [simple example](#example)
+### See: [>> Contents](#contents) | [>> Install and Quick Start](#install) | [>> Simple example](#example)
 
 
+---
 > **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
 > Don’t hesitate, switch to using this modern plugin too.
+---
 
 
 ## ❤️ Sponsors & Patrons
@@ -90,14 +94,14 @@ Thank you to all our sponsors and patrons!
       <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="72" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
       <p>Raymond Ackloo</p>
     </a></td>
-    </tr>
+  </tr>
 </table>
 
 
 ## 💡 Highlights
 
 - An [entry point](#option-entry) is any template.
-- Allows to **include** **script** and **style** source files directly **in HTML**:
+- Specify script and style **source files** directly **in HTML**:
   - `<link href="./styles.scss" rel="stylesheet">`
   - `<script src="./app.tsx" defer="defer"></script>`
 - **Inlines** **JS** and **CSS** into HTML using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options.
@@ -106,9 +110,10 @@ Thank you to all our sponsors and patrons!
   - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
 - **Inlines images**, e.g., [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
 - Support for [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
-- **Auto processing many HTML templates** using the [entry path](#option-entry-path), add/delete/rename w/o restarting.
+- **Auto processing many HTML templates** using the [entry path](#option-entry-path).
 - Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
-- Supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
+- Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
+- Create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
 
 See the [full list of features](#features).
 
@@ -116,7 +121,7 @@ See the [full list of features](#features).
 
 The plugin resolves references in the HTML template and adds them to the Webpack compilation.
 Webpack will automatically process the source files, and the plugin replaces the references with their output filenames in the generated HTML.
-See the [example](#example).
+See the [usage example](#example) and [how the plugin works under the hood](#plugin-hooks-and-callbacks).
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
@@ -144,6 +149,11 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 - [Auto generate an integrity hash for `link` and `script` tags](https://dev.to/webdiscus/webpack-auto-generate-an-integrity-hash-for-link-and-script-tags-in-an-html-template-48p5)
 - [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
 - [Comparison and Benchmarks of Node.js libraries to colorize text in terminal](https://dev.to/webdiscus/comparison-of-nodejs-libraries-to-colorize-text-in-terminal-4j3a) (_offtopic_)
+
+## 🔆 What's New in v3
+
+- **NEW** added [Hooks & Callbacks](#plugin-hooks-and-callbacks). Now you can create own plugin to extend this plugin.
+- **NEW** added the build-in [FaviconsBundlerPlugin](#favicons-bundler-plugin) to generate and inject favicon tags.
 
 ## 🔆 What's New in v2
 
@@ -223,7 +233,19 @@ module.exports = {
       },
     }),
   ],
-  // ... loaders for styles, images, etc.
+  // loaders for styles, images, etc.
+  module: {
+    rules: [
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+      {
+        test: /\.(ico|png|jp?g|webp|svg)$/,
+        type: 'asset/resource',
+      },
+    ],
+  },
 };
 ```
 
@@ -271,6 +293,17 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [publicPath](#webpack-option-output-publicpath)
      - [filename](#webpack-option-output-filename)
    - [entry](#webpack-option-entry)
+1. [Build-in Plugins](#build-in-plugins)
+   - [FaviconsBundlerPlugin](#favicons-bundler-plugin) (generates favicon tags)
+1. [Third-party Plugins](#third-party-plugins)
+1. [Hooks & Callbacks](#plugin-hooks-and-callbacks)
+   - [beforePreprocessor](#hook-beforePreprocessor)
+   - [preprocessor](#hook-preprocessor)
+   - [resolveSource](#hook-resolveSource)
+   - [postprocess](#hook-postprocess)
+   - [beforeEmit](#hook-beforeEmit)
+   - [afterEmit](#hook-afterEmit)
+   - [integrityHashes](#hook-integrity-hashes)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (RegEx to handle matching templates)
    - [entry](#option-entry) (entry as a list of template files)
@@ -279,23 +312,26 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options to extract JS)
    - [css](#option-css) (options to extract CSS)
-   - [beforePreprocessor](#loader-option-before-preprocessor) (🔗reference to `loaderOptions.beforePreprocessor`)
-   - [preprocessor](#option-preprocessor) (🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
-   - [preprocessorOptions](#option-preprocessor) (🔗reference to [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions))
-   - [postprocess](#option-postprocess)
    - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
+   - [beforePreprocessor](#option-before-preprocessor) (callback, 🔗reference to [loaderOptions.beforePreprocessor](#loader-option-before-preprocessor))
+   - [preprocessor](#option-preprocessor) (callback or string, 🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
+   - [preprocessorOptions](#option-preprocessor) (🔗reference to [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions))
+   - [postprocess](#option-postprocess) (callback)
+   - [beforeEmit](#option-beforeEmit) (callback)
+   - [afterEmit](#option-afterEmit) (callback)
    - [preload](#option-preload) (inject preload link tags)
+   - [integrity](#option-integrity) (inject [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) into script and style tags)
    - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
    - [extractComments](#option-extract-comments)
-   - [integrity](#option-integrity) (enable [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity))
-   - [verbose](#option-verbose)
    - [watchFiles](#option-watch-files)
    - [hotUpdate](#option-hot-update)
+   - [verbose](#option-verbose)
    - [loaderOptions](#option-loader-options) (reference to loader options)
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [root](#loader-option-root) (allow to resolve root path in attributes)
-   - [preprocessor](#loader-option-preprocessor) and [preprocessorOptions](#loader-option-preprocessorOptions) (templating)
+   - [beforePreprocessor](#loader-option-before-preprocessor) (callback)
+   - [preprocessor](#loader-option-preprocessor) (callback or string) and [preprocessorOptions](#loader-option-preprocessorOptions) (templating)
      - [eta](#loader-option-preprocessor-options-eta)
      - [ejs](#loader-option-preprocessor-options-ejs)
      - [handlebars](#loader-option-preprocessor-options-handlebars)
@@ -320,6 +356,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
+   - [How to load CSS file dynamically](#recipe-dynamic-load-css)
    - [How to process a PHP template](#recipe-preprocessor-php)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to use some different template engines](#recipe-diff-templates)
@@ -373,22 +410,24 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 <a id="list-of-plugins" name="list-of-plugins"></a>
 Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
 
-| Package                                                                                                | Features                                                            |
-| ------------------------------------------------------------------------------------------------------ |---------------------------------------------------------------------|
-| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                 | creates HTML and inject `script` tag for compiled JS file into HTML |
-| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                  | injects `link` tag for processed CSS file into HTML                 |
-| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)              | removes generated empty JS files                                    |
-| [html-loader](https://github.com/webpack-contrib/html-loader)                                          | exports HTML, resolving attributes                                  |
-| [style-loader](https://github.com/webpack-contrib/style-loader)                                        | injects an inline CSS into HTML                                     |
-| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)          | inject preload link tags                                            |
-| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                              | inject preload link tags                                            |
+| Package                                                                                                 | Features                                                            |
+|---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin)                                  | creates HTML and inject `script` tag for compiled JS file into HTML |
+| [mini-css-extract-plugin](https://github.com/webpack-contrib/mini-css-extract-plugin)                   | injects `link` tag for processed CSS file into HTML                 |
+| [webpack-remove-empty-scripts](https://github.com/webdiscus/webpack-remove-empty-scripts)               | removes generated empty JS files                                    |
+| [html-loader](https://github.com/webpack-contrib/html-loader)                                           | exports HTML, resolving attributes                                  |
+| [style-loader](https://github.com/webpack-contrib/style-loader)                                         | injects an inline CSS into HTML                                     |
+| [html-webpack-inject-preload](https://github.com/principalstudio/html-webpack-inject-preload)           | inject preload link tags                                            |
+| [preload-webpack-plugin](https://github.com/vuejs/preload-webpack-plugin)                               | inject preload link tags                                            |
 | [html-webpack-inline-source-plugin](https://github.com/dustinjackson/html-webpack-inline-source-plugin) | inline JS and CSS into HTML                                         |
-| [html-inline-css-webpack-plugin](https://github.com/runjuu/html-inline-css-webpack-plugin)             | inline CSS into HTML                                                |
-| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                            | injects an inline SVG icon into HTML                                |
-| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                  | resolves a relative URL in CSS                                      |
-| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                         | encodes a SVG data-URL as utf8                                      |
-| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                       | renders handlebars templates                                        |
-| [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)          | enables Subresource Integrity                                       |
+| [html-inline-css-webpack-plugin](https://github.com/runjuu/html-inline-css-webpack-plugin)              | inline CSS into HTML                                                |
+| [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                             | injects an inline SVG icon into HTML                                |
+| [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
+| [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
+| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
+| [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)           | enables Subresource Integrity                                       |
+| [favicons-webpack-plugin ](https://github.com/jantimon/favicons-webpack-plugin)                         | generates favicons and icons                                        |
+
 
 <a id="install" name="install"></a>
 
@@ -601,6 +640,534 @@ For details see the [plugin option `entry`](#option-entry).
 
 #### [↑ back to contents](#contents)
 
+
+<a id="build-in-plugins" name="build-in-plugins"></a>
+
+## Build-in Plugins
+
+There are the most useful plugins available "out of the box".
+The build-in plugins maintained by the HtmlBundlerPlugin.
+
+All build-in plugins are in the `/plugins` subdirectory of the HtmlBundlerPlugin.
+
+
+### FaviconsBundlerPlugin
+
+<a id="favicons-bundler-plugin" name="favicons-bundler-plugin"></a>
+
+The [FaviconsBundlerPlugin](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/plugins/favicons-bundler-plugin) generates favicons for different devices and injects favicon tags into HTML head.
+
+#### Install
+
+This plugin requires the additional [favicons](https://github.com/itgalaxy/favicons) package.
+
+```
+npm install favicons -D
+```
+
+#### Config
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const { FaviconsBundlerPlugin } = require('html-bundler-webpack-plugin/plugins');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        // source favicon file must be specified directly in HTML using link tag
+        index: './src/views/index.html',
+      },
+    }),
+    // add the favicons plugin
+    new FaviconsBundlerPlugin({
+      enabled: 'auto', // true, false, auto - generate favicons in production mode only
+      // favicons configuration options, see https://github.com/itgalaxy/favicons#usage
+      faviconOptions: {
+        path: '/img/favicons', // favicons output path relative to webpack output.path
+        icons: {
+          android: true, // Create Android homescreen icon.
+          appleIcon: true, // Create Apple touch icons.
+          appleStartup: false, // Create Apple startup images.
+          favicons: true, // Create regular favicons.
+          windows: false, // Create Windows 8 tile icons.
+          yandex: false, // Create Yandex browser icon.
+        },
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpe?g|ico|svg)$/,
+        type: 'asset/resource',
+      },
+    ],
+  },
+};
+```
+
+#### FaviconsBundlerPlugin options
+
+- `enabled` { boolean | 'auto' }\
+  if is `'auto'` then generate favicons in production mode only, 
+  in development mode will be used original favicon processed via webpack asset module.
+- `faviconOptions` { FaviconOptions } - options of the [favicons](https://github.com/itgalaxy/favicons) module. See [configuration options](https://github.com/itgalaxy/favicons#usage).
+ 
+#### Usage
+
+The source file of your favicon must be specified directly in HTML as the `link` tag with `rel="icon"` attribute.
+
+If the FaviconsBundlerPlugin is disabled or as `auto` in development mode, 
+then the source favicon file will be processed via `webpack`.
+
+If the FaviconsBundlerPlugin is enabled or as `auto` in production mode,
+then the source favicon file will be processed via `favicons` package and
+the original link tag with favicon will be replaced with generated favicon tags. 
+
+For example, there is the _src/views/index.html_
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- source favicon file relative to this HTML file, or use a webpack alias -->
+  <link href="./myFavicon.png" rel="icon" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+
+The generated HTML when FaviconsBundlerPlugin is `disabled`:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- output favicon file -->
+  <link href="assets/img/myFavicon.1234abcd.png" rel="icon" />
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+
+The generated HTML when FaviconsBundlerPlugin is `enabled`:
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- original tag is replaced with tags generated by favicons module -->
+  <link rel="apple-touch-icon" sizes="1024x1024" href="/img/favicons/apple-touch-icon-1024x1024.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/img/favicons/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/img/favicons/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/img/favicons/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/img/favicons/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/img/favicons/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/favicons/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="57x57" href="/img/favicons/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/img/favicons/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/img/favicons/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicons/apple-touch-icon-76x76.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/img/favicons/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/img/favicons/favicon-48x48.png">
+  <link rel="icon" type="image/x-icon" href="/img/favicons/favicon.ico">
+  <link rel="manifest" href="/img/favicons/manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My App">
+  <meta name="application-name" content="My App">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#fff">
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+
+#### [↑ back to contents](#contents)
+
+<a id="third-party-plugins" name="third-party-plugins"></a>
+
+## Third-party Plugins
+
+The third-party plugins not maintained by the HtmlBundlerPlugin.
+It potentially does not have the same support, security policy or license as [Build-in Plugins](#build-in-plugins).
+
+You can create own plugin using the [plugin hooks](#plugin-hooks-and-callbacks).
+As a reference plugin,
+you can use the [FaviconsBundlerPlugin](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/plugins/favicons-bundler-plugin).
+
+If you have a useful plugin, create a PR with the link to you plugin.
+
+The plugin name must end with `-bundler-plugin`, e.g. `hello-world-bundler-plugin`.
+
+_Currently there are no plugins yet. Be the first to create one._
+
+#### [↑ back to contents](#contents)
+
+
+
+<a id="plugin-hooks-and-callbacks" name="plugin-hooks-and-callbacks"></a>
+
+## Hooks & Callbacks
+
+Using hooks and callbacks, you can extend the functionality of this plugin.
+
+The `hook` can be defined in an external plugin.
+The `callback` is defined as an option in the HTMLBundlerPlugin.
+
+Most hooks have a callback with the same name.
+Each callback is called after hook with the same name.
+So with a callback, you can change the result of the hook.
+
+#### When using `callbacks`
+
+If you have small code just for your project or are doing debugging, you can use callbacks.
+
+#### When using `hooks`
+
+Using hooks you can create your own plugin.
+
+_How the plugin works under the hood._
+<center>
+  <img width="765" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/hooks.png" alt="HTMLBundlerPlugin hooks & callbacks">
+</center>
+
+### How to use hooks
+
+The simplest way, add the `{ apply() { ... } }` object to the array of the Webpack plugins:
+
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+    }),
+    // your plugin
+    {
+      apply(compiler) {
+        const pluginName = 'MyPlugin';
+
+        compiler.hooks.compilation.tap(pluginName, (compilation) => {
+          const hooks = HtmlBundlerPlugin.getHooks(compilation);
+
+          // modify generated HTML of the index.html template
+          hooks.beforeEmit.tap(pluginName, (content, { name, sourceFile, assetFile }) => {
+            return content.replace('something...', 'other...')
+          });
+        });
+      },
+    },
+  ],
+};
+```
+
+
+You can use this template as the basis for your own plugin:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+class MyPlugin {
+  pluginName = 'my-plugin';
+  options = {};
+
+  /**
+   * @param {{ enabled: boolean | 'auto'}} options The options of your plugin.
+   */
+  constructor(options = {}) {
+    this.options = options;
+  }
+
+  apply(compiler) {
+    // you can use the API of the HtmlBundlerPlugin.option
+    const enabled = HtmlBundlerPlugin.option.toBool(this.options?.enabled, true, 'auto');
+    const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
+
+    if (!enabled) {
+      return;
+    }
+
+    const { pluginName } = this;
+    const { webpack } = compiler; // instance of the Webpack
+    const fs = compiler.inputFileSystem.fileSystem; // instance of the Webpack FyleSystem
+
+    // start your plugin from the webpack compilation hook
+    compiler.hooks.compilation.tap(pluginName, (compilation) => {
+      const hooks = HtmlBundlerPlugin.getHooks(compilation);
+      
+      // usage of the sync, async and promise hooks
+
+      // sync hook
+      hooks.<hookName>.tap(pluginName, (...arguments) => {
+        // do somthing here ...
+        const result = 'your result';
+        // return the result
+        return result;
+      });
+      
+      // async hook
+      hooks.<hookName>.tapAsync(pluginName, (...arguments, callback) => {
+        // do somthing here ...
+        const result = 'your result';
+        // call the callback function to resolve the async hook
+        callback(result);
+      });
+      
+      // promise hook
+      hooks.<hookName>.tapPromise(pluginName, (...arguments) => {
+        // do somthing here ...
+        const result = 'your result';
+        // return the promise with the result
+        return Promise.resolve(result);
+      });
+    });
+  }
+}
+
+module.exports = MyPlugin;
+```
+
+Then add your plugin in the webpack config:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const MyBundlerPlugin = require('my-bundler-plugin');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+    }),
+    // your plugin
+    new MyBundlerPlugin({ enable: true });
+  ],
+};
+```
+
+For an example implementation see [FaviconsBundlerPlugin](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/plugins/favicons-bundler-plugin).
+
+#### [↑ back to contents](#contents)
+
+<a id="hook-beforePreprocessor" name="hook-beforePreprocessor"></a>
+
+### `beforePreprocessor`
+
+```ts
+AsyncSeriesWaterfallHook<[
+  content: string,
+  loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
+]>;
+```
+
+For details on `AsyncSeriesWaterfallHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+For details on hook parameters, see in the [beforePreprocessor](#loader-option-before-preprocessor) callback option.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-preprocessor" name="hook-preprocessor"></a>
+
+### `preprocessor`
+
+```ts
+AsyncSeriesWaterfallHook<[
+  content: string,
+  loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
+]>;
+```
+
+For details on `AsyncSeriesWaterfallHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+For details on hook parameters, see in the [preprocessor](#loader-option-preprocessor-custom) callback option.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-resolveSource" name="hook-resolveSource"></a>
+
+### `resolveSource`
+
+```ts
+SyncWaterfallHook<[
+  source: string,
+  info: {
+    type: 'style' | 'script' | 'asset';
+    tag: string;
+    attribute: string;
+    value: string;
+    resolvedFile: string;
+    issuer: string
+  },
+]>;
+```
+
+_no calback_
+
+
+Called after resolving of a source attribute defined by [source](#loader-option-sources) loader option.
+
+For details on `SyncWaterfallHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+Hook parameters:
+
+- `source` - a source of the tag where are parsed attributes, e.g. `<link href="./favicon.png" rel="icon">`
+- `info` - an object with parsed information:
+  - `type` - the type of the tag
+  - `tag` - the tag name, e.g. `'link'`, `'script'`, `'img'`, etc.
+  - `attribute` - the attribute name, e.g. `'src'`, `'href'`, etc.
+  - `value` - the attribute value
+  - `resolvedFile` - the resolved file from the value
+  - `issuer` - the template file
+
+Return a string to override the resolved value of the attribute or `undefined` to keep the resolved value.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-postprocess" name="hook-postprocess"></a>
+
+### `postprocess`
+
+```ts
+AsyncSeriesWaterfallHook<[content: string, info: TemplateInfo]>;
+```
+
+For details on `AsyncSeriesWaterfallHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+For details on hook parameters, see in the [postprocess](#option-postprocess) callback option.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-beforeEmit" name="hook-beforeEmit"></a>
+
+### `beforeEmit`
+
+```ts
+AsyncSeriesWaterfallHook<[content: string, entry: CompileEntry]>;
+```
+
+For details on `AsyncSeriesWaterfallHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+For details on hook parameters, see in the [beforeEmit](#option-beforeEmit) callback option.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-afterEmit" name="hook-afterEmit"></a>
+
+### `afterEmit`
+
+```ts
+AsyncSeriesHook<[entries: CompileEntries]>;
+```
+
+For details on `AsyncSeriesHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+For details on hook parameters, see in the [afterEmit](#option-afterEmit) callback option.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="hook-integrity-hashes" name="hook-integrity-hashes"></a>
+
+### `integrityHashes`
+
+
+```ts
+AsyncSeriesHook<{
+  // the map of the output asset filename to its integrity hash
+  hashes: Map<string, string>;
+}>;
+```
+
+Called after all assets have been processed and hashes have finite values and cannot be changed, at the `afterEmit` stage.
+This can be used to retrieve the integrity values for the asset files.
+
+For details on `AsyncSeriesHook` see the [hook interface](https://github.com/webpack/tapable#hookhookmap-interface).
+
+Callback Parameter: `hashes` is the map of the output asset filename to its integrity hash.
+The map only contains JS and CSS assets that have a hash.
+
+You can write your own plugin, for example, to extract integrity values into the separate file:
+
+```js
+const fs = require('fs');
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  output: {
+    crossOriginLoading: 'anonymous', // required for Subresource Integrity
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+      js: {
+        filename: '[name].[contenthash:8].js',
+        chunkFilename: '[name].[contenthash:8].chunk.js',
+      },
+      css: {
+        filename: '[name].[contenthash:8].css',
+        chunkFilename: '[name].[contenthash:8].chunk.css',
+      },
+      integrity: 'auto',
+    }),
+    // your plugin to extract the integrity values
+    {
+      apply(compiler) {
+        compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
+          const hooks = HtmlBundlerPlugin.getHooks(compilation);
+          hooks.integrityHashes.tapAsync(
+            'MyPlugin', 
+            (hashes) => Promise.resolve().then(() => {
+                if (hashes.size > 0) {
+                  const saveAs = path.join(__dirname, 'dist/integrity.json');
+                  const json = Object.fromEntries(hashes);
+                  fs.writeFileSync(saveAs, JSON.stringify(json, null, '  ')); // => save to file
+                  console.log(hashes); // => output to console
+                }
+              })
+            );
+          }
+        );
+      },
+    },
+  ],
+};
+```
+
+The content of the `dist/integrity.json` file looks like:
+```
+{
+  "815.49b3d882.chunk.js": "sha384-dBK6nNrKKk2KjQLYmHZu6tuWwp7kBzzEvdX+4Ni11UzxO2VHvP4A22E/+mmeduul",
+  "main.9c043cce.js": "sha384-AbfLh7mk6gCp0nhkXlAnOIzaHeJSB8fcV1/wT/FWBHIDV7Blg9A0sukZ4nS3xjtR"
+  "main.dc4ea4af.chunk.css": "sha384-W/pO0vwqqWBj4lq8nfe+kjrP8Z78smCBttkCvx1SYKrVI4WEdJa6W6i0I2hoc1t7",
+  "style.47f4da55.css": "sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E",
+}
+```
+
+#### [↑ back to contents](#contents)
+
+
 <a id="plugin-options" name="plugin-options"></a>
 
 ## Plugin options
@@ -622,7 +1189,7 @@ The `test` value is used in the [default loader](#loader-options).
 This plugin is very powerful and has many experimental features not yet documented.
 One of the next features will be the processing scripts and styles as entry points for library bundles without templates.
 To do this, the plugin must differentiate between a template entry point and a script/style entry point.
-This plugin can completely replace the functionality of mini-css-extract-plugin and webpack-remove-empty-scripts in future.
+This plugin can completely replace the functionality of `mini-css-extract-plugin` and `webpack-remove-empty-scripts` in future.
 
 <a id="option-entry" name="option-entry"></a>
 
@@ -985,6 +1552,11 @@ type JsInlineOptions = {
   enabled?: 'auto' | boolean;
   chunk?: RegExp | Array<RegExp>;
   source?: RegExp | Array<RegExp>;
+  attributeFilter?: (props: {
+    attribute: string;
+    value: string;
+    attributes: { [attributeName: string]: string };
+  }) => boolean | void;
 };
 ```
 
@@ -1017,12 +1589,21 @@ If `inline` is an `object`:
    if the `enabled` is undefined, then using the `inline` as the `object`, the value is `true`
 - `chunk` - inlines the single chunk when output chunk filename matches a regular expression(s)
 - `source` - inlines all chunks when source filename matches a regular expression(s)
+- `attributeFilter` - filter function to keep/remove attributes for inlined script tag. If undefined, all attributes will be removed.\
+  Destructed arguments:
+  - `attribute` - attribute name
+  - `value` - attribute value
+  - `attributes` - all attributes of the script tag
+
+  Return: 
+  - `true` - keep the attribute in the inlined script tag 
+  - `false` or `undefined` - remove the attribute
 
 You can use both the `chunk` and the `source` options,
 then there will be inlined chunks matching regular expressions with `OR` logic.
 
 For example, there is used the `optimization.splitChunks` and we want to inline only the small webpack runtime chunk
-but other JS chunks of the same splited `app.js` file should be saved to chunk files, then use the following inline option:
+but other JS chunks of the same split `app.js` file should be saved to chunk files, then use the following inline option:
 
 ```js
 js: {
@@ -1033,7 +1614,7 @@ js: {
 },
 ```
 
-Then the `app.js` file will be splited to many output chunks, e.g.:
+Then the `app.js` file will be split to many output chunks, e.g.:
 
 ```
 assets/js/325.xxxxxxxx.js  -> save as file
@@ -1048,6 +1629,36 @@ The single `runtime.xxxxxxxx.js` chunk will be injected into HTML, other chunks 
 >
 > The `filename` and `chunkFilename` options are the same as in Webpack `output` options, just defined in one place along with other relevant plugin options.
 > You don't need to define them in the in Webpack `output` options anymore. Keep the config clean & clear.
+
+To keep some original script tag attributes in the inlined script tag, use the `attributeFilter`.
+For example, there is a script tag with attributes:
+```html
+<script id="js-main" src="./main.js" defer></script>
+```
+
+Use the `attributeFilter`:
+
+```js
+new HtmlBundlerPlugin({
+  // ...
+  js: {
+    inline: {
+      attributeFilter: ({ attributes, attribute, value }) => {
+        if (attribute === 'id') return true;
+      },
+    },
+  },
+}
+```
+
+The inlined tag contains the `id` attribute, but the `src` and `defer` are removed:
+```html
+<script id="js-main">
+  // inlined JavaScript code
+</script>
+```
+
+
 
 All source script files specified in `<script src="...">` are automatically resolved,  
 and JS will be extracted to output file. The source filename will be replaced with the output filename.
@@ -1199,46 +1810,6 @@ If you want to have a different output filename, you can use the `filename` opti
 
 #### [↑ back to contents](#contents)
 
-<a id="option-preprocessor" name="option-preprocessor"></a>
-
-### `preprocessor` and `preprocessorOptions`
-
-Since the `v2.2.0`, the `preprocessor` and `preprocessorOptions` plugin options are references to [loaderOptions.preprocessor](#loader-option-preprocessor) and [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions).
-
-Now it is possible to define these options directly in the plugin options to simplify the config.
-
-The NEW syntactic "sugar":
-
-```js
-new HtmlBundlerPlugin({
-  entry: {
-    index: './src/views/home.ejs',
-  },
-  // new references to options in the loaderOptions
-  preprocessor: 'ejs',
-  preprocessorOptions: {...},
-}),
-```
-
-The old syntax is still valid and will never be deprecated:
-
-```js
-new HtmlBundlerPlugin({
-  entry: {
-    index: './src/views/home.ejs',
-  },
-  loaderOptions: {
-    // original options are under loaderOptions
-    preprocessor: 'ejs',
-    preprocessorOptions: {...},
-  },
-}),
-```
-
-Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader options.
-
-#### [↑ back to contents](#contents)
-
 <a id="option-data" name="option-data"></a>
 
 ### `data`
@@ -1277,27 +1848,124 @@ Please see the details below under the [data](#loader-option-data) loader option
 
 #### [↑ back to contents](#contents)
 
-<a id="option-postprocess" name="option-postprocess"></a>
+<a id="option-before-preprocessor" name="option-before-preprocessor"></a>
 
-### `postprocess`
+### `beforePreprocessor`
+
+Reference to `loaderOption.beforePreprocessor`
+
+The plugin option is the reference to [loaderOptions.beforePreprocessor](#loader-option-before-preprocessor).
 
 Type:
 
 ```ts
-type postprocess = (content: string, info: TemplateInfo, compilation: Compilation) => string | undefined;
+type BeforePreprocessor =
+  | false
+  | ((
+      content: string,
+      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
+    ) => string | undefined);
+```
+
+Default: `false`
+
+The `content` is the raw content of a template.
+
+The description of all `loaderContext` attributes see in the [Webpack documentation](https://webpack.js.org/api/loaders/#thisresourcepath).
+
+Returns the modified template. If you are not changing the template, you should return `undefined` or not use `return` at all.
+
+The callback function called right before the [preprocessor](#loader-option-preprocessor).
+This can be useful when using one of the predefined preprocessors and modifying the raw template or the data passed to the template.
+
+For example:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/pages/',
+  },
+  data: {
+    title: 'Welcome to [sitename] website',
+  },
+  beforePreprocessor: (content, { resourcePath, data }) => {
+    let sitename = 'Homepage';
+    if (resourcePath.includes('/about.html')) sitename = 'About';
+    data.title = data.title.replace('[sitename]', sitename); // modify template data
+    return content.replaceAll('{{old_var}}', '{{new_var}}'); // modify template content
+  },
+  preprocessor: 'handlebars', // use the templating engine
+});
+```
+
+#### [↑ back to contents](#contents)
+
+
+<a id="option-preprocessor" name="option-preprocessor"></a>
+
+### `preprocessor` (callback or string) and `preprocessorOptions`
+
+The plugin options are the references to [loaderOptions.preprocessor](#loader-option-preprocessor) and [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions).
+
+Now it is possible to define these options directly in the plugin options to simplify the config.
+
+The NEW syntactic "sugar":
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  // new references to options in the loaderOptions
+  preprocessor: 'ejs',
+  preprocessorOptions: {...},
+}),
+```
+
+The old syntax is still valid and will never be deprecated:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  loaderOptions: {
+    // original options are under loaderOptions
+    preprocessor: 'ejs',
+    preprocessorOptions: {...},
+  },
+}),
+```
+
+Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader options.
+
+#### [↑ back to contents](#contents)
+
+<a id="option-postprocess" name="option-postprocess"></a>
+
+### `postprocess` callback
+
+Type:
+
+```ts
+type postprocess = (
+  content: string,
+  info: TemplateInfo,
+  compilation: Compilation
+) => string | undefined;
 
 type TemplateInfo = {
-  verbose: boolean;
-  filename: string | ((pathData: PathData) => string);
-  outputPath: string;
-  sourceFile: string;
+  name: string;
   assetFile: string;
+  sourceFile: string;
+  resource: string;
+  outputPath: string;
 };
 ```
 
 Default: `null`
 
-Called after the template has been rendered, but not yet finalized, before the split chunks and inline assets are injected.
+Called after the template has been compiled, but not yet finalized, before injection of the split chunks and inline assets.
 
 The `postprocess` have the following arguments:
 
@@ -1307,16 +1975,79 @@ The `postprocess` have the following arguments:
 
 The `TemplateInfo` have the following properties:
 
-- `verbose: boolean` - the [`verbose`](#option-verbose) option
-- `filename: string|function` - the [`filename`](#option-filename) option of the template
+- `name: string` - the entry name
+- `assetFile: string` - the output asset filename relative to `outputPath`
+- `sourceFile: string` - the absolute path of the source file, without a query
+- `resource: string` - the absolute path of the source file, including a query
 - `outputPath: string` - the absolute path of the output directory
-- `sourceFile: string` - the absolute path of the source file, without URL query
-- `assetFile: string` - the output file relative to the `outputPath`
 
 Return new content as a `string`.
 If return `undefined`, the result processed via Webpack plugin is ignored and will be saved a result processed via the loader.
 
 #### [↑ back to contents](#contents)
+
+
+<a id="option-beforeEmit" name="option-beforeEmit"></a>
+
+### `beforeEmit` callback
+
+Type:
+
+```ts
+type BeforeEmit = (
+  content: string,
+  entry: CompileEntry,
+  compilation: Compilation
+) => string | undefined;
+
+type CompileEntry = TemplateInfo & {
+  // assets used in html
+  assets: Array<CompileAsset>;
+};
+```
+
+Default: `null`
+
+Called at the latest stage of the [processAssets](https://webpack.js.org/api/compilation-hooks/#processassets) hook, before emitting.
+This is the latest stage where you can change the html before it will be saved on the disk.
+
+Callback parameters:
+- `content: string` - the final version html content
+- `entry: CompileEntry` the information about the entry containing all dependent assets,\
+  the description of the `TemplateInfo` see by [postprocess](#option-postprocess)
+- `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
+
+Return new content as a `string`.
+If return `undefined` then content will not be changed.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="option-afterEmit" name="option-afterEmit"></a>
+
+### `afterEmit` callback
+
+Type:
+
+```ts
+type AfterEmit = (
+  entries: Array<CompileEntry>,
+  compilation: Compilation
+) => Promise<void> | void;
+```
+
+Default: `null`
+
+Called after emitting assets to output directory.
+This callback can be useful to create a manifest file containing source and output filenames.
+
+Callback parameters:
+- `entries: Array<CompileEntry>` the collection of entries containing all dependent assets,\
+   the description of the `CompileEntry` see by [beforeEmit](#option-beforeEmit)
+- `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
+
+#### [↑ back to contents](#contents)
+
 
 <a id="option-preload" name="option-preload"></a>
 
@@ -1707,78 +2438,11 @@ The generated HTML contains the integrity hashes:
 </html>
 ```
 
+
 #### `integrityHashes` hook
 
-```ts
-AsyncSeriesHook<{
-  hashes: Map<string, string>;
-}>;
-```
+For details see the [integrityHashes hook](#hook-integrity-hashes).
 
-Called after all assets have been processed and hashes have finite values and cannot be changed, at the `afterEmit` stage.
-This can be used to retrieve the integrity values for the asset files.
-
-The hook is async and can be called using the `tapAsync` method.
-
-Callback Parameter: `hashes` is the map of the output asset filename to its integrity hash.
-The map only contains JS and CSS assets that have a hash.
-
-You can write your own plugin, for example, to extract integrity values into the separate file:
-
-```js
-const fs = require('fs');
-const path = require('path');
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-module.exports = {
-  output: {
-    crossOriginLoading: 'anonymous', // required for Subresource Integrity
-  },
-  plugins: [
-    new HtmlBundlerPlugin({
-      entry: {
-        index: './src/index.html',
-      },
-      js: {
-        filename: '[name].[contenthash:8].js',
-        chunkFilename: '[name].[contenthash:8].chunk.js',
-      },
-      css: {
-        filename: '[name].[contenthash:8].css',
-        chunkFilename: '[name].[contenthash:8].chunk.css',
-      },
-      integrity: 'auto',
-    }),
-    // your plugin to extract the integrity values
-    {
-      apply(compiler) {
-        compiler.hooks.compilation.tap('MyPlugin', (compilation) => {
-          HtmlBundlerPlugin.getHooks(compilation).integrityHashes.tapAsync(
-            'MyPlugin', 
-            (hashes) => {
-              if (hashes.size > 0) {
-                const saveAs = path.join(__dirname, 'dist/integrity.json');
-                const json = Object.fromEntries(hashes);
-                fs.writeFileSync(saveAs, JSON.stringify(json, null, '  '));
-                console.log(hashes); // => output to console
-              }
-            });
-          }
-        );
-      },
-    },
-  ],
-};
-```
-
-The content of the `dist/integrity.json` file looks like:
-```
-{
-  "815.49b3d882.chunk.js": "sha384-dBK6nNrKKk2KjQLYmHZu6tuWwp7kBzzEvdX+4Ni11UzxO2VHvP4A22E/+mmeduul",
-  "main.9c043cce.js": "sha384-AbfLh7mk6gCp0nhkXlAnOIzaHeJSB8fcV1/wT/FWBHIDV7Blg9A0sukZ4nS3xjtR"
-  "main.dc4ea4af.chunk.css": "sha384-W/pO0vwqqWBj4lq8nfe+kjrP8Z78smCBttkCvx1SYKrVI4WEdJa6W6i0I2hoc1t7",
-  "style.47f4da55.css": "sha384-gaDmgJjLpipN1Jmuc98geFnDjVqWn1fixlG0Ab90qFyUIJ4ARXlKBsMGumxTSu7E",
-}
-```
 
 #### [↑ back to contents](#contents)
 
@@ -1868,6 +2532,10 @@ Type: `boolean` Default: `false`
 
 If the value is `true`, then in the `serve` or `watch` mode, the `hot-update.js` file is injected into each generated HTML file to enable the live reloading.
 Use this options only if you don't have a referenced source file of a script in html.
+
+> **Note**
+> 
+> The `devServer.hot` must be true.
 
 If you already have a js file in html, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
 
@@ -1980,7 +2648,7 @@ The `default loader`:
 You can omit the loader in Webpack `modules.rules`.
 If the `HtmlBundlerPlugin.loader` is not configured, the plugin add it with default options automatically.
 
-The default loader handels HTML files and `EJS`-like templates.
+The default loader handles HTML files and `EJS`-like templates.
 
 > **Note**
 >
@@ -2065,7 +2733,9 @@ By default, resolves source files in the following tags and attributes:
 
 <a id="loader-option-sources-filter" name="loader-option-sources-filter"></a>
 
-#### Filter function
+#### `filter` function
+
+Using the `filter` function, you can enable/disable resolving of specific assets by tags and attributes.
 
 The `filter` is called for all attributes of the tag defined as defaults and in `sources` option.
 The argument is an object containing the properties:
@@ -2256,47 +2926,21 @@ Now you can use the `/` root path for the source assets:
 
 ### `beforePreprocessor`
 
-Reference: `loaderOption.beforePreprocessor`
+See the description in the [beforePreprocessor](#option-before-preprocessor).
 
-Type:
-
-```ts
-type BeforePreprocessor =
-  | false
-  | ((
-      template: string,
-      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
-    ) => string | undefined);
-```
-
-Default: `false`
-
-The `template` is the raw content of a template.
-
-The description of all `loaderContext` attributes see in the [Webpack documentation](https://webpack.js.org/api/loaders/#thisresourcepath).
-
-Returns the modified template. If you are not changing the template, you should return `undefined` or not use `return` at all.
-
-The callback function called right before the [preprocessor](#loader-option-preprocessor).
-This can be useful when using one of the predefined preprocessors and modifying the raw template or the data passed to the template.
-
-For example:
+Usage in loaderOptions:
 
 ```js
 new HtmlBundlerPlugin({
   entry: {
     index: 'src/views/pages/',
   },
-  data: {
-    title: 'Welcome to [sitename] website',
+  loaderOptions: {
+    beforePreprocessor: (content, { resourcePath, data }) => {
+      // modify content
+      return content;
+    },
   },
-  beforePreprocessor: (template, { resourcePath, data }) => {
-    let sitename = 'Homepage';
-    if (resourcePath.includes('/about.html')) sitename = 'About';
-    data.title = data.title.replace('[sitename]', sitename); // modify template data
-    return template.replaceAll('{{old_var}}', '{{new_var}}'); // modify template content
-  },
-  preprocessor: 'handlebars', // use the templating engine
 });
 ```
 
@@ -2316,7 +2960,7 @@ type Preprocessor =
   | 'handlebars'
   | 'nunjucks'
   | ((
-      template: string,
+      content: string,
       loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
     ) => string | Promise<any> | undefined);
 ```
@@ -2396,14 +3040,14 @@ To use any templating engine, you can define the `preprocessor` as a function.
 
 ```ts
 type Preprocessor = (
-  template: string,
+  content: string,
   loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
 ) => string | Promise<any> | undefined;
 ```
 
 The function arguments:
 
-- `template` - a raw content of a template file defined in the [`entry`](#option-entry) option.
+- `content` - a raw content of a template file defined in the [`entry`](#option-entry) option.
 - `loaderContext` - the [Loader Context](https://webpack.js.org/api/loaders/#the-loader-context) object contained useful properties:
   - `mode: string` - a Webpack mode: `production`, `development`, `none`
   - `rootContext: string` - a path to Webpack context
@@ -2422,7 +3066,7 @@ The example for your own `sync` render function:
 
 ```js
 {
-  preprocessor: (template, { data }) => render(template, data);
+  preprocessor: (content, { data }) => render(content, data);
 }
 ```
 
@@ -2430,9 +3074,9 @@ The example of using `Promise` for your own `async` render function:
 
 ```js
 {
-  preprocessor: (template, { data }) =>
+  preprocessor: (content, { data }) =>
     new Promise((resolve) => {
-      const result = render(template, data);
+      const result = render(content, data);
       resolve(result);
     });
 }
@@ -2447,7 +3091,7 @@ const eta = new Eta({
   useWith: true, // allow to use variables in template without `it.` scope
   views: process.cwd(), // directory that contains templates
 });
-preprocessor = (template, { data }) => eta.renderString(template, data);
+preprocessor = (content, { data }) => eta.renderString(content, data);
 ```
 
 > **Note**
@@ -3167,7 +3811,7 @@ module.exports = {
         },
       },
       // define preprocessor as the function that shoud return a string or promise
-      preprocessor: (template, { data }) => Mustache.render(template, data),
+      preprocessor: (content, { data }) => Mustache.render(content, data),
     }),
   ],
 };
@@ -3275,7 +3919,7 @@ module.exports = {
         },
       },
       // async parseAndRender method return the promise
-      preprocessor: (template, { data }) => LiquidEngine.parseAndRender(template, data),
+      preprocessor: (content, { data }) => LiquidEngine.parseAndRender(content, data),
     }),
   ],
 };
@@ -3986,6 +4630,37 @@ The plugin automatically inlines images smaller then `maxSize`.
 
 #### [↑ back to contents](#contents)
 
+<a id="recipe-dynamic-load-css" name="recipe-dynamic-load-css"></a>
+
+## How to load CSS file dynamically
+
+For dynamic file loading, we need the output filename of extracted CSS from a source style file.
+To get the CSS output filename in JavaScript, you can use the `url` query in `require()` function:
+```js
+const cssFile = require('./style.scss?url');
+```
+Where the `./style.scss` is the source SCSS file relative to the JavaScript file.
+
+To load a CSS file dynamically, you can use the function:
+```js
+function loadCSS(file) {
+  const style = document.createElement('link');
+  style.href = file;
+  style.rel = 'stylesheet';
+  document.head.appendChild(style);
+}
+
+const cssFile = require('./style.scss?url');
+loadCSS(cssFile);
+``` 
+
+The CSS will be extracted into separate file and the `cssFile` variable will contains the CSS output filename. 
+
+
+---
+
+#### [↑ back to contents](#contents)
+
 <a id="recipe-preprocessor-php" name="recipe-preprocessor-php"></a>
 
 ## How to process a PHP template (.phtml)
@@ -4185,7 +4860,7 @@ module.exports = {
       // the Nunjucks template engine is supported "out of the box"
       preprocessor: 'nunjucks',
       // -OR- use as the function for full controll
-      // preprocessor: (template, { data }) => Nunjucks.renderString(template, data),
+      // preprocessor: (content, { data }) => Nunjucks.renderString(content, data),
     }),
   ],
   module: {

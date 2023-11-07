@@ -23,7 +23,11 @@ export const getCompareFileList = function (receivedPath, expectedPath) {
   };
 };
 
-export const getCompareFileContents = function (receivedFile, expectedFile, filter = /.(html|css|css.map|js|js.map)$/) {
+export const getCompareFileContents = function (
+  receivedFile,
+  expectedFile,
+  filter = /.(html|css|css.map|js|js.map|json)$/
+) {
   return filter.test(receivedFile) && filter.test(expectedFile)
     ? { received: readTextFileSync(receivedFile), expected: readTextFileSync(expectedFile) }
     : { received: '', expected: '' };

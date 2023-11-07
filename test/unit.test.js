@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { getFileExtension, replaceAll } from '../src/Common/Helpers';
+import { findPlugin, getFileExtension, replaceAll } from '../src/Common/Helpers';
 import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import AssetEntry from '../src/Plugin/AssetEntry';
 import Asset from '../src/Plugin/Asset';
@@ -7,7 +7,7 @@ import Snapshot from '../src/Plugin/Snapshot';
 import Template from '../src/Loader/Template';
 import { HtmlParser } from '../src/Common/HtmlParser';
 import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
-import Options from '../src/Plugin/Options';
+import Option from '../src/Plugin/Option';
 import Collection from '../src/Plugin/Collection';
 
 beforeAll(() => {
@@ -238,25 +238,25 @@ describe('parse attributes unit tests', () => {
 
 describe('resolve parsed values', () => {
   test('https://example.com/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: 'https://example.com/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', value: 'https://example.com/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('http://example.com/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: 'http://example.com/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', value: 'http://example.com/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('//style.css', () => {
-    const received = Template.resolve({ type: 'style', file: '//style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', value: '//style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
 
   test('/style.css', () => {
-    const received = Template.resolve({ type: 'style', file: '/style.css', issuer: '' });
+    const received = Template.resolveFile({ type: 'style', value: '/style.css', issuer: '' });
     const expected = false;
     return expect(received).toEqual(expected);
   });
@@ -336,6 +336,113 @@ describe('parse tags unit tests', () => {
   });
 });
 
+describe('parseAttrAll', () => {
+  test('tag end 01', () => {
+    const source = '<script src="file.js">';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 02', () => {
+    const source = '<script src="file.js" >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 03', () => {
+    const source = '<script defer=true>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 04', () => {
+    const source = '<script defer=true/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 05', () => {
+    const source = '<script defer=true >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: 'true' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 06', () => {
+    const source = '<script defer>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 07', () => {
+    const source = '<script defer/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 08', () => {
+    const source = '<script defer >';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 11', () => {
+    const source = '<script src="file.js"/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 12', () => {
+    const source = '<script src="file.js"  />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 31', () => {
+    const source = '<br>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 32', () => {
+    const source = '<br/>';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 33', () => {
+    const source = '<br />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = {};
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('tag end 34', () => {
+    const source = '<br attr />';
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { attr: undefined };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('all possible values of attribute', () => {
+    const source = `<script  defer data-text="text with spaces"  enabled=true empty="" src='file.js'  />`;
+    const received = HtmlParser.parseAttrAll(source);
+    const expected = { defer: undefined, 'data-text': 'text with spaces', enabled: 'true', empty: '', src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+});
+
 describe('AssetEntry unit tests', () => {
   test('reset', () => {
     AssetEntry.compilationEntryNames = new Set(['home', 'about']);
@@ -347,78 +454,78 @@ describe('AssetEntry unit tests', () => {
 
 describe('plugin options unit tests', () => {
   test('isTrue: defaultValue', () => {
-    const received = Options.toBool(undefined, false, true);
+    const received = Option.toBool(undefined, false, true);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: value false', () => {
-    Options.productionMode = true;
-    const received = Options.toBool(false, true, true);
+    Option.productionMode = true;
+    const received = Option.toBool(false, true, true);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: value true', () => {
-    Options.productionMode = true;
-    const received = Options.toBool(true, false, false);
+    Option.productionMode = true;
+    const received = Option.toBool(true, false, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = true, prod mode', () => {
-    Options.productionMode = true;
-    const received = Options.toBool('auto', true, false);
+    Option.productionMode = true;
+    const received = Option.toBool('auto', true, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = false, prod mode', () => {
-    Options.productionMode = true;
-    const received = Options.toBool('auto', false, false);
+    Option.productionMode = true;
+    const received = Option.toBool('auto', false, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = true, dev mode', () => {
-    Options.productionMode = false;
-    const received = Options.toBool('auto', true, false);
+    Option.productionMode = false;
+    const received = Option.toBool('auto', true, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = false, dev mode', () => {
-    Options.productionMode = false;
-    const received = Options.toBool('auto', false, false);
+    Option.productionMode = false;
+    const received = Option.toBool('auto', false, false);
     return expect(received).toEqual(true);
   });
 
   test('isProduction true', () => {
-    Options.productionMode = true;
-    const received = Options.isProduction();
+    Option.productionMode = true;
+    const received = Option.isProduction();
     return expect(received).toEqual(true);
   });
 
   test('isRealContentHash true', () => {
-    Options.webpackOptions.optimization = {
+    Option.webpackOptions.optimization = {
       realContentHash: true,
     };
-    const received = Options.isRealContentHash();
+    const received = Option.isRealContentHash();
     return expect(received).toEqual(true);
   });
 
   test('isScript true', () => {
-    Options.options = {
+    Option.options = {
       js: {
         enabled: true,
-        test: Options.js.test,
+        test: Option.js.test,
       },
     };
 
-    const received = Options.isScript('test.js?v=123');
+    const received = Option.isScript('test.js?v=123');
     return expect(received).toEqual(true);
   });
 
   test('getEntryPath', () => {
-    Options.dynamicEntry = 'src/views/';
-    Options.options.entry = Options.dynamicEntry;
+    Option.dynamicEntry = 'src/views/';
+    Option.options.entry = Option.dynamicEntry;
 
-    const received = Options.getEntryPath();
-    return expect(received).toEqual(Options.dynamicEntry);
+    const received = Option.getEntryPath();
+    return expect(received).toEqual(Option.dynamicEntry);
   });
 });
 
@@ -611,6 +718,17 @@ describe('misc tests', () => {
     const received = replaceAll('begin replace_me and replace_me and', 'replace_me', 'A');
     const expected = 'begin A and A and';
     return expect(received).toEqual(expected);
+  });
+
+  test('findPlugin', () => {
+    class MyPlugin {
+      constructor() {}
+    }
+
+    const myPluginInstance = new MyPlugin();
+    const plugins = [myPluginInstance];
+    const received = findPlugin(plugins, 'MyPlugin');
+    return expect(received).toBeInstanceOf(MyPlugin);
   });
 
   test('Collection.findStyleInsertPos OK', () => {

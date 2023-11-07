@@ -172,7 +172,7 @@ const relativePathForView = (file, dir = process.cwd()) => {
  * Autodetect a root source directory.
  * Defaults, it is first-level subdirectory of a template, relative to root context.
  *
- * For examples:
+ * For example:
  * ./home.html => ./
  * ./src/home.html => ./src
  * ./src/views/home.html => ./src

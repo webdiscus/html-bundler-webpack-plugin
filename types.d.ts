@@ -1,13 +1,14 @@
-import { Compiler, Compilation, LoaderContext, WebpackPluginInstance } from 'webpack';
-import { PathData, AssetInfo } from 'webpack/lib/Compilation';
+import { Compiler, Compilation, LoaderContext, WebpackPluginInstance, PathData, AssetInfo } from 'webpack';
 import { Options as MinifyOptions } from 'html-minifier-terser';
-import { AsyncSeriesHook } from 'tapable';
+import { AsyncSeriesHook, AsyncSeriesWaterfallHook, SyncWaterfallHook } from 'tapable';
 
 declare class HtmlBundlerPlugin implements WebpackPluginInstance {
   /**
    * The path to the template loader.
    */
   static loader: string;
+
+  static option: HtmlBundlerPlugin.OptionPluginInterface;
 
   static getHooks(compilation: Compilation): HtmlBundlerPlugin.Hooks;
 
@@ -16,14 +17,35 @@ declare class HtmlBundlerPlugin implements WebpackPluginInstance {
 }
 
 declare namespace HtmlBundlerPlugin {
-  export interface Hooks {
-    integrityHashes: AsyncSeriesHook<{
-      // the map of the output asset filename to its integrity hash
-      hashes: Map<string, string>;
-    }>;
+  export interface OptionPluginInterface {
+    isEnabled: () => boolean;
+    isProduction: () => boolean;
+    isVerbose: () => boolean;
+
+    /**
+     * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
+     *
+     * @param {boolean|string|undefined} value The value one of the values: true, false, 'auto'.
+     * @param {boolean} autoValue Returns the autoValue in prod mode when value is 'auto'.
+     * @param {boolean|string} defaultValue Returns default value when value is undefined.
+     * @return {boolean}
+     */
+    toBool: (value: boolean | string | undefined, autoValue: boolean, defaultValue: boolean | string) => boolean;
+
+    get: () => PluginOptions;
+    getWebpackOutputPath: () => string;
   }
 
   export interface PluginOptions {
+    // callbacks
+    beforePreprocessor?: BeforePreprocessor;
+    preprocessor?: Preprocessor;
+    preprocessorOptions?: Object;
+    // postprocess of rendered template, called after js template was compiled into html
+    postprocess?: Postprocess;
+    beforeEmit?: BeforeEmit;
+    afterEmit?: AfterEmit;
+
     // match of entry template files
     test?: RegExp;
     /**
@@ -43,11 +65,6 @@ declare namespace HtmlBundlerPlugin {
      * It's syntactic "sugar" to avoid the complicated structure of options.
      */
     data?: { [key: string]: any } | string;
-    beforePreprocessor?: BeforePreprocessor;
-    preprocessor?: Preprocessor;
-    preprocessorOptions?: Object;
-    // postprocess of rendered template, called after js template was compiled into html
-    postprocess?: Postprocess;
     // generates preload link tags for assets
     preload?: Preload;
     minify?: 'auto' | boolean | MinifyOptions;
@@ -87,7 +104,49 @@ declare namespace HtmlBundlerPlugin {
      */
     data?: Data;
   }
+
+  export interface Hooks {
+    beforePreprocessor: AsyncSeriesWaterfallHook<
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => void]
+    >;
+
+    preprocessor: AsyncSeriesWaterfallHook<
+      [content: string, loaderContext: BundlerPluginLoaderContext, callback?: (error: Error | null) => void]
+    >;
+
+    // TODO: implement afterPreprocessor when will be required the feature
+    //afterPreprocessor: AsyncSeriesWaterfallHook<[content: string, loaderContext: BundlerPluginLoaderContext]>;
+
+    /**
+     * Called after resolve of a source attribute defined by loaderOptions.source.
+     * Return a string to override the resolved value of the attribute.
+     */
+    resolveSource: SyncWaterfallHook<
+      [
+        source: string,
+        info: { type: string; tag: string; attribute: string; value: string; resolvedFile: string; issuer: string },
+      ]
+    >;
+
+    postprocess: AsyncSeriesWaterfallHook<[content: string, info: TemplateInfo]>;
+
+    beforeEmit: AsyncSeriesWaterfallHook<[content: string, entry: CompileEntry]>;
+
+    afterEmit: AsyncSeriesHook<[entries: CompileEntries]>;
+
+    integrityHashes: AsyncSeriesHook<
+      [
+        // the map of the output asset filename to its integrity hash
+        hashes: Map<string, string>,
+      ]
+    >;
+  }
 }
+
+/**
+ * Context of bundler loader.
+ */
+type BundlerPluginLoaderContext = LoaderContext<Object> & { data: { [key: string]: any } | string };
 
 /**
  * Multiple entry bundles are created. The key is the entry name. The value can be a string or an entry description object.
@@ -125,9 +184,13 @@ type EntryDescription = {
 type Data = { [key: string]: any } | string;
 
 type JsOptions = {
+  // The output filename of extracted JavaScript. Defaults `[name].js`.
   filename?: FilenameTemplate;
+  // The output filename of non-initial chunk file. Defaults `[id].js`.
   chunkFilename?: FilenameTemplate;
+  // The output directory for an asset. Defaults, `webpack.output.path`.
   outputPath?: string;
+  // Whether the compiled JavaScript should be inlined. Defaults, `false`.
   inline?: 'auto' | boolean | JsInlineOptions;
 };
 
@@ -142,13 +205,24 @@ type JsInlineOptions = {
   chunk?: RegExp | Array<RegExp>;
   // Inlines all chunks when source filename matches a regular expression(s).
   source?: RegExp | Array<RegExp>;
+  // Filter function to keep/remove attributes for inlined script tag.  If undefined, all attributes will be removed.
+  attributeFilter?: (props: {
+    attribute: string;
+    value: string;
+    attributes: { [attributeName: string]: string };
+  }) => boolean | void;
 };
 
 type CssOptions = {
+  // RegEx to match style files.
   test?: RegExp;
+  // The output filename of extracted CSS.
   filename?: FilenameTemplate;
+  // The output filename of non-initial chunk file, e.g., a style file imported in JavaScript.
   chunkFilename?: FilenameTemplate;
+  // The output directory for an asset. Defaults, `webpack.output.path`.
   outputPath?: string;
+  // Whether the compiled JavaScript should be inlined. Defaults, `false`.
   inline?: 'auto' | boolean;
 };
 
@@ -165,12 +239,7 @@ type HashFunctions = 'sha256' | 'sha384' | 'sha512';
  */
 type FilenameTemplate = string | ((pathData: PathData, assetInfo?: AssetInfo) => string);
 
-type BeforePreprocessor =
-  | false
-  | ((
-      template: string,
-      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
-    ) => string | undefined);
+type BeforePreprocessor = false | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | undefined);
 
 type Preprocessor =
   | false
@@ -178,10 +247,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
-  | ((
-      template: string,
-      loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
-    ) => string | Promise<any> | undefined);
+  | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 
 /**
  * Called after the template has been compiled into html string, but not yet finalized,
@@ -190,15 +256,60 @@ type Preprocessor =
 type Postprocess = (content: string, templateInfo: TemplateInfo, compilation: Compilation) => string | undefined;
 
 /**
- * The object is argument of the postprocess hook.
+ * The object is argument of the hooks and callbacks.
  */
 type TemplateInfo = {
-  verbose: boolean;
-  filename: string | ((pathData: PathData) => string);
-  outputPath: string;
-  sourceFile: string;
+  // the entry name
+  name: string;
+  // the output asset filename relative to output path
   assetFile: string;
+  // the source file without a query
+  sourceFile: string;
+  // the source file including a query
+  resource: string;
+  // output path of assetFile
+  outputPath: string;
 };
+
+/**
+ * Called after the processAssets hook had finished without an error, before emitting.
+ * At this stage, all resources are processed with plugins and have final output filenames.
+ * This hook is called for each compiled template defined in the entry option.
+ */
+type BeforeEmit = (content: string, entry: CompileEntry, compilation: Compilation) => string | undefined;
+
+type AfterEmit = (entries: CompileEntries, compilation: Compilation) => Promise<void> | void;
+
+/**
+ * The object is argument of hooks and callbacks.
+ */
+type CompileEntry2 = {
+  // the entry name
+  name: string;
+  // the output asset filename relative to output path
+  assetFile: string;
+  // the source filename without a query, optional
+  sourceFile: string | undefined;
+  // the source filename including a query
+  resource: string;
+  // output path of assetFile
+  outputPath: string;
+  // assets used in html
+  assets: Array<CompileAsset>;
+};
+
+type CompileEntry = TemplateInfo & {
+  // assets used in html
+  assets: Array<CompileAsset>;
+};
+
+type CompileEntries = Array<CompileEntry>;
+
+type CompileAsset = AssetScript | AssetStyle | AssetResource;
+// TODO: define types AssetScript, AssetStyle, AssetResource
+type AssetScript = {};
+type AssetStyle = {};
+type AssetResource = {};
 
 type Preload = Array<{
   test: RegExp;

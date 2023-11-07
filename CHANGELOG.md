@@ -1,8 +1,157 @@
 # Change log
 
-## 2.15.2 (2023-10-31)
+## 3.0.0 (2023-10-29)
 
-- fix: error when used integrity with complex root publicPath, #45 ( @SteffenBlake )
+- feat(BREAKING CHANGE): changed `postprocess` callback arguments and return\
+  OLD:
+  ```ts
+  postprocess(content: string, info: TemplateInfo, compilation: webpack.Compilation): string | null;
+
+  type TemplateInfo = {
+    filename: string | ((pathData: PathData) => string);
+    assetFile: string;
+    sourceFile: string;
+    outputPath: string;
+    verbose: boolean | undefined;
+  };
+  ```
+  When return `null` then the template processing was skipped.
+
+  **NEW:**\
+  Removed properties: `filename`, `verbose`. Added properties: `name`, `resource`.
+  ```ts
+  postprocess(content: string, info: TemplateInfo, compilation: webpack.Compilation): string | undefined;
+
+  type TemplateInfo = {
+    name: string; // the entry name
+    assetFile: string; // the output asset filename relative to output path
+    sourceFile: string;  // the source filename without a query
+    resource: string; // the source filename including a query
+    outputPath: string; // output path of assetFile
+  };
+  ```
+  When return `null` or `undefined` then the content stay unchanged by `postprocess` and will be procedded in next hooks/callbacs.
+- feat: optimize `postprocess` callback option, moved from `renderManifest` sync hook to `processAssets` async hook
+- feat: add `postprocess` hook
+- feat: add `beforePreprocessor` hook
+- feat: add `beforePreprocessor` callback option
+- feat: add `preprocessor` hook
+- feat: add `resolveSource` hook
+- feat: add `beforeEmit` hook
+- feat: add `beforeEmit` callback option
+- feat: add `afterEmit` hook
+- feat: add `afterEmit` callback option
+- feat: add possibility to create own plugin using the hooks: `beforePreprocessor`, `preprocessor`, `resolveSource`, `postprocess`, `beforeEmit`, `afterEmit`
+- feat: add the **first** plugin (plugin for bundler plugin :-) - `favicons-bundler-plugin` to generate and inject favicon tags for many devices.\
+  For example:
+  ```js
+  const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+  const { FaviconsBundlerPlugin } = require('html-bundler-webpack-plugin/plugins');
+  
+  module.exports = {
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: {
+          index: './src/views/index.html',
+        },
+      }),
+      // add the plugin to extend the functionality of the HtmlBundlerPlugin
+      new FaviconsBundlerPlugin({
+        faviconOptions: { ... }, // favicons configuration options
+      }),
+    ],
+  };
+  ```
+  If you use the `favicons-bundler-plugin`, you need to install the [favicons](https://www.npmjs.com/package/favicons) module.
+
+- feat: add possibility to get output CSS filename in JS via import a source style file with the `url` query.\
+  This feature allows the dynamic load the CSS in JavaScript, for example:
+  ```js
+  function loadCSS(file) {
+    const style = document.createElement('link');
+    style.href = file;
+    style.rel = 'stylesheet';
+    document.head.appendChild(style);
+  }
+  
+  loadCSS(require('./style.scss?url')); // <= dynamic load the source style file with `url` query
+  ```
+- feat: add `js.inline.attributeFilter` option to keep some original script tag attributes when JS is inlined.\
+  For example, keep the `id` and `text/javascript` attributes by inlined `<script id="my-id">...inlined JS code...</script>`:
+  ```js
+  new HtmlBundlerPlugin({
+    // ...
+    js: {
+      inline: {
+        attributeFilter: ({ attributes, attribute, value }) => {
+          if (attribute === 'type' && value === 'text/javascript') return true;
+          if (attribute === 'id' && attributes?.type === 'text/javascript') return true;
+        },
+      },
+    },
+  }
+  ```
+- refactor: optimize inner processes for HTML rendering
+- test: add tests for new features
+- docs: add descriptions for new features
+
+## 2.16.0-beta.3 (2023-10-29)
+
+- feat: add `resolveSource` hook
+- test: add a test as the example how to create a plugin using the favicons module
+
+## 2.16.0-beta.2 (2023-10-24)
+
+- fix: compute integrity for the current compilation only to isolate them by async tests
+- fix: output exceptions for new callbacks
+- test: add test for `beforePreprocessor` hook
+- test: add test for `beforePreprocessor` callback
+- test: add test for `preprocessor` hook
+- test: add test for `beforeEmit` hook
+- test: add test for `beforeEmit` callback
+- test: add test for `afterEmit` hook
+- test: add test for `afterEmit` callback
+
+## 2.16.0-beta.1 (2023-10-23)
+
+- feat: add `js.inline.keepAttributes` option to keep some original script tag attributes when JS is inlined
+- feat(EXPERIMENTAL): add `afterEmit` callback, undocumented
+- fix(EXPERIMENTAL, BREAKING CHANGE): rename `lazy` query to `url` to get output URL of CSS
+  ```js
+  // your code to add the CSS file dynamically
+  function dynamicLoad(outputFilename) {
+    const style = document.createElement('link');
+    style.rel = 'stylesheet';
+    style.href = outputFilename;
+    document.head.appendChild(style);
+  }
+
+  dynamicLoad(require('./style.scss?url')); // <= dynamic load the style file with `url` query
+  ```
+- chore: add usage example of image-minimizer-webpack-plugin
+
+## 2.16.0-beta.0 (2023-10-21)
+
+- feat(EXPERIMENTAL): add possibility to get output CSS filename in JS via import a style file with the `lazy` query.\
+  **DON'T use it for production, it is just EXPERIMENTAL undocumented feature!**\
+  This feature allows to lazy load the extracted CSS, for example:
+  ```js
+  function loadCSS(file) {
+    const style = document.createElement('link');
+    style.href = file;
+    style.rel = 'stylesheet';
+    document.head.appendChild(style);
+  }
+  
+  loadCSS(require('./style.scss?lazy')); // <= dynamic load the source style file with `lazy` query
+  ```
+- feat(EXPERIMENTAL): add `beforePreprocessor` hook, undocumented
+- feat(EXPERIMENTAL): add `beforePreprocessor` callback, undocumented
+- feat(EXPERIMENTAL): add `preprocessor` hook, undocumented
+- feat(EXPERIMENTAL, BREAKING CHANGE): rename `undocumented` experimental `afterCompile` callback to `beforeEmit`
+- feat(EXPERIMENTAL): add `beforeEmit` hook, undocumented
+- feat(EXPERIMENTAL): add `afterEmit` hook, undocumented
+- fix: disable preprocessor when the value of the `preprocessor` plugin option is `false`
 
 ## 2.15.1 (2023-10-28)
 

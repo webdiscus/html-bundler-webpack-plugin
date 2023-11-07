@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "2.15.2",
+  "version": "3.0.0",
   "description": "HTML bundler plugin for webpack handles a template as an entry point, extracts CSS and JS from their sources referenced in HTML, supports template engines like Eta, EJS, Handlebars, Nunjucks.",
   "keywords": [
     "html",
@@ -51,6 +51,8 @@
     "test:issue": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/issue.test.js",
     "test:unit": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.test.js",
     "test:unitQueryParser": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.queryParser.test.js",
+    "test:verbose": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
+    "test:verbose-update": "jest --detectOpenHandles --updateSnapshot --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
     "publish:public": "npm publish --access public",
     "publish:beta": "npm publish --tag beta"
   },
@@ -63,11 +65,20 @@
     "LICENSE",
     "types.d.ts"
   ],
+  "exports": {
+    "./plugins": "./plugins/index.js",
+    "./plugins/favicons-bundler-plugin": {
+      "types": "./plugins/favicons-bundler-plugin/index.d.ts",
+      "require": "./plugins/favicons-bundler-plugin/index.js",
+      "import": "./plugins/favicons-bundler-plugin/index.js"
+    }
+  },
   "engines": {
     "node": ">=14.21.0"
   },
   "peerDependencies": {
     "ejs": ">=3.1.9",
+    "favicons": "^>=7.1.4",
     "handlebars": ">=4.7.7",
     "liquidjs": ">=10.7.0",
     "mustache": ">=4.2.0",
@@ -75,6 +86,9 @@
     "webpack": ">=5.32.0"
   },
   "peerDependenciesMeta": {
+    "favicons": {
+      "optional": true
+    },
     "ejs": {
       "optional": true
     },
@@ -92,28 +106,29 @@
     }
   },
   "dependencies": {
-    "ansis": "1.5.6",
+    "ansis": "2.0.1",
     "enhanced-resolve": ">=5.7.0",
     "eta": "^3.1.1",
     "html-minifier-terser": "^7.2.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.0",
-    "@babel/preset-env": "^7.22.20",
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
     "@test-fixtures/js": "0.0.2",
     "@test-fixtures/dius": "file:./test/fixtures/node_modules/dius/",
     "@test-fixtures/lorem": "file:./test/fixtures/node_modules/lorem/",
     "@test-fixtures/scss": "0.0.7",
     "@test/import-css": "file:./test/fixtures/node_modules/import-css/",
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^29.5.8",
     "copy-webpack-plugin": "9.1.0",
     "css-loader": "^6.8.1",
     "css-minimizer-webpack-plugin": "^5.0.1",
     "ejs": "^3.1.9",
+    "favicons": "^7.1.4",
     "handlebars": "^4.7.8",
     "handlebars-layouts": "^3.1.4",
     "jest": "^29.7.0",
-    "liquidjs": "^10.9.2",
+    "liquidjs": "^10.9.4",
     "mustache": "^4.2.0",
     "nunjucks": "^3.2.4",
     "prettier": "^3.0.3",
@@ -121,9 +136,9 @@
     "sass": "1.67.0",
     "sass-loader": "13.3.2",
     "sharp": "^0.32.6",
-    "ts-loader": "9.4.4",
+    "ts-loader": "9.5.0",
     "typescript": "5.2.2",
-    "webpack": "^5.88.2",
+    "webpack": "^5.89.0",
     "webpack-cli": "5.1.4",
     "webpack-dev-server": "^4.15.1"
   }

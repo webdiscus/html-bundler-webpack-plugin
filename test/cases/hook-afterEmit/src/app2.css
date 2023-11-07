@@ -1,0 +1,6 @@
+.app2 {
+  color: cornflowerblue;
+  background-image: url('@fixtures/images/plum.png');
+  width: 160px;
+  height: 130px;
+}

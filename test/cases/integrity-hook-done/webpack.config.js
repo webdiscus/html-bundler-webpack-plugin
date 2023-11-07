@@ -33,15 +33,33 @@ module.exports = {
         const pluginName = 'extract-integrity';
 
         // test compatibility for webpack-subresource-integrity, which saves integrity in stats
-        compiler.hooks.done.tap(pluginName, (stats) => {
-          const hashes = {};
-          for (const { name, integrity } of stats.toJson().assets) {
-            if (integrity) hashes[name] = integrity;
-          }
 
-          const saveAs = path.join(__dirname, 'dist/integrity.json');
-          fs.writeFileSync(saveAs, JSON.stringify(hashes, null, '  '));
+        // test promise hook - OK
+        compiler.hooks.done.tapPromise(pluginName, (stats) => {
+          return new Promise((resolve) => {
+            const saveAs = path.join(__dirname, 'dist/integrity.json');
+            const hashes = {};
+
+            for (const { name, integrity } of stats.toJson().assets) {
+              if (integrity) hashes[name] = integrity;
+            }
+
+            fs.writeFileSync(saveAs, JSON.stringify(hashes, null, '  '));
+            resolve();
+          });
         });
+
+        // test sync hook - OK
+        // compiler.hooks.done.tap(pluginName, (stats) => {
+        //   const saveAs = path.join(__dirname, 'dist/integrity.json');
+        //   const hashes = {};
+        //
+        //   for (const { name, integrity } of stats.toJson().assets) {
+        //     if (integrity) hashes[name] = integrity;
+        //   }
+        //
+        //   fs.writeFileSync(saveAs, JSON.stringify(hashes, null, '  '));
+        // });
       },
     },
   ],

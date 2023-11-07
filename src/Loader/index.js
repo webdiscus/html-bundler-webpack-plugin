@@ -4,13 +4,13 @@ const Template = require('./Template');
 const Loader = require('./Loader');
 const RenderMode = require('./Modes/RenderMode');
 const Dependency = require('./Dependency');
-const Options = require('./Options');
+const Option = require('./Option');
 const {
   notInitializedPluginError,
   initError,
   beforePreprocessorError,
   preprocessorError,
-  compileError,
+  resolveError,
   exportError,
 } = require('./Messages/Exeptions');
 
@@ -20,9 +20,11 @@ const {
  * @param {any} meta
  */
 const loader = function (content, map, meta) {
+  /** @type {BundlerPluginLoaderContext} */
   const loaderContext = this;
   const loaderCallback = loaderContext.async();
-  const { rootContext, resource, resourcePath, entryName, entryId, entryData } = loaderContext;
+  const { rootContext, resource, resourcePath, entryId } = loaderContext;
+  const hooks = PluginService.getHooks();
   let errorStage = '';
 
   const callback = (error, result = null) => {
@@ -44,26 +46,51 @@ const loader = function (content, map, meta) {
   new Promise((resolve) => {
     // the options must be initialized before others
     errorStage = 'init';
-    Options.init(loaderContext);
+    Option.init(loaderContext);
     Loader.init(loaderContext);
-
-    const beforePreprocessor = Options.get().beforePreprocessor;
-    const preprocessor = Options.getPreprocessor();
-    let result;
-
-    if (beforePreprocessor != null) {
-      errorStage = 'beforePreprocessor';
-      result = beforePreprocessor(content, loaderContext);
-    }
-    if (preprocessor != null) {
-      errorStage = 'preprocessor';
-      result = preprocessor(result != null ? result : content, loaderContext);
-    }
-    resolve(result != null ? result : content);
+    resolve();
   })
+    .then(() => {
+      errorStage = 'beforePreprocessor';
+      return hooks.beforePreprocessor.promise(content, loaderContext);
+    })
     .then((value) => {
-      errorStage = 'compile';
-      return Template.compile(value, resource, entryId);
+      const beforePreprocessor = Option.get().beforePreprocessor;
+      if (beforePreprocessor != null) {
+        errorStage = 'beforePreprocessor';
+        return beforePreprocessor(value, loaderContext) || value;
+      }
+      return value;
+    })
+    .then((value) => {
+      errorStage = 'preprocessor';
+      return hooks.preprocessor.promise(value, loaderContext);
+    })
+    .then((value) => {
+      const preprocessor = Option.getPreprocessor();
+      if (preprocessor != null) {
+        errorStage = 'preprocessor';
+        return preprocessor(value, loaderContext) || value;
+      }
+      return value;
+    })
+    // TODO: implement and docs
+    // .then((value) => {
+    //   errorStage = 'afterPreprocessor';
+    //   return hooks.afterPreprocessor.promise(value, loaderContext);
+    // })
+    // .then((value) => {
+    //   const afterPreprocessor = Option.get().afterPreprocessor;
+    //   if (afterPreprocessor != null) {
+    //     errorStage = 'afterPreprocessor';
+    //     return afterPreprocessor(value, loaderContext) || value;
+    //   }
+    //   return value;
+    // })
+    .then((value) => {
+      errorStage = 'resolve';
+      // TODO: this is possible in 'render' (html) mode only, skip it in 'compile' (js template) mode
+      return Template.resolve(value, resource, entryId, hooks);
     })
     .then((value) => {
       errorStage = 'export';
@@ -88,8 +115,8 @@ const loader = function (content, map, meta) {
         case 'preprocessor':
           error = preprocessorError(error, issuer);
           break;
-        case 'compile':
-          error = compileError(error, issuer);
+        case 'resolve':
+          error = resolveError(error, issuer);
           break;
         case 'export':
           error = exportError(error, issuer);

@@ -19,14 +19,8 @@ module.exports = {
         title: 'Welcome to [sitename] website',
         webroot: '/pages',
       },
-      // beforePreprocessor: (template, { resourcePath, data }) => {
-      //   let sitename = 'Homepage';
-      //   if (resourcePath.includes('/about.html')) sitename = 'About';
-      //   data.title = data.title.replace('[sitename]', sitename); // modify template data
-      //   return template.replaceAll('{{old_webroot}}', '{{webroot}}'); // modify template content
-      // },
 
-      // example, how to override the data in the loaderContext
+      // example, how to override the data in the loaderContext before template rendering
       beforePreprocessor: (template, loaderContext) => {
         const { resourcePath, loaderIndex, data } = loaderContext;
         const loaderObject = loaderContext.loaders[loaderIndex];

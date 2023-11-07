@@ -10,8 +10,8 @@ module.exports = {
       },
       loaderOptions: {
         sources: false,
-        // simulate error by export of compiled result
-        preprocessor: (content, { data }) => false,
+        // simulate the error by exporting not a string as expected
+        preprocessor: (content, { data }) => 123,
       },
     }),
   ],

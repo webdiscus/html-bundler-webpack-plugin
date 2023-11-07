@@ -5,7 +5,7 @@ const makeSerializable = require('webpack/lib/util/makeSerializable');
 /** @typedef {import("webpack/lib/serialization/ObjectMiddleware").ObjectSerializerContext} ObjectSerializerContext */
 
 const ansis = require('ansis');
-const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis/colors');
+const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis');
 const { pluginName } = require('../../config');
 
 const redBright = ansi256(203);
@@ -181,8 +181,8 @@ const preprocessorError = (error, file) => {
  * @param {string} file
  * @returns {Error}
  */
-const compileError = (error, file) => {
-  return new LoaderException(`Template compilation failed.\nFile: ${cyan(file)}`, error);
+const resolveError = (error, file) => {
+  return new LoaderException(`Resolving of source files in the template file failed.\nFile: ${cyan(file)}`, error);
 };
 
 /**
@@ -209,6 +209,6 @@ module.exports = {
   initError,
   beforePreprocessorError,
   preprocessorError,
-  compileError,
+  resolveError,
   exportError,
 };

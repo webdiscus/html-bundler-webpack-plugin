@@ -1,0 +1,6 @@
+.app1 {
+  color: orangered;
+  background-image: url('@fixtures/images/fig.png');
+  width: 160px;
+  height: 130px;
+}

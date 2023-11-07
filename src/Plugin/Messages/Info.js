@@ -11,7 +11,7 @@ const {
   yellowBright,
   bgAnsi,
   yellow,
-} = require('ansis/colors');
+} = require('ansis');
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { relativePathForView } = require('../../Common/FileUtils');
@@ -21,9 +21,10 @@ const Dependency = require('../../Loader/Dependency');
 const PluginService = require('../PluginService');
 
 const gray = ansi256(244);
-const padLevel1 = 19;
+const padLevel1 = 16;
 const padLevel2 = padLevel1 + 10;
-const padChunks = padLevel1 + 2;
+const padLevel3 = padLevel2 + 8;
+const padChunks = padLevel1 + 4;
 
 /**
  * Get the compilation name styled based on the presence of an error.
@@ -42,8 +43,8 @@ const colorType = (item, pad) => {
   let { type, inline } = item;
   const color = inline ? yellowBright : ansi256(112);
 
-  if (type === Collection.type.style && item.imports != null) {
-    type = inline ? `inline styles` : `import styles in`;
+  if (type === Collection.type.style && item.imported) {
+    type = inline ? `inline styles` : `import styles`;
   } else if (inline) {
     type = `inline`;
   }
@@ -51,21 +52,21 @@ const colorType = (item, pad) => {
   return color(`${type}:`.padStart(pad));
 };
 
-const renderAssets = (item) => {
+const renderAssets = (item, pad = padLevel2) => {
   const { type } = item;
   let str = '';
-  // style can contain resource such as images, fonts
-  const assets = item?.ref?.assets ? item.ref.assets : item.assets;
+  // style can contain assets such as images, fonts
+  const assets = item.assets;
 
   if (Array.isArray(assets)) {
-    assets.forEach((assetResource) => {
-      const { inline, resource, assetFile } = assetResource;
+    assets.forEach((assetItem) => {
+      const { inline, resource, assetFile } = assetItem;
       const sourceFile = relativePathForView(resource);
 
-      str += colorType(assetResource, padLevel2) + ` ${cyan(sourceFile)}\n`;
+      str += colorType(assetItem, pad) + ` ${cyan(sourceFile)}\n`;
 
       if (!inline && assetFile) {
-        str += `${'->'.padStart(padLevel2)} ${assetFile}\n`;
+        str += `${'->'.padStart(pad)} ${assetFile}\n`;
       }
     });
   }
@@ -96,7 +97,7 @@ const renderAssets = (item) => {
 };
 
 /**
- * Display all processed resources in entry points.
+ * Display all processed assets in entry points.
  */
 const verbose = () => {
   let str = '\n' + black.bgGreen` ${pluginName} ` + bgAnsi256(193).black` Entry processing ` + '\n';
@@ -118,14 +119,14 @@ const verbose = () => {
     }
   }
 
-  // display resources
-  for (let [entryAsset, { entry, resources, preloads }] of Collection.data) {
+  // display assets
+  for (let [entryAsset, { entry, assets, preloads }] of Collection.data) {
     const entrySource = relativePathForView(entry.resource);
     const outputPath = relativePathForView(entry.outputPath);
 
     str += '\n';
     str += bgAnsi256(27).whiteBright` ENTRY ` + ansi256(195).inverse` ${entryAsset} ` + '\n';
-    //str += `${magenta`output:`} ${cyanBright(entry.outputPath)}\n`; // for debugging only
+    // str += `${magenta`output:`} ${cyanBright(entry.outputPath)}\n`; // for debugging only
     str += `${magenta`source:`} ${cyanBright(entrySource)}\n`;
     str += `${magenta`output:`} ${cyanBright(outputPath)}\n`;
 
@@ -138,21 +139,15 @@ const verbose = () => {
     }
 
     // assets
-    if (resources.length > 0) {
+    if (assets.length > 0) {
       str += green`assets:` + `\n`;
     }
 
-    for (const item of resources) {
-      if (item.imported) {
-        // skip single imported style because it will be viewed as the group of all styles imported in one JS file
-        continue;
-      }
-
-      const hasImports = item.imports?.length > 0;
+    for (const item of assets) {
       let resource = item.resource;
       let resourceColor = cyan;
 
-      if (hasImports) {
+      if (item.imported) {
         resource = item.issuer.resource;
         resourceColor = gray;
       }
@@ -165,13 +160,14 @@ const verbose = () => {
         str += `${'->'.padStart(padLevel1)} ${item.assetFile}\n`;
       }
 
-      if (hasImports) {
-        str += `${''.padStart(padLevel1)} ${ansi256(214)`sources:`}\n`;
-        for (const importedItem of item.imports) {
-          let sourceFile = relativePathForView(importedItem.resource);
-
+      // styles imported in JS
+      if (item.imported) {
+        str += `${''.padStart(padLevel1)} ${ansi256(214)`imports:`}\n`;
+        // note: if a style is imported, then resource is an array
+        for (let importItem of item.imports) {
+          sourceFile = relativePathForView(importItem.resource);
           str += `${''.padStart(padChunks)} ${ansi256(143)(sourceFile)}\n`;
-          str += renderAssets(importedItem);
+          str += renderAssets(importItem, padLevel3);
         }
       } else {
         str += renderAssets(item);

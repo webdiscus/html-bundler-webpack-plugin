@@ -4,6 +4,10 @@
 
 const textEncoder = new TextEncoder();
 const spaceCodes = textEncoder.encode(' \n\r\t\f');
+const tagEndCodes = textEncoder.encode(' \n\r\t\f/>');
+const valueSeparatorCodes = textEncoder.encode('= \n\r\t\f');
+const equalCode = '='.charCodeAt(0);
+const quotCodes = textEncoder.encode(`"'`);
 
 const comparePos = (a, b) => a.startPos - b.startPos;
 
@@ -34,6 +38,37 @@ const indexOfNonSpace = (content, startPos = 0) => {
   for (; spaceCodes.indexOf(content.charCodeAt(startPos)) > -1; startPos++) {}
 
   return startPos;
+};
+
+/**
+ * Returns the first index of an attribute/value separator char.
+ * The char can be one of: =, space, tab, new line, carrier return, page break.
+ *
+ * @param {string} content
+ * @param {number} startPos
+ * @return {number}
+ */
+const indexOfValueSeparator = (content, startPos = 0) => {
+  const len = content.length;
+  for (; valueSeparatorCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
+
+  return startPos < len ? startPos : -1;
+};
+
+/**
+ * Return end position of the last attribute in a tag.
+ *
+ * @param {string} content The tag content.
+ * @param {number} startAttrsPos The start position of first attribute.
+ * @return {number}
+ */
+const indexOfAttributesEnd = (content, startAttrsPos) => {
+  const len = content.length;
+  let pos = content.length - 1;
+
+  for (; tagEndCodes.indexOf(content.charCodeAt(pos)) >= 0 && pos > 0; pos--) {}
+
+  return pos < len && pos > startAttrsPos ? pos : -1;
 };
 
 /**
@@ -191,26 +226,51 @@ class HtmlParser {
    */
   static parseAttrAll(content) {
     let attrs = {};
-    let pos = 1;
-    let spacePos, attrStartPos, attrEndPos, valueStartPos, valueEndPos, attr;
+    let pos = indexOfSpace(content, 1);
 
-    while (true) {
-      spacePos = indexOfSpace(content, pos);
-      // when no space between attributes
-      if (spacePos < 0) spacePos = pos;
-      attrStartPos = indexOfNonSpace(content, spacePos);
-      attrEndPos = content.indexOf('="', attrStartPos);
-      // no more attributes with value
-      if (attrEndPos < 0) break;
+    // no attributes
+    if (pos < 0) return attrs;
 
-      valueStartPos = attrEndPos + 2;
-      valueEndPos = content.indexOf('"', valueStartPos);
-      // not closed quote
-      if (valueEndPos < 0) break;
+    let attrsEndPos = indexOfAttributesEnd(content, pos);
 
-      attr = content.slice(attrStartPos, attrEndPos);
-      attrs[attr] = content.slice(valueStartPos, valueEndPos);
-      pos = valueEndPos + 1;
+    // no attributes
+    if (attrsEndPos < 0) return attrs;
+
+    while (pos < attrsEndPos) {
+      let attrStartPos = indexOfNonSpace(content, pos);
+      pos = indexOfValueSeparator(content, attrStartPos + 1);
+      let hasValue = pos >= 0 && content.charCodeAt(pos) === equalCode;
+
+      if (pos < 0) pos = attrsEndPos + 1;
+
+      let attr = content.slice(attrStartPos, pos);
+      let value = undefined;
+
+      if (hasValue) {
+        // TODO: allow a space around equal, e.g., `attr =  value`
+        let valueStartPos = pos + 1;
+        let valueEndPos = -1;
+        let nextCharCode = content.charCodeAt(valueStartPos);
+
+        if (quotCodes.indexOf(nextCharCode) >= 0) {
+          // value with quotes
+          valueEndPos = content.indexOf(String.fromCharCode([nextCharCode]), ++valueStartPos);
+          if (valueEndPos > -1) pos = valueEndPos + 1;
+        } else {
+          // value w/o quotes
+          valueEndPos = indexOfSpace(content, valueStartPos);
+          if (valueEndPos > -1) pos = valueEndPos;
+        }
+
+        if (valueEndPos < 0) {
+          valueEndPos = attrsEndPos + 1;
+          pos = valueEndPos;
+        }
+
+        value = content.slice(valueStartPos, valueEndPos);
+      }
+
+      attrs[attr] = value;
     }
 
     return attrs;

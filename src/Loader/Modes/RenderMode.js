@@ -50,12 +50,15 @@ class RenderMode {
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
    * @param {string|number} entryId The entry id where is loaded the resource.
-   * @return {string}
+   * @return {{encodedRequire: string, resolvedFile: string}}
    */
   loaderRequire(file, issuer, entryId) {
     let resolvedFile = Resolver.resolve(file, issuer);
 
-    return this.encodeRequire(resolvedFile);
+    return {
+      resolvedFile,
+      encodedRequire: this.encodeRequire(resolvedFile),
+    };
   }
 
   /**
@@ -64,16 +67,18 @@ class RenderMode {
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
    * @param {string|number} entryId The entry id where is loaded the resource.
-   * @return {string}
+   * @return {{encodedRequire: string, resolvedFile: string}}
    */
   loaderRequireScript(file, issuer, entryId) {
     const type = 'script';
     const resolvedFile = Resolver.resolve(file, issuer, type);
-    const result = this.encodeRequire(resolvedFile);
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
-    return result;
+    return {
+      resolvedFile,
+      encodedRequire: this.encodeRequire(resolvedFile),
+    };
   }
 
   /**
@@ -82,16 +87,18 @@ class RenderMode {
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
    * @param {string|number} entryId The entry id where is loaded the resource.
-   * @return {string}
+   * @return {{encodedRequire: string, resolvedFile: string}}
    */
   loaderRequireStyle(file, issuer, entryId) {
     const type = 'style';
     const resolvedFile = Resolver.resolve(file, issuer, type);
-    const result = this.encodeRequire(resolvedFile);
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
-    return result;
+    return {
+      resolvedFile,
+      encodedRequire: this.encodeRequire(resolvedFile),
+    };
   }
 
   /**

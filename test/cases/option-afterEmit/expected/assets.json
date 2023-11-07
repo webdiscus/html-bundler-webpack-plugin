@@ -1,0 +1,14 @@
+[
+  {
+    "resource": "src/index.html",
+    "assetFile": "index.html"
+  },
+  {
+    "resource": "src/style.scss",
+    "assetFile": "assets/css/style.bundle.css"
+  },
+  {
+    "resource": "src/main.js",
+    "assetFile": "assets/js/main.bundle.js"
+  }
+]
