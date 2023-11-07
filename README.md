@@ -709,10 +709,10 @@ module.exports = {
 
 #### FaviconsBundlerPlugin options
 
-- `enabled` { boolean | 'auto' }\
+- `enabled: boolean | 'auto'`\
   if is `'auto'` then generate favicons in production mode only, 
   in development mode will be used original favicon processed via webpack asset module.
-- `faviconOptions` { FaviconOptions } - options of the [favicons](https://github.com/itgalaxy/favicons) module. See [configuration options](https://github.com/itgalaxy/favicons#usage).
+- `faviconOptions: FaviconOptions` - options of the [favicons](https://github.com/itgalaxy/favicons) module. See [configuration options](https://github.com/itgalaxy/favicons#usage).
  
 #### Usage
 
@@ -722,8 +722,8 @@ If the FaviconsBundlerPlugin is disabled or as `auto` in development mode,
 then the source favicon file will be processed via `webpack`.
 
 If the FaviconsBundlerPlugin is enabled or as `auto` in production mode,
-then the source favicon file will be processed via `favicons` package and
-the original link tag with favicon will be replaced with generated favicon tags. 
+then the source favicon file will be processed via `favicons` module and
+the original `link` tag with favicon will be replaced with generated favicon tags. 
 
 For example, there is the _src/views/index.html_
 
