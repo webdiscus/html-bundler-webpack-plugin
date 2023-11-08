@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "HTML bundler plugin for webpack handles a template as an entry point, extracts CSS and JS from their sources referenced in HTML, supports template engines like Eta, EJS, Handlebars, Nunjucks.",
   "keywords": [
     "html",
@@ -66,6 +66,7 @@
     "types.d.ts"
   ],
   "exports": {
+    ".": "./src/index.js",
     "./plugins": "./plugins/index.js",
     "./plugins/favicons-bundler-plugin": {
       "types": "./plugins/favicons-bundler-plugin/index.d.ts",

@@ -1,6 +1,12 @@
 # Change log
 
-## 3.0.0 (2023-10-29)
+## 3.0.1 (2023-11-08)
+
+- fix: add the root dir of the module to exports in the package.json
+- test: update manual tests for using with the Eta version 3.x
+- docs: update readme for live reloading
+
+## 3.0.0 (2023-11-07)
 
 - feat(BREAKING CHANGE): changed `postprocess` callback arguments and return\
   OLD:

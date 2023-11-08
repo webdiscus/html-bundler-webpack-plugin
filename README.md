@@ -955,7 +955,7 @@ module.exports = {
       },
     }),
     // your plugin
-    new MyBundlerPlugin({ enable: true });
+    new MyBundlerPlugin({ enabled: true });
   ],
 };
 ```
@@ -2535,9 +2535,11 @@ Use this options only if you don't have a referenced source file of a script in 
 
 > **Note**
 > 
-> The `devServer.hot` must be true.
+> The `devServer.hot` must be `true`.
 
 If you already have a js file in html, this setting should be `false` as Webpack automatically injects the hot update code into the compiled js file.
+
+Also see [Setup Live Reload](#setup-live-reload).
 
 <a id="option-verbose" name="option-verbose"></a>
 
@@ -3949,6 +3951,13 @@ module.exports = {
   },
 };
 ```
+
+> **Warning**
+> 
+> If you don't have a referenced source script file in HTML, then set the [hotUpdate](#option-hot-update) option to `true` to enable live reload.
+> Besides, the `devServer.hot` must be `true` (defaults).
+> 
+
 
 ---
 

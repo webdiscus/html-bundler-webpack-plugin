@@ -11,20 +11,29 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      entry: {
-        index: {
-          import: './src/views/home.html',
-          data: {
-            title: 'Home',
-          },
-        },
-      },
-      // configure paths to watch file changes
-      watchFiles: {
-        paths: ['./src'],
-        //files: [/\.(html|js|sc?ss)$/],
-        //ignore: [],
-      },
+      // auto processing templates in the path
+      entry: './src/views/pages/',
+
+      // define templates manual
+      // entry: {
+      //   index: {
+      //     import: './src/views/pages/home.html',
+      //     // the template data
+      //     data: {
+      //       title: 'Home',
+      //     },
+      //   },
+      // },
+
+      // test: configure paths to watch file changes
+      // watchFiles: {
+      //   paths: ['./src'],
+      //   //files: [/\.(html|js|sc?ss)$/],
+      //   //ignore: [],
+      // },
+
+      data: { title: 'Home' }, // global data for all templates
+      hotUpdate: true, // <= use it only if your html don't have a js file
       verbose: true,
     }),
   ],
