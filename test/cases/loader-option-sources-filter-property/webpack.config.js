@@ -26,17 +26,11 @@ module.exports = {
           {
             tag: 'meta',
             attributes: ['content'],
-            // TODO: resolve the `content` attribute when one of other attributes contains one of a value
-            //  or try to resolve a relative path in the attribute
-            // oneOf: {
-            //   name: ['twitter:image'],
-            //   property: ['og:image', 'og:video'],
-            //   itemprop: ['image', 'screenshot'],
-            // },
             filter: ({ attributes }) => {
               const attrName = 'property';
               const attrValues = ['og:image', 'og:video']; // allowed values
-              if (attributes[attrName] && attrValues.indexOf(attributes[attrName]) < 0) {
+
+              if (!attributes[attrName] || attrValues.indexOf(attributes[attrName]) < 0) {
                 return false; // return false to disable processing
               }
               // return true or undefined to enable processing
