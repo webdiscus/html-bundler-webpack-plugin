@@ -2839,7 +2839,7 @@ new HtmlBundlerPlugin({
         filter: ({ attributes }) => {
           const attrName = 'property';
           const attrValues = ['og:image', 'og:video']; // allowed values of the property
-          if (attributes[attrName] && attrValues.indexOf(attributes[attrName]) < 0) {
+          if (!attributes[attrName] || attrValues.indexOf(attributes[attrName]) < 0) {
             return false; // return false to disable processing
           }
           // return true or undefined to enable processing
