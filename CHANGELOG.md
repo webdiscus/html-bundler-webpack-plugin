@@ -36,7 +36,7 @@
     outputPath: string; // output path of assetFile
   };
   ```
-  When return `null` or `undefined` then the content stay unchanged by `postprocess` and will be procedded in next hooks/callbacs.
+  When return `null` or `undefined` then the content stay unchanged by `postprocess` and will be processed in next hooks/callbacks.
 - feat: optimize `postprocess` callback option, moved from `renderManifest` sync hook to `processAssets` async hook
 - feat: add `postprocess` hook
 - feat: add `beforePreprocessor` hook
@@ -104,7 +104,7 @@
 ## 2.16.0-beta.3 (2023-10-29)
 
 - feat: add `resolveSource` hook
-- test: add a test as the example how to create a plugin using the favicons module
+- test: add a test as the example how to create a plugin using the `favicons` module
 
 ## 2.16.0-beta.2 (2023-10-24)
 
