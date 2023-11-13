@@ -1,5 +1,45 @@
 # Change log
 
+## 3.1.0 (2023-11-22)
+
+- feat: add support for the `template function` in JS runtime on the client-side.\
+  For example:
+  ```js
+  import personTmpl from './partials/person.ejs';
+  
+  // render template function with variables in browser
+  document.getElementById('person').innerHTML = personTmpl({ name: 'Walter White', age: 50});
+  ```
+  Template function works with preprocessors: `ejs`, `handlebars`, `nunjucks`.\
+  **Note:** The `eta` (default preprocessor) doesn't support template function in JS on the client-side, use the `ejs` instead.
+- feat: add CSS extraction from styles used in *.vue files.\
+  For example, _MyComponent.vue_:
+  ```html
+  <template>
+    ...
+  </template>
+  <script setup>
+    ...
+  </script>
+  <!-- CSS will be extracted from the SCSS file into a separate *.css file -->
+  <style src="./style.scss" lang="scss"></style>
+  <!-- CSS will be extracted from the style tag into a separate *.css file -->
+  <style>
+    h1 {
+      color: red;
+    }
+  </style>
+  ```
+
+## 3.0.3 (2023-11-13)
+
+- fix: add the missing `plugins` directory to package
+- chore: add usage example of the build-in favicons plugin
+
+## 3.0.2 (2023-11-13) DEPRECATED, critical issue is fixed in v3.0.3
+
+- fix: installation error 'Invalid tag name of the favicons package' (introduced in v3.0.0)
+
 ## 3.0.1 (2023-11-08)
 
 - fix: add the root dir of the module to exports in the package.json
@@ -340,7 +380,7 @@
 
 ## 2.2.1 (2023-07-23)
 
-- fix: load the handlebars's partials with allowed extensions only, #24
+- fix: load the Handlebars's partials with allowed extensions only, #24
 
 ## 2.2.0 (2023-07-21)
 
@@ -369,13 +409,13 @@
     },
   }),
   ```
-- feat: improve performance when used the same style file in many templates
+- feat: improve performance when using the same style file in many templates
 - fix: correct order of styles when the same style is imported in many nested js files
 - chore: update npm packages
 
 ## 2.1.1 (2023-07-14)
 
-- chore: fix image path in readme
+- chore: fix the image path in readme
 
 ## 2.1.0 (2023-07-14)
 
@@ -396,9 +436,7 @@
 
 ## 2.0.0 (2023-06-21)
 
-- feat: add support for importing style files in JavaScript. (!!! FOR COMPATIBILITY WITH REACT ONLY !!!)
-  NOTE: import a style in JavaScript is a `bad practice`, DON'T use it in new projects!
-  DO IT RIGHT: specify a source style file directly in an HTML template.
+- feat: add support for importing style files in JavaScript.
 - feat(BREAKING CHANGE): upgrade the default preprocessor `eta` to next major version 3.0.
   Perhaps you may need to migrate your Eta templates to v3 syntax.
 - refactor: optimize source code

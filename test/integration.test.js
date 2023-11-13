@@ -386,9 +386,23 @@ describe('integrity, dynamic chunks', () => {
   //test('import css in dynamic chunk', () => compareFiles('integrity-import-css-in-dynamic-chunk'));
 });
 
-describe('use template in js', () => {
-  // TODO: avoid to call 2x the same template
-  test('require default template in js', () => compareFiles('require-tmpl-in-js'));
+describe('usage template in js on client side', () => {
+  test('default template', () => compareFiles('js-tmpl-default'));
+
+  // Note:
+  //  Eta does not compile the template into template function source code,
+  //  so we compile the template into an HTML string that will be wrapped in a function for client-side compatibility.
+  test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
+  test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
+
+  // EJS
+  test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));
+
+  // Handlebars
+  test('hbs: compile to fn', () => compareFiles('js-tmpl-hbs-compile'));
+
+  // Nunjucks
+  test('njk: compile to fn', () => compareFiles('js-tmpl-njk-compile'));
 });
 
 describe('extras: responsive images', () => {
@@ -397,4 +411,10 @@ describe('extras: responsive images', () => {
   test('images in template, in style an in js', () => compareFiles('responsive-images-html-css-js'));
   test('duplicate images in template and styles', () => compareFiles('responsive-images-many-duplicates'));
   test('images in template, publicPath="/"', () => compareFiles('responsive-images-publicPath-root'));
+});
+
+describe('style imported in Vue', () => {
+  test('import style file in vue', () => compareFiles('vue-import-css-file'));
+  test('extract vue style', () => compareFiles('vue-import-css-style'));
+  test('inline vue style', () => compareFiles('vue-import-css-style-inline'));
 });

@@ -461,7 +461,7 @@ class Collection {
    */
   static findImportedModules(entryId, rootIssuer, chunk) {
     const issuerModule = this.getGraphModule(rootIssuer);
-    const modules = this.findDependenciesOfModule(issuerModule);
+    const modules = this.findModuleDependencies(issuerModule);
     const uniqueModules = [];
 
     // reserved for debug;
@@ -500,7 +500,7 @@ class Collection {
    * @param {Module} module The Webpack compilation module.
    * @returns {Array<{order: string, module: Module}>}
    */
-  static findDependenciesOfModule(module) {
+  static findModuleDependencies(module) {
     const { moduleGraph } = this.compilation;
     let order = '';
     let orderStack = [];
@@ -510,9 +510,15 @@ class Collection {
       const result = [];
 
       for (const dependency of dependencies) {
-        if (!dependency.userRequest) continue;
+        // TODO: detect whether the userRequest is a file, not a runtime, e.g. of vue
+        if (
+          !dependency.userRequest ||
+          // skip vue runtime dependencies
+          dependency.userRequest === 'vue'
+          // || 'directImport' in dependency
+        )
+          continue;
 
-        const parentIndex = moduleGraph.getParentBlockIndex(dependency);
         let depModule = moduleGraph.getModule(dependency);
 
         if (!depModule) {
@@ -526,6 +532,7 @@ class Collection {
           depModule = depModule.rootModule;
         }
 
+        const parentIndex = moduleGraph.getParentBlockIndex(dependency);
         const { isImportedStyle } = depModule.resourceResolveData._bundlerPluginMeta || {}; // TODO: test
 
         if (depModule.dependencies.length > 0) {
@@ -1149,12 +1156,12 @@ class Collection {
 
     // don't delete entry data, clear only assets
     this.data.forEach((item, key) => {
-      if (item.assets != null) item.assets.length = 0;
+      if (item.assets != null) item.assets = [];
     });
 
     // don't delete files, clear only assets
     this.assets.forEach((item, key) => {
-      if (item.assets != null) item.assets.length = 0;
+      if (item.assets != null) item.assets = [];
     });
 
     this.importStyleRootIssuers.clear();

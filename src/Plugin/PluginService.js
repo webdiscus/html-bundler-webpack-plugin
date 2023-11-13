@@ -5,15 +5,13 @@
 
 const Preprocessor = require('../Loader/Preprocessor');
 
-/** @typedef {import('Option')} PluginOptionInstance */
-
 class PluginService {
   // TODO: add methods to set this properties
   static plugin;
   static compilation;
 
-  /** @type PluginOptionInstance Provide to use the plugin option instance in the loader. */
-  static #options = {};
+  /** @type {OptionPluginInterface | {}} Provide to use the plugin option instance in the loader. */
+  static #PluginOption = null;
 
   // options defined in the plugin but provided to the loader
   static #loaderOptions = {};
@@ -40,10 +38,10 @@ class PluginService {
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
-   * @param {Option} options The plugin options instance.
+   * @param {OptionPluginInterface} PluginOption The plugin options instance.
    */
-  static init(options) {
-    const pluginOptions = options.get();
+  static init(PluginOption) {
+    const pluginOptions = PluginOption.get();
     const loaderOptions = pluginOptions.loaderOptions || {};
 
     // add reference for data to the loader options
@@ -68,7 +66,7 @@ class PluginService {
     this.#used = true;
     this.#watchMode = false;
     this.#hotUpdate = pluginOptions.hotUpdate;
-    this.#options = options;
+    this.#PluginOption = PluginOption;
     this.#loaderOptions = loaderOptions;
     this.#loaderCache.clear();
   }
@@ -103,10 +101,12 @@ class PluginService {
   /**
    * Returns plugin options instance.
    *
-   * @return {PluginOptionInstance}
+   * TODO: rename to getPluginOptionInstance()
+   *
+   * @return {OptionPluginInterface}
    */
   static getOptions() {
-    return this.#options;
+    return this.#PluginOption;
   }
 
   /**

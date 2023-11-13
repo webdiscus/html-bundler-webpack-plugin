@@ -1,9 +1,11 @@
 const PluginService = require('../Plugin/PluginService');
 const Option = require('./Option');
 const Resolver = require('./Resolver');
-const RenderMode = require('./Modes/RenderMode');
+const Compile = require('./Modes/Compile');
+const Render = require('./Modes/Render');
 
 class Loader {
+  /** @type {Render|Compile} */
   static compiler = null;
 
   /**
@@ -11,7 +13,7 @@ class Loader {
    */
   static init(loaderContext) {
     const { rootContext, hot } = loaderContext;
-    const { data, esModule, mode, self: useSelf } = Option.get();
+    const { preprocessor, preprocessorMode, data, esModule, self: useSelf } = Option.get();
 
     this.data = data;
 
@@ -20,8 +22,9 @@ class Loader {
       Resolver.init(loaderContext);
     }
 
-    this.compiler = this.compilerFactory({
-      mode,
+    this.compiler = this.factory({
+      preprocessor,
+      preprocessorMode,
       esModule,
       useSelf,
       hot,
@@ -33,17 +36,20 @@ class Loader {
    *
    * Note: default mode is `render`
    *
-   * @param {string} mode The loader mode: compile or render.
+   * @param {{}} preprocessor The preprocessor option.
+   * @param {string} preprocessorMode The loader mode: compile or render.
    * @param {boolean} esModule
    * @param {boolean} useSelf Whether the `self` option is true.
    * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
-   * @return {RenderMode}
+   * @return {Render|Compile}
    */
-  static compilerFactory({ mode, esModule, useSelf, hot }) {
-    switch (mode) {
+  static factory({ preprocessor, preprocessorMode, esModule, useSelf, hot }) {
+    switch (preprocessorMode) {
+      case 'compile':
+        return new Compile({ preprocessor, esModule, hot });
       case 'render':
       default:
-        return new RenderMode({ esModule, hot });
+        return new Render({ preprocessor, esModule, hot });
     }
   }
 

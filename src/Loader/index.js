@@ -2,7 +2,7 @@ const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const Template = require('./Template');
 const Loader = require('./Loader');
-const RenderMode = require('./Modes/RenderMode');
+const Render = require('./Modes/Render');
 const Dependency = require('./Dependency');
 const Option = require('./Option');
 const {
@@ -63,14 +63,18 @@ const loader = function (content, map, meta) {
       return value;
     })
     .then((value) => {
+      const loaderOptions = Option.get();
       errorStage = 'preprocessor';
-      return hooks.preprocessor.promise(value, loaderContext);
+      // TODO: add to types.d.ts loaderOptions as 3rd param
+      return hooks.preprocessor.promise(value, loaderContext, loaderOptions);
     })
     .then((value) => {
       const preprocessor = Option.getPreprocessor();
       if (preprocessor != null) {
+        const loaderOptions = Option.get();
         errorStage = 'preprocessor';
-        return preprocessor(value, loaderContext) || value;
+        // TODO: add to types.d.ts loaderOptions as 3rd param
+        return preprocessor(value, loaderContext, loaderOptions) || value;
       }
       return value;
     })
@@ -88,6 +92,7 @@ const loader = function (content, map, meta) {
     //   return value;
     // })
     .then((value) => {
+      //console.log('~~~ Template.resolve:', { preprocessorMode: Option.get().preprocessorMode, value });
       errorStage = 'resolve';
       // TODO: this is possible in 'render' (html) mode only, skip it in 'compile' (js template) mode
       return Template.resolve(value, resource, entryId, hooks);
@@ -124,7 +129,7 @@ const loader = function (content, map, meta) {
         default:
           // TODO: test this case
           // unrecoverable configuration error, requires to restart Webpack
-          const render = new RenderMode({});
+          const render = new Render({});
           const browserErrorMessage = render.exportError(error, resource);
           callback(error, browserErrorMessage);
           return;

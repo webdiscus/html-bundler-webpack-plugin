@@ -31,6 +31,9 @@ const parseRequest = (request) => {
   for (let arg of queryArgs) {
     let [name, value] = arg.split('=');
 
+    // skip empty key when used `&` w/o a name, e.g. ?&k=val
+    if (name.length < 1) continue;
+
     if (value == null) {
       result[name] = true;
     } else if (value) {

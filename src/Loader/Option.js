@@ -22,8 +22,8 @@ class Option {
   static #rootContext;
   static #resourcePath;
 
-  // TODO: add compile|compiling, render|rendering and string|html modes;
-  static modes = new Set(['render']);
+  // rule: the first value is default
+  static preprocessorModes = new Set(['render', 'compile']);
 
   static init(loaderContext) {
     const { loaderIndex, rootContext, resourcePath, resourceQuery } = loaderContext;
@@ -47,19 +47,38 @@ class Option {
       const basedir = options.root || options.basedir || false;
       options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
 
-      // reserved for future feature
-      // if (queryData.hasOwnProperty('_mode')) {
-      //   // rule: the mode defined in the query has prio over the loader option
-      //   if (this.modes.has(queryData._mode)) {
-      //     options.mode = queryData._mode;
-      //   }
-      //   // remove mode from query data to pass in the template only clean data
-      //   delete queryData['_mode'];
-      // }
+      // whether it should be used ESM export for the rendered/compiled result
+      options.esModule = options?.esModule === true;
 
       PluginService.setLoaderCache(loaderId, options);
     }
+
     this.#options = options;
+
+    // preprocessor mode
+    const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
+    let [defaultPreprocessorMode] = this.preprocessorModes;
+    let preprocessorMode;
+
+    // rule: defaults, if issuer is JS, then compile template to the template function
+    if (issuer && PluginService.getOptions().isScript(issuer)) {
+      preprocessorMode = defaultPreprocessorMode = 'compile';
+    }
+
+    // rule: a mode defined in the query using `?render` or `?compile` has the priority over the default or loaderOptions value
+    for (let mode of this.preprocessorModes) {
+      if (mode in queryData) {
+        preprocessorMode = mode;
+        delete queryData[mode];
+        break;
+      }
+    }
+
+    if (preprocessorMode && this.preprocessorModes.has(preprocessorMode)) {
+      options.preprocessorMode = preprocessorMode;
+    } else if (!this.preprocessorModes.has(options.preprocessorMode)) {
+      options.preprocessorMode = defaultPreprocessorMode;
+    }
 
     // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
     const loaderData = this.loadData(options.data);
@@ -75,7 +94,7 @@ class Option {
     }
 
     // preprocessor
-    if (!Preprocessor.isReady(options.preprocessor)) {
+    if (!Preprocessor.isUsed(options.preprocessor)) {
       options.preprocessor = Preprocessor.factory(loaderContext, {
         preprocessor: options.preprocessor,
         watch: this.#watch,

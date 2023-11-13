@@ -21,12 +21,13 @@
 > Bundle your source files of scripts, styles, images and assets with HTML template.
 > 
 > _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
+>
 
 The HTML Bundler Plugin generates static HTML from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
 The plugin allows to use a template file as [entry point](#option-entry).
+You can import a template into JS as a compiled [template function](#template-in-js) and render it with variables in runtime on the client-side in the browser.
 
-This plugin is a modern replacement of the [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and [many others](#list-of-plugins) plugins and loaders.\
-This plugin is much easier and cleaner to use than html-webpack-plugin.
+This plugin is an advanced replacement of the html-webpack-plugin and [many others](#list-of-plugins) plugins and loaders.
 
 <!--
 <table align="center">
@@ -45,13 +46,44 @@ This plugin is much easier and cleaner to use than html-webpack-plugin.
   <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
 </center>
 
-### See: [>> Contents](#contents) | [>> Install and Quick Start](#install) | [>> Simple example](#example)
+All source file paths in dependencies will be resolved and auto-replaced with correct URLs in the bundled output. 
+The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
+You can use a relative path or Webpack alias to a source file.
+
+### See: [Contents](#contents) | [Install and Quick Start](#install) | [Simple example](#example)
 
 
 ---
-> **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
-> Don’t hesitate, switch to using this modern plugin too.
+> 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
+> [Try to use](#example) this powerful plugin too.
+> 
+> The plugin has been actively developed for more than 2 years, and since 2023 it is open source.\
+> Please support this project by giving it a star ⭐.
 ---
+
+
+## 💡 Highlights
+
+- An [entry point](#option-entry) is any HTML template.
+- **Auto processing** multiple HTML templates in the [entry path](#option-entry-path).
+- Allows to specify [`script`](#option-js) and [`style`](#option-css) **source files** directly in **HTML**:
+  - `<link href="./styles.scss" rel="stylesheet">`
+  - `<script src="./app.tsx" defer="defer"></script>`
+- **Resolves** [source files](#loader-option-sources) in [default attributes](#loader-option-sources-default) `href` `src` `srcset` etc. using **relative path** or **alias**:
+  - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
+  - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`
+- **Inlines** [JS](#recipe-inline-js) and [CSS](#recipe-inline-css) into HTML.
+- **Inlines** [images](#recipe-inline-image) into HTML and CSS.
+- Supports **styles** used in `*.vue` files.
+- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
+- **Compile** a template into [template function](#template-in-js) for usage in JS on the client-side.
+- Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles, etc.
+- Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
+- Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
+- You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
+- Over 400 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
+
+See the [full list of features](#features).
 
 
 ## ❤️ Sponsors & Patrons
@@ -98,25 +130,6 @@ Thank you to all our sponsors and patrons!
 </table>
 
 
-## 💡 Highlights
-
-- An [entry point](#option-entry) is any template.
-- Specify script and style **source files** directly **in HTML**:
-  - `<link href="./styles.scss" rel="stylesheet">`
-  - `<script src="./app.tsx" defer="defer"></script>`
-- **Inlines** **JS** and **CSS** into HTML using the [`js.inline`](#option-js) and [`css.inline`](#option-css) options.
-- **Resolves** [source asset files](#loader-option-sources) in attributes `href` `src` `srcset` etc. using **relative path** or **alias**:
-  - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
-  - `<img src="@images/fig.png" srcset="@images/fig-640.png 640w, @images/fig-800.png 800w" />`
-- **Inlines images**, e.g., [SVG](#recipe-inline-image), [PNG](#recipe-inline-image) without additional plugins and loaders.
-- Support for [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
-- **Auto processing many HTML templates** using the [entry path](#option-entry-path).
-- Auto generation of `<link rel="preload">` to [preload](#option-preload) fonts, images, video, scripts, styles, etc.
-- Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
-- Create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
-
-See the [full list of features](#features).
-
 ## ⚙️ How works the plugin
 
 The plugin resolves references in the HTML template and adds them to the Webpack compilation.
@@ -152,14 +165,16 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v3
 
+- **NEW** added support for the [template function](#template-in-js) in JS runtime on the client-side.
+- **NEW** added CSS extraction from **styles** used in `*.vue` files.
 - **NEW** added [Hooks & Callbacks](#plugin-hooks-and-callbacks). Now you can create own plugin to extend this plugin.
 - **NEW** added the build-in [FaviconsBundlerPlugin](#favicons-bundler-plugin) to generate and inject favicon tags.
 
 ## 🔆 What's New in v2
 
+- **NEW** added importing style files in JavaScript.
 - **NEW** added support the [integrity](#option-integrity).
 - **NEW** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
-- **NEW** added importing style files in JavaScript.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
@@ -174,8 +189,6 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 <a id="example" name="example"></a>
 
 ### Simple usage example
-
-
 
 Start with an HTML template. Add the `<link>` and `<script>` tags.
 You can directly include asset source files such as SCSS, JS, images, and other media files in an HTML template.
@@ -346,6 +359,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [Nunjucks](#using-template-nunjucks)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
+1. [Using template in JavaScript](#template-in-js)
 1. [Setup Live Reload](#setup-live-reload)
 1. [Recipes](#recipes)
    - [How to keep source directory structure for HTML](#recipe-keep-folder-structure-html)
@@ -403,6 +417,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
 - supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
 - [minification](#option-minify) of generated HTML
+- allows extending base functionality using [hooks & callbacks](#plugin-hooks-and-callbacks)
+- [generates favicons](#favicons-bundler-plugin) of different sizes for various platforms and injects them into HTML
 
 <a id="note-asset-source" name="note-asset-source"></a>
 (\*) - `asset/source` works currently for SVG only, in a next version will work for other files too
@@ -425,6 +441,7 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 | [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
 | [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
 | [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
+| [handlebars-loader](https://github.com/pcardune/handlebars-loader)                                      | import a templates function in JS on client-side                    |
 | [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)           | enables Subresource Integrity                                       |
 | [favicons-webpack-plugin ](https://github.com/jantimon/favicons-webpack-plugin)                         | generates favicons and icons                                        |
 
@@ -3926,6 +3943,87 @@ module.exports = {
   ],
 };
 ```
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="template-in-js" name="template-in-js"></a>
+
+## Using template in JavaScript
+
+The [preprocessor](#loader-option-preprocessor) works in two modes: `render` and `compile`.
+
+### Render mode
+
+The `render` is default mode for a template defined in the [entry](#option-entry) option.
+The processed template in `render` mode is HTML string, which is saved as HTML file.
+You can import a template file as generated HTML string in JS with the `?render` query.
+
+For example:
+
+```js
+import html from './partials/star-button.html?render';
+
+document.getElementById('star-button').innerHTML = html;
+```
+
+_./partials/star-button.html_
+```html
+<button class="btn-star">
+  <!-- you can use a source image file with webpack alias,
+       in the bundle it will be auto replaced with the output asset filename -->
+  <img src="@images/star.svg">
+  <span>Star</span>
+</button>
+```
+
+### Compile mode
+
+The `compile` is default mode for a template imported in JavaScript file.
+The processed template in `compile` mode is a template function,
+which can be executed with passed variables in the runtime on client-side.
+
+For example:
+
+```js
+import tmpl from './partials/people.ejs';
+
+// template variables
+const locals = {
+  people: [
+    'Walter White',
+    'Jesse Pinkman',
+  ],
+};
+
+// render template function with variables in browser
+document.getElementById('people').innerHTML = tmpl(locals);
+```
+
+_./partials/people.ejs_
+```html
+<ul class="people">
+  <% for (let i = 0; i < people.length; i++) {%>
+  <li><%= people[i] %></li>
+  <% } %>
+</ul>
+```
+
+> **Warning**
+> 
+> Not all templating engines can generate a template function.
+
+#### Template engines that do support the `template function` on client-side
+
+- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function (**recommended**)
+- [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)
+- [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)
+- pug (the support will be added later) - generates a small pure template function
+
+#### Template engines that do NOT support the `template function` on client-side
+
+- [eta](#loader-option-preprocessor-options-eta) - use the `ejs` instead
+- LiquidJS
 
 ---
 

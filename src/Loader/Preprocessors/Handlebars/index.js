@@ -1,5 +1,6 @@
 const path = require('path');
 const Dependency = require('../../Dependency');
+const { escapeSequences, stringifyData } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
@@ -171,9 +172,15 @@ const preprocessor = (loaderContext, options) => {
     updatePartials();
   }
 
+  const fnName = 'templateFn';
+  const exportCode = 'module.exports=';
+
   return {
+    externalData: '{}',
+
     /**
-     * Called to render each template page
+     * Render template to HTML.
+     * Called in the `render` preprocessor mode.
      *
      * @param {string} template The template content.
      * @param {string} resourcePath The request of template.
@@ -184,6 +191,44 @@ const preprocessor = (loaderContext, options) => {
      * @return {string}
      */
     render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)({ ...data }),
+
+    /**
+     * Compile template into template function.
+     * Called when a template is loaded in JS in `compile` mode.
+     *
+     * @param {string} template
+     * @param {string} resourcePath
+     * @param {{}} data
+     * @return {string}
+     */
+    compile: (template, { resourcePath, data = {} }) => {
+      let precompiledTemplate = Handlebars.precompile(template);
+
+      this.externalData = stringifyData(data);
+
+      return precompiledTemplate;
+    },
+
+    /**
+     * Export the compiled template function contained resolved source asset files.
+     * Note: this method is required for `compile` mode.
+     *
+     * @param {string} precompiledTemplate The source code of the precompiled template function.
+     * @return {string} The exported template function.
+     */
+    export: (precompiledTemplate) => {
+      const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min');
+
+      return `
+        var Handlebars = require('${runtimeFile}');
+        var __data__ = ${this.externalData};
+        var precompiledTemplate = ${precompiledTemplate};
+        var ${fnName} = (locals) => {
+          var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
+          return template(Object.assign(__data__, locals));
+        };
+        ${exportCode} ${fnName};`;
+    },
 
     /**
      * Called before each new compilation after changes, in the serve/watch mode.

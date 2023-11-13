@@ -20,7 +20,10 @@ declare namespace HtmlBundlerPlugin {
   export interface OptionPluginInterface {
     isEnabled: () => boolean;
     isProduction: () => boolean;
+    isMinify: () => boolean;
     isVerbose: () => boolean;
+    isScript: (resource: string) => boolean;
+    isStyle: (resource: string) => boolean;
 
     /**
      * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
@@ -34,6 +37,7 @@ declare namespace HtmlBundlerPlugin {
 
     get: () => PluginOptions;
     getWebpackOutputPath: () => string;
+    getPublicPath: () => string;
   }
 
   export interface PluginOptions {
@@ -184,6 +188,10 @@ type EntryDescription = {
 type Data = { [key: string]: any } | string;
 
 type JsOptions = {
+  // undocumented
+  enabled?: boolean;
+  // undocumented
+  test: RegExp;
   // The output filename of extracted JavaScript. Defaults `[name].js`.
   filename?: FilenameTemplate;
   // The output filename of non-initial chunk file. Defaults `[id].js`.
@@ -214,6 +222,8 @@ type JsInlineOptions = {
 };
 
 type CssOptions = {
+  // undocumented
+  enabled?: boolean;
   // RegEx to match style files.
   test?: RegExp;
   // The output filename of extracted CSS.

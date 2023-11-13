@@ -169,6 +169,7 @@ describe('parse attributes unit tests', () => {
       attr: 'src',
       startPos: 10,
       endPos: 10,
+      inEscapedDoubleQuotes: false,
       offset: 0,
       value: '',
       parsedValue: [''],
@@ -184,6 +185,7 @@ describe('parse attributes unit tests', () => {
       attr: 'src',
       startPos: 10,
       endPos: 27,
+      inEscapedDoubleQuotes: false,
       offset: 0,
       value: 'img1.png?size=800',
       parsedValue: ['img1.png'],
@@ -198,6 +200,7 @@ describe('parse attributes unit tests', () => {
       attr: 'srcset',
       startPos: 16,
       endPos: 38,
+      inEscapedDoubleQuotes: false,
       offset: 0,
       value: 'img1.png?size=200 w200',
       parsedValue: ['img1.png'],
@@ -209,6 +212,7 @@ describe('parse attributes unit tests', () => {
           value: 'img1.png?size=200',
           startPos: 16,
           endPos: 33,
+          inEscapedDoubleQuotes: false,
           offset: 0,
         },
       ],
@@ -223,13 +227,38 @@ describe('parse attributes unit tests', () => {
       attr: 'srcset',
       startPos: 28,
       endPos: 66,
+      inEscapedDoubleQuotes: false,
       offset: 0,
       value: 'img1.png, img2.png 100w, img3.png 1.5x',
       parsedValue: ['img1.png', 'img2.png', 'img3.png'],
       attrs: [
-        { type: 'asset', attr: 'srcset', startPos: 28, endPos: 36, offset: 0, value: 'img1.png' },
-        { type: 'asset', attr: 'srcset', startPos: 38, endPos: 46, offset: 0, value: 'img2.png' },
-        { type: 'asset', attr: 'srcset', startPos: 53, endPos: 61, offset: 0, value: 'img3.png' },
+        {
+          type: 'asset',
+          attr: 'srcset',
+          startPos: 28,
+          endPos: 36,
+          inEscapedDoubleQuotes: false,
+          offset: 0,
+          value: 'img1.png',
+        },
+        {
+          type: 'asset',
+          attr: 'srcset',
+          startPos: 38,
+          endPos: 46,
+          inEscapedDoubleQuotes: false,
+          offset: 0,
+          value: 'img2.png',
+        },
+        {
+          type: 'asset',
+          attr: 'srcset',
+          startPos: 53,
+          endPos: 61,
+          inEscapedDoubleQuotes: false,
+          offset: 0,
+          value: 'img3.png',
+        },
       ],
     };
     return expect(received).toEqual(expected);
@@ -281,6 +310,7 @@ describe('parse tags unit tests', () => {
             parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
+            inEscapedDoubleQuotes: false,
             offset: 0,
           },
         ],
@@ -310,6 +340,7 @@ describe('parse tags unit tests', () => {
             parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
+            inEscapedDoubleQuotes: false,
             offset: 5,
           },
           {
@@ -318,6 +349,7 @@ describe('parse tags unit tests', () => {
             value: '1.png?s=200',
             startPos: 39,
             endPos: 50,
+            inEscapedDoubleQuotes: false,
             offset: 5,
           },
           {
@@ -326,7 +358,48 @@ describe('parse tags unit tests', () => {
             value: '2.png',
             startPos: 57,
             endPos: 62,
+            inEscapedDoubleQuotes: false,
             offset: 5,
+          },
+        ],
+        attrs: null,
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+});
+
+describe('escaped quote', () => {
+  test('parseAttrAll: escaped quote', () => {
+    const html = `<img src=\\"img1.png\\" alt=\\"logo\\">`;
+    const received = HtmlParser.parseAttrAll(html);
+    const expected = {
+      src: 'img1.png',
+      alt: 'logo',
+    };
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag: escaped quote', () => {
+    const html = `<img src=\\"img1.png\\" alt=\\"logo\\">`;
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
+    const expected = [
+      {
+        tag: 'img',
+        source: `<img src=\\"img1.png\\" alt=\\"logo\\">`,
+        type: 'asset',
+        startPos: 0,
+        endPos: 35,
+        parsedAttrs: [
+          {
+            type: 'asset',
+            attr: 'src',
+            value: 'img1.png',
+            parsedValue: ['img1.png'],
+            startPos: 11,
+            endPos: 19,
+            inEscapedDoubleQuotes: true,
+            offset: 0,
           },
         ],
         attrs: null,

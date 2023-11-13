@@ -32,6 +32,7 @@ const pitchLoader = async function (remaining) {
 
   // create a unique request different from the original to avoid cyclic loading of the same style file
   const request = `${resourcePath}.webpack[javascript/auto]!=!!!${remaining}${cssLoaderName}`;
+
   const result = await this.importModule(request, {
     layer: options.layer,
     publicPath: urlPathPrefix,
@@ -44,7 +45,7 @@ const pitchLoader = async function (remaining) {
   module._cssSource = esModule ? result.default : result;
   Collection.setImportStyleEsModule(esModule);
 
-  // support for lazy load CSS in JavaScript, see js-import-css-lazy-url
+  // support for lazy load CSS in JavaScript, see the test js-import-css-lazy-url
   return '/* extracted by HTMLBundler CSSLoader */' + (isUrl ? module._cssSource : '');
 };
 

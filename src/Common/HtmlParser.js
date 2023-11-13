@@ -7,6 +7,7 @@ const spaceCodes = textEncoder.encode(' \n\r\t\f');
 const tagEndCodes = textEncoder.encode(' \n\r\t\f/>');
 const valueSeparatorCodes = textEncoder.encode('= \n\r\t\f');
 const equalCode = '='.charCodeAt(0);
+const escapeCode = `\\`.charCodeAt(0);
 const quotCodes = textEncoder.encode(`"'`);
 
 const comparePos = (a, b) => a.startPos - b.startPos;
@@ -51,6 +52,21 @@ const indexOfNonSpace = (content, startPos = 0) => {
 const indexOfValueSeparator = (content, startPos = 0) => {
   const len = content.length;
   for (; valueSeparatorCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
+
+  return startPos < len ? startPos : -1;
+};
+
+/**
+ * Returns the first index of a quote.
+ * The quote can be escaped, e.g. attr=\"value\" in a template function code.
+ *
+ * @param {string} content
+ * @param {number} startPos
+ * @return {number}
+ */
+const indexOfQuote = (content, startPos = 0) => {
+  const len = content.length;
+  for (; quotCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
 
   return startPos < len ? startPos : -1;
 };
@@ -251,10 +267,19 @@ class HtmlParser {
         let valueStartPos = pos + 1;
         let valueEndPos = -1;
         let nextCharCode = content.charCodeAt(valueStartPos);
+        let isEscaped = false;
+
+        if (nextCharCode === escapeCode) {
+          isEscaped = true;
+          nextCharCode = content.charCodeAt(++valueStartPos);
+        }
 
         if (quotCodes.indexOf(nextCharCode) >= 0) {
           // value with quotes
-          valueEndPos = content.indexOf(String.fromCharCode([nextCharCode]), ++valueStartPos);
+          let quote = String.fromCharCode([nextCharCode]);
+          if (isEscaped) quote = `\\` + quote;
+
+          valueEndPos = content.indexOf(quote, ++valueStartPos);
           if (valueEndPos > -1) pos = valueEndPos + 1;
         } else {
           // value w/o quotes
@@ -283,10 +308,10 @@ class HtmlParser {
    * @param {string} attr The attribute to parse value.
    * @param {string} type The type of attribute value.
    * @param {Number} offset The absolute tag offset in the content.
-   * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number}|boolean}
+   * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number, offset: number, inEscapedDoubleQuotes: boolean}|boolean}
    */
   static parseAttr(content, attr, type = 'asset', offset = 0) {
-    const open = `${attr}="`;
+    const open = `${attr}=`;
     let startPos = 0;
     let pos;
 
@@ -298,12 +323,31 @@ class HtmlParser {
 
     if (pos <= 0) return false;
 
-    let endPos = content.indexOf('"', startPos);
+    // Note:
+    // 1. The HTML string contains the normal quote:
+    //    <img src="image.png">
+    //    the require function should be injected as:
+    //    module.exports = '<img src="' + require('image.png') + '">'
+
+    // 2. The template function can contain the escaped quote, e.g.:
+    //    fn("<img src=\"image.png\">")
+    //    the require function should be injected as:
+    //    module.exports = fn("<img src=\"" + require('image.png') + "\">")
+
+    // find open quote pos
+    startPos = content.indexOf('"', startPos);
+    let inEscapedDoubleQuotes = content.charCodeAt(startPos - 1) === escapeCode;
+    let quote = inEscapedDoubleQuotes ? `\\"` : '"';
+
+    // find close quote pos
+    startPos++;
+    let endPos = content.indexOf(quote, startPos);
     if (endPos < 0) endPos = content.length - 1;
 
     let value = content.slice(startPos, endPos);
+
     if (attr.indexOf('srcset') > -1) {
-      const { values, attrs } = this.parseSrcsetValue(value, startPos, offset);
+      const { values, attrs } = this.parseSrcsetValue(value, startPos, offset, inEscapedDoubleQuotes);
 
       return {
         attr,
@@ -313,10 +357,20 @@ class HtmlParser {
         startPos,
         endPos,
         offset,
+        inEscapedDoubleQuotes,
       };
     }
 
-    return { type, attr, value, parsedValue: [value.split('?', 1)[0]], startPos, endPos, offset };
+    return {
+      type,
+      attr,
+      value,
+      parsedValue: [value.split('?', 1)[0]],
+      startPos,
+      endPos,
+      offset,
+      inEscapedDoubleQuotes,
+    };
   }
 
   /**
@@ -329,9 +383,10 @@ class HtmlParser {
    * @param {string} srcsetValue
    * @param {Number} valueOffset The offset of value in the tag.
    * @param {Number} offset The absolute tag offset in the content.
-   * @return {{values: Array<string>, attrs: [{attr: string, value, startPos: Number, endPos: Number}]}}
+   * @param {boolean} inEscapedDoubleQuotes Bypass the property to all `attrs` objects.
+   * @return {{values: Array<string>, attrs: [{attr: string, value, startPos: Number, endPos: Number, offset: number, inEscapedDoubleQuotes: boolean}]}}
    */
-  static parseSrcsetValue(srcsetValue, valueOffset, offset) {
+  static parseSrcsetValue(srcsetValue, valueOffset, offset, inEscapedDoubleQuotes) {
     const lastPos = srcsetValue.length;
     let startPos = 0;
     let endPos = 0;
@@ -380,6 +435,7 @@ class HtmlParser {
         startPos: valueOffset + startPos,
         endPos: valueOffset + endPos,
         offset,
+        inEscapedDoubleQuotes,
       });
 
       startPos = currentPos + 1;

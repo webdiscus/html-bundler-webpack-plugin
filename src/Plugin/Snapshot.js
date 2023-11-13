@@ -149,8 +149,8 @@ class Snapshot {
   static reset() {}
 
   static clear() {
-    this.prevFiles.length = 0;
-    this.currFiles.length = 0;
+    this.prevFiles = [];
+    this.currFiles = [];
   }
 }
 

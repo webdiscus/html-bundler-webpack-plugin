@@ -4,29 +4,32 @@ const { unsupportedPreprocessorException } = require('./Messages/Exeptions');
 
 class Preprocessor {
   /**
-   * Whether the preprocessor is ready to use.
+   * Whether the preprocessor is used.
    *
    * @param {*} preprocessor
    * @return {boolean}
    */
-  static isReady(preprocessor) {
+  static isUsed(preprocessor) {
     // disabled preprocessor
     if (preprocessor === false) return true;
-    return typeof (preprocessor?.render || preprocessor) === 'function';
+    return typeof (preprocessor?.render || preprocessor?.compile || preprocessor) === 'function';
   }
 
   /**
-   * Returns preprocessor to compile a template.
+   * Returns preprocessor to render/compile a template.
    * The default preprocessor uses the Eta templating engine.
    *
    * @param {Object} options The loader options.
    * @return {null|(function(string, {data?: {}}): Promise|null)}
    */
   static getPreprocessor(options) {
-    const preprocessor = options.preprocessor;
+    const { preprocessor, preprocessorMode } = options;
 
     if (typeof preprocessor === 'function') return preprocessor;
-    if (typeof preprocessor?.render === 'function') return preprocessor.render;
+
+    // render/compile
+    const modeFn = preprocessor[preprocessorMode];
+    if (typeof modeFn === 'function') return modeFn;
 
     return null;
   }

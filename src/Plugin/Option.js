@@ -7,7 +7,7 @@ const pluginName = require('../config');
 
 class Option {
   static pluginName = pluginName;
-  /** @type {PluginOptions} */
+  /** @type {HtmlBundlerPlugin.PluginOptions} */
   static options = {};
   /** @type {AssetEntry} */
   static assetEntry = null;
@@ -36,7 +36,7 @@ class Option {
   /**
    * Initialize plugin options.
    *
-   * @param {PluginOptions} options The plugin options.
+   * @param {HtmlBundlerPlugin.PluginOptions} options The plugin options.
    * @param {AssetEntry} assetEntry The instance of the AssetEntry class.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
@@ -404,13 +404,6 @@ class Option {
   }
 
   /**
-   * @return {string}
-   */
-  static getPublicPath() {
-    return this.webpackPublicPath;
-  }
-
-  /**
    * Resolve undefined|true|false|''|'auto' value depend on current Webpack mode dev/prod.
    *
    * @param {boolean|string|undefined} value The value one of the values: true, false, 'auto'.
@@ -527,6 +520,13 @@ class Option {
   }
 
   /**
+   * @return {string}
+   */
+  static getPublicPath() {
+    return this.webpackPublicPath;
+  }
+
+  /**
    * Get the output path of the asset.
    *
    * @param {string | null} assetFile The output asset filename relative by output path.
@@ -606,6 +606,15 @@ class Option {
   }
 
   /**
+   * @param {string} type
+   */
+  static enableLibraryType(type) {
+    if (this.webpackOptions.output.enabledLibraryTypes.indexOf(type) < 0) {
+      this.webpackOptions.output.enabledLibraryTypes.push(type);
+    }
+  }
+
+  /**
    * Called after js template is compiled into html string.
    *
    * @param {string} content A content of processed file.
@@ -658,15 +667,6 @@ class Option {
     return new Promise((resolve) => {
       resolve(this.options.afterEmit(entries, compilation));
     });
-  }
-
-  /**
-   * @param {string} type
-   */
-  static enableLibraryType(type) {
-    if (this.webpackOptions.output.enabledLibraryTypes.indexOf(type) < 0) {
-      this.webpackOptions.output.enabledLibraryTypes.push(type);
-    }
   }
 
   /**

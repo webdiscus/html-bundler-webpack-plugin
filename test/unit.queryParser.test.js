@@ -1,6 +1,14 @@
 const { parseRequest, parseJSON5Query } = require('../src/Common/RequestParser');
 
 describe('parseRequest tests', () => {
+  test('empty key', () => {
+    const received = parseRequest('image.jpg?&key2=val2').query;
+    const expected = {
+      key2: 'val2',
+    };
+    return expect(received).toStrictEqual(expected);
+  });
+
   test('key w/o value should be true', () => {
     const received = parseRequest('image.jpg?disable').query;
     const expected = {
