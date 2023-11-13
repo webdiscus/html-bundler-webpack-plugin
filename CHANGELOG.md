@@ -1,6 +1,15 @@
 # Change log
 
-## 3.0.1 (2023-11-08)
+## 3.0.3 (2023-11-13)
+
+- fix: add the missing `plugins` directory to package
+- chore: add usage example of the build-in favicons plugin
+
+## 3.0.2 (2023-11-13) DEPRECATED, critical issue is fixed in v3.0.3
+
+- fix: installation error 'Invalid tag name of the favicons package' (introduced in v3.0.0)
+
+## 3.0.1 (2023-11-08) DEPRECATED, critical issue is fixed in v3.0.3
 
 - fix: add the root dir of the module to exports in the package.json
 - test: update manual tests for using with the Eta version 3.x
