@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  <h1>{{ headline }}</h1>
+  <ul>
+    {{#each people}}
+      <li>
+        {{ @index }}. {{this}}{{#if @first}} [@first] {{/if}}{{#if @last}} [@last] {{/if}}
+        {{#each @root.bar}}<span>{{this}}</span>{{/each}}
+      </li>
+    {{/each}}
+  </ul>
+</body>
+</html>
