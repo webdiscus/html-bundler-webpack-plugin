@@ -188,10 +188,10 @@ type EntryDescription = {
 type Data = { [key: string]: any } | string;
 
 type JsOptions = {
-  // undocumented
+  // undocumented, for debugging
   enabled?: boolean;
-  // undocumented
-  test: RegExp;
+  // undocumented, for debugging
+  test?: RegExp;
   // The output filename of extracted JavaScript. Defaults `[name].js`.
   filename?: FilenameTemplate;
   // The output filename of non-initial chunk file. Defaults `[id].js`.

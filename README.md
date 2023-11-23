@@ -18,13 +18,12 @@
 
 ## HTML template as entry point
 
-> Bundle your source files of scripts, styles, images and assets with HTML template.
-> 
-> _HTML as an entry point works in both Vite and Parcel, and now also in Webpack._
->
+> _**HTML as an entry point works in both Vite and Parcel, and now also in Webpack.**_\
+> Bundle your source files of scripts, styles and images with HTML template.
+
 
 The HTML Bundler Plugin generates static HTML from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
-The plugin allows to use a template file as [entry point](#option-entry).
+The plugin allows using a template file as an [entry point](#option-entry).
 You can import a template into JS as a compiled [template function](#template-in-js) and render it with variables in runtime on the client-side in the browser.
 
 This plugin is an advanced replacement of the html-webpack-plugin and [many others](#list-of-plugins) plugins and loaders.
@@ -401,6 +400,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - [extracts CSS](#option-css) from the source style filename specified in HTML via a `<link>` tag
 - importing style files in JavaScript
 - resolves source asset files in HTML attributes and in the CSS `url()`
+- supports styles used in `*.vue` files
 - generated HTML contains output filenames
 - supports the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
 - `inline CSS` in HTML
@@ -412,6 +412,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - supports the `auto` publicPath
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
 - supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- supports a [template function](#template-in-js) for usage in JS on the client-side
 - supports both `async` and `sync` preprocessor
 - auto processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting

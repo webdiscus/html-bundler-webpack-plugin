@@ -1,5 +1,9 @@
 # Change log
 
+## 3.1.1 (2023-11-23)
+
+- fix: define `js.test` field in `types.d.ts` as optional
+
 ## 3.1.0 (2023-11-22)
 
 - feat: add support for the `template function` in JS runtime on the client-side.\
