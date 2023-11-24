@@ -1,11 +1,20 @@
-<!DOCTYPE html>
+
+
+<!-- test: accessibility of the `@root` data inside of the `partial` -> `#each` -->
+
+<!doctype html>
 <html>
 <head>
   <title>Home</title>
 </head>
 <body>
+<div>Layout @root: Home</div>
   <h1>Breaking Bad</h1>
+
+  <div>Partial @root.title: Home</div>
+
   <ul>
+    <!-- local scope of the `#each` block, for access to parent variable use the `../var` or `@root.var` -->
       <li>
         0. Walter White [@first] 
         <span>alfa</span><span>beta</span>
@@ -27,5 +36,6 @@
         <span>alfa</span><span>beta</span>
       </li>
   </ul>
+
 </body>
 </html>

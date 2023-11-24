@@ -3,6 +3,7 @@
 /** @typedef {import('handlebars')} Handlebars */
 /** @typedef {import('handlebars').HelperOptions} HelperOptions */
 
+const { Obj } = require('nunjucks/src/object');
 /**
  * Insert the partial content as a block.
  * Note: `partial` and `block` are paar helpers.
@@ -23,6 +24,6 @@ module.exports = (Handlebars) => {
   return function (name, options) {
     const partial = this._blocks[name] || options.fn;
 
-    return partial(this, { data: options.hash });
+    return partial(this);
   };
 };

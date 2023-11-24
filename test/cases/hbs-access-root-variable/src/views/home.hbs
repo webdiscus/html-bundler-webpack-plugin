@@ -1,11 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ title }}</title>
-</head>
-<body>
+{{assign title="Home"}}
+
+<!-- test: accessibility of the `@root` data inside of the `partial` -> `#each` -->
+{{#partial 'body'}}
   <h1>{{ headline }}</h1>
+
+  <div>Partial @root.title: {{@root.title}}</div>
+
   <ul>
+    <!-- local scope of the `#each` block, for access to parent variable use the `../var` or `@root.var` -->
     {{#each people}}
       <li>
         {{ @index }}. {{this}}{{#if @first}} [@first] {{/if}}{{#if @last}} [@last] {{/if}}
@@ -13,5 +15,6 @@
       </li>
     {{/each}}
   </ul>
-</body>
-</html>
+{{/partial}}
+
+{{>layout}}

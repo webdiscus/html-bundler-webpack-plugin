@@ -17,6 +17,9 @@ module.exports = {
         },
       },
       preprocessor: 'handlebars',
+      preprocessorOptions: {
+        partials: [path.join(__dirname, './src/partials/')],
+      },
     }),
   ],
 };

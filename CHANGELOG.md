@@ -1,5 +1,9 @@
 # Change log
 
+## 3.1.2 (2023-11-24)
+
+- fix: access `@root` variables in hbs `partial` helper inside the `each` block
+
 ## 3.1.1 (2023-11-23)
 
 - fix: define `js.test` field in `types.d.ts` as optional
