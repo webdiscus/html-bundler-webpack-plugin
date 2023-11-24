@@ -3,7 +3,6 @@
 /** @typedef {import('handlebars')} Handlebars */
 /** @typedef {import('handlebars').HelperOptions} HelperOptions */
 
-const { Obj } = require('nunjucks/src/object');
 /**
  * Insert the partial content as a block.
  * Note: `partial` and `block` are paar helpers.

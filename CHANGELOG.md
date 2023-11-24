@@ -1,6 +1,11 @@
 # Change log
 
-## 3.1.2 (2023-11-24)
+## 3.1.3 (2023-11-24)
+
+- fix: fatal error when using the handlebars preprocessor (introduced in v3.1.2)
+- fix: access `@root` variables in hbs `partial` helper inside the `each` block
+
+## 3.1.2 (2023-11-24) DEPRECATED: the critical bug by using the handlebars preprocessor is fixed in the v3.1.3
 
 - fix: access `@root` variables in hbs `partial` helper inside the `each` block
 
