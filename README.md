@@ -26,7 +26,7 @@ The HTML Bundler Plugin generates static HTML from [any template](#template-engi
 The plugin allows using a template file as an [entry point](#option-entry).
 You can import a template into JS as a compiled [template function](#template-in-js) and render it with variables in runtime on the client-side in the browser.
 
-This plugin is an advanced replacement of the html-webpack-plugin and [many others](#list-of-plugins) plugins and loaders.
+This plugin is an **advanced successor** to `html-webpack-plugin` and a replacement of the [plugins and loaders](#list-of-plugins).
 
 <!--
 <table align="center">
@@ -49,7 +49,7 @@ All source file paths in dependencies will be resolved and auto-replaced with co
 The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
 You can use a relative path or Webpack alias to a source file.
 
-### See: [Contents](#contents) | [Install and Quick Start](#install) | [Simple example](#example)
+### See: [Contents](#contents) | [Install and Quick Start](#install) | [Simple example](#example) | [Usage examples](#usage-examples)
 
 
 ---
@@ -376,20 +376,23 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to split CSS files](#recipe-split-css)
    - [How to keep package name for split chunks from **node_modules**](#recipe-split-chunks-keep-module-name)
-1. Demo sites
+2. <a id="demo-sites" name="demo-sites"></a> 
+   Demo sites
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
    - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
-1. Examples
+1. <a id="usage-examples" name="usage-examples"></a>
+   Usage examples
    - Simple example "Hello World!" [View in browser](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
-   - Automatically processing many HTML templates [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/simple-site/)
-   - Bootstrap with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
-   - Tailwind CSS with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
-   - Handlebars with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
-   - Extend Handlebars layout with blocks [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-bjtjvc?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars-layout/)
-   - Auto generate integrity hash for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
-   - Inline multiple SVG files w/o ID collision [View in browser](https://stackblitz.com/edit/inline-svg-wo-ids-collision?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/inline-svg-unique-id/)
+   - Automatically processing **multiple HTML** templates [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/simple-site/)
+   - **Bootstrap** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
+   - **Tailwind CSS** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+   - **Handlebars** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
+   - Extend **Handlebars layout** with blocks [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-bjtjvc?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars-layout/)
+   - Auto generate **integrity hash** for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
+   - Inline multiple **SVG** files w/o ID collision [View in browser](https://stackblitz.com/edit/inline-svg-wo-ids-collision?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/inline-svg-unique-id/)
+   - Bundle **Vue** app into single HTML file with **embedded** JS, CSS, images [View in browser](https://stackblitz.com/edit/vue-bundle-inlined-assets?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/vue-bundle-inlined-assets/)
 
 <a id="features" name="features"></a>
 
