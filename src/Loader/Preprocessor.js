@@ -50,16 +50,19 @@ class Preprocessor {
 
     switch (preprocessor) {
       case 'eta':
-        return require('./Preprocessors/Eta/index')(loaderContext, options);
+        return require('./Preprocessors/Eta/index.js')(loaderContext, options);
 
       case 'ejs':
-        return require('./Preprocessors/Ejs/index')(loaderContext, options);
+        return require('./Preprocessors/Ejs/index.js')(loaderContext, options);
 
       case 'handlebars':
-        return require('./Preprocessors/Handlebars/index')(loaderContext, options);
+        return require('./Preprocessors/Handlebars/index.js')(loaderContext, options);
 
       case 'nunjucks':
-        return require('./Preprocessors/Nunjucks/index')(loaderContext, options, watch);
+        return require('./Preprocessors/Nunjucks/index.js')(loaderContext, options, watch);
+
+      case 'twig':
+        return require('./Preprocessors/Twig/index.js')(loaderContext, options);
 
       default:
         unsupportedPreprocessorException(preprocessor);

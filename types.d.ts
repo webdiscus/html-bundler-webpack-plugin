@@ -257,6 +257,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
+  | 'twig'
   | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 
 /**
@@ -293,21 +294,6 @@ type AfterEmit = (entries: CompileEntries, compilation: Compilation) => Promise<
 /**
  * The object is argument of hooks and callbacks.
  */
-type CompileEntry2 = {
-  // the entry name
-  name: string;
-  // the output asset filename relative to output path
-  assetFile: string;
-  // the source filename without a query, optional
-  sourceFile: string | undefined;
-  // the source filename including a query
-  resource: string;
-  // output path of assetFile
-  outputPath: string;
-  // assets used in html
-  assets: Array<CompileAsset>;
-};
-
 type CompileEntry = TemplateInfo & {
   // assets used in html
   assets: Array<CompileAsset>;

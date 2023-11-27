@@ -1,5 +1,9 @@
 # Change log
 
+## 3.2.0 (2023-11-28)
+
+- feat: add Twig preprocessor. Now you can use "best of the best" template engine. Enjoy ;-)
+
 ## 3.1.3 (2023-11-24)
 
 - fix: fatal error when using the handlebars preprocessor (introduced in v3.1.2)

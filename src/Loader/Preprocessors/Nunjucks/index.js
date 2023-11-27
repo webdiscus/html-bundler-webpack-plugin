@@ -1,5 +1,5 @@
 const path = require('path');
-const { stringifyData } = require('../../Utils');
+const { makeTemplateId, stringifyData } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
 const preprocessor = (loaderContext, options = {}, watch) => {
@@ -10,6 +10,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
   const async = options?.async === true;
   const fnName = 'templateFn';
   const exportCode = 'module.exports=';
+  let externalData = '';
 
   if (watch === true) {
     // enable to watch changes in serve/watch mode
@@ -28,8 +29,6 @@ const preprocessor = (loaderContext, options = {}, watch) => {
   nunjucks.configure(viewPaths, options);
 
   return {
-    externalData: '{}',
-
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.
@@ -60,7 +59,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      */
     compile: (template, { resourcePath, data }) => {
       // the template name must be unique, e.g. partial file, to allow import many partials in the same js
-      const templateName = path.relative(rootContext, resourcePath);
+      const templateName = makeTemplateId(rootContext, resourcePath);
 
       let precompiledTemplate = nunjucks.precompileString(template, {
         env,
@@ -73,7 +72,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
       const requiredTemplates = new Set();
       let dependencies = '';
 
-      this.externalData = stringifyData(data);
+      externalData = stringifyData(data);
 
       for (const [, templateFile] of matches) {
         if (requiredTemplates.has(templateFile)) continue;
@@ -123,7 +122,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
 
       return `
         var nunjucks = require('${runtimeFile}');
-        var __data__ = ${this.externalData};
+        var __data__ = ${externalData};
         ${precompiledTemplate};
         ${exportCode} ${fnName};`;
     },

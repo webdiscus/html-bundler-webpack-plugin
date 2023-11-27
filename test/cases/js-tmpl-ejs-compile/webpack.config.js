@@ -20,10 +20,12 @@ module.exports = {
         index: './src/index.html',
       },
       preprocessor: 'ejs',
-      loaderOptions: {
-        data: {
-          title: 'My Title',
-        },
+      preprocessorOption: {
+        views: ['src/partials'],
+      },
+
+      data: {
+        title: 'My Title',
       },
     }),
   ],

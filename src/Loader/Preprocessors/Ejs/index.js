@@ -36,6 +36,8 @@ const preprocessor = (loaderContext, options) => {
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
      *
+     * TODO: add support for the `include`
+     *
      * @param {string} template
      * @param {string} resourcePath
      * @param {{}} data
@@ -67,6 +69,8 @@ const preprocessor = (loaderContext, options) => {
       // the name of template function in generated code
       const fnName = 'anonymous';
       const exportCode = 'module.exports=';
+
+      content = content.replaceAll('include(', 'require(');
 
       return `var __data__ = ${this.externalData};` + content + `;${exportCode}${fnName};`;
     },

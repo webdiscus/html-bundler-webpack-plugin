@@ -1,0 +1,12 @@
+{# test: resolve relative path #}
+{% include 'header.twig' %}
+
+{# tets: local runtime variables #}
+<ul id="people">
+    {% for item in people %}
+        <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+
+{# test: resolve namespace in path #}
+{% include '@partials/star.twig' %}

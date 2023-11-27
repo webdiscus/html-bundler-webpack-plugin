@@ -74,7 +74,7 @@ You can use a relative path or Webpack alias to a source file.
 - **Inlines** [JS](#recipe-inline-js) and [CSS](#recipe-inline-css) into HTML.
 - **Inlines** [images](#recipe-inline-image) into HTML and CSS.
 - Supports **styles** used in `*.vue` files.
-- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [LiquidJS](#using-template-liquidjs) and others.
+- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
 - **Compile** a template into [template function](#template-in-js) for usage in JS on the client-side.
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles, etc.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
@@ -141,7 +141,7 @@ See the [usage example](#example) and [how the plugin works under the hood](#plu
 
 - **Simplify Webpack config** using one powerful plugin instead of many [different plugins and loaders](#list-of-plugins).
 
-- **Start from HTML**, not from JS. Define an **HTML** file as an **entry point**.
+- **Start from HTML**, not from JS. Define an **HTML** template file as an **entry point**.
 
 - Specify script and style **source files** directly in an **HTML** template,
 and you no longer need to define them in Webpack entry or import styles in JavaScript.
@@ -165,6 +165,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ## 🔆 What's New in v3
 
 - **NEW** added support for the [template function](#template-in-js) in JS runtime on the client-side.
+- **NEW** added [Twig](#using-template-twig) preprocessor.
 - **NEW** added CSS extraction from **styles** used in `*.vue` files.
 - **NEW** added [Hooks & Callbacks](#plugin-hooks-and-callbacks). Now you can create own plugin to extend this plugin.
 - **NEW** added the build-in [FaviconsBundlerPlugin](#favicons-bundler-plugin) to generate and inject favicon tags.
@@ -348,6 +349,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [ejs](#loader-option-preprocessor-options-ejs)
      - [handlebars](#loader-option-preprocessor-options-handlebars)
      - [nunjucks](#loader-option-preprocessor-options-nunjucks)
+     - [twig](#loader-option-preprocessor-options-twig)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
    - [data](#loader-option-data) (pass data into templates)
 1. [Using template engines](#template-engine)
@@ -356,6 +358,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [Handlebars](#using-template-handlebars)
    - [Mustache](#using-template-mustache)
    - [Nunjucks](#using-template-nunjucks)
+   - [TwigJS](#using-template-twig)
    - [LiquidJS](#using-template-liquidjs)
    - [Pug](https://github.com/webdiscus/pug-plugin)
 1. [Using template in JavaScript](#template-in-js)
@@ -406,18 +409,19 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - supports styles used in `*.vue` files
 - generated HTML contains output filenames
 - supports the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
-- `inline CSS` in HTML
-- `inline JavaScript` in HTML
-- `inline image` as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
-- `inline SVG` as SVG tag in HTML
-- `inline SVG` as `utf-8` data-URL in CSS
-- auto generation of `<link rel="preload">` to preload assets
-- supports the `auto` publicPath
+- [inline CSS](#recipe-inline-css) in HTML
+- [inline JavaScript](#recipe-inline-js) in HTML
+- [inline image](#recipe-inline-image) as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
+- [inline SVG](#recipe-inline-image) as SVG tag in HTML
+- [inline SVG](#recipe-inline-image) as `utf-8` data-URL in CSS
+- auto generation of `<link rel="preload">` to [preload assets](#option-preload)
+- supports the `auto` [publicPath](#webpack-option-output-publicpath)
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
-- supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [TwigJS](https://github.com/twigjs/twig.js), [LiquidJS](https://github.com/harttle/liquidjs) and others
 - supports a [template function](#template-in-js) for usage in JS on the client-side
-- supports both `async` and `sync` preprocessor
-- auto processing many HTML templates using the [entry path](#option-entry-path), add/delete/rename w/o restarting
+- supports both `async` and `sync` [preprocessor](#loader-option-preprocessor-custom)
+- auto processing multiple HTML templates using the [entry path](#option-entry-path)
+- [pass data](#option-entry-advanced) into template from the plugin config
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
 - supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
 - [minification](#option-minify) of generated HTML
@@ -2982,6 +2986,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
+  | 'twig'
   | ((
       content: string,
       loaderContext: LoaderContext<Object> & { data: { [key: string]: any } | string }
@@ -2996,11 +3001,11 @@ or define your own preprocessor as a function to use any template engine.
 #### Supported templating engines "out of the box"
 
 ```ts
-type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks';
+type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks' | 'twig';
 ```
 
-The preprocessor is already ready to use the most popular templating engines:
-[Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks).
+The preprocessor is ready to use the most popular templating engines:
+[Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Twig](#using-template-twig).
 
 Defaults used the [Eta](https://eta.js.org) templating engine,
 because `Eta` has the `EJS`-like syntax, is only `2KB` gzipped and is much fasted than EJS.
@@ -3156,7 +3161,7 @@ Each preprocessor has its own options, depend on using template engine.
 #### Options for `preprocessor: 'eta'` (default)
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'eta',
   preprocessorOptions: {
     async: false, // defaults 'false', wenn is 'true' then must be used `await includeAsync()`
@@ -3196,7 +3201,7 @@ If partials have `.eta` extensions, then the extension can be omitted in the inc
 #### Options for `preprocessor: 'ejs'`
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'ejs',
   preprocessorOptions: {
     async: false, // defaults 'false'
@@ -3248,7 +3253,7 @@ The `preprocessor` has built-in `include` helper, to load a partial file directl
 The `include` helper has the following _de facto_ standard options:
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'handlebars',
   preprocessorOptions: {
     // defaults process.cwd(), root path for includes with an absolute path (e.g., /file.html)
@@ -3296,7 +3301,7 @@ If you use the partials syntax `{{> footer }}` to include a file, then use the `
 Partials will be auto-detected in paths recursively and registered under their relative paths, without an extension.
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'handlebars',
   preprocessorOptions: {
     // an array of relative or absolute paths to partials
@@ -3313,7 +3318,7 @@ For example, if the partial path is the `src/views/partials` then the file `src/
 You can define all partials manually using the option as an object:
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'handlebars',
     preprocessorOptions: {
     // define partials manually
@@ -3356,7 +3361,7 @@ src/views/helpers2/wrapper/span.js
 The preprocessor options:
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'handlebars',
   preprocessorOptions: {
     // an array of relative or absolute paths to helpers
@@ -3385,7 +3390,7 @@ Usage of helpers:
 You can define helpers manually using `name: function` object:
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'handlebars',
   preprocessorOptions: {
     // define helpers manually
@@ -3438,7 +3443,7 @@ For the complete list of Handlebars `compile` options see [here](https://handleb
 #### Options for `preprocessor: 'nunjucks'`
 
 ```js
-loaderOptions: {
+{
   preprocessor: 'nunjucks',
   preprocessorOptions: {
     // here are preprocessor options
@@ -3458,6 +3463,56 @@ loaderOptions: {
 ```
 
 For all available options, see the [Nunjucks API configure](https://mozilla.github.io/nunjucks/api.html#configure).
+
+
+<a id="loader-option-preprocessor-options-twig" name="loader-option-preprocessor-options-twig"></a>
+
+#### Options for `preprocessor: 'twig'`
+
+The [TwigJS](https://github.com/twigjs/twig.js) have few useful options:
+
+- `async {boolean}` defaults is `'false'`.
+- `autoescape {boolean}` defaults is `'false'`. Escape dangerous characters.
+- `namespaces {Object}` defaults is `{}`.\
+  The key is a namespace (like Webpack alias) used in the template instead a relative path.\
+  The value is an absolute a path relative to the project directory.
+
+
+```js
+{
+  preprocessor: 'twig',
+  preprocessorOptions: {
+    async: false,
+    autoescape: false,
+    namespaces: {
+      layouts: 'src/views/layouts',
+      partials: 'src/views/partials',
+    },
+  },
+},
+```
+
+The used namespace must begin with the leading `@` symbol: 
+
+```html
+{% extends "@layouts/default.twig" %}
+{% include "@partials/articles/sidebar.twig" %}
+```
+
+You can use a relative path:
+```html
+{% extends "../layouts/default.twig" %}
+{% include "../partials/articles/sidebar.twig" %}
+```
+
+> **Warning**
+> 
+> The dynamic including is not supported.\
+> For example, passing `myTemplate` as a parameter does not work: 
+> ```html
+> {# page.twig #}
+> {% extends myTemplate %}
+> ```
 
 ---
 
@@ -3516,15 +3571,13 @@ module.exports = {
         },
         about: 'src/views/about.html',
       },
-      loaderOptions: {
-        data: {
-          // global variables for all pages
-          title: 'Default Title',
-          globalData: 'Global Data',
-        },
-        // - OR -
-        data: 'src/data/global.js',
+      data: {
+        // global variables for all pages
+        title: 'Default Title',
+        globalData: 'Global Data',
       },
+      // - OR -
+      data: 'src/data/global.js',
     }),
   ],
 };
@@ -3582,8 +3635,8 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 - [Handlebars](https://handlebarsjs.com)
 - [Mustache](https://github.com/janl/mustache.js)
 - [Nunjucks](https://mozilla.github.io/nunjucks/)
+- [TwigJS](https://github.com/twigjs/twig.js)
 - [LiquidJS](https://github.com/harttle/liquidjs)
-- and others
 
 > **Note**
 >
@@ -3649,7 +3702,7 @@ new HtmlBundlerPlugin({
 });
 ```
 
-For the `eta` preprocessor options see [here](#loader-option-preprocessor-options-eta).
+See the [`eta` preprocessor options](#loader-option-preprocessor-options-eta).
 
 <a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs"></a>
 
@@ -3711,7 +3764,7 @@ module.exports = {
 };
 ```
 
-For the `ejs` preprocessor options see [here](#loader-option-preprocessor-options-ejs).
+See the [`ejs` preprocessor options](#loader-option-preprocessor-options-ejs).
 
 #### [↑ back to contents](#contents)
 
@@ -3783,7 +3836,7 @@ module.exports = {
 };
 ```
 
-For the `handlebars` preprocessor options see [here](#loader-option-preprocessor-options-handlebars).
+See the [`handlebars` preprocessor options](#loader-option-preprocessor-options-handlebars).
 
 [Source code](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
 
@@ -3891,7 +3944,91 @@ module.exports = {
 };
 ```
 
-For the `nunjucks` preprocessor options see [here](#loader-option-preprocessor-options-nunjucks).
+See the [`nunjucks` preprocessor options](#loader-option-preprocessor-options-nunjucks).
+
+
+#### [↑ back to contents](#contents)
+
+<a id="using-template-twig" name="using-template-twig"></a>
+
+### Using the TwigJS
+
+You need to install the `twig` package:
+
+```
+npm i -D twig
+```
+
+For example, there is the layout template _src/views/layout/default.twig_
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <script src="@scripts/main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>{{ headline }}!</h1>
+    <div id="content">{% block content %}{% content %}</div>
+    {% include "@partials/footer.twig" %}
+  </body>
+</html>
+```
+
+The page template _src/views/pages/home.twig_ can be extended from the layout:
+
+```html
+{% extends '@layouts/default.twig' %}
+
+{% block content %}
+  <ul id="people">
+    {% for item in people %}
+        <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+```
+
+Define the `preprocessor` as `twig`:
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  resolve: {
+    alias: {
+      '@scripts': path.join(__dirname, 'src/scripts/'), // alias to scripts used in template
+    },
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: {
+          import: 'src/views/page/home.twig',
+          data: {
+            title: 'Strartpage',
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+      preprocessor: 'twig', // use TwigJS templating engine
+      preprocessorOptions: {
+        // aliases used for extends/include
+        namespaces: {
+          layouts: 'src/views/layout/',
+          partials: 'src/views/partials/',
+        },
+      },
+    }),
+  ],
+};
+```
+
+See the [`twig` preprocessor options](#loader-option-preprocessor-options-twig).
+
 
 #### [↑ back to contents](#contents)
 
@@ -4006,6 +4143,9 @@ document.getElementById('people').innerHTML = tmpl(locals);
 
 _./partials/people.ejs_
 ```html
+<!-- you can use a source image file with webpack alias,
+     in the bundle it will be auto replaced with the output asset filename -->
+<img src="@images/people.png">
 <ul class="people">
   <% for (let i = 0; i < people.length; i++) {%>
   <li><%= people[i] %></li>
@@ -4015,13 +4155,18 @@ _./partials/people.ejs_
 
 > **Warning**
 > 
-> Not all templating engines can generate a template function.
+> Not all template engines can generate a template function that can be executed with local variables at runtime.
 
 #### Template engines that do support the `template function` on client-side
 
-- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function (**recommended**)
-- [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)
-- [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)
+- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function w/o runtime (**recommended**)\
+  `include` is NOT supported (yet)
+- [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)\
+  `include` is NOT supported (yet)
+- [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)\
+  `include` is supported
+- [twig](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~110KB)\
+  `include` is supported
 - pug (the support will be added later) - generates a small pure template function
 
 #### Template engines that do NOT support the `template function` on client-side

@@ -6,6 +6,17 @@ const urlPathPrefix = '/__HTML_BUNDLER_PLUGIN__/';
 const cssLoaderName = 'HTMLBundlerCSSLoader';
 
 /**
+ * Call an async function for the each array item.
+ *
+ * @param {Array<any>} data The array of data.
+ * @param {Function: Promise} fn The async function to handle the data.
+ * @return {Promise<Promise<Awaited<unknown>[]>|Promise<void>>}
+ */
+const eachAsync = async (data, fn) => (Array.isArray(data) ? Promise.all(data.map(fn)) : Promise.resolve());
+
+const makeTemplateId = (context, filePath) => path.relative(context, filePath);
+
+/**
  * Inject a string before closing </head> tag.
  *
  * @param {string} content
@@ -145,6 +156,8 @@ module.exports = {
   urlPathPrefix,
   cssLoaderName,
   hotUpdateFile: path.join(__dirname, 'Hmr/hot-update.js'),
+  eachAsync,
+  makeTemplateId,
   injectBeforeEndHead,
   injectBeforeEndBody,
   decodeReservedChars,

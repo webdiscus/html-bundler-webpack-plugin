@@ -196,6 +196,8 @@ const preprocessor = (loaderContext, options) => {
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
      *
+     * TODO: add support for the `include`
+     *
      * @param {string} template
      * @param {string} resourcePath
      * @param {{}} data

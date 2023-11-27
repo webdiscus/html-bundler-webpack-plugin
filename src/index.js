@@ -13,7 +13,7 @@ class Plugin extends AssetCompiler {
    */
   constructor(options = {}) {
     const PluginOptions = {
-      test: /\.(html|ejs|eta|hbs|handlebars|njk)$/,
+      test: /\.(html|ejs|eta|hbs|handlebars|njk|twig)$/,
       enabled: true,
       verbose: false,
       minify: false,

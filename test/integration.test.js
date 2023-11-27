@@ -195,6 +195,8 @@ describe('loader preprocessor options', () => {
   test('nunjucks sync', () => compareFiles('loader-option-preprocessor-nunjucks'));
   test('nunjucks async', () => compareFiles('loader-option-preprocessor-nunjucks-async'));
 
+  test('twig', () => compareFiles('loader-option-preprocessor-twig'));
+
   test('simple multiple pages', () => compareFiles('loader-option-preprocessor-multipage'));
   test('multiple templating engines', () => compareFiles('loader-option-preprocessor-many-ejs-hbs'));
 });
@@ -404,6 +406,9 @@ describe('usage template in js on client side', () => {
 
   // Nunjucks
   test('njk: compile to fn', () => compareFiles('js-tmpl-njk-compile'));
+
+  // Twig
+  test('twig: compile to fn', () => compareFiles('js-tmpl-twig-compile'));
 });
 
 describe('extras: responsive images', () => {

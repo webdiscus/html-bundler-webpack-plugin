@@ -17,14 +17,21 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/index.hbs',
+        index: {
+          import: './src/views/pages/index.twig',
+          data: {
+            title: 'Home',
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
       },
-      preprocessor: 'handlebars',
+      preprocessor: 'twig',
       preprocessorOptions: {
-        views: ['src/partials'],
-      },
-      data: {
-        title: 'My Title',
+        namespaces: {
+          // alias used for include/extends is a relative or absolute path
+          partials: 'src/views/partials/',
+        },
       },
     }),
   ],
@@ -32,10 +39,10 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.(ico|png|jp?g|svg)$/,
+        test: /\.(png|svg|jpe?g|webp)$/i,
         type: 'asset/resource',
         generator: {
-          filename: 'img/[name].[hash:8][ext][query]',
+          filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],
