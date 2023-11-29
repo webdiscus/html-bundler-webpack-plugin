@@ -19,16 +19,15 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-
       loaderOptions: {
-        //preprocessorMode: 'compile',
+        preprocessor: 'eta',
         preprocessorOptions: {
-          async: true, // TODO: test separate sync and async
+          autoEscape: true,
+          async: true,
+          varName: '__myVar__', // test: override the default `it` in template function
         },
         data: {
-          component: {
-            title: 'My Title',
-          },
+          title: 'My Title',
         },
       },
     }),

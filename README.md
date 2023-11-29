@@ -4159,7 +4159,9 @@ _./partials/people.ejs_
 
 #### Template engines that do support the `template function` on client-side
 
-- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function w/o runtime (**recommended**)\
+- [eta](#loader-option-preprocessor-options-eta) - generates a fast small template function with runtime (~3KB) (**recommended**)\
+  `include` is supported
+- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function w/o runtime\
   `include` is NOT supported (yet)
 - [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)\
   `include` is NOT supported (yet)
@@ -4171,7 +4173,6 @@ _./partials/people.ejs_
 
 #### Template engines that do NOT support the `template function` on client-side
 
-- [eta](#loader-option-preprocessor-options-eta) - use the `ejs` instead
 - LiquidJS
 
 ---

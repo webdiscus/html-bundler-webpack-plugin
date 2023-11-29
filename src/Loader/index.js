@@ -92,14 +92,12 @@ const loader = function (content, map, meta) {
     //   return value;
     // })
     .then((value) => {
-      //console.log('~~~ Template.resolve:', { preprocessorMode: Option.get().preprocessorMode, value });
       errorStage = 'resolve';
-      // TODO: this is possible in 'render' (html) mode only, skip it in 'compile' (js template) mode
       return Template.resolve(value, resource, entryId, hooks);
     })
     .then((value) => {
       errorStage = 'export';
-      return Loader.export(value, resource);
+      return Loader.export(value, loaderContext);
     })
     .then((value) => {
       errorStage = 'watch';

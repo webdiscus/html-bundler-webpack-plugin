@@ -172,17 +172,12 @@ const preprocessor = (loaderContext, options) => {
     updatePartials();
   }
 
-  const fnName = 'templateFn';
-  const exportCode = 'module.exports=';
-
   return {
-    externalData: '{}',
-
     /**
      * Render template to HTML.
      * Called in the `render` preprocessor mode.
      *
-     * @param {string} template The template content.
+     * @param {string} source The template source code.
      * @param {string} resourcePath The request of template.
      * @param {object} data The data passed into template.
      *  Note:
@@ -190,7 +185,7 @@ const preprocessor = (loaderContext, options) => {
      *  to allow defining properties in `this` of some helpers.
      * @return {string}
      */
-    render: (template, { resourcePath, data = {} }) => Handlebars.compile(template, options)({ ...data }),
+    render: (source, { resourcePath, data = {} }) => Handlebars.compile(source, options)({ ...data }),
 
     /**
      * Compile template into template function.
@@ -198,17 +193,12 @@ const preprocessor = (loaderContext, options) => {
      *
      * TODO: add support for the `include`
      *
-     * @param {string} template
-     * @param {string} resourcePath
-     * @param {{}} data
+     * @param {string} source The template source code.
+     * @param {BundlerPluginLoaderContext} loaderContext
      * @return {string}
      */
-    compile: (template, { resourcePath, data = {} }) => {
-      let precompiledTemplate = Handlebars.precompile(template);
-
-      this.externalData = stringifyData(data);
-
-      return precompiledTemplate;
+    compile: (source, loaderContext) => {
+      return Handlebars.precompile(source);
     },
 
     /**
@@ -216,20 +206,23 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The source code of the precompiled template function.
+     * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate) => {
+    export: (precompiledTemplate, { data }) => {
       const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min');
+      const exportFunction = 'templateFn';
+      const exportCode = 'module.exports=';
 
       return `
         var Handlebars = require('${runtimeFile}');
-        var __data__ = ${this.externalData};
+        var __data__ = ${stringifyData(data)};
         var precompiledTemplate = ${precompiledTemplate};
-        var ${fnName} = (locals) => {
+        var ${exportFunction} = (context) => {
           var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
-          return template(Object.assign(__data__, locals));
+          return template(Object.assign(__data__, context));
         };
-        ${exportCode} ${fnName};`;
+        ${exportCode}${exportFunction};`;
     },
 
     /**

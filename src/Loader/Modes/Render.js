@@ -44,10 +44,10 @@ class Render extends PreprocessorMode {
    *
    * @param {string} content The template content.
    * @param {{}} data The object with variables passed in template.
-   * @param {string} issuer
+   * @param {string} issuer The issuer of the template file.
    * @return {string}
    */
-  export(content, data, issuer) {
+  export(content, { data, resource: issuer }) {
     /* istanbul ignore next: Webpack API no provide `loaderContext.hot` for testing */
     if (this.hot && PluginService.useHotUpdate()) {
       content = this.injectHotScript(content);

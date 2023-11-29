@@ -7,9 +7,7 @@ const preprocessor = (loaderContext, options) => {
   const Twig = TwigEngine.twig;
   const rootContext = loaderContext.rootContext || process.cwd();
   const async = options?.async === true;
-  const isHot = loaderContext.hot === true;
   const dependencies = new Set();
-  let externalData = '';
   let template = {};
 
   /**
@@ -100,14 +98,12 @@ const preprocessor = (loaderContext, options) => {
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
      *
-     * @param {string} source
-     * @param {LoaderContext} loaderContext
+     * @param {string} source The template source code.
+     * @param {BundlerPluginLoaderContext} loaderContext
      * @return {Promise}
      */
     compile: (source, loaderContext) => {
       const { resourcePath, data = {} } = loaderContext;
-
-      externalData = stringifyData(data);
 
       return new Promise((resolve, reject) => {
         const twigOptions = {
@@ -143,11 +139,13 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The code of the precompiled template.
+     * @param {{}} data The object with variables passed in template.
+     * @param {boolean} hot
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate) => {
+    export: (precompiledTemplate, { data, hot }) => {
       const runtimeFile = require.resolve('twig/twig.min.js');
-      const fnName = 'templateFn';
+      const exportFunction = 'templateFn';
       const exportCode = 'module.exports=';
       let loadDependencies = '';
 
@@ -157,11 +155,11 @@ const preprocessor = (loaderContext, options) => {
 
       return `${loadDependencies}
         var Twig = require('${runtimeFile}');
-        ${isHot ? `Twig.cache(false);` : ''}
-        var __data__ = ${externalData};
+        ${hot === true ? `Twig.cache(false);` : ''}
+        var __data__ = ${stringifyData(data)};
         var template = Twig.twig(${precompiledTemplate});
-        const ${fnName} = (locals) => template.render(Object.assign(__data__, locals));
-        ${exportCode}${fnName};`;
+        var ${exportFunction} = (context) => template.render(Object.assign(__data__, context));
+        ${exportCode}${exportFunction};`;
     },
   };
 };

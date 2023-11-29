@@ -1,8 +1,11 @@
-import tmpl from './partials/header.html?lang=en';
+import tmpl from './partials/content.html?lang=en';
 
-// Note: Eta does not support passing variables to the client-side template function.
-const html = tmpl();
+const html = tmpl({
+  name: 'World',
+  people: ['Alexa <Amazon>', 'Cortana <MS>', 'Siri <Apple>'],
+  nested: { name: 'Eta' },
+});
 
-document.getElementById('header').innerHTML = html;
+document.getElementById('main').innerHTML = html;
 
 console.log('>> app');

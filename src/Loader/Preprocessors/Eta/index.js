@@ -1,14 +1,8 @@
 const path = require('path');
-const { escapeSequences } = require('../../Utils');
+const { stringifyData } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
-const { yellow } = require('ansis');
 
-const compileModeWarning = () => {
-  // TODO: warning
-  console.log(
-    yellow`[html-bundler-webpack-plugin] WARNING: Eta supports only rendering to an html string and cannot compile into a JS template function.${'\n'}You can use ESJ for using the JS template function with variables.`
-  );
-};
+const includeRegexp = /=include\((?<file>.+?)(?:\)|,\s*{(?<data>.+?)}\))/g;
 
 const preprocessor = (loaderContext, options) => {
   const Eta = loadModule('eta', () => require('eta').Eta);
@@ -22,7 +16,7 @@ const preprocessor = (loaderContext, options) => {
   }
 
   const eta = new Eta({
-    useWith: true, // allow using variables in template without `it.` scope
+    useWith: true, // allow using variables in template without `it.` namespace
     ...options,
     views, // directory that contains templates
   });
@@ -36,54 +30,67 @@ const preprocessor = (loaderContext, options) => {
      * Render template into HTML.
      * Called for rendering of template defined as entry point.
      *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
     render: async
-      ? (template, { resourcePath, data = {} }) => {
-          return eta.renderStringAsync(template, data);
+      ? (source, { resourcePath, data = {} }) => {
+          return eta.renderStringAsync(source, data);
         }
-      : (template, { resourcePath, data = {} }) => {
-          return eta.renderString(template, data);
+      : (source, { resourcePath, data = {} }) => {
+          return eta.renderString(source, data);
         },
 
     /**
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
      *
-     * Note:
-     *  Eta does not compile the template into template function source code,
-     *  so we compile the template into an HTML string that will be wrapped in a function for client-side compatibility.
-     *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
-    compile: async
-      ? (template, { resourcePath, data = {} }) => {
-          compileModeWarning();
-          return eta.renderStringAsync(template, data);
-        }
-      : (template, { resourcePath, data = {} }) => {
-          compileModeWarning();
-          return eta.renderString(template, data);
-        },
+    compile: (source, { resourcePath, data = {} }) => {
+      const varName = options.varName || 'it';
+      const eta = new Eta({
+        useWith: true, // allow using variables in template without `it.` namespace
+        ...options,
+        views,
+      });
+
+      // parse and replace the partial file and data
+      // include("./file.eta")                  => require("./file.eta")({...it, ...{}})
+      // include('./file.eta', { name: 'eta' }) => require('./file.eta')({...it, ...{name: 'eta'}})
+      const templateFunctionBody = eta
+        .compileToString(source)
+        .replaceAll(includeRegexp, `=require($<file>)({...${varName}, ...{$<data>}})`);
+
+      return `function(${varName}){${templateFunctionBody}}`;
+    },
 
     /**
      * Export the compiled template function contained resolved source asset files.
      * Note: this method is required for `compile` mode.
      *
-     * @param {string} content The source code of the template function.
+     * @param {string} templateFunction The source code of the template function.
+     * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (content) => {
-      const fnName = 'templateFn';
+    export: (templateFunction, { data }) => {
+      // note: resolved the file is for node, therefore, we need to get the module path plus file for browser
+      const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs');
+      const exportFunction = 'templateFn';
       const exportCode = 'module.exports=';
 
-      return `const ${fnName} = () => '` + escapeSequences(content) + `';${exportCode}${fnName};`;
+      return `
+        var { Eta } = require('${runtimeFile}');
+        var eta = new Eta(${stringifyData(options)});
+        var __data__ = ${stringifyData(data)};
+        var etaFn = ${templateFunction};
+        var ${exportFunction} = (context) => etaFn.bind(eta)(Object.assign(__data__, context));
+        ${exportCode}${exportFunction};`;
     },
   };
 };

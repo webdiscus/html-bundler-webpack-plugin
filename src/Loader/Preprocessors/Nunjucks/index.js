@@ -8,9 +8,8 @@ const preprocessor = (loaderContext, options = {}, watch) => {
   const { rootContext } = loaderContext;
   const viewPaths = (options.views = [...new Set([...(options.views || []), rootContext])]);
   const async = options?.async === true;
-  const fnName = 'templateFn';
+  const exportFunction = 'templateFn';
   const exportCode = 'module.exports=';
-  let externalData = '';
 
   if (watch === true) {
     // enable to watch changes in serve/watch mode
@@ -33,7 +32,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      * Render template into HTML.
      * Called for rendering of template defined as entry point.
      *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
@@ -46,22 +45,22 @@ const preprocessor = (loaderContext, options = {}, watch) => {
               else reject(error);
             });
           })
-      : (template, { data = {} }) => nunjucks.renderString(template, data),
+      : (source, { data = {} }) => nunjucks.renderString(source, data),
 
     /**
      * Compile template into template function.
      * Called when a template is imported in JS in `compile` mode.
      *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
-    compile: (template, { resourcePath, data }) => {
+    compile: (source, { resourcePath, data }) => {
       // the template name must be unique, e.g. partial file, to allow import many partials in the same js
       const templateName = makeTemplateId(rootContext, resourcePath);
 
-      let precompiledTemplate = nunjucks.precompileString(template, {
+      let precompiledTemplate = nunjucks.precompileString(source, {
         env,
         name: templateName,
         asFunction: false,
@@ -71,8 +70,6 @@ const preprocessor = (loaderContext, options = {}, watch) => {
       const matches = precompiledTemplate.matchAll(dependenciesRegExp);
       const requiredTemplates = new Set();
       let dependencies = '';
-
-      externalData = stringifyData(data);
 
       for (const [, templateFile] of matches) {
         if (requiredTemplates.has(templateFile)) continue;
@@ -106,7 +103,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
 
       return (
         precompiledTemplate +
-        `;var ${fnName} = (locals) => nunjucks.render("${templateName}", Object.assign(__data__, locals));`
+        `;var ${exportFunction} = (context) => nunjucks.render("${templateName}", Object.assign(__data__, context));`
       );
     },
 
@@ -115,16 +112,17 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The source code of the precompiled template function.
+     * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate) => {
+    export: (precompiledTemplate, { data }) => {
       const runtimeFile = require.resolve('nunjucks/browser/nunjucks-slim.min');
 
       return `
         var nunjucks = require('${runtimeFile}');
-        var __data__ = ${externalData};
+        var __data__ = ${stringifyData(data)};
         ${precompiledTemplate};
-        ${exportCode} ${fnName};`;
+        ${exportCode}${exportFunction};`;
     },
   };
 };

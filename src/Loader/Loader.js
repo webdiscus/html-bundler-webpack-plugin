@@ -9,13 +9,13 @@ class Loader {
   static compiler = null;
 
   /**
-   * @param {Object} loaderContext
+   * @param {BundlerPluginLoaderContext} loaderContext
    */
   static init(loaderContext) {
     const { rootContext, hot } = loaderContext;
     const { preprocessor, preprocessorMode, data, esModule, self: useSelf } = Option.get();
 
-    this.data = data;
+    //this.data = data;
 
     // prevent double initialization with same options, it occurs when many entry files used in one webpack config
     if (!PluginService.isCached(rootContext)) {
@@ -57,11 +57,11 @@ class Loader {
    * Export generated result.
    *
    * @param {string} source
-   * @param {string} issuer
+   * @param {BundlerPluginLoaderContext} loaderContext
    * @return {string}
    */
-  static export(source, issuer) {
-    return this.compiler.export(source, this.data, issuer);
+  static export(source, loaderContext) {
+    return this.compiler.export(source, loaderContext);
   }
 
   /**

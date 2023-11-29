@@ -23,20 +23,19 @@ class PreprocessorMode {
    * @abstract
    */
   requireExpression(file) {
-    return '';
+    return file;
   }
 
   /**
    * Export template code with rendered HTML.
    *
    * @param {string} content The template content.
-   * @param {{}} data The object with variables passed in template.
-   * @param {string} issuer The issuer of the template file.
+   * @param {BundlerPluginLoaderContext} loaderContext
    * @return {string}
    * @abstract
    */
-  export(content, data, issuer) {
-    return '';
+  export(content, loaderContext) {
+    return content;
   }
 
   /**
@@ -48,7 +47,7 @@ class PreprocessorMode {
    * @abstract
    */
   exportError(error, issuer) {
-    return '';
+    return error;
   }
 
   /**

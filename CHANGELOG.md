@@ -1,5 +1,9 @@
 # Change log
 
+## 3.3.0 (2023-11-29)
+
+- feat: add support for the template function on the client-side for `eta`
+
 ## 3.2.0 (2023-11-28)
 
 - feat: add Twig preprocessor. Now you can use "best of the best" template engine. Enjoy ;-)

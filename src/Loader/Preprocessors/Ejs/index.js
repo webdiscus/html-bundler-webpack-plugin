@@ -13,19 +13,17 @@ const preprocessor = (loaderContext, options) => {
   const { rootContext } = loaderContext;
 
   return {
-    externalData: '{}',
-
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.
      *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
-    render: (template, { resourcePath, data = {} }) =>
-      Ejs.render(template, data, {
+    render: (source, { resourcePath, data = {} }) =>
+      Ejs.render(source, data, {
         async: false,
         root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
         ...options,
@@ -38,13 +36,13 @@ const preprocessor = (loaderContext, options) => {
      *
      * TODO: add support for the `include`
      *
-     * @param {string} template
+     * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
-    compile: (template, { resourcePath, data = {} }) => {
-      let source = Ejs.compile(template, {
+    compile: (source, { resourcePath, data = {} }) => {
+      let templateFunction = Ejs.compile(source, {
         client: true,
         compileDebug: false,
         root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
@@ -53,26 +51,25 @@ const preprocessor = (loaderContext, options) => {
         filename: resourcePath, // allow including a partial relative to the template
       }).toString();
 
-      this.externalData = stringifyData(data);
-
-      return source.replace(`var __output = "";`, 'locals = Object.assign(__data__, locals); var __output = "";');
+      return templateFunction
+        .replace(`var __output = "";`, 'locals = Object.assign(__data__, locals); var __output = "";')
+        .replaceAll('include(', 'require(');
     },
 
     /**
      * Export the compiled template function contained resolved source asset files.
      * Note: this method is required for `compile` mode.
      *
-     * @param {string} content The source code of the template function.
+     * @param {string} templateFunction The source code of the template function.
+     * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (content) => {
+    export: (templateFunction, { data }) => {
       // the name of template function in generated code
-      const fnName = 'anonymous';
+      const exportFunction = 'anonymous';
       const exportCode = 'module.exports=';
 
-      content = content.replaceAll('include(', 'require(');
-
-      return `var __data__ = ${this.externalData};` + content + `;${exportCode}${fnName};`;
+      return `var __data__ = ${stringifyData(data)};` + templateFunction + `;${exportCode}${exportFunction};`;
     },
   };
 };
