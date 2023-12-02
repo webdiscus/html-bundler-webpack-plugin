@@ -390,13 +390,11 @@ describe('integrity, dynamic chunks', () => {
 });
 
 describe('usage template in js on client side', () => {
+  // Eta
   test('default template', () => compareFiles('js-tmpl-default'));
-
-  // Note:
-  //  Eta does not compile the template into template function source code,
-  //  so we compile the template into an HTML string that will be wrapped in a function for client-side compatibility.
   test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
   test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
+  test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
 
   // EJS
   test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));

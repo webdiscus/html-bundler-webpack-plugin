@@ -84,7 +84,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data
      * @return {string}
      */
-    render: (source, { resourcePath, data = {} }) => {
+    render(source, { resourcePath, data = {} }) {
       const twigOptions = {
         ...options,
         async,
@@ -102,7 +102,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {BundlerPluginLoaderContext} loaderContext
      * @return {Promise}
      */
-    compile: (source, loaderContext) => {
+    compile(source, loaderContext) {
       const { resourcePath, data = {} } = loaderContext;
 
       return new Promise((resolve, reject) => {
@@ -143,7 +143,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {boolean} hot
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate, { data, hot }) => {
+    export(precompiledTemplate, { data, hot }) {
       const runtimeFile = require.resolve('twig/twig.min.js');
       const exportFunction = 'templateFn';
       const exportCode = 'module.exports=';
@@ -165,3 +165,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
+module.exports.test = /\.(html|twig)$/;

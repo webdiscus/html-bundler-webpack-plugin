@@ -515,7 +515,6 @@ class Collection {
           !dependency.userRequest ||
           // skip vue runtime dependencies
           dependency.userRequest === 'vue'
-          // || 'directImport' in dependency
         )
           continue;
 
@@ -533,14 +532,13 @@ class Collection {
         }
 
         const parentIndex = moduleGraph.getParentBlockIndex(dependency);
-        const { isImportedStyle } = depModule.resourceResolveData._bundlerPluginMeta || {}; // TODO: test
 
         if (depModule.dependencies.length > 0) {
           // save current order before recursive walking
           orderStack.push(order);
           order += (order ? '.' : '') + parentIndex;
           result.push(...walk(depModule));
-        } else if (isImportedStyle) {
+        } else if (depModule.resourceResolveData?._bundlerPluginMeta.isImportedStyle === true) {
           result.push({
             order: order + (order ? '.' : '') + parentIndex,
             module: depModule,

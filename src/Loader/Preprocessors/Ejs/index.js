@@ -1,12 +1,17 @@
 const { loadModule } = require('../../../Common/FileUtils');
 const { stringifyData } = require('../../Utils');
 
+// replace the partial file and data to load nested included template via the Webpack loader
+// include("./file.html")                   => require("./file.eta")({...locals, ...{}})
+// include('./file.html', { name: 'Siri' }) => require('./file.eta')({...locals, ...{name: 'Siri'}})
+const includeRegexp = /include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
+
 /**
- * Transform the raw template to template function or HTML.
+ * Transform the raw template source to a template function or HTML.
  *
- * @param {{}} loaderContext
+ * @param {BundlerPluginLoaderContext} loaderContext
  * @param {{}} options
- * @return {function(template: string, {resourcePath: string, data?: {}}, {preprocessorMode: string}): string}
+ * @return {{compile: (function(string, {resourcePath: string, data?: {}}): *), render: (function(string, {resourcePath: string, data?: {}}): *), export: (function(string, {data: {}}): string)}}
  */
 const preprocessor = (loaderContext, options) => {
   const Ejs = loadModule('ejs');
@@ -22,38 +27,36 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data
      * @return {string}
      */
-    render: (source, { resourcePath, data = {} }) =>
-      Ejs.render(source, data, {
+    render(source, { resourcePath, data = {} }) {
+      return Ejs.render(source, data, {
         async: false,
         root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
         ...options,
         filename: resourcePath, // allow including a partial relative to the template
-      }),
+      });
+    },
 
     /**
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
-     *
-     * TODO: add support for the `include`
      *
      * @param {string} source The template source code.
      * @param {string} resourcePath
      * @param {{}} data
      * @return {string}
      */
-    compile: (source, { resourcePath, data = {} }) => {
-      let templateFunction = Ejs.compile(source, {
-        client: true,
+    compile(source, { resourcePath, data = {} }) {
+      return Ejs.compile(source, {
         compileDebug: false,
-        root: rootContext, // root path for includes with an absolute path (e.g., /file.html)
+        root: rootContext,
         ...options,
-        async: false, // for client is used the sync function
+        client: true,
+        async: false,
         filename: resourcePath, // allow including a partial relative to the template
-      }).toString();
-
-      return templateFunction
-        .replace(`var __output = "";`, 'locals = Object.assign(__data__, locals); var __output = "";')
-        .replaceAll('include(', 'require(');
+        context: data,
+      })
+        .toString()
+        .replaceAll(includeRegexp, `require($1)({...locals, ...{$2}})`);
     },
 
     /**
@@ -64,14 +67,18 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (templateFunction, { data }) => {
+    export(templateFunction, { data }) {
       // the name of template function in generated code
       const exportFunction = 'anonymous';
       const exportCode = 'module.exports=';
 
-      return `var __data__ = ${stringifyData(data)};` + templateFunction + `;${exportCode}${exportFunction};`;
+      return `${templateFunction};
+        var __data__ = ${stringifyData(data)};
+        var template = (context) => ${exportFunction}(Object.assign(__data__, context));
+        ${exportCode}template;`;
     },
   };
 };
 
 module.exports = preprocessor;
+module.exports.test = /\.(html|ejs)$/;

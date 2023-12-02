@@ -71,24 +71,37 @@ class PluginService {
     this.#loaderCache.clear();
   }
 
+  /**
+   * Whether the plugin is defined in Webpack configuration.
+   * @return {boolean}
+   */
+  static isUsed() {
+    return this.#used;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  static isWatchMode() {
+    return this.#watchMode;
+  }
+
+  static isCached(context) {
+    if (this.#contextCache.has(context)) return true;
+    this.#contextCache.add(context);
+
+    return false;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  static useHotUpdate() {
+    return this.#hotUpdate;
+  }
+
   static setDependencyInstance(Dependency) {
     this.Dependency = Dependency;
-  }
-
-  /**
-   * @param {boolean} mode The mode is true when Webpack run as watch/serve.
-   */
-  static setWatchMode(mode) {
-    this.#watchMode = mode;
-  }
-
-  /**
-   * Called before each new compilation, in the serve/watch mode.
-   */
-  static watchRun() {
-    for (const [id, options] of this.#loaderCache) {
-      Preprocessor.watchRun(options);
-    }
   }
 
   /**
@@ -140,32 +153,19 @@ class PluginService {
   }
 
   /**
-   * Whether the plugin is defined in Webpack configuration.
-   * @return {boolean}
+   * @param {boolean} mode The mode is true when Webpack run as watch/serve.
    */
-  static isUsed() {
-    return this.#used;
+  static setWatchMode(mode) {
+    this.#watchMode = mode;
   }
 
   /**
-   * @return {boolean}
+   * Called before each new compilation, in the serve/watch mode.
    */
-  static isWatchMode() {
-    return this.#watchMode;
-  }
-
-  /**
-   * @return {boolean}
-   */
-  static useHotUpdate() {
-    return this.#hotUpdate;
-  }
-
-  static isCached(context) {
-    if (this.#contextCache.has(context)) return true;
-    this.#contextCache.add(context);
-
-    return false;
+  static watchRun() {
+    for (const [id, options] of this.#loaderCache) {
+      Preprocessor.watchRun(options);
+    }
   }
 
   /**

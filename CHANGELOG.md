@@ -1,5 +1,11 @@
 # Change log
 
+## 3.4.0 (2023-12-03)
+
+- feat: add support for the template function on the client-side for `ejs`
+- docs: update readme
+- test: add tests for compile mode
+
 ## 3.3.0 (2023-11-29)
 
 - feat: add support for the template function on the client-side for `eta`

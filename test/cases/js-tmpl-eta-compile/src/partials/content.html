@@ -10,4 +10,4 @@
 <% /* include the partial containing variables */ %>
 <%~ include('./include.html') %>
 <% /* include the partial containing variables, override global variables with locals */ %>
-<%~ include('./include.html', { name: 'Armagedon', title: 'Included data', lang: 'de'}) %>
+<%~ include('./include.html', { nested: {name: 'Armageddon'}, title: 'Included data', lang: 'de'}) %>

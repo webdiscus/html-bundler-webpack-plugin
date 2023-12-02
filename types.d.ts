@@ -50,6 +50,9 @@ declare namespace HtmlBundlerPlugin {
     beforeEmit?: BeforeEmit;
     afterEmit?: AfterEmit;
 
+    // enable the plugin, used for debugging
+    enabled?: boolean;
+
     // match of entry template files
     test?: RegExp;
     /**

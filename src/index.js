@@ -1,7 +1,6 @@
 const Option = require('./Plugin/Option');
 const AssetCompiler = require('./Plugin/AssetCompiler');
 const loader = require.resolve('./Loader');
-const { isWin } = require('./Common/Helpers');
 
 /**
  * @typedef {PluginOptions} HtmlBundlerPluginOptions
@@ -13,7 +12,6 @@ class Plugin extends AssetCompiler {
    */
   constructor(options = {}) {
     const PluginOptions = {
-      test: /\.(html|ejs|eta|hbs|handlebars|njk|twig)$/,
       enabled: true,
       verbose: false,
       minify: false,
@@ -40,8 +38,6 @@ class Plugin extends AssetCompiler {
    * @param {Compiler} compiler The instance of the webpack compilation.
    */
   initialize(compiler) {
-    const webpackLoaders = compiler.options.module.rules;
-
     // Note: the default templating engine is Eta.
     const defaultLoader = {
       test: Option.get().test,
@@ -51,15 +47,7 @@ class Plugin extends AssetCompiler {
       loader,
     };
 
-    const existsLoader = webpackLoaders.find((rule) => {
-      let ruleStr = JSON.stringify(rule);
-      if (isWin) ruleStr = ruleStr.replaceAll(/\\\\/g, '\\');
-      return ruleStr.indexOf(loader) > -1;
-    });
-
-    if (existsLoader == null) {
-      webpackLoaders.unshift(defaultLoader);
-    }
+    Option.addLoader(defaultLoader);
   }
 }
 

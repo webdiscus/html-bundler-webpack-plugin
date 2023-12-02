@@ -56,7 +56,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      * @param {{}} data
      * @return {string}
      */
-    compile: (source, { resourcePath, data }) => {
+    compile(source, { resourcePath, data }) {
       // the template name must be unique, e.g. partial file, to allow import many partials in the same js
       const templateName = makeTemplateId(rootContext, resourcePath);
 
@@ -115,7 +115,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate, { data }) => {
+    export(precompiledTemplate, { data }) {
       const runtimeFile = require.resolve('nunjucks/browser/nunjucks-slim.min');
 
       return `
@@ -128,3 +128,4 @@ const preprocessor = (loaderContext, options = {}, watch) => {
 };
 
 module.exports = preprocessor;
+module.exports.test = /\.(html|njk)$/;

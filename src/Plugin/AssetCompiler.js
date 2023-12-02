@@ -10,8 +10,6 @@ const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
 //const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 //const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
-const { minify } = require('html-minifier-terser');
-
 const { pluginName } = require('../config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { isDir } = require('../Common/FileUtils');
@@ -36,6 +34,9 @@ const Integrity = require('./Extras/Integrity');
 
 const { compilationName, verbose } = require('./Messages/Info');
 const { PluginError, afterEmitException } = require('./Messages/Exception');
+const Preprocessor = require('../Loader/Preprocessor');
+
+const loaderPath = require.resolve('../Loader');
 
 /**
  * The CSS loader.
@@ -154,7 +155,7 @@ class AssetCompiler {
    * @param {PluginOptions|{}} options
    */
   constructor(options = {}) {
-    Option.init(options, { assetEntry: AssetEntry });
+    Option.init(options, { assetEntry: AssetEntry, loaderPath: loaderPath });
 
     // let know the loader that the plugin is being used
     PluginService.init(Option);
@@ -249,6 +250,9 @@ class AssetCompiler {
       PluginService.setWatchMode(true);
       PluginService.watchRun();
     });
+
+    // TODO:
+    //  - before AssetEntry.initEntry() init preprocessor by Loader.Options to get `test`
 
     // entry option
     AssetEntry.initEntry();
@@ -815,7 +819,6 @@ class AssetCompiler {
 
       // note: the contextIssuer may be wrong, as previous entry, because Webpack distinct same modules by first access
       let issuer = contextIssuer === entry.sourceFile ? entry.resource : contextIssuer;
-
       if (!issuer || Option.isEntry(issuer)) {
         issuer = entry.resource;
       }

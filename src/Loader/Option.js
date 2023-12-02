@@ -119,7 +119,7 @@ class Option {
 
       // watch only files matched to RegExps,
       // if empty then watch all files, except ignored
-      files: [PluginService.getOptions().getFilterRegexp()],
+      files: PluginService.getOptions().getEntryTest(),
 
       // ignore paths and files matched to RegExps
       ignore: [

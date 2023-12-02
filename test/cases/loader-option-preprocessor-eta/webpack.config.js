@@ -16,7 +16,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-      test: /\.(html|ejs|eta)$/,
+      test: /\.(html|eta)$/, // test: process only matched templates, ignore other templates
       entry: {
         index: {
           import: './src/views/pages/home.eta',

@@ -4096,14 +4096,21 @@ The [preprocessor](#loader-option-preprocessor) works in two modes: `render` and
 
 ### Render mode
 
-The `render` is default mode for a template defined in the [entry](#option-entry) option.
-The processed template in `render` mode is HTML string, which is saved as HTML file.
-You can import a template file as generated HTML string in JS with the `?render` query.
+The `render` is the default mode for the template defined in the [entry](#option-entry) option.
+The rendered template is an HTML string, which is saved as an HTML file.
+
+You can import the template file as a generated HTML string in JS using the `?render` query.
+To pass simple variables into the imported template you can use query parameters, e.g.: `?render&name=Arnold&age=25`.
+To pass complex variables such as an array or an object use the global [data](#option-data) option.
+
+> **Note**
+> 
+> At runtime in JavaScript will be used the already rendered HTML from the template.
 
 For example:
 
 ```js
-import html from './partials/star-button.html?render';
+import html from './partials/star-button.html?render&buttonText=Star';
 
 document.getElementById('star-button').innerHTML = html;
 ```
@@ -4114,15 +4121,16 @@ _./partials/star-button.html_
   <!-- you can use a source image file with webpack alias,
        in the bundle it will be auto replaced with the output asset filename -->
   <img src="@images/star.svg">
-  <span>Star</span>
+  <!-- the `buttonText` variable is passed via query -->
+  <span><%= buttonText %></span>
 </button>
 ```
 
 ### Compile mode
 
-The `compile` is default mode for a template imported in JavaScript file.
-The processed template in `compile` mode is a template function,
-which can be executed with passed variables in the runtime on client-side.
+The `compile` is the default mode for the template imported in JavaScript file.
+The compiled template is a template function,
+which can be executed with passed variables in the runtime on the client-side in the browser.
 
 For example:
 
@@ -4159,10 +4167,10 @@ _./partials/people.ejs_
 
 #### Template engines that do support the `template function` on client-side
 
-- [eta](#loader-option-preprocessor-options-eta) - generates a fast small template function with runtime (~3KB) (**recommended**)\
+- [eta](#loader-option-preprocessor-options-eta) - generates a template function with runtime (~3KB)\
   `include` is supported
-- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast small pure template function w/o runtime\
-  `include` is NOT supported (yet)
+- [ejs](#loader-option-preprocessor-options-ejs) - generates a fast smallest pure template function w/o runtime (**recommended** for use on client-side)\
+  `include` is supported
 - [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)\
   `include` is NOT supported (yet)
 - [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)\

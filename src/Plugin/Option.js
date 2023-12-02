@@ -4,6 +4,7 @@ const LoaderOption = require('../Loader/Option');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 
 const pluginName = require('../config');
+const Preprocessor = require('../Loader/Preprocessor');
 
 class Option {
   static pluginName = pluginName;
@@ -16,6 +17,7 @@ class Option {
   static dynamicEntry = false;
   static cacheable = false;
   static context = '';
+  static testEntry = null;
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
     enabled: true,
@@ -38,13 +40,27 @@ class Option {
    *
    * @param {HtmlBundlerPlugin.PluginOptions} options The plugin options.
    * @param {AssetEntry} assetEntry The instance of the AssetEntry class.
+   * @param {string} loaderPath The absolute path of the loader.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
-  static init(options, { assetEntry }) {
+  static init(options, { assetEntry, loaderPath }) {
+    this.loaderPath = loaderPath;
     this.options = options;
     this.assetEntry = assetEntry;
+    this.testEntry = null;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
+
+    const loaderOptions = this.options.loaderOptions;
+
+    // add reference for the preprocessor option into the plugin options
+    if (loaderOptions && loaderOptions.preprocessor != null) {
+      options.preprocessor = loaderOptions.preprocessor;
+
+      if (loaderOptions.preprocessorOptions != null) {
+        options.preprocessorOptions = loaderOptions.preprocessorOptions;
+      }
+    }
 
     if (!isFunction(options.postprocess)) this.options.postprocess = null;
     if (!isFunction(options.beforeEmit)) this.options.beforeEmit = null;
@@ -151,8 +167,8 @@ class Option {
       this.options.integrity == null
         ? {}
         : typeof this.options.integrity === 'object'
-        ? { enabled: 'auto', ...this.options.integrity }
-        : { enabled: this.options.integrity };
+          ? { enabled: 'auto', ...this.options.integrity }
+          : { enabled: this.options.integrity };
 
     integrity.enabled = this.toBool(integrity.enabled, true, false);
     if (this.options.integrity?.hashFunctions != null) {
@@ -188,6 +204,38 @@ class Option {
       this.options.minify = this.toBool(this.options.minify, true, false);
     }
     this.options.minifyOptions = { ...defaultMinifyOptions, ...this.options.minifyOptions };
+
+    this.initEntry(this.loaderPath);
+  }
+
+  /**
+   * Init detection of entry files.
+   *
+   * @param {string} loaderPath The absolute path to loader file.
+   */
+  static initEntry(loaderPath) {
+    const preprocessorTest = Preprocessor.getTest(this.options.preprocessor);
+    const loaderTests = new Set();
+
+    // detect tests defined in rules
+    this.webpackOptions.module.rules.forEach((rule) => {
+      let ruleStr = JSON.stringify(rule);
+
+      if (isWin) ruleStr = ruleStr.replaceAll(/\\\\/g, '\\');
+
+      if (ruleStr.indexOf(loaderPath) > -1) {
+        loaderTests.add(rule.test);
+      }
+    });
+
+    if (!this.options.test) {
+      // set preprocessor test for default loader if the test plugin option is undefined
+      // fallback: if the test option is not defined anywhere
+      this.options.test = preprocessorTest ? preprocessorTest : /\.html$/;
+    }
+
+    // loader tests from rules have the highest priority, over defined in plugin options
+    this.testEntry = loaderTests.size > 0 ? [...loaderTests] : [this.options.test];
   }
 
   static initWatchMode() {
@@ -289,7 +337,21 @@ class Option {
   }
 
   /**
-   * @param {string} resource
+   * Whether the file is a template entry file.
+   *
+   * @param {string} resource The resource file, including a query.
+   * @return {boolean}
+   */
+  static isEntry(resource) {
+    if (resource == null) return false;
+
+    const [file] = resource.split('?', 1);
+
+    return this.testEntry.find((test) => test.test(file)) != null;
+  }
+
+  /**
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isStyle(resource) {
@@ -298,7 +360,7 @@ class Option {
   }
 
   /**
-   * @param {string} resource
+   * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   static isScript(resource) {
@@ -358,20 +420,6 @@ class Option {
     const value = urlParams.get('inline');
 
     return this.toBool(value, false, this.options.css.inline);
-  }
-
-  /**
-   * Whether the source file is a template entry file.
-   *
-   * @param {string} resource The resource file, including a query.
-   * @return {boolean}
-   */
-  static isEntry(resource) {
-    if (resource == null) return false;
-
-    const [file] = resource.split('?', 1);
-
-    return this.options.test.test(file);
   }
 
   /**
@@ -438,10 +486,10 @@ class Option {
   }
 
   /**
-   * @return {RegExp}
+   * @return {Array<RegExp>}
    */
-  static getFilterRegexp() {
-    return this.options.test;
+  static getEntryTest() {
+    return this.testEntry;
   }
 
   /**
@@ -603,6 +651,24 @@ class Option {
    */
   static getEntryPath() {
     return this.dynamicEntry ? this.options.entry : null;
+  }
+
+  /**
+   * Add default loader if it yet not defined.
+   *
+   * @param {{test: RegExp, loader: string}} loader
+   */
+  static addLoader(loader) {
+    const loaderPath = loader.loader;
+    const existsLoader = this.webpackOptions.module.rules.find((rule) => {
+      let ruleStr = JSON.stringify(rule);
+      if (isWin) ruleStr = ruleStr.replaceAll(/\\\\/g, '\\');
+      return ruleStr.indexOf(loaderPath) > -1;
+    });
+
+    if (existsLoader == null) {
+      this.webpackOptions.module.rules.unshift(loader);
+    }
   }
 
   /**

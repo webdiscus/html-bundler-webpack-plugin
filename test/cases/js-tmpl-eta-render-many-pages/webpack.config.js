@@ -17,19 +17,27 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: {
-          import: './src/index.html',
+        page1: {
+          import: './src/template.html',
           // pass data into the entry template
           // NOTE: the data are NOT available in the imported template in JS
           data: {
-            title: 'My Title',
+            title: 'Page 1',
+          },
+        },
+        page2: {
+          import: './src/template.html',
+          // pass data into the entry template
+          // NOTE: the data are NOT available in the imported template in JS
+          data: {
+            title: 'Page 2',
           },
         },
       },
 
       // global data passed into all templates, including imported templates in JS
       data: {
-        name: 'World',
+        buttonText: 'My button',
       },
     }),
   ],

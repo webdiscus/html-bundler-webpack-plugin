@@ -1,6 +1,5 @@
-import html from './partials/header.html?render';
+import html from './partials/component.html?render&buttonText=My button&buttonImage=@images/stern.svg';
 
-const domNode = document.getElementById('header');
-domNode.innerHTML = html;
+document.getElementById('content').innerHTML = html;
 
 console.log('>> app');

@@ -1,0 +1,5 @@
+<% /* The variable passed in the Webpack config via the global data option */ %>
+<h2>Hello <%= name %>!</h2>
+
+<% /* Pass the variables through  */ %>
+<%~ include('src/partials/button.html', { buttonText, buttonImage }) %>

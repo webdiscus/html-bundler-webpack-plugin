@@ -2,8 +2,18 @@ const path = require('path');
 const { stringifyData } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
-const includeRegexp = /=include\((?<file>.+?)(?:\)|,\s*{(?<data>.+?)}\))/g;
+// replace the partial file and data to load nested included template via the Webpack loader
+// include("./file.html")                   => require("./file.eta")({...it, ...{}})
+// include('./file.html', { name: 'Siri' }) => require('./file.eta')({...it, ...{name: 'Siri'}})
+const includeRegexp = /=include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
 
+/**
+ * Transform the raw template source to a template function or HTML.
+ *
+ * @param {BundlerPluginLoaderContext} loaderContext
+ * @param {{}} options
+ * @return {{compile: (function(string, {resourcePath: string, data?: {}}): string), render: {(*, {resourcePath: *, data?: {}}): *, (*, {resourcePath: *, data?: {}}): *}, export: (function(string, {data: {}}): string)}}
+ */
 const preprocessor = (loaderContext, options) => {
   const Eta = loadModule('eta', () => require('eta').Eta);
   const { rootContext } = loaderContext;
@@ -36,12 +46,8 @@ const preprocessor = (loaderContext, options) => {
      * @return {string}
      */
     render: async
-      ? (source, { resourcePath, data = {} }) => {
-          return eta.renderStringAsync(source, data);
-        }
-      : (source, { resourcePath, data = {} }) => {
-          return eta.renderString(source, data);
-        },
+      ? (source, { resourcePath, data = {} }) => eta.renderStringAsync(source, data)
+      : (source, { resourcePath, data = {} }) => eta.renderString(source, data),
 
     /**
      * Compile template into template function.
@@ -52,7 +58,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data
      * @return {string}
      */
-    compile: (source, { resourcePath, data = {} }) => {
+    compile(source, { resourcePath, data = {} }) {
       const varName = options.varName || 'it';
       const eta = new Eta({
         useWith: true, // allow using variables in template without `it.` namespace
@@ -60,12 +66,9 @@ const preprocessor = (loaderContext, options) => {
         views,
       });
 
-      // parse and replace the partial file and data
-      // include("./file.eta")                  => require("./file.eta")({...it, ...{}})
-      // include('./file.eta', { name: 'eta' }) => require('./file.eta')({...it, ...{name: 'eta'}})
-      const templateFunctionBody = eta
+      let templateFunctionBody = eta
         .compileToString(source)
-        .replaceAll(includeRegexp, `=require($<file>)({...${varName}, ...{$<data>}})`);
+        .replaceAll(includeRegexp, `=require($1)({...${varName}, ...{$2}})`);
 
       return `function(${varName}){${templateFunctionBody}}`;
     },
@@ -78,7 +81,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (templateFunction, { data }) => {
+    export(templateFunction, { data }) {
       // note: resolved the file is for node, therefore, we need to get the module path plus file for browser
       const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs');
       const exportFunction = 'templateFn';
@@ -96,3 +99,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
+module.exports.test = /\.(html|eta)$/;

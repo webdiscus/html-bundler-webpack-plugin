@@ -3,6 +3,8 @@ const { unsupportedPreprocessorException } = require('./Messages/Exeptions');
 /** @typedef {import('webpack').LoaderContext} LoaderContext */
 
 class Preprocessor {
+  static cache = new Map();
+
   /**
    * Whether the preprocessor is used.
    *
@@ -16,11 +18,60 @@ class Preprocessor {
   }
 
   /**
-   * Returns preprocessor to render/compile a template.
-   * The default preprocessor uses the Eta templating engine.
+   * Load preprocessor module.
+   * The default preprocessor uses the Eta template engine.
+   *
+   * @param {string|function|boolean|undefined} preprocessor
+   * @return {*} TODO: add jsdoc for the preprocessor module type
+   * @throws
+   */
+  static load(preprocessor) {
+    const preprocessorDirs = {
+      eta: 'Eta',
+      ejs: 'Ejs',
+      handlebars: 'Handlebars',
+      nunjucks: 'Nunjucks',
+      twig: 'Twig',
+    };
+
+    // disabled preprocessor
+    if (preprocessor === false) return null;
+
+    // default preprocessor is Eta
+    if (preprocessor == null) preprocessor = 'eta';
+
+    if (this.cache.has(preprocessor)) {
+      return this.cache.get(preprocessor);
+    }
+
+    let dirname = preprocessorDirs[preprocessor];
+
+    if (dirname) {
+      // we are sure the file exists
+      const module = require(`./Preprocessors/${dirname}/index.js`);
+      this.cache.set(preprocessor, module);
+
+      return module;
+    }
+
+    unsupportedPreprocessorException(preprocessor);
+  }
+
+  /**
+   * @param {*} preprocessor
+   * @return {RegExp|null}
+   */
+  static getTest(preprocessor) {
+    const module = typeof preprocessor === 'function' ? preprocessor : this.load(preprocessor);
+
+    return module?.test;
+  }
+
+  /**
+   * Returns a preprocessor method to render/compile a template.
    *
    * @param {Object} options The loader options.
-   * @return {null|(function(string, {data?: {}}): Promise|null)}
+   * @return {null|(function(string, loaderContext: BundlerPluginLoaderContext): Promise|null)}
    */
   static getPreprocessor(options) {
     const { preprocessor, preprocessorMode } = options;
@@ -36,37 +87,17 @@ class Preprocessor {
 
   /**
    * Factory preprocessor as a function.
-   * The default preprocessor uses the Eta template engine.
    *
-   * @param {LoaderContext} loaderContext The loader context of Webpack.
+   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
    * @param {string|null|*} preprocessor The preprocessor value, should be a string
    * @param {Object} options The preprocessor options.
-   * @param {Function} watch The function called by watching.
+   * @param {boolean} watch Whether is serve/watch mode.
    * @return {Function|Promise|Object}
-   * @throws
    */
   static factory(loaderContext, { preprocessor, options = {}, watch }) {
-    if (preprocessor == null) preprocessor = 'eta';
+    const module = this.load(preprocessor);
 
-    switch (preprocessor) {
-      case 'eta':
-        return require('./Preprocessors/Eta/index.js')(loaderContext, options);
-
-      case 'ejs':
-        return require('./Preprocessors/Ejs/index.js')(loaderContext, options);
-
-      case 'handlebars':
-        return require('./Preprocessors/Handlebars/index.js')(loaderContext, options);
-
-      case 'nunjucks':
-        return require('./Preprocessors/Nunjucks/index.js')(loaderContext, options, watch);
-
-      case 'twig':
-        return require('./Preprocessors/Twig/index.js')(loaderContext, options);
-
-      default:
-        unsupportedPreprocessorException(preprocessor);
-    }
+    return module(loaderContext, options, watch);
   }
 
   static watchRun({ preprocessor }) {

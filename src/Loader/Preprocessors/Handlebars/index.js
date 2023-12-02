@@ -185,7 +185,9 @@ const preprocessor = (loaderContext, options) => {
      *  to allow defining properties in `this` of some helpers.
      * @return {string}
      */
-    render: (source, { resourcePath, data = {} }) => Handlebars.compile(source, options)({ ...data }),
+    render(source, { resourcePath, data = {} }) {
+      return Handlebars.compile(source, options)({ ...data });
+    },
 
     /**
      * Compile template into template function.
@@ -197,7 +199,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {BundlerPluginLoaderContext} loaderContext
      * @return {string}
      */
-    compile: (source, loaderContext) => {
+    compile(source, loaderContext) {
       return Handlebars.precompile(source);
     },
 
@@ -209,7 +211,7 @@ const preprocessor = (loaderContext, options) => {
      * @param {{}} data The object with variables passed in template.
      * @return {string} The exported template function.
      */
-    export: (precompiledTemplate, { data }) => {
+    export(precompiledTemplate, { data }) {
       const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min');
       const exportFunction = 'templateFn';
       const exportCode = 'module.exports=';
@@ -236,3 +238,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
+module.exports.test = /\.(html|hbs|handlebars)$/;

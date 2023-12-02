@@ -21,6 +21,7 @@ module.exports = {
       },
       preprocessor: 'ejs',
       preprocessorOption: {
+        localsName: '__myVar__',
         views: ['src/partials'],
       },
 

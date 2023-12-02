@@ -7,5 +7,9 @@
     <li><%= people[i] %></li>
     <% } %>
 </ul>
-<img src="@images/fig.png" srcset="@images/kiwi.png 300w, @images/pear.png 400w">
-<%# include('./star.html') #%>
+
+<%# test: include the partial #%>
+<%- include('./include.html') %>
+
+<%# test: include the partial containing variables, override global variables with locals #%>
+<%- include('./include.html', { nested: {name: 'Armageddon'}, title: 'Included data', lang: 'de'}) %>
