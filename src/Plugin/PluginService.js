@@ -114,7 +114,7 @@ class PluginService {
   /**
    * Returns plugin options instance.
    *
-   * TODO: rename to getPluginOptionInstance()
+   * TODO: rename to getOptionInstance()
    *
    * @return {OptionPluginInterface}
    */

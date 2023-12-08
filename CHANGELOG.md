@@ -1,8 +1,12 @@
 # Change log
 
+## 3.4.2 (2023-12-08)
+
+- fix: watching changes in template function imported in JS
+
 ## 3.4.1 (2023-12-08)
 
-- fix: runtime error using template function in js when external data is not defined
+- fix: runtime error using template function in JS when external data is not defined
 
 ## 3.4.0 (2023-12-03)
 

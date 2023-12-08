@@ -3,6 +3,7 @@ const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
 const { parseQuery } = require('../Common/Helpers');
 const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
+const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { watchPathsException, dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
 
 /**
@@ -21,6 +22,7 @@ class Option {
   static #options;
   static #rootContext;
   static #resourcePath;
+  static #pluginOption;
 
   // rule: the first value is default
   static preprocessorModes = new Set(['render', 'compile']);
@@ -33,8 +35,9 @@ class Option {
     const queryData = parseQuery(resourceQuery);
     let options = PluginService.getLoaderCache(loaderId);
 
-    this.fileSystem = loaderContext.fs.fileSystem;
+    this.#pluginOption = PluginService.getOptions();
     this.#watch = PluginService.isWatchMode();
+    this.fileSystem = loaderContext.fs.fileSystem;
     this.#webpackOptions = loaderContext._compiler.options || {};
     this.#rootContext = rootContext;
     this.#resourcePath = resourcePath;
@@ -42,6 +45,9 @@ class Option {
     if (!options) {
       const loaderOptions = PluginService.getLoaderOptions();
       options = { ...loaderOptions, ...(loaderContext.getOptions() || {}) };
+
+      // save the initial value defined in the webpack config
+      options.originalPreprocessorMode = options.preprocessorMode;
 
       // the assets root path is used for resolving files specified in attributes (`sources` option)
       // allow both 'root' and 'basedir' option name for compatibility
@@ -53,16 +59,57 @@ class Option {
 
       PluginService.setLoaderCache(loaderId, options);
     }
-
     this.#options = options;
 
-    // preprocessor mode
+    // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
+    const loaderData = this.#loadData(options.data);
+    const entryData = this.#loadData(loaderContext.entryData);
+    const contextData = loaderContext.data || {};
+
+    // merge plugin and loader data, the plugin data property overrides the same loader data property
+    loaderObject.data = { ...contextData, ...loaderData, ...entryData, ...queryData };
+
+    // beforePreprocessor
+    if (typeof options.beforePreprocessor !== 'function') {
+      options.beforePreprocessor = null;
+    }
+
+    // preprocessor
+    this.#initPreprocessor(loaderContext, queryData);
+
+    // clean loaderContext of artifacts
+    if (loaderContext.entryData != null) delete loaderContext.entryData;
+
+    // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
+    if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
+
+    if (this.#watch) this.#initWatchFiles();
+  }
+
+  /**
+   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
+   * @param {Object} queryData The parsed parameters from the url query.
+   */
+  static #initPreprocessor(loaderContext, queryData) {
+    const pluginOption = this.#pluginOption;
+    const options = this.#options;
     const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
     let [defaultPreprocessorMode] = this.preprocessorModes;
+    let isIssuerScript = false;
     let preprocessorMode;
 
+    if (issuer) {
+      isIssuerScript = pluginOption.isScript(issuer);
+      if (!isIssuerScript) {
+        const rootIssuer = findRootIssuer(PluginService.compilation, issuer);
+        if (rootIssuer) {
+          isIssuerScript = pluginOption.isScript(rootIssuer);
+        }
+      }
+    }
+
     // rule: defaults, if issuer is JS, then compile template to the template function
-    if (issuer && PluginService.getOptions().isScript(issuer)) {
+    if (isIssuerScript) {
       preprocessorMode = defaultPreprocessorMode = 'compile';
     }
 
@@ -75,53 +122,27 @@ class Option {
       }
     }
 
+    // reset the original option value, also no cached state,
+    // because the loader works in different modes depend on the context
+    options.preprocessorMode = options.originalPreprocessorMode;
+
     if (preprocessorMode && this.preprocessorModes.has(preprocessorMode)) {
       options.preprocessorMode = preprocessorMode;
     } else if (!this.preprocessorModes.has(options.preprocessorMode)) {
       options.preprocessorMode = defaultPreprocessorMode;
     }
 
-    // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
-    const loaderData = this.loadData(options.data);
-    const entryData = this.loadData(loaderContext.entryData);
-    const contextData = loaderContext.data || {};
-
-    //console.log('*** INIT DATA1: ', { data: loaderContext.data });
-
-    // merge plugin and loader data, the plugin data property overrides the same loader data property
-    const data = { ...contextData, ...loaderData, ...entryData, ...queryData };
-    if (Object.keys(data).length > 0) loaderObject.data = data;
-
-    loaderObject.data = data;
-
-    //if (!loaderObject.data) loaderObject.data = {};
-
-    //console.log('*** INIT DATA2: ', { data: loaderContext.data });
-
-    // beforePreprocessor
-    if (typeof options.beforePreprocessor !== 'function') {
-      options.beforePreprocessor = null;
-    }
-
-    // preprocessor
     if (!Preprocessor.isUsed(options.preprocessor)) {
       options.preprocessor = Preprocessor.factory(loaderContext, {
         preprocessor: options.preprocessor,
-        watch: this.#watch,
         options: options.preprocessorOptions,
+        watch: this.#watch,
       });
     }
-
-    // clean loaderContext of artifacts
-    if (loaderContext.entryData != null) delete loaderContext.entryData;
-
-    // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
-    if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
-
-    if (this.#watch) this.#initWatchFiles();
   }
 
   static #initWatchFiles() {
+    const pluginOption = this.#pluginOption;
     const watchFiles = {
       // watch files only in the directories;
       // defaults is first-level subdirectory of a template, relative to root context
@@ -129,7 +150,7 @@ class Option {
 
       // watch only files matched to RegExps,
       // if empty then watch all files, except ignored
-      files: PluginService.getOptions().getEntryTest(),
+      files: pluginOption.getEntryTest(),
 
       // ignore paths and files matched to RegExps
       ignore: [
@@ -142,7 +163,7 @@ class Option {
     };
 
     const fs = this.fileSystem;
-    const { paths, files, ignore } = PluginService.getOptions().getWatchFiles();
+    const { paths, files, ignore } = pluginOption.getWatchFiles();
     const watchDirs = new Set([rootSourceDir(this.#rootContext, this.#resourcePath)]);
     const rootContext = this.#rootContext;
 
@@ -195,7 +216,7 @@ class Option {
    * @param {Object|string|null} dataValue If string, the relative or absolute filename.
    * @return {Object}
    */
-  static loadData(dataValue) {
+  static #loadData(dataValue) {
     if (typeof dataValue !== 'string') return dataValue || {};
 
     let dataFile = PluginService.dataFiles.get(dataValue);

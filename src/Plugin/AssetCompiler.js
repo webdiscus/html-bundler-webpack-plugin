@@ -12,6 +12,7 @@ const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
 
 const { pluginName } = require('../config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
+const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
 const createPersistentCache = require('./createPersistentCache');
 const PersistentCache = require('./PersistentCache');
@@ -34,7 +35,6 @@ const Integrity = require('./Extras/Integrity');
 
 const { compilationName, verbose } = require('./Messages/Info');
 const { PluginError, afterEmitException } = require('./Messages/Exception');
-const Preprocessor = require('../Loader/Preprocessor');
 
 const loaderPath = require.resolve('../Loader');
 
@@ -585,7 +585,7 @@ class AssetCompiler {
       // to avoid splitting the loader runtime scripts;
       // allow runtime scripts for styles imported in JavaScript, regards deep imported styles via url()
       if (isIssuerStyle && file.endsWith('.js')) {
-        const rootIssuer = Collection.findRootIssuer(issuer);
+        const rootIssuer = findRootIssuer(this.compilation, issuer);
         meta.isScript = true;
 
         // return true if the root issuer is a JS (not style and not template), otherwise return false
@@ -605,7 +605,7 @@ class AssetCompiler {
       // try to detect imported style as resolved resource file, because a request can be a node module w/o an extension
       // the issuer can be a style if a scss contains like `@import 'main.css'`
       if (!Option.isStyle(issuer) && !Option.isEntry(issuer) && meta.isStyle) {
-        const rootIssuer = Collection.findRootIssuer(issuer);
+        const rootIssuer = findRootIssuer(this.compilation, issuer);
 
         Collection.importStyleRootIssuers.add(rootIssuer || issuer);
         meta.isImportedStyle = true;
