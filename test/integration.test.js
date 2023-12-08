@@ -131,6 +131,7 @@ describe('plugin hooks', () => {
 
   test('postprocess', () => compareFiles('hook-postprocess'));
   test('beforeEmit', () => compareFiles('hook-beforeEmit'));
+  test('using beforeEmit for rtlcss', () => compareFiles('hook-beforeEmit-rtlcss'));
 
   // TODO: add an argument as flat map of assets, w/o tree, to create a manifest
   test('afterEmit', () => compareFiles('hook-afterEmit'));
