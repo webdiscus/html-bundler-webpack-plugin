@@ -19,6 +19,18 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      loaderOptions: {
+        preprocessor: 'eta',
+        preprocessorOptions: {
+          autoEscape: true,
+          async: true,
+          varName: '__myVar__', // test: override the default `it` in template function
+        },
+        // test: pass external variables into js template
+        data: {
+          title: 'My Title',
+        },
+      },
     }),
   ],
 

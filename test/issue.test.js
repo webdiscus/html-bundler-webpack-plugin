@@ -17,5 +17,6 @@ describe('issue tests', () => {
 
   test('issue advanced template', () => compareFiles('issue-0-advanced-template'));
 
-  // add your issue test here
+  // TODO: fix it
+  //test('issue using mui and css in js', () => compareFiles('issue-mui-css'));
 });

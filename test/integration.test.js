@@ -320,7 +320,7 @@ describe('custom plugins', () => {
 
 describe('entry', () => {
   test('css', () => compareFiles('entry-css-single'));
-  // TODO: implement extracting form entry as array with many files
+  // TODO: implement extracting from entry as array with many files
   //test('js and css in the same entry name', () => compareFiles('entry-js-css'));
 });
 
@@ -393,6 +393,8 @@ describe('usage template in js on client side', () => {
   // Eta
   test('default template', () => compareFiles('js-tmpl-default'));
   test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
+  test('eta: compile to fn with local data in js', () => compareFiles('js-tmpl-eta-compile-data-local'));
+  test('eta: compile to fn with external data', () => compareFiles('js-tmpl-eta-compile-data-external'));
   test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
   test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
 

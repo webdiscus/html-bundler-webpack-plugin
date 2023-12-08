@@ -22,6 +22,7 @@ const {
 const loader = function (content, map, meta) {
   /** @type {BundlerPluginLoaderContext} */
   const loaderContext = this;
+
   const loaderCallback = loaderContext.async();
   const { rootContext, resource, resourcePath, entryId } = loaderContext;
   const hooks = PluginService.getHooks();

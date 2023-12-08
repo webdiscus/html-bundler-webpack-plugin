@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.1 (2023-12-08)
+
+- fix: runtime error using template function in js when external data is not defined
+
 ## 3.4.0 (2023-12-03)
 
 - feat: add support for the template function on the client-side for `ejs`

@@ -293,7 +293,7 @@ class AssetEntry {
    * @return {Object}
    */
   static getData(id) {
-    return this.data.get(Number(id));
+    return this.data.get(Number(id)) || {};
   }
 
   /**

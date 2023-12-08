@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "HTML bundler plugin for webpack handles a template as an entry point, extracts CSS and JS from their sources referenced in HTML, supports template engines like Eta, EJS, Handlebars, Nunjucks.",
   "keywords": [
     "html",
@@ -122,6 +122,9 @@
   "devDependencies": {
     "@babel/core": "^7.23.2",
     "@babel/preset-env": "^7.23.2",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.14.19",
     "@test-fixtures/js": "0.0.2",
     "@test-fixtures/dius": "file:./test/fixtures/node_modules/dius/",
     "@test-fixtures/lorem": "file:./test/fixtures/node_modules/lorem/",
@@ -140,6 +143,8 @@
     "mustache": "^4.2.0",
     "nunjucks": "^3.2.4",
     "prettier": "^3.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "responsive-loader": "^3.1.2",
     "sass": "1.67.0",
     "sass-loader": "13.3.2",

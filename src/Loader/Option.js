@@ -27,6 +27,7 @@ class Option {
 
   static init(loaderContext) {
     const { loaderIndex, rootContext, resourcePath, resourceQuery } = loaderContext;
+    // note: the loaderContext object has only getter for the `data` property
     const loaderObject = loaderContext.loaders[loaderIndex];
     const loaderId = loaderObject.path + loaderObject.query;
     const queryData = parseQuery(resourceQuery);
@@ -83,10 +84,19 @@ class Option {
     // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
     const loaderData = this.loadData(options.data);
     const entryData = this.loadData(loaderContext.entryData);
+    const contextData = loaderContext.data || {};
+
+    //console.log('*** INIT DATA1: ', { data: loaderContext.data });
 
     // merge plugin and loader data, the plugin data property overrides the same loader data property
-    const data = { ...loaderData, ...entryData, ...queryData };
+    const data = { ...contextData, ...loaderData, ...entryData, ...queryData };
     if (Object.keys(data).length > 0) loaderObject.data = data;
+
+    loaderObject.data = data;
+
+    //if (!loaderObject.data) loaderObject.data = {};
+
+    //console.log('*** INIT DATA2: ', { data: loaderContext.data });
 
     // beforePreprocessor
     if (typeof options.beforePreprocessor !== 'function') {
