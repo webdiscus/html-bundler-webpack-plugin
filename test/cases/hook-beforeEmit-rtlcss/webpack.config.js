@@ -41,6 +41,8 @@ module.exports = {
             // explain the structure of the `entry` object
             //console.dir({ hook: 'beforeEmit', entry }, { depth: 5 });
 
+            let linkTags = '';
+
             entry.assets.forEach((asset) => {
               const { type, assetFile, inline } = asset;
 
@@ -53,25 +55,24 @@ module.exports = {
               if (!inline) {
                 // add new CSS file into compilation
                 compilation.assets[rtlAssetFile] = new RawSource(rtlResult);
-
-                // find inject pos: after the last <link> tag
-                // TODO: implement your logic to find an inject pos
-                let pos = content.lastIndexOf('<link');
-                if (pos > -1) {
-                  let injectPos = content.indexOf('>', pos);
-                  // inject the style tag with rtl CSS into HTML
-                  if (injectPos > -1) {
-                    injectPos++;
-                    content =
-                      content.slice(0, injectPos) +
-                      `<link href="${rtlAssetFile}" rel="stylesheet" />` +
-                      content.slice(injectPos);
-                  }
-                }
+                linkTags += `<link href="${rtlAssetFile}" rel="stylesheet" />`;
               } else {
                 // TODO: if CSS asset is inlined inject the <style> tag into HTML
               }
             });
+
+            if (linkTags) {
+              // find inject pos: after the last <link> tag
+              // TODO: implement your logic to find an inject pos
+              let pos = content.lastIndexOf('<link');
+              if (pos > -1) {
+                let injectPos = content.indexOf('>', pos) + 1;
+                if (injectPos > 0) {
+                  // inject style tags with rtl CSS into HTML
+                  content = content.slice(0, injectPos) + linkTags + content.slice(injectPos);
+                }
+              }
+            }
 
             return content;
           });
