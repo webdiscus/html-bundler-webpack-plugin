@@ -1,5 +1,5 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 const { Liquid } = require('liquidjs');
 const LiquidEngine = new Liquid({ root: process.cwd() });
 

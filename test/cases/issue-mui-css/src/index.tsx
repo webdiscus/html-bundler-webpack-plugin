@@ -1,16 +1,14 @@
-//import { createRoot } from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 
-// TODO: fix - both together not works
+// test both together must work
 import Stack from '@mui/material/Stack';
-//import './style.css';
+import './style.css';
 
-console.log(Stack);
+const root = createRoot(document.getElementById('app')!);
 
-// const root = createRoot(document.getElementById('app')!);
-//
-// root.render(
-//   <Stack>
-//     <p>Hello!</p>
-//     <p>How are you?</p>
-//   </Stack>
-// );
+root.render(
+  <Stack>
+    <p>Hello!</p>
+    <p>How are you?</p>
+  </Stack>
+);

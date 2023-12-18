@@ -451,7 +451,7 @@ class Collection {
   }
 
   /**
-   * Find styles from all nested JS files imported in the root JS file and sort them.
+   * Find styles from all nested JS files.
    *
    * @param {number} entryId The entry id of the template where is the root issuer.
    *  Note: the same issuer can be used in many entries.
@@ -462,38 +462,12 @@ class Collection {
   static findImportedModules(entryId, rootIssuer, chunk) {
     const issuerModule = this.getGraphModule(rootIssuer);
     const modules = this.findModuleDependencies(issuerModule);
-    const uniqueModules = [];
 
     // reserved for debug;
     // the modules are already sorted
     //modules.sort((a, b) => (a.order < b.order ? -1 : 1));
 
-    // TODO: research how to unique modules used in the current issuer and in deep nested issuers;
-    //  Currently the prio is for an first exemplar in nested issuers.
-    //  See the test js-import-css-order-dependencies.
-    //  For example:
-    //  0:   a.css
-    //  1.0: common.css // currently, is kept this file (imported in the nested js component)
-    //  3:   b.css
-    //  2:   common.css // perhaps, should be kept this?
-    for (const { module } of modules) {
-      if (!uniqueModules.includes(module)) {
-        uniqueModules.push(module);
-      }
-    }
-
-    // reserved for debug
-    // console.log(
-    //   '\n### modules:\n',
-    //   modules.map(({ order, module }) => {
-    //     return {
-    //       order,
-    //       resource: path.basename(module.resource),
-    //     };
-    //   })
-    // );
-
-    return uniqueModules;
+    return modules;
   }
 
   /**
@@ -502,12 +476,19 @@ class Collection {
    */
   static findModuleDependencies(module) {
     const { moduleGraph } = this.compilation;
+    const circularDependencyIds = new Set();
+    const orderStack = [];
     let order = '';
-    let orderStack = [];
 
     const walk = (module) => {
       const { dependencies } = module;
       const result = [];
+
+      // avoid an infinity walk by circular dependency
+      if (circularDependencyIds.has(module.debugId)) {
+        return result;
+      }
+      circularDependencyIds.add(module.debugId);
 
       for (const dependency of dependencies) {
         // TODO: detect whether the userRequest is a file, not a runtime, e.g. of vue
@@ -531,16 +512,17 @@ class Collection {
           depModule = depModule.rootModule;
         }
 
-        const parentIndex = moduleGraph.getParentBlockIndex(dependency);
+        const index = moduleGraph.getParentBlockIndex(dependency);
 
         if (depModule.dependencies.length > 0) {
           // save current order before recursive walking
           orderStack.push(order);
-          order += (order ? '.' : '') + parentIndex;
+          order += (order ? '.' : '') + index;
           result.push(...walk(depModule));
         } else if (depModule.resourceResolveData?._bundlerPluginMeta.isImportedStyle === true) {
           result.push({
-            order: order + (order ? '.' : '') + parentIndex,
+            resource: depModule.resource,
+            order: order + (order ? '.' : '') + index,
             module: depModule,
           });
         }

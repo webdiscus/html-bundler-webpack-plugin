@@ -17,6 +17,5 @@ describe('issue tests', () => {
 
   test('issue advanced template', () => compareFiles('issue-0-advanced-template'));
 
-  // TODO: fix it
-  //test('issue using mui and css in js', () => compareFiles('issue-mui-css'));
+  test('issue infinity walk by circular dependency', () => compareFiles('issue-mui-css'));
 });

@@ -1,5 +1,5 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 const ejs = require('ejs');
 
 module.exports = {

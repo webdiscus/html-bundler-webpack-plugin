@@ -91,7 +91,7 @@ describe('plugin options', () => {
   test('entry', () => compareFiles('option-entry'));
   test('entry data, multiple pages', () => compareFiles('entry-data-i18n-multipage'));
   // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
-  //test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
+  // test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
 
   test('entry data file', () => compareFiles('option-entry-data-file'));
   test('entry path', () => compareFiles('option-entry-path'));
@@ -209,6 +209,28 @@ describe('handlebars', () => {
   test('handlebars-layouts helpers', () => compareFiles('preprocessor-handlebars-helper-layouts'));
 });
 
+describe('usage template in js on client side', () => {
+  // Eta
+  test('default template', () => compareFiles('js-tmpl-default'));
+  test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
+  test('eta: compile to fn with local data in js', () => compareFiles('js-tmpl-eta-compile-data-local'));
+  test('eta: compile to fn with external data', () => compareFiles('js-tmpl-eta-compile-data-external'));
+  test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
+  test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
+
+  // EJS
+  test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));
+
+  // Handlebars
+  test('hbs: compile to fn', () => compareFiles('js-tmpl-hbs-compile'));
+
+  // Nunjucks
+  test('njk: compile to fn', () => compareFiles('js-tmpl-njk-compile'));
+
+  // Twig
+  test('twig: compile to fn', () => compareFiles('js-tmpl-twig-compile'));
+});
+
 describe('inline images', () => {
   test('inline-asset-bypass-data-url', () => compareFiles('inline-asset-bypass-data-url'));
   test('inline-asset-decide-size', () => compareFiles('inline-asset-decide-size'));
@@ -257,11 +279,16 @@ describe('import styles in JavaScript', () => {
   // special cases
   test('nested import, sorted', () => compareFiles('js-import-css-nested-sorted'));
   test('order dependencies', () => compareFiles('js-import-css-order-dependencies'));
+
   test('import one CSS from many JS files', () => compareFiles('js-import-css-one-from-many-js'));
   test('multiple-pages-same-asset', () => compareFiles('js-import-css-multiple-pages-same-asset'));
   test('multiple-pages-same-asset-inline', () => compareFiles('js-import-css-multiple-pages-same-asset-inline'));
 
   // the same styles can be used in many issuers, and these issuers can be imported in many other js/html files
+
+  // for debug only
+  //test('import same css in many js, mini-css', () => compareFiles('js-import-css-same-in-many-mini-css'));
+
   test('import same css in many js', () => compareFiles('js-import-css-same-in-many'));
   test('import same css in many js 2', () => compareFiles('js-import-css-same-in-many2'));
   test('import same css in many js 3', () => compareFiles('js-import-css-same-in-many3'));
@@ -388,28 +415,6 @@ describe('integrity, dynamic chunks', () => {
 
   // TODO: whether it make a sense?
   //test('import css in dynamic chunk', () => compareFiles('integrity-import-css-in-dynamic-chunk'));
-});
-
-describe('usage template in js on client side', () => {
-  // Eta
-  test('default template', () => compareFiles('js-tmpl-default'));
-  test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
-  test('eta: compile to fn with local data in js', () => compareFiles('js-tmpl-eta-compile-data-local'));
-  test('eta: compile to fn with external data', () => compareFiles('js-tmpl-eta-compile-data-external'));
-  test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
-  test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
-
-  // EJS
-  test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));
-
-  // Handlebars
-  test('hbs: compile to fn', () => compareFiles('js-tmpl-hbs-compile'));
-
-  // Nunjucks
-  test('njk: compile to fn', () => compareFiles('js-tmpl-njk-compile'));
-
-  // Twig
-  test('twig: compile to fn', () => compareFiles('js-tmpl-twig-compile'));
 });
 
 describe('extras: responsive images', () => {

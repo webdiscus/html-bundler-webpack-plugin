@@ -1,5 +1,5 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 const PATHS = {
   pages: path.join(__dirname, 'src/views/pages/'),

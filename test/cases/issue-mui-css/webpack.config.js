@@ -1,5 +1,5 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'production',
@@ -9,14 +9,10 @@ module.exports = {
   },
 
   resolve: {
-    // alias: {
-    //   client: path.resolve(__dirname, 'client')
-    // },
-    extensions: ['.js', '.ts'],
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.scss', '.sass'],
   },
 
   plugins: [
-    // zero config
     new HtmlBundlerPlugin({
       entry: {
         index: 'src/index.html',

@@ -1,5 +1,10 @@
 # Change log
 
+## 3.4.4 (2023-12-28)
+
+- fix: extract css from complex libs like MUI leads to an infinity walk by circular dependency, #59
+- test: refactor tests
+
 ## 3.4.3 (2023-12-18)
 
 - fix: favicon plugin causes a crash without an error explaining if no link tag is included

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 /**
  * @param {CompileEntries} entries

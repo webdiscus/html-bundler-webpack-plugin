@@ -688,8 +688,6 @@ class AssetCompiler {
     }
 
     AssetEntry.connectEntryAndModule(module, resolveData);
-    // for debug only, don't use this id as real entryId, because the module.resourceResolveData is cached in serve mode
-    meta._lastEntryId = resolveData.entryId;
 
     // skip the module loaded via importModule
     if (meta.isLoaderImport || meta.isParentLoaderImport) return;
@@ -1014,7 +1012,12 @@ class AssetCompiler {
       const modules = Collection.findImportedModules(entry.id, issuer, chunk);
 
       // 2. squash styles from all nested files into one file
-      for (const module of modules) {
+      const uniqueModuleIds = new Set();
+      for (const { module } of modules) {
+        if (uniqueModuleIds.has(module.debugId)) {
+          continue;
+        }
+
         const isUrl = module.resourceResolveData?.query.includes('url');
         const importData = {
           resource: module.resource,
@@ -1044,7 +1047,7 @@ class AssetCompiler {
         }
 
         if (isUrl) {
-          // get url of css output filename in js for lazy load
+          // get url of css output filename in js for the lazy load
           Collection.setData(
             entry,
             { resource: issuer },
@@ -1062,9 +1065,9 @@ class AssetCompiler {
 
         cssHash += module.buildInfo.hash;
         sources.push(...module._cssSource);
-
         imports.push(importData);
         resources.push(module.resource);
+        uniqueModuleIds.add(module.debugId);
       }
 
       if (sources.length === 0) continue;

@@ -1,5 +1,5 @@
 const { VueLoaderPlugin } = require('vue-loader');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'production',

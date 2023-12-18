@@ -393,6 +393,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Automatically processing **multiple HTML** templates [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/simple-site/)
    - **Bootstrap** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
    - **Tailwind CSS** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)
+   - **Twig** with Webpack [View in browser](https://stackblitz.com/edit/twig-webpack?file=webpack.config.js)
    - **Handlebars** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
    - Extend **Handlebars layout** with blocks [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-bjtjvc?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars-layout/)
    - Auto generate **integrity hash** for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
@@ -3515,6 +3516,13 @@ You can use a relative path:
 > {# page.twig #}
 > {% extends myTemplate %}
 > ```
+
+> **Warning**
+>
+> The Twig template containing `tabs` will not be compiled into HTML.\
+> Use the `spaces` as an indent in templates.
+> The `tabs` are not supported by `TwigJS`.
+
 
 ---
 

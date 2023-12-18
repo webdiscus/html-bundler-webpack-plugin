@@ -1,5 +1,5 @@
 const path = require('path');
-const HtmlBundlerPlugin = require('../../../');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 // custom sync preprocessor function
 const render = (template, search, replacement) => template.replace(search, replacement);

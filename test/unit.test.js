@@ -15,6 +15,52 @@ beforeAll(() => {
   process.env.NODE_ENV_TEST = 'true';
 });
 
+const compareArrays = (a, b) => {
+  let orderA = a.order.split('.');
+  let orderB = b.order.split('.');
+
+  let len = Math.min(orderA.length, orderB.length);
+  let i;
+  for (i = 0; i < len; i++) {
+    if (orderA[i] === orderB[i]) continue;
+
+    return orderA[i] < orderB[i] ? -1 : 1;
+  }
+
+  return orderA.length !== orderB.length ? (orderA.length < orderB.length ? -1 : 1) : 1;
+};
+
+describe('misc', () => {
+  test('sort arrays by order index', () => {
+    const source = [
+      //
+      { order: '2.1.1' },
+      { order: '3' },
+      { order: '2.1' },
+      { order: '0.1' },
+      { order: '1.2.1' },
+      { order: '0' },
+      { order: '1.2.0' },
+      { order: '2' },
+    ];
+
+    const expected = [
+      //
+      { order: '0' },
+      { order: '0.1' },
+      { order: '1.2.0' },
+      { order: '1.2.1' },
+      { order: '2' },
+      { order: '2.1' },
+      { order: '2.1.1' },
+      { order: '3' },
+    ];
+    const received = source.sort(compareArrays);
+    // console.log('==> RES: ', received);
+    return expect(received).toEqual(expected);
+  });
+});
+
 describe('unique filename tests', () => {
   test('js/file.js', () => {
     const received = Asset.getUniqueFilename('/src/file.js', 'js/file.js');
