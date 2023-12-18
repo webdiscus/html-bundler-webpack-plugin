@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.3 (2023-12-18)
+
+- fix: favicon plugin causes a crash without an error explaining if no link tag is included
+
 ## 3.4.2 (2023-12-08)
 
 - fix: watching changes in template function imported in JS

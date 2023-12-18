@@ -1,7 +1,9 @@
 const fs = require('fs/promises');
 const path = require('path');
+const { black, blueBright, yellow } = require('ansis');
 const HtmlBundlerPlugin = require('../../src/');
 const { favicons, config } = require('favicons');
+const { outToConsole } = require('../../src/Common/Helpers');
 
 class FaviconsBundlerPlugin {
   pluginName = 'favicons-bundler-plugin';
@@ -117,19 +119,40 @@ class FaviconsBundlerPlugin {
     });
 
     // save favicon images on disk
-    compiler.hooks.afterEmit.tapPromise(pluginName, () => {
-      if (this.faviconResponse?.images.length > 0) {
-        const { images } = this.faviconResponse;
-        const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
-        const saveDir = path.join(outputPath, this.options.faviconsConfig.path);
+    compiler.hooks.afterEmit.tapPromise(
+      pluginName,
+      () =>
+        new Promise((resolve, reject) => {
+          if (this.faviconResponse?.images.length > 0) {
+            const { images } = this.faviconResponse;
+            const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
+            const saveDir = path.join(outputPath, this.options.faviconsConfig.path);
 
-        return fs
-          .mkdir(saveDir, { recursive: true })
-          .then(() =>
-            Promise.all(images.map(async (image) => await fs.writeFile(path.join(saveDir, image.name), image.contents)))
-          );
-      }
-    });
+            return fs
+              .mkdir(saveDir, { recursive: true })
+              .then(() =>
+                Promise.all(
+                  images.map(async (image) => await fs.writeFile(path.join(saveDir, image.name), image.contents))
+                ).then(resolve)
+              );
+          } else {
+            this.warningFaviconNotFound();
+            resolve();
+          }
+        })
+    );
+  }
+
+  warningFaviconNotFound() {
+    const header = `\n${black.bgYellow` ${this.pluginName} `}${black.bgAnsi(227)` WARNING `} `;
+
+    let warning = `Favicon file is not found!
+If the ${blueBright(
+      this.constructor.name
+    )} is used, at last one favicon source file should be defined in the template, e.g.:
+${yellow`<link rel="icon" href="path/to/source/favicon.png">`}`;
+
+    outToConsole(header + warning);
   }
 }
 

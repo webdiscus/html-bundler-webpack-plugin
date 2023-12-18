@@ -1,4 +1,4 @@
-import { exceptionContain, watchExceptionContain } from './utils/helpers';
+import { exceptionContain, watchExceptionContain, stdoutContain } from './utils/helpers';
 import { loadModule } from '../src/Common/FileUtils';
 
 beforeAll(() => {
@@ -178,5 +178,12 @@ describe('css loader exceptions', () => {
   test('importModule fails', () => {
     const containString = 'SyntaxError';
     return exceptionContain('msg-exception-css-loader', containString);
+  });
+});
+
+describe('warnings', () => {
+  test('plugin-favicons', () => {
+    const containString = `Favicon file is not found`;
+    return stdoutContain('msg-warning-plugin-favicons-no-href', containString);
   });
 });

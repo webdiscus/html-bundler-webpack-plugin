@@ -118,6 +118,23 @@ export const exceptionContain = (relTestCasePath, containString) => {
   ).rejects.toContain(containString);
 };
 
+export const stdoutContain = (relTestCasePath, containString) => {
+  const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
+
+  return expect(
+    compile(PATHS, relTestCasePath, {}).then(() => {
+      const { calls } = stdout.mock;
+      let output = calls.length > 0 ? calls[0][0] : '';
+      output = ansis.strip(output);
+
+      stdout.mockClear();
+      stdout.mockRestore();
+
+      return Promise.resolve(output);
+    })
+  ).resolves.toContain(containString);
+};
+
 export const watchExceptionContain = function (relTestCasePath, containString) {
   return expect(
     watch(PATHS, relTestCasePath, {}, (watching) => {
