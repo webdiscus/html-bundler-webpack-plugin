@@ -30,6 +30,7 @@ const loader = require.resolve('../Loader');
  *  The template strings support only these substitutions:
  *  [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
  *  See https://webpack.js.org/configuration/output/#outputfilename
+ * @property {Function} filenameFn The function to generate the output filename dynamically.
  * TODO: remove filename or assetFile, currently the assetFile is undeined (unused?)
  * @property {string=} assetFile The output asset file with the relative path by webpack output path.
  *   Note: the method compilation.emitAsset() use this file as the key of an asset object
@@ -49,7 +50,7 @@ const loader = require.resolve('../Loader');
 
 class AssetEntry {
   /** @type {Map<string, AssetEntryOptions>} */
-  static entries = new Map();
+  static entriesByName = new Map();
 
   /** @type {Map<Number, AssetEntryOptions>} */
   static entriesById = new Map();
@@ -184,7 +185,7 @@ class AssetEntry {
   static getEntryFiles() {
     const files = new Set();
 
-    for (let { sourceFile, isTemplate } of this.entries.values()) {
+    for (let { sourceFile, isTemplate } of this.entriesByName.values()) {
       if (isTemplate && !this.removedEntries.has(sourceFile)) files.add(sourceFile);
     }
 
@@ -199,7 +200,7 @@ class AssetEntry {
    * @return {boolean}
    */
   static isUnique(name, file) {
-    const entry = this.entries.get(name);
+    const entry = this.entriesByName.get(name);
     return !entry || entry.sourceFile === file;
   }
 
@@ -221,7 +222,7 @@ class AssetEntry {
    */
   static isEntryResource(resource) {
     const [resourceFile] = resource.split('?', 1);
-    for (let { isTemplate, sourceFile } of this.entries.values()) {
+    for (let { isTemplate, sourceFile } of this.entriesByName.values()) {
       if (isTemplate && sourceFile === resourceFile) return true;
     }
 
@@ -242,20 +243,61 @@ class AssetEntry {
   }
 
   /**
-   * Get an entry object by name.
+   * Get an entry object by chunk.
    *
-   * @param {string} name The entry name.
+   * Note: the `chunk.filenameTemplate` will be recovered
+   * because the webpack sets it as undefined in the watch mode after changes.
+   *
+   * Called in `renderManifest` hook.
+   *
+   * @param {Chunk} chunk The webpack chunk.
    * @returns {AssetEntryOptions|null}
    */
-  static get(name) {
-    const entry = this.entries.get(name);
+  static getByChunk(chunk) {
+    const entry = this.entriesByName.get(chunk.name);
 
-    if (entry && PluginService.isWatchMode() && Option.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
+    if (entry == null) return null;
+
+    if (PluginService.isWatchMode() && Option.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
       // delete artifacts from compilation in serve/watch mode
-      // TODO: reproduce the use case
       AssetTrash.add(entry.filename);
       AssetTrash.add(`${entry.name}.js`);
+
       return null;
+    }
+
+    if (entry.isTemplate) {
+      entry.filename = this.compilation.getAssetPath(entry.filenameTemplate, {
+        // define the structure of the pathData argument with useful data for the filenameTemplate as a function
+        runtime: entry.originalName,
+        filename: entry.sourceFile,
+        filenameTemplate: entry.filenameTemplate,
+        chunk: {
+          name: entry.originalName,
+          runtime: entry.originalName,
+        },
+      });
+
+      if (entry.publicPath) {
+        entry.filename = path.posix.join(entry.publicPath, entry.filename);
+      }
+
+      return entry;
+    }
+
+    // set generated output filename for the CSS asset defined as an entrypoint
+    if (entry.isStyle) {
+      entry.filename = this.compilation.getPath(chunk.filenameTemplate, {
+        contentHashType: 'javascript',
+        chunk,
+      });
+
+      return entry;
+    }
+
+    // fix undefined `pathData.filename` in the watch mode after changes when the `js.filename` is a function
+    if (chunk.filenameTemplate == null && typeof entry.filenameTemplate === 'function') {
+      chunk.filenameTemplate = entry.filenameFn;
     }
 
     return entry;
@@ -279,7 +321,7 @@ class AssetEntry {
   static getByResource(resource) {
     const [resourceFile] = resource.split('?', 1);
 
-    for (let entry of this.entries.values()) {
+    for (let entry of this.entriesByName.values()) {
       if (entry.sourceFile === resourceFile) return entry;
     }
 
@@ -364,38 +406,6 @@ class AssetEntry {
    */
   static setCompilation(compilation) {
     this.compilation = compilation;
-  }
-
-  /**
-   * Set generated output filename for the asset defined as entrypoint.
-   *
-   * Called by renderManifest() stage.
-   *
-   * @param {AssetEntryOptions} entry
-   * @param {Chunk} chunk The Webpack Chunk object.
-   */
-  static setFilename(entry, chunk) {
-    if (entry.isTemplate) {
-      entry.filename = this.compilation.getAssetPath(entry.filenameTemplate, {
-        // define the structure of the pathData argument with useful data for the filenameTemplate as a function
-        runtime: entry.originalName,
-        filename: entry.sourceFile,
-        filenameTemplate: entry.filenameTemplate,
-        chunk: {
-          name: entry.originalName,
-          runtime: entry.originalName,
-        },
-      });
-
-      if (entry.publicPath) {
-        entry.filename = path.posix.join(entry.publicPath, entry.filename);
-      }
-    } else {
-      entry.filename = this.compilation.getPath(chunk.filenameTemplate, {
-        contentHashType: 'javascript',
-        chunk,
-      });
-    }
   }
 
   /**
@@ -530,7 +540,7 @@ class AssetEntry {
     this.removedEntries.add(file);
     this.collection.deleteData(file);
 
-    // don't delete the entry from 'this.entries', it is used as the cache for the following use case:
+    // don't delete the entry from 'this.entriesByName', it is used as the cache for the following use case:
     // in serve/watch mode after renaming an entry file in another name and rename the same file back in previous name,
     // will be used already created entry instead of the new entry
   }
@@ -616,12 +626,14 @@ class AssetEntry {
       assetEntryOptions.publicPath = path.relative(Option.getWebpackOutputPath(), outputPath);
     }
 
-    entry.filename = (pathData, assetInfo) => {
-      if (assetEntryOptions.filename != null) return assetEntryOptions.filename;
+    const filenameFn = (pathData, assetInfo) => {
+      // the template filename stays the same after changes in watch mode because have not a hash substitution
+      if (assetEntryOptions.isTemplate && assetEntryOptions.filename != null) return assetEntryOptions.filename;
 
       let filename = filenameTemplate;
+
       if (isFunction(filenameTemplate)) {
-        // clone the pathData object to modify the chunk object w/o side effects in main compilation
+        // clone the pathData object to modify the chunk object w/o side effects in the main compilation
         const pathDataCloned = { ...pathData };
         pathDataCloned.chunk = { ...pathDataCloned.chunk };
         pathDataCloned.chunk.name = assetEntryOptions.originalName;
@@ -642,7 +654,10 @@ class AssetEntry {
       return filename;
     };
 
-    this.entries.set(name, assetEntryOptions);
+    entry.filename = filenameFn;
+    assetEntryOptions.filenameFn = filenameFn;
+
+    this.entriesByName.set(name, assetEntryOptions);
     this.entriesById.set(assetEntryOptions.id, assetEntryOptions);
   }
 
@@ -655,7 +670,7 @@ class AssetEntry {
    * @private
    */
   static #exists(name, importFile) {
-    const entry = this.entries.get(name);
+    const entry = this.entriesByName.get(name);
     return entry != null && entry.importFile === importFile;
   }
 
@@ -666,7 +681,7 @@ class AssetEntry {
   static clear() {
     this.idIndex = 1;
     this.data.clear();
-    this.entries.clear();
+    this.entriesByName.clear();
     this.entriesById.clear();
   }
 
@@ -676,14 +691,14 @@ class AssetEntry {
    */
   static reset() {
     for (const entryName of this.compilationEntryNames) {
-      const entry = this.entries.get(entryName);
+      const entry = this.entriesByName.get(entryName);
       if (entry) {
         this.entriesById.delete(entry.id);
       }
 
       // not remove JS file added as the entry for compilation,
       // because after changes any style file imported in the JS file, the JS entry will not be processed
-      // this.entries.delete(entryName);
+      // this.entriesByName.delete(entryName);
     }
 
     this.compilationEntryNames.clear();

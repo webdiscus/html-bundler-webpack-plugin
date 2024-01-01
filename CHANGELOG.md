@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.5 (2024-01-01)
+
+fix: the `pathData.filename` is undefined after changes when the `js.filename` is a function
+
 ## 3.4.4 (2023-12-28)
 
 - fix: extract css from complex libs like MUI leads to an infinity walk by circular dependency, #59

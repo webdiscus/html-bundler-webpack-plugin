@@ -786,16 +786,17 @@ class AssetCompiler {
   renderManifest(result, { chunk, chunkGraph, codeGenerationResults }) {
     if (chunk instanceof HotUpdateChunk) return;
 
-    const entry = AssetEntry.get(chunk.name);
+    const entry = AssetEntry.getByChunk(chunk);
+
+    if (!entry) return;
 
     // process only entries supported by this plugin
-    if (!entry || (!entry.isTemplate && !entry.isStyle)) return;
+    if (!entry.isTemplate && !entry.isStyle) return;
+
+    Collection.addEntry(entry);
 
     const assetModules = new Set();
     const chunkModules = chunkGraph.getChunkModulesIterable(chunk);
-
-    AssetEntry.setFilename(entry, chunk);
-    Collection.addEntry(entry);
 
     for (const module of chunkModules) {
       const { buildInfo, resource, resourceResolveData } = module;

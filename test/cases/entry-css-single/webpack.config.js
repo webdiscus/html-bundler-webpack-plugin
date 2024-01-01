@@ -17,7 +17,19 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        'style.bundle': 'src/style.css',
+        style: 'src/style.css',
+      },
+      css: {
+        filename: '[name].bundle.css',
+        // filename: (pathData) => {
+        //   const { filename } = pathData;
+        //   console.log('------- CSS.filename: ', {
+        //     filename,
+        //     filenameTemplate: pathData.chunk.filenameTemplate?.toString(),
+        //   });
+        //
+        //   return '[name].bundle.css';
+        // },
       },
     }),
   ],

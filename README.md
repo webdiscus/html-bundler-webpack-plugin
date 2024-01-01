@@ -3154,7 +3154,7 @@ See [How to process a PHP template](#recipe-preprocessor-php).
 
 Type: `Object` Default: `{}`
 
-With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars` or `nunjucks`.
+With the `preprocessorOptions` you can pass template engine options when used the [preprocessor](#loader-option-preprocessor) as the string: `eta`, `ejs`, `handlebars`, `nunjucks`, `twig`.
 Each preprocessor has its own options, depend on using template engine.
 
 > This loader option is referenced as the [preprocessorOptions](#option-preprocessor) plugin option to simplify the config.

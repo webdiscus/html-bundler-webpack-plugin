@@ -348,6 +348,7 @@ describe('custom plugins', () => {
 
 describe('entry', () => {
   test('css', () => compareFiles('entry-css-single'));
+  test('js', () => compareFiles('entry-js-single'));
   // TODO: implement extracting from entry as array with many files
   //test('js and css in the same entry name', () => compareFiles('entry-js-css'));
 });
