@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.6 (2024-01-02)
+
+fix: the `pathData.chunk.name` is undefined when the `js.filename` is a function, this bug was introduced in `3.4.5`
+
 ## 3.4.5 (2024-01-01)
 
 fix: the `pathData.filename` is undefined after changes when the `js.filename` is a function

@@ -620,7 +620,7 @@ class AssetEntry {
    * @private
    */
   static #add(entry, assetEntryOptions) {
-    const { name, filenameTemplate, outputPath } = assetEntryOptions;
+    const { name, originalName, filenameTemplate, outputPath } = assetEntryOptions;
 
     if (path.isAbsolute(outputPath)) {
       assetEntryOptions.publicPath = path.relative(Option.getWebpackOutputPath(), outputPath);
@@ -636,8 +636,10 @@ class AssetEntry {
         // clone the pathData object to modify the chunk object w/o side effects in the main compilation
         const pathDataCloned = { ...pathData };
         pathDataCloned.chunk = { ...pathDataCloned.chunk };
-        pathDataCloned.chunk.name = assetEntryOptions.originalName;
-        pathDataCloned.chunk.runtime = assetEntryOptions.originalName;
+        if (originalName) {
+          pathDataCloned.chunk.name = originalName;
+          pathDataCloned.chunk.runtime = originalName;
+        }
 
         // the `filename` property of the `PathData` type should be a source file, but in entry this property not exists
         if (pathDataCloned.filename == null) {

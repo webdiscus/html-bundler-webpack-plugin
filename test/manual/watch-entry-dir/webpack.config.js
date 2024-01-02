@@ -22,6 +22,7 @@ module.exports = {
         filename: (pathData) => {
           console.log('-- JS.filename: ', {
             filename: pathData.filename,
+            pathData,
           });
 
           return 'js/[name].[contenthash:8].js';
@@ -33,6 +34,7 @@ module.exports = {
         filename: (pathData) => {
           console.log('-- CSS.filename: ', {
             filename: pathData.filename,
+            pathData,
           });
 
           return 'css/[name].[contenthash:8].css';
