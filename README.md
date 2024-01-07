@@ -45,16 +45,64 @@ This plugin is an **advanced successor** to `html-webpack-plugin` and a replacem
   <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
 </center>
 
+For example, there is the HTML template _./src/views/index.html_:
+
+```html
+<html>
+  <head>
+    <!-- relative path to SCSS source file -->
+    <link href="../scss/style.scss" rel="stylesheet" />
+    <!-- relative path to TypeScript source file -->
+    <script src="../app/main.ts" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <!-- relative path to image source file -->
+    <img src="../assets/images/picture1.png" />
+    <!-- Webpack alias as path (src/assets/images/) to image source file -->
+    <img src="@images/picture2.png" />
+  </body>
+</html>
+```
+
+[Open an example in StackBlitz](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
+
+The folder structure of the example:
+```
+./src/views/index.html
+./src/app/main.ts
+./src/scss/style.scss
+./src/assets/images/picture1.png
+./src/assets/images/picture2.png
+```
+<!--
+```
+src/
+   ├── views/
+   │   └── index.html
+   ├── app/
+   │   └── main.ts
+   ├── scss/
+   │   └── style.scss
+   └── assets/
+       └── images/
+           └── picture.png
+```
+-->
+
+
 All source file paths in dependencies will be resolved and auto-replaced with correct URLs in the bundled output. 
 The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
 You can use a relative path or Webpack alias to a source file.
 
-### See: [Contents](#contents) | [Install and Quick Start](#install) | [Simple example](#example) | [Usage examples](#usage-examples)
+---
 
+### 📋 [Table of Contents](#contents)
+### 🛠️ [Install and Quick Start](#install)
+### 🖼 [Usage examples](#usage-examples)
 
 ---
-> 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.\
-> [Try to use](#example) this powerful plugin too.
+> 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.
 > 
 > The plugin has been actively developed for more than 2 years, and since 2023 it is open source.\
 > Please support this project by giving it a star ⭐.
@@ -66,7 +114,7 @@ You can use a relative path or Webpack alias to a source file.
 - An [entry point](#option-entry) is any HTML template.
 - **Auto processing** multiple HTML templates in the [entry path](#option-entry-path).
 - Allows to specify [`script`](#option-js) and [`style`](#option-css) **source files** directly in **HTML**:
-  - `<link href="./styles.scss" rel="stylesheet">`
+  - `<link href="./style.scss" rel="stylesheet">`
   - `<script src="./app.tsx" defer="defer"></script>`
 - **Resolves** [source files](#loader-option-sources) in [default attributes](#loader-option-sources-default) `href` `src` `srcset` etc. using **relative path** or **alias**:
   - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
@@ -133,7 +181,7 @@ Thank you to all our sponsors and patrons!
 
 The plugin resolves references in the HTML template and adds them to the Webpack compilation.
 Webpack will automatically process the source files, and the plugin replaces the references with their output filenames in the generated HTML.
-See the [usage example](#example) and [how the plugin works under the hood](#plugin-hooks-and-callbacks).
+See [how the plugin works under the hood](#plugin-hooks-and-callbacks).
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
@@ -186,26 +234,46 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 ---
 
-<a id="example" name="example"></a>
+<a id="install" name="install"></a>
 
-### Simple usage example
+## Install and Quick start
+
+Install the `html-bundler-webpack-plugin`:
+
+```bash
+npm install html-bundler-webpack-plugin --save-dev
+```
+
+It's recommended to combine `html-bundler-webpack-plugin` with the [css-loader](https://github.com/webpack-contrib/css-loader) and the [sass-loader](https://github.com/webpack-contrib/sass-loader).\
+Install additional packages for styles:
+
+```bash
+npm install css-loader sass-loader sass --save-dev
+```
 
 Start with an HTML template. Add the `<link>` and `<script>` tags.
-You can directly include asset source files such as SCSS, JS, images, and other media files in an HTML template.
+You can include asset source files such as SCSS, JS, images, and other media files directly in an HTML template.
 
-The plugin resolves `<script src="...">` `<link href="...">` and `<img src="...">` that references your JavaScript, style and image source files.
+The plugin resolves `<script src="...">` `<link href="...">` and `<img src="...">` that references your script, style and image source files.
+
+For example, there is the template _./src/views/home.html_:
 
 ```html
 <html>
   <head>
-    <!-- include a SCSS file -->
-    <link href="./styles.scss" rel="stylesheet" />
-    <!-- include a source script file -->
+    <!-- variable from Webpack config -->
+    <title><%= title %></title>
+    <!-- relative path to favicon source file -->
+    <link href="./favicon.ico" rel="icon" />
+    <!-- relative path to SCSS source file -->
+    <link href="./style.scss" rel="stylesheet" />
+    <!-- relative path to JS source file -->
     <script src="./main.js" defer="defer"></script>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    <!-- reference an image file -->
+    <!-- variable from Webpack config -->
+    <h1>Hello <%= name %>!</h1>
+    <!-- relative path to image source file -->
     <img src="./picture.png" />
   </body>
 </html>
@@ -214,12 +282,14 @@ The plugin resolves `<script src="...">` `<link href="...">` and `<img src="..."
 All source filenames should be relative to the current HTML template, or you can use [Webpack alias](https://webpack.js.org/configuration/resolve/#resolvealias).
 The references are rewritten in the generated HTML so that they link to the correct output files.
 
-The generated HTML contains the output filenames:
+The generated HTML contains URLs of the output filenames:
 
 ```html
 <html>
   <head>
-    <link href="css/styles.05e4dd86.css" rel="stylesheet" />
+    <title>Homepage</title>
+    <link href="img/favicon.3bd858b4.ico" rel="icon" />
+    <link href="css/style.05e4dd86.css" rel="stylesheet" />
     <script src="js/main.f4b855d8.js" defer="defer"></script>
   </head>
   <body>
@@ -229,7 +299,16 @@ The generated HTML contains the output filenames:
 </html>
 ```
 
-HTML templates can be defined in the [`entry`](#option-entry) option:
+<a id="simple-webpack-config" name="simple-webpack-config"></a>
+
+**Pages** can be defined in the [`entry`](#option-entry) option.
+**JS** and **CSS** can be configured using the [`js`](#option-js) and [`css`](#option-css) options.
+
+If the `entry` option is a path, the plugin finds all templates automatically
+and keep the same directory structure in the output directory.
+
+If the `entry` option is an object, the key is an output filename without `.html` extension and the value is a template file.
+
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -237,16 +316,31 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      // define a relative or absolute path to entry templates
-      entry: 'src/views/',
-      // OR define many templates manually
+      // define many page templates manually
       entry: {
-        index: 'src/views/home.html', // => dist/index.html
+        // advanced page config with external variables passed into template
+        index: { // => dist/index.html
+          import: 'src/views/home.html', // template file
+          data: { title: 'Homepage', name: 'World' }, // pass variables into template
+        },
+        // simple page config w/o variables
+        about: 'src/views/about.html', // => dist/about.html
         'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
+      },
+      // - OR - define a relative or absolute path to page templates
+      entry: 'src/views/',
+      js: {
+        // JS output filename, used if `inline` option is false (defaults)
+        filename: 'js/[name].[contenthash:8].js',
+        //inline: true, // inlines JS into HTML
+      },
+      css: {
+        // CSS output filename, used if `inline` option is false (defaults)
+        filename: 'css/[name].[contenthash:8].css',
+        //inline: true, // inlines CSS into HTML
       },
     }),
   ],
-  // loaders for styles, images, etc.
   module: {
     rules: [
       {
@@ -256,16 +350,29 @@ module.exports = {
       {
         test: /\.(ico|png|jp?g|webp|svg)$/,
         type: 'asset/resource',
+        generator: {
+          filename: 'img/[name].[hash:8][ext][query]',
+        },
       },
     ],
   },
 };
 ```
 
-If the `entry` option is a path, the plugin finds all templates automatically
-and keep the same directory structure in the output directory.
+> **Note**
+>
+> To define the JS output filename, use the `js.filename` option of the plugin.\
+> Don't use Webpack's `output.filename`, hold all relevant settings in one place - in plugin options.\
+> Both places have the same effect, but `js.filename` has priority over `output.filename`.
 
-If the `entry` option is an object, the key is an output filename without `.html` extension and the value is a template file.
+No additional template loader is required. The plugin handels templates with base `EJS`-like syntax automatically.
+The default templating engine is [Eta](https://eta.js.org).
+
+For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs).\
+For using the `Handlebars` see [Templating with Handlebars](#using-template-handlebars).\
+For other templates see [Template engines](#template-engine).
+
+For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
 
 <table>
 <tr>
@@ -293,6 +400,9 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 </td>
 </tr>
 </table>
+
+---
+
 
 <a id="contents" name="contents"></a>
 
@@ -323,8 +433,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [entry dynamic](#option-entry-path) (entry as a path to template files)
    - [outputPath](#option-outputpath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
-   - [js](#option-js) (options to extract JS)
-   - [css](#option-css) (options to extract CSS)
+   - [js](#option-js) (options for JS)
+   - [css](#option-css) (options for CSS)
    - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
    - [beforePreprocessor](#option-before-preprocessor) (callback, 🔗reference to [loaderOptions.beforePreprocessor](#loader-option-before-preprocessor))
    - [preprocessor](#option-preprocessor) (callback or string, 🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
@@ -457,128 +567,7 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 | [favicons-webpack-plugin ](https://github.com/jantimon/favicons-webpack-plugin)                         | generates favicons and icons                                        |
 
 
-<a id="install" name="install"></a>
 
-## Install and Quick start
-
-Install the `html-bundler-webpack-plugin`:
-
-```bash
-npm install html-bundler-webpack-plugin --save-dev
-```
-
-or
-
-```bash
-yarn add -D html-bundler-webpack-plugin
-```
-
-or
-
-```bash
-pnpm add -D html-bundler-webpack-plugin
-```
-
-It's recommended to combine `html-bundler-webpack-plugin` with the [css-loader](https://github.com/webpack-contrib/css-loader) and the [sass-loader](https://github.com/webpack-contrib/sass-loader).\
-Install additional packages for styles:
-
-```bash
-npm install css-loader sass-loader sass --save-dev
-```
-
-or
-
-```bash
-yarn add -D css-loader sass-loader sass
-```
-
-or
-
-```bash
-pnpm add -D css-loader sass-loader sass
-```
-
-For example, there is a template _./src/views/home/index.html_:
-
-```html
-<html>
-  <head>
-    <title><%= title %></title>
-    <link href="./favicon.ico" rel="icon" />
-    <link href="./styles.scss" rel="stylesheet" />
-    <script src="./main.js" defer="defer"></script>
-  </head>
-  <body>
-    <h1>Hello <%= name %>!</h1>
-    <img src="./picture.png" />
-  </body>
-</html>
-```
-
-To compile this template use the following Webpack configuration:
-
-<a id="simple-webpack-config" name="simple-webpack-config"></a>
-
-```js
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-
-module.exports = {
-  plugins: [
-    new HtmlBundlerPlugin({
-      entry: {
-        // define templates here
-        index: {
-          // => dist/index.html
-          import: 'src/views/home.html', // template file
-          data: { title: 'Homepage', name: 'Heisenberg' }, // pass variables into template
-        },
-      },
-      js: {
-        // output filename of compiled JavaScript, used if `inline` option is false (defaults)
-        filename: 'assets/js/[name].[contenthash:8].js',
-        //inline: true, // inlines JS into HTML
-      },
-      css: {
-        // output filename of extracted CSS, used if `inline` option is false (defaults)
-        filename: 'assets/css/[name].[contenthash:8].css',
-        //inline: true, // inlines CSS into HTML
-      },
-    }),
-  ],
-  module: {
-    rules: [
-      {
-        test: /\.(css|sass|scss)$/,
-        use: ['css-loader', 'sass-loader'],
-      },
-      {
-        test: /\.(ico|png|jp?g|webp|svg)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/img/[name].[hash:8][ext][query]',
-        },
-      },
-    ],
-  },
-};
-```
-
-> **Note**
->
-> To define the JS output filename, use the `js.filename` option of the plugin.\
-> Don't use Webpack's `output.filename`, hold all relevant settings in one place - in plugin options.\
-> Both places have the same effect, but `js.filename` has priority over `output.filename`.
-
-No additional template loader is required. The plugin handels templates with base `EJS`-like syntax automatically.
-The default templating engine is [Eta](https://eta.js.org).
-
-For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs).\
-For using the `Handlebars` see [Templating with Handlebars](#using-template-handlebars).\
-For other templates see [Template engines](#template-engine).
-
-For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
-
----
 
 #### [↑ back to contents](#contents)
 
@@ -637,11 +626,11 @@ module.exports = {
     new HtmlBundlerPlugin({
       js: {
         // define the output name of a generated JS file here
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
       css: {
         // define the output name of a generated CSS file here
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
     }),
   ],
@@ -1407,7 +1396,7 @@ For example, there are files in the template directory `./src/views/`
 ./src/views/about/index.html
 ./src/views/news/sport/index.html
 ./src/views/news/sport/script.js
-./src/views/news/sport/styles.scss
+./src/views/news/sport/style.scss
 ...
 ```
 
@@ -1635,19 +1624,19 @@ but other JS chunks of the same split `app.js` file should be saved to chunk fil
 
 ```js
 js: {
-  filename: 'assets/js/[name].[contenthash:8].js',
+  filename: 'js/[name].[contenthash:8].js',
   inline: {
     chunk: [/runtime.+[.]js/],
   },
 },
 ```
 
-Then the `app.js` file will be split to many output chunks, e.g.:
+Then the `app.js` file will be split to many output chunks in the `dist/` directory, e.g.:
 
 ```
-assets/js/325.xxxxxxxx.js  -> save as file
-assets/js/545.xxxxxxxx.js  -> save as file
-assets/js/app.xxxxxxxx.js  -> save as file
+js/325.xxxxxxxx.js  -> save as file
+js/545.xxxxxxxx.js  -> save as file
+js/app.xxxxxxxx.js  -> save as file
 runtime.xxxxxxxx.js        -> inline the chunk into HTML and NOT save as file
 ```
 
@@ -1686,8 +1675,6 @@ The inlined tag contains the `id` attribute, but the `src` and `defer` are remov
 </script>
 ```
 
-
-
 All source script files specified in `<script src="...">` are automatically resolved,  
 and JS will be extracted to output file. The source filename will be replaced with the output filename.
 
@@ -1706,7 +1693,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
     }),
   ],
@@ -1714,7 +1701,7 @@ module.exports = {
 ```
 
 The `[name]` is the base filename script.
-For example, if source file is `main.js`, then output filename will be `assets/js/main.1234abcd.js`.\
+For example, if source file is `main.js`, then output filename will be `js/main.1234abcd.js`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
 The `chunkFilename` option only takes effect if you have the `optimization.splitChunks` option.
@@ -1730,8 +1717,8 @@ module.exports = {
         index: 'src/views/index.html',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
-        chunkFilename: 'assets/js/[id].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
+        chunkFilename: 'js/[id].[contenthash:8].js',
       },
     }),
   ],
@@ -1800,7 +1787,7 @@ and CSS will be extracted to output file. The source filename will be replaced w
 For example:
 
 ```html
-<link href="./styles.scss" rel="stylesheet" />
+<link href="./style.scss" rel="stylesheet" />
 ```
 
 > **Warning**
@@ -1817,7 +1804,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
     }),
   ],
@@ -1825,7 +1812,7 @@ module.exports = {
 ```
 
 The `[name]` is the base filename of a loaded style.
-For example, if source file is `styles.scss`, then output filename will be `assets/css/styles.1234abcd.css`.\
+For example, if source file is `style.scss`, then output filename will be `css/style.1234abcd.css`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
 > **Warning**
@@ -2143,7 +2130,7 @@ preload: [
 The generated preload tag like the following:
 
 ```html
-<link rel="preload" href="css/styles.1f4faaff.css" as="style" />
+<link rel="preload" href="css/style.1f4faaff.css" as="style" />
 ```
 
 #### Preload scripts
@@ -2228,7 +2215,7 @@ For example, there is an HTML template with specified source assets:
 <html>
   <head>
     <script src="./main.js" defer></script>
-    <link href="./styles.scss" rel="stylesheet" />
+    <link href="./style.scss" rel="stylesheet" />
   </head>
   <body>
     <img src="./apple.png" alt="apple" />
@@ -2269,13 +2256,13 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
     <link rel="preload" href="img/apple.697ef306.png" as="image" type="image/png" />
     <link rel="preload" href="img/lemon.3666c92d.svg" as="image" type="image/svg+xml" />
     <!-- 2. preload styles -->
-    <link rel="preload" href="css/styles.1f4faaff.css" as="style" />
+    <link rel="preload" href="css/style.1f4faaff.css" as="style" />
     <!-- 3. preload scripts -->
     <link rel="preload" href="js/main.c608b1cd.js" as="script" />
     <link rel="preload" href="js/app.2c8d13ac.js" as="script" />
 
     <script src="js/main.c608b1cd.js" defer></script>
-    <link href="css/styles.1f4faaff.css" rel="stylesheet" />
+    <link href="css/style.1f4faaff.css" rel="stylesheet" />
   </head>
   <body>
     <img src="img/apple.697ef306.png" alt="apple" />
@@ -2917,7 +2904,7 @@ For example, there are project files:
 
 ```
 ./src/views/index.html
-./src/styles/styles.scss
+./src/styles/style.scss
 ./src/scripts/main.js
 ./src/images/apple.png
 ```
@@ -2940,7 +2927,7 @@ Now you can use the `/` root path for the source assets:
 ```html
 <html>
   <head>
-    <link href="/styles/styles.scss" rel="stylesheet" />
+    <link href="/styles/style.scss" rel="stylesheet" />
     <script src="/scripts/main.js" defer="defer"></script>
   </head>
   <body>
@@ -4484,7 +4471,7 @@ The template _index.html_ where is loaded the source style:
   <head>
     <title>Demo</title>
     <!-- include source style -->
-    <link href="./styles.scss" rel="stylesheet" />
+    <link href="./style.scss" rel="stylesheet" />
   </head>
   <body>
     <h1>Hello World!</h1>
@@ -4555,7 +4542,7 @@ The generated HTML contains the preload tag with the font:
     <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true" />
     <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true" />
     <!-- compiled style -->
-    <link href="css/styles.1f4faaff.css" rel="stylesheet" />
+    <link href="css/style.1f4faaff.css" rel="stylesheet" />
   </head>
   <body>
     <h1>Hello World!</h1>
@@ -4616,7 +4603,7 @@ There is the _./src/views/index.html_ with both style files:
 <html>
   <head>
     <link href="./main.scss" rel="stylesheet" />
-    <link href="./styles.scss" rel="stylesheet" />
+    <link href="./style.scss" rel="stylesheet" />
   </head>
   <body>
     <h1>Hello World!</h1>
@@ -4683,7 +4670,7 @@ To inline a single CSS, add the `?inline` query to a style file which you want t
     <!-- file CSS -->
     <link href="./main.scss" rel="stylesheet" />
     <!-- inline CSS -->
-    <link href="./styles.scss?inline" rel="stylesheet" />
+    <link href="./style.scss?inline" rel="stylesheet" />
   </head>
   <body>
     <h1>Hello World!</h1>
@@ -4697,7 +4684,7 @@ The generated HTML contains inline CSS already processed via Webpack:
 <html>
   <head>
     <!-- file CSS -->
-    <link href="/assets/css/main.05e4dd86.css" rel="stylesheet" />
+    <link href="/css/main.05e4dd86.css" rel="stylesheet" />
     <!-- inline CSS -->
     <style>
       h1 {
@@ -4832,7 +4819,7 @@ The generated HTML contains inline JS already compiled via Webpack:
 <html>
   <head>
     <!-- file JS -->
-    <script src="assets/js/main.992ba657.js" defer="defer"></script>
+    <script src="js/main.992ba657.js" defer="defer"></script>
     <!-- inline JS -->
     <script>
       (() => {
@@ -4951,7 +4938,7 @@ For example, there is the PHP template _src/views/index.phtml_:
 <html>
 <head>
   <title><?= $title ?></title>
-  <link href="./styles.css" rel="stylesheet">
+  <link href="./style.css" rel="stylesheet">
   <script src="./main.js" defer="defer"></script>
 </head>
 <body>
@@ -4976,10 +4963,10 @@ module.exports = {
         index: './src/views/index.phtml',
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
       preprocessor: false, // disable preprocessor
     }),
@@ -4996,8 +4983,8 @@ The processed PHP template _dist/index.phtml_:
 <html>
 <head>
   <title><?= $title ?></title>
-  <link href="assets/css/styles.026fd625.css" rel="stylesheet">
-  <script src="assets/js/main.3347618e.js" defer="defer"></script>
+  <link href="css/style.026fd625.css" rel="stylesheet">
+  <script src="js/main.3347618e.js" defer="defer"></script>
 </head>
 <body>
   <h1>Hello World!</h1>
@@ -5127,10 +5114,10 @@ module.exports = {
         },
       },
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
       // the Nunjucks template engine is supported "out of the box"
       preprocessor: 'nunjucks',
@@ -5165,8 +5152,8 @@ The generated _dist/index.html_
 <html>
   <head>
     <title>Home</title>
-    <link href="assets/css/home.2180238c.css" rel="stylesheet" />
-    <script src="assets/js/home.790d746b.js" defer="defer"></script>
+    <link href="css/home.2180238c.css" rel="stylesheet" />
+    <script src="js/home.790d746b.js" defer="defer"></script>
   </head>
   <body>
     <main class="main-content">
@@ -5186,8 +5173,8 @@ The generated _dist/about.html_
 <html>
   <head>
     <title>About</title>
-    <link href="assets/css/about.2777c101.css" rel="stylesheet" />
-    <script src="assets/js/about.1.c5e03c0e.js" defer="defer"></script>
+    <link href="css/about.2777c101.css" rel="stylesheet" />
+    <script src="js/about.1.c5e03c0e.js" defer="defer"></script>
   </head>
   <body>
     <main class="main-content">
@@ -5461,11 +5448,11 @@ You can separate the styles into multiple bundles yourself.
 For example, there are style files used in your app:
 
 ```
-- components/banner/styles.scss 150 KB
-- components/button/styles.scss  50 KB
-- components/menu/styles.scss    50 KB
-- components/modal/styles.scss  100 KB
-- components/panel/styles.scss  100 KB
+- components/banner/style.scss 150 KB
+- components/button/style.scss  50 KB
+- components/menu/style.scss    50 KB
+- components/modal/style.scss  100 KB
+- components/panel/style.scss  100 KB
 - styles/main.scss  250 KB
 ```
 
@@ -5474,16 +5461,16 @@ We want to have a bundle file ~250 KB, then create the bundles manually:
 _styles/bundle01.scss_ 200 KB
 
 ```scss
-@use '../components/banner/styles.scss';
-@use '../components/button/styles.scss';
+@use '../components/banner/style.scss';
+@use '../components/button/style.scss';
 ```
 
 _styles/bundle02.scss_ 250 KB
 
 ```scss
-@use '../components/menu/styles.scss';
-@use '../components/modal/styles.scss';
-@use '../components/panel/styles.scss';
+@use '../components/menu/style.scss';
+@use '../components/modal/style.scss';
+@use '../components/panel/style.scss';
 ```
 
 Add the bundles in the template:
@@ -5523,7 +5510,7 @@ If you want save module styles separate from your styles, then load them in a te
     <!-- include module styles -->
     <link href="bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <!-- include your styles -->
-    <link href="./styles.scss" rel="stylesheet" />
+    <link href="./style.scss" rel="stylesheet" />
   </head>
   <body>
     <h1>Hello World!</h1>
