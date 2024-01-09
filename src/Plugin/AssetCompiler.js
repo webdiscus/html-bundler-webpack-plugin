@@ -1001,7 +1001,20 @@ class AssetCompiler {
     const orderedRootIssuers = Collection.orderedResources.get(entry.id);
 
     for (const issuer of orderedRootIssuers) {
-      if (!Collection.importStyleRootIssuers.has(issuer)) continue;
+      // Fix #68: if the same `c.css` file was imported in many js files: `a.js` and `b.js`,
+      // then webpack processes the css module only for 1st `a.js`, others issuers will be ignored,
+      // then we lost relation: a.js -> c.css (ok) but b.js -> c.css (lost).
+      // So we can't use the following check for avoid unnecessary searching in js files where no CSS has been imported
+      // Side-effect: increases build time for cases when many js files do not import css.
+      // TODO: create a cache for js files that don't import CSS.
+      // if (!Collection.importStyleRootIssuers.has(issuer)) {
+      //   console.log('--- importStyleRootIssuers: ', {
+      //     entryFilename,
+      //     issuer,
+      //     importStyleRootIssuers: Collection.importStyleRootIssuers,
+      //   });
+      //   continue;
+      // }
 
       const issuerEntry = AssetEntry.getByResource(issuer);
       const sources = [];

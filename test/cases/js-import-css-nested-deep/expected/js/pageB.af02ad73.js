@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log(">> Page B: ",{Foo:"Component Bar",Bar:"Component Foo"})})();

@@ -279,6 +279,7 @@ describe('import styles in JavaScript', () => {
   // special cases
   test('nested import, sorted', () => compareFiles('js-import-css-nested-sorted'));
   test('order dependencies', () => compareFiles('js-import-css-order-dependencies'));
+  test('import the same css in deep in  many js', () => compareFiles('js-import-css-nested-deep'));
 
   test('import one CSS from many JS files', () => compareFiles('js-import-css-one-from-many-js'));
   test('multiple-pages-same-asset', () => compareFiles('js-import-css-multiple-pages-same-asset'));
