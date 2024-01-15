@@ -45,6 +45,8 @@ describe('resolve url() in style', () => {
   test('@import url() in CSS', () => compareFiles('import-url-in-css'));
   test('@import url() in SCSS', () => compareFiles('import-url-in-scss'));
   test('url() in nested style', () => compareFiles('resolve-url-in-nested-style'));
+  test('alias in url()', () => compareFiles('resolve-alias-in-scss'));
+  test('data:image in url()', () => compareFiles('resolve-data-image-in-css'));
 });
 
 describe('plugin options', () => {
@@ -279,6 +281,8 @@ describe('import styles in JavaScript', () => {
   // special cases
   test('nested import, sorted', () => compareFiles('js-import-css-nested-sorted'));
   test('order dependencies', () => compareFiles('js-import-css-order-dependencies'));
+  // TODO: implement split css chunks
+  //test('order split chunks', () => compareFiles('js-import-css-order-splitchunk'));
   test('import the same css in deep in  many js', () => compareFiles('js-import-css-nested-deep'));
 
   test('import one CSS from many JS files', () => compareFiles('js-import-css-one-from-many-js'));

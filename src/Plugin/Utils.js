@@ -10,7 +10,14 @@ const transformToCommonJS = (code) => {
   for (const [match, variable, file] of importMatches) {
     code = code.replace(match, `var ${variable} = require('${file}');`);
   }
-  // new URL to require
+
+  // transform `new URL("data:image...", import.meta.url)` to 'data:image...'
+  const urlDataMatches = code.matchAll(/= new URL\("(data:.+?)", import.meta.url\);/g);
+  for (const [match, data] of urlDataMatches) {
+    code = code.replace(match, `= '${data}';`);
+  }
+
+  // transform `new URL("file")` to `require('file')`
   const urlMatches = code.matchAll(/= new URL\("(.+?)".*?\);/g);
   for (const [match, file] of urlMatches) {
     code = code.replace(match, `= require('${file}');`);

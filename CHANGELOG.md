@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.8 (2024-01-15)
+
+- fix: error by resolving `url(date:image...)` in CSS
+
 ## 3.4.7 (2024-01-09)
 
 - fix: if the same CSS file is imported in many js files, then the CSS is extracted for the first issuer only, #68
