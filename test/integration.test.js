@@ -148,7 +148,7 @@ describe('plugin callbacks', () => {
 
   test('postprocess', () => compareFiles('option-postprocess'));
 
-  // TODO: yet experimental, undocumented
+  test('modify publicPath in html', () => compareFiles('option-beforeEmit-modify-urls-in-html-css'));
   test('beforeEmit', () => compareFiles('option-beforeEmit'));
   test('afterEmit', () => compareFiles('option-afterEmit'));
 });
@@ -346,6 +346,7 @@ describe('optimization', () => {
 
 describe('custom plugins', () => {
   test('favicons', () => compareFiles('plugin-favicons'));
+  test('favicons defaults', () => compareFiles('plugin-favicons-defaults'));
   test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
   test('favicons used on one of many pages', () => compareFiles('plugin-favicons-oneof-pages'));
   test('favicons used on many pages', () => compareFiles('plugin-favicons-multi-pages'));

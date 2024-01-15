@@ -29,7 +29,7 @@ class FaviconsBundlerPlugin {
   constructor(options = {}) {
     this.options = options;
     // favicons configuration options, see https://github.com/itgalaxy/favicons#usage
-    this.options.faviconsConfig = { ...config, ...(options.faviconOptions || {}) };
+    this.options.faviconsConfig = { ...config.defaults, ...(options.faviconOptions || {}) };
   }
 
   apply(compiler) {

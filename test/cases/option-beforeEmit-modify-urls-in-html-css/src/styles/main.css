@@ -1,0 +1,9 @@
+h1 {
+  color: green;
+}
+.img {
+  width: 160px;
+  height: 130px;
+  background-image: url(../images/image.webp);
+  border: 2px solid darkred;
+}

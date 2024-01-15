@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.9 (2024-01-15)
+
+- fix: use the favicons default options for the build-in FaviconsBundlerPlugin when no plugin options
+
 ## 3.4.8 (2024-01-15)
 
 - fix: error by resolving `url(date:image...)` in CSS
