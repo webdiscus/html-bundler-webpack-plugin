@@ -28,7 +28,7 @@ module.exports = {
       enabled: 'auto', // true, false, auto - generate favicons in production mode only
       // favicons configuration options, see https://github.com/itgalaxy/favicons#usage
       faviconOptions: {
-        path: '/img/favicons',
+        path: '/favicons',
         appName: 'My App',
         icons: {
           android: true, // Create Android homescreen icon.

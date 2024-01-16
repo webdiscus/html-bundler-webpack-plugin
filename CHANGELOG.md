@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.10 (2024-01-16)
+
+- fix: save the webmanifest files in the directory defined in the `faviconOptions.path` option
+
 ## 3.4.9 (2024-01-15)
 
 - fix: use the favicons default options for the build-in FaviconsBundlerPlugin when no plugin options

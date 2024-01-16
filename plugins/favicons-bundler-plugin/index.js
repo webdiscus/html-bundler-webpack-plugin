@@ -87,7 +87,8 @@ class FaviconsBundlerPlugin {
 
             // save favicon manifest files on disk
             response.files.forEach(({ name, contents }) => {
-              compilation.emitAsset(name, new RawSource(contents));
+              let outputFile = path.posix.join(this.options.faviconsConfig.path, name);
+              compilation.emitAsset(outputFile, new RawSource(contents));
             });
           });
         }
