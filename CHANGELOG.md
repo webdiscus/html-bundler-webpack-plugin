@@ -1,5 +1,9 @@
 # Change log
 
+## 3.4.11 (2024-01-22)
+
+- fix: error by resolving url() in the CSS file defined in the entry option
+
 ## 3.4.10 (2024-01-16)
 
 - fix: save the webmanifest files in the directory defined in the `faviconOptions.path` option

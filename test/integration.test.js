@@ -39,7 +39,10 @@ describe('resolve styles', () => {
 });
 
 describe('resolve url() in style', () => {
+  // TODO: fix not working
+  // background: url("@icons/arrow.png") no-repeat center center / auto 100%;
   test('url(image) in CSS', () => compareFiles('resolve-url-in-css'));
+  test('url(image) in CSS entry', () => compareFiles('resolve-url-in-css-entry'));
   test('CSS imported in module with .css', () => compareFiles('import-css-from-module-with-ext'));
   test('CSS imported from module without .css', () => compareFiles('import-css-from-module-wo-ext'));
   test('@import url() in CSS', () => compareFiles('import-url-in-css'));

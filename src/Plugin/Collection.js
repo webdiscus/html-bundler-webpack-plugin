@@ -672,6 +672,9 @@ class Collection {
    * @param {CollectionData|{}} data The collection data.
    */
   static setData(entry, issuer, data = {}) {
+    // skip when the resource is defined in the entry option, not in the entry template
+    if (!entry) return;
+
     const { filename } = entry;
     const entryPoint = this.data.get(filename);
 
