@@ -70,6 +70,50 @@ export const compareFiles = (relTestCasePath, compareContent = true) => {
 };
 
 /**
+ * Compare the file list and content of files after calling N times.
+ * Used for testing the cache filesystem.
+ *
+ * @param {string} relTestCasePath The relative path to the test directory.
+ * @param {boolean} compareContent Whether the content of files should be compared too.
+ * @param {number} num Number of calls
+ * @return {Promise<void>}
+ */
+export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1) => {
+  const absTestPath = path.join(PATHS.testSource, relTestCasePath),
+    webRootPath = path.join(absTestPath, PATHS.webRoot),
+    expectedPath = path.join(absTestPath, PATHS.expected);
+
+  const results = [];
+  const expected = Array(num).fill(true);
+
+  for (let i = 0; i < num; i++) {
+    const res = compile(PATHS, relTestCasePath, {})
+      .then(() => {
+        const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
+        expect(receivedFiles).toEqual(expectedFiles);
+
+        if (compareContent) {
+          expectedFiles.forEach((file) => {
+            const { received, expected } = getCompareFileContents(
+              path.join(webRootPath, file),
+              path.join(expectedPath, file)
+            );
+            expect(received).toEqual(expected);
+          });
+        }
+
+        return Promise.resolve(true);
+      })
+      .catch((error) => {
+        return Promise.reject(error);
+      });
+    results.push(res);
+  }
+
+  return expect(Promise.all(results)).resolves.toEqual(expected);
+};
+
+/**
  * Compare the file list and content of files it the serve/watch mode.
  *
  * @param {string} relTestCasePath The relative path to the test directory.

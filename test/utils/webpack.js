@@ -47,6 +47,12 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
   return merge(baseConfig, commonConfig, webpackOpts, testConfig);
 };
 
+/**
+ * @param {{}} PATHS
+ * @param {string} testCasePath
+ * @param {{}} webpackOpts
+ * @return {Promise<unknown>}
+ */
 export const compile = (PATHS, testCasePath, webpackOpts) =>
   new Promise((resolve, reject) => {
     let config;

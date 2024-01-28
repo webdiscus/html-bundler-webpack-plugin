@@ -35,6 +35,9 @@ class Collection {
   /** @type {Compilation} */
   static compilation;
 
+  /** @type {AssetEntry} */
+  static assetEntry;
+
   static assets = new Map();
 
   /** @type {Map<string, {entry: AssetEntryOptions, assets: Array<{}>} >} Entries data */
@@ -330,10 +333,12 @@ class Collection {
 
   /**
    * @param {Compilation} compilation
+   * @param {AssetEntry} assetEntry
    * @param {HtmlBundlerPlugin.Hooks} hooks
    */
-  static init(compilation, hooks) {
+  static init({ compilation, assetEntry, hooks }) {
     this.compilation = compilation;
+    this.assetEntry = assetEntry;
     this.hooks = hooks;
   }
 
@@ -1005,41 +1010,6 @@ class Collection {
         });
       }
 
-      // TODO: add hook for addHeadTags: beforeStyles, beforeScripts, endHead
-      // let res = this.hooks.insertHeadTags.call(content);
-      // if (res && Array.isArray(res.tags)) {
-      //   let headTags = res.tags;
-      //   let pos = res.pos;
-      //   let sep = Option.isMinify() ? '' : '\n';
-      //   let headBlock = headTags.join(sep);
-      //
-      //   let startPos;
-      //   let headEndPos = content.indexOf('</head>');
-      //   let headEndPosRegExp = /<\/head>/;
-      //   let posRegexp;
-      //
-      //   if (!isNumber(pos)) {
-      //     switch (pos) {
-      //       case 'beforePreload':
-      //         posRegexp = /<link.+rel="preload"/;
-      //         break;
-      //       case 'beforeStyles':
-      //         posRegexp = /<link.+rel=".*stylesheet.*"/;
-      //         break;
-      //       case 'beforeScripts':
-      //         posRegexp = /<script/;
-      //         break;
-      //       case 'endHead':
-      //       // through
-      //       case 'default':
-      //         startPos;
-      //         break;
-      //     }
-      //
-      //     const match = posRegexp.exec(content);
-      //   }
-      // }
-
       // 9. beforeEmit hook allows plugins to change the html after chunks and inlined assets are injected
       promise = promise.then((content) => hooks.beforeEmit.promise(content, compileEntry) || content);
 
@@ -1118,17 +1088,44 @@ class Collection {
     this.importStyleSources.clear();
   }
 
+  /* istanbul ignore next: test it manual using `cache.type` as `filesystem` after 2nd run the same project */
+  /**
+   * Called by first start or after changes.
+   *
+   * @param {Function} write The serialize function.
+   */
   static serialize({ write }) {
+    for (let [, { entry }] of this.data) {
+      // note: set the function properties as null to able the serialization of the entry object,
+      // the original functions will be recovered by deserialization from the cached object `AssetEntry`
+      entry.filenameFn = null;
+      entry.filenameTemplate = null;
+    }
+
     write(this.assets);
     write(this.data);
   }
 
+  /* istanbul ignore next: test it manual using `cache.type` as `filesystem` after 2nd run the same project */
+  /**
+   * @param {Function} read The deserialize function.
+   */
   static deserialize({ read }) {
     this.assets = read();
     this.data = read();
+
+    for (let [, { entry }] of this.data) {
+      const cachedEntry = this.assetEntry.entriesById.get(entry.id);
+
+      // recovery original not serializable functions from the object cached in the memory
+      entry.filenameFn = cachedEntry.filenameFn;
+      entry.filenameTemplate = cachedEntry.filenameTemplate;
+    }
+
     this.isDeserialized = true;
   }
 
+  /* istanbul ignore next: test it manual using `cache.type` as `filesystem` after 2nd run the same project */
   /**
    * Add the script files loaded in the template to the compilation after deserialization.
    *
@@ -1140,45 +1137,13 @@ class Collection {
    */
   static addToCompilationDeserializedFiles(issuer) {
     for (const [resource, item] of this.assets) {
-      const { isCompiled, type, name, entries } = item;
-      if (!isCompiled && type === this.type.script && entries.has(issuer)) {
-        item.isCompiled = true;
+      const { type, name, entries } = item;
+
+      if (type === this.type.script && entries.has(issuer)) {
         this.#addToCompilation({ name, resource, issuer });
       }
     }
   }
-
-  /**
-   * TODO: Reserved for debug.
-   */
-  // static getResourceIssuers(resource) {
-  //   const item = this.assets.get(resource);
-  //
-  //   if (!item) return [];
-  //
-  //   const issuers = Array.from(item.entries.keys());
-  //
-  //   // extract from all issuer's request only filename, w/o a query
-  //   issuers.forEach((request, index) => {
-  //     let [file] = request.split('?', 1);
-  //     issuers[index] = file;
-  //   });
-  //
-  //   return issuers;
-  // }
-
-  /**
-   * TODO: Reserved for debug.
-   */
-  // static getCompilationModule(resource) {
-  //   const { modules } = this.compilation;
-  //   for (const module of modules) {
-  //     if (module.resource === resource) {
-  //       return module;
-  //     }
-  //   }
-  //   return null;
-  // }
 }
 
 module.exports = Collection;

@@ -1,4 +1,4 @@
-import { compareFiles, watchCompareFiles } from './utils/helpers';
+import { compareFiles, compareFilesRuns, watchCompareFiles } from './utils/helpers';
 //import { removeDirsSync } from './utils/file';
 
 // Remove all 'dist/' directories from tests, use it only for some local tests.
@@ -21,6 +21,16 @@ describe('features tests', () => {
   test('use script in html', () => compareFiles('use-script-in-html'));
   test('resolve-js-in-many-pages', () => compareFiles('resolve-js-in-many-pages'));
 });
+
+// TODO: test after N runs
+// describe('cache tests', () => {
+//   afterEach(async () => {
+//     // sleep between tests to give time for GC
+//     await new Promise((r) => setTimeout(r, 500));
+//   });
+//
+//   test('cache-filesystem-js3', () => compareFilesRuns('cache-filesystem-js', false, 3));
+// });
 
 describe('resolve files', () => {
   test('script style asset', () => compareFiles('resolve-script-style-asset'));

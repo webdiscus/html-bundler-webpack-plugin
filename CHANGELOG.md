@@ -1,5 +1,10 @@
 # Change log
 
+## 3.4.12 (2024-01-29)
+
+- fix: serialization issue when used the `cache.type = 'filesystem'`
+- fix: missing output js files after second run build when used the `cache.type = 'filesystem'`
+
 ## 3.4.11 (2024-01-22)
 
 - fix: error by resolving url() in the CSS file defined in the entry option

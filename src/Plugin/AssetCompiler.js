@@ -275,7 +275,7 @@ class AssetCompiler {
       AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, collection: Collection });
       AssetTrash.init(compilation);
       CssExtractModule.init(compilation);
-      Collection.init(compilation, AssetCompiler.getHooks(compilation));
+      Collection.init({ compilation, assetEntry: AssetEntry, hooks: AssetCompiler.getHooks(compilation) });
 
       Resolver.init({
         fs,

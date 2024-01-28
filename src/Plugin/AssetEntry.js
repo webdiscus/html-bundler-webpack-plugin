@@ -31,10 +31,6 @@ const loader = require.resolve('../Loader');
  *  [name], [base], [path], [ext], [id], [contenthash], [contenthash:nn]
  *  See https://webpack.js.org/configuration/output/#outputfilename
  * @property {Function} filenameFn The function to generate the output filename dynamically.
- * TODO: remove filename or assetFile, currently the assetFile is undeined (unused?)
- * @property {string=} assetFile The output asset file with the relative path by webpack output path.
- *   Note: the method compilation.emitAsset() use this file as the key of an asset object
- *   and save the file relative by output path, defined in webpack.options.output.path.
  * @property {string} resource The absolute import file with a query.
  * @property {string} importFile The original import entry file.
  * @property {string} sourceFile The absolute import file only w/o a query.
@@ -114,7 +110,7 @@ class AssetEntry {
 
     for (let name in pluginEntry) {
       const entry = pluginEntry[name];
-      const entryName = `${this.entryNamePrefix}${name}`;
+      const entryName = this.createEntryName(name);
 
       if (entry.import == null) {
         if (Option.isEntry(entry)) {
@@ -162,11 +158,19 @@ class AssetEntry {
     files.forEach((file) => {
       const outputFile = path.relative(dir, file);
       const name = outputFile.slice(0, outputFile.lastIndexOf('.'));
-      const entryName = `${this.entryNamePrefix}${name}`;
+      const entryName = this.createEntryName(name);
       entry[entryName] = { import: [file] };
     });
 
     return entry;
+  }
+
+  /**
+   * @param {string} name
+   * @return {string}
+   */
+  static createEntryName(name) {
+    return `${this.entryNamePrefix}${name}`;
   }
 
   /**
@@ -457,7 +461,6 @@ class AssetEntry {
         originalName,
         filenameTemplate,
         filename: undefined,
-        assetFile: undefined,
         resource,
         importFile,
         sourceFile,
