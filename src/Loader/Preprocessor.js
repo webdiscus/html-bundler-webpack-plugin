@@ -32,6 +32,7 @@ class Preprocessor {
       handlebars: 'Handlebars',
       nunjucks: 'Nunjucks',
       twig: 'Twig',
+      pug: 'Pug',
     };
 
     // disabled preprocessor

@@ -35,9 +35,9 @@ class Option {
     const queryData = parseQuery(resourceQuery);
     let options = PluginService.getLoaderCache(loaderId);
 
+    this.fileSystem = loaderContext.fs.fileSystem;
     this.#pluginOption = PluginService.getOptions();
     this.#watch = PluginService.isWatchMode();
-    this.fileSystem = loaderContext.fs.fileSystem;
     this.#webpackOptions = loaderContext._compiler.options || {};
     this.#rootContext = rootContext;
     this.#resourcePath = resourcePath;
@@ -59,6 +59,7 @@ class Option {
 
       PluginService.setLoaderCache(loaderId, options);
     }
+
     this.#options = options;
 
     // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
