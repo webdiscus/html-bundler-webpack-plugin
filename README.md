@@ -18,12 +18,10 @@
 
 ## HTML template as entry point
 
-> _**HTML as an entry point works in both Vite and Parcel, and now also in Webpack.**_\
-> Bundle your source files of scripts, styles and images with HTML template.
+> Define your **source files** of scripts, styles and images directly in HTML template.
 
-
-The HTML Bundler Plugin generates static HTML from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
-The plugin allows using a template file as an [entry point](#option-entry).
+The **Bundler Plugin** generates static HTML or [template function](#template-in-js) from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
+This plugin allows using a template file as an [entry point](#option-entry).
 You can import a template into JS as a compiled [template function](#template-in-js) and render it with variables in runtime on the client-side in the browser.
 
 This plugin is an **advanced successor** to `html-webpack-plugin` and a replacement of the [plugins and loaders](#list-of-plugins).
