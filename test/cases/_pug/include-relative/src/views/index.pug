@@ -1,0 +1,8 @@
+h1 Test includes
+
+//- test include pug with variables defined here
+- var items = ['Hello', 'pug!']
+each str in items
+  include ../includes/include-var-str
+
+include ../includes/include-a

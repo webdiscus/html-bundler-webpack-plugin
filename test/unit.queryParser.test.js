@@ -30,7 +30,6 @@ describe('parseRequest tests', () => {
     const expected = {
       disable: false,
     };
-    //return expect(received).toEqual(expected);
     return expect(received).toStrictEqual(expected);
   });
 

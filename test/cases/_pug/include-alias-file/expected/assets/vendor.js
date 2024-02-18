@@ -1,0 +1,1 @@
+console.log(">> alias to vendor.js");

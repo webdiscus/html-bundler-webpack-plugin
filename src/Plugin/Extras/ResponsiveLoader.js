@@ -63,7 +63,7 @@ class ResponsiveLoader {
    *
    * @param {Object} module The Webpack module of asset.
    * @param {FileInfo} issuer The issuer of the module.
-   * @returns {null|string} The compiled result as string to replace required resource with this result.
+   * @return {null|string} The compiled result as string to replace required resource with this result.
    */
   getAsset(module, issuer) {
     if (this.isUsed !== true) return null;

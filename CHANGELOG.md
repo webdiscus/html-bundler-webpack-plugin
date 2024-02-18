@@ -1,5 +1,13 @@
 # Change log
 
+## 3.5.0 (2024-02-18)
+
+- feat: add support for the `Pug` template engine.
+  The `pug` preprocessor based on the [@webdiscus/pug-loader](https://github.com/webdiscus/pug-loader) source code 
+  and has the same options and features.
+- test: add pug tests
+- docs: add documentation for using the pug
+
 ## 3.4.12 (2024-01-29)
 
 - fix: serialization issue when used the `cache.type = 'filesystem'`

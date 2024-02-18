@@ -1,5 +1,5 @@
 const path = require('path');
-const { eachAsync, makeTemplateId, stringifyData } = require('../../Utils');
+const { eachAsync, makeTemplateId, stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
 const preprocessor = (loaderContext, options) => {
@@ -139,13 +139,13 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The code of the precompiled template.
-     * @param {{}} data The object with variables passed in template.
+     * @param {{}} data The object with external variables passed in template from data option.
      * @param {boolean} hot
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data, hot }) {
       const runtimeFile = require.resolve('twig/twig.min.js');
-      const exportFunction = 'templateFn';
+      const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
       let loadDependencies = '';
 
@@ -156,10 +156,10 @@ const preprocessor = (loaderContext, options) => {
       return `${loadDependencies}
         var Twig = require('${runtimeFile}');
         ${hot === true ? `Twig.cache(false);` : ''}
-        var __data__ = ${stringifyData(data)};
+        var data = ${stringifyJSON(data)};
         var template = Twig.twig(${precompiledTemplate});
-        var ${exportFunction} = (context) => template.render(Object.assign(__data__, context));
-        ${exportCode}${exportFunction};`;
+        var ${exportFunctionName} = (context) => template.render(Object.assign(data, context));
+        ${exportCode}${exportFunctionName};`;
     },
   };
 };

@@ -4,7 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>The plugin renders HTML templates with referenced source files of styles, scripts, images</div>
+    <div>The plugin renders various templates with referenced source asset files into HTML</div>
 </div>
 
 ---
@@ -43,7 +43,7 @@ This plugin is an **advanced successor** to `html-webpack-plugin` and a replacem
   <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
 </center>
 
-For example, there is the HTML template _./src/views/index.html_:
+For example, using source asset files is HTML template _./src/views/index.html_:
 
 ```html
 <html>
@@ -84,7 +84,8 @@ src/
    │   └── style.scss
    └── assets/
        └── images/
-           └── picture.png
+           └── picture1.png
+           └── picture2.png
 ```
 -->
 
@@ -120,7 +121,7 @@ You can use a relative path or Webpack alias to a source file.
 - **Inlines** [JS](#recipe-inline-js) and [CSS](#recipe-inline-css) into HTML.
 - **Inlines** [images](#recipe-inline-image) into HTML and CSS.
 - Supports **styles** used in `*.vue` files.
-- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
+- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
 - **Compile** a template into [template function](#template-in-js) for usage in JS on the client-side.
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles, etc.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
@@ -211,6 +212,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ## 🔆 What's New in v3
 
 - **NEW** added support for the [template function](#template-in-js) in JS runtime on the client-side.
+- **NEW** added [Pug](#using-template-pug) preprocessor.
 - **NEW** added [Twig](#using-template-twig) preprocessor.
 - **NEW** added CSS extraction from **styles** used in `*.vue` files.
 - **NEW** added [Hooks & Callbacks](#plugin-hooks-and-callbacks). Now you can create own plugin to extend this plugin.
@@ -404,7 +406,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 
 <a id="contents" name="contents"></a>
 
-## Contents
+## Table of Contents
 
 1. [Features](#features)
 1. [Install and Quick start](#install)
@@ -457,6 +459,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [ejs](#loader-option-preprocessor-options-ejs)
      - [handlebars](#loader-option-preprocessor-options-handlebars)
      - [nunjucks](#loader-option-preprocessor-options-nunjucks)
+     - [pug](#loader-option-preprocessor-options-pug)
      - [twig](#loader-option-preprocessor-options-twig)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
    - [data](#loader-option-data) (pass data into templates)
@@ -464,11 +467,11 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [Eta](#using-template-eta)
    - [EJS](#using-template-ejs)
    - [Handlebars](#using-template-handlebars)
+   - [LiquidJS](#using-template-liquidjs)
    - [Mustache](#using-template-mustache)
    - [Nunjucks](#using-template-nunjucks)
+   - [Pug](#using-template-pug)
    - [TwigJS](#using-template-twig)
-   - [LiquidJS](#using-template-liquidjs)
-   - [Pug](https://github.com/webdiscus/pug-plugin)
 1. [Using template in JavaScript](#template-in-js)
 1. [Setup Live Reload](#setup-live-reload)
 1. [Recipes](#recipes)
@@ -528,7 +531,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - auto generation of `<link rel="preload">` to [preload assets](#option-preload)
 - supports the `auto` [publicPath](#webpack-option-output-publicpath)
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
-- supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [TwigJS](https://github.com/twigjs/twig.js), [LiquidJS](https://github.com/harttle/liquidjs) and others
+- supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [Pug](https://pugjs.org/), [TwigJS](https://github.com/twigjs/twig.js), [LiquidJS](https://github.com/harttle/liquidjs) and others
 - supports a [template function](#template-in-js) for usage in JS on the client-side
 - supports both `async` and `sync` [preprocessor](#loader-option-preprocessor-custom)
 - auto processing multiple HTML templates using the [entry path](#option-entry-path)
@@ -2974,6 +2977,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
+  | 'pug'
   | 'twig'
   | ((
       content: string,
@@ -2989,11 +2993,11 @@ or define your own preprocessor as a function to use any template engine.
 #### Supported templating engines "out of the box"
 
 ```ts
-type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks' | 'twig';
+type Preprocessor = 'eta' | 'ejs' | 'handlebars' | 'nunjucks' | 'pug' | 'twig';
 ```
 
 The preprocessor is ready to use the most popular templating engines:
-[Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Twig](#using-template-twig).
+[Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Twig](#using-template-twig).
 
 Defaults used the [Eta](https://eta.js.org) templating engine,
 because `Eta` has the `EJS`-like syntax, is only `2KB` gzipped and is much fasted than EJS.
@@ -3184,6 +3188,10 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 If partials have `.eta` extensions, then the extension can be omitted in the include argument.
 
+---
+
+#### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessor-options-ejs" name="loader-option-preprocessor-options-ejs"></a>
 
 #### Options for `preprocessor: 'ejs'`
@@ -3231,6 +3239,10 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 ```
 
 If you have partials with `.ejs` extensions, then the extension can be omitted.
+
+---
+
+#### [↑ back to contents](#contents)
 
 <a id="loader-option-preprocessor-options-handlebars" name="loader-option-preprocessor-options-handlebars"></a>
 
@@ -3426,6 +3438,10 @@ This plugin has own `build-in` helpers:
 
 For the complete list of Handlebars `compile` options see [here](https://handlebarsjs.com/api-reference/compilation.html).
 
+---
+
+#### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks"></a>
 
 #### Options for `preprocessor: 'nunjucks'`
@@ -3452,6 +3468,54 @@ For the complete list of Handlebars `compile` options see [here](https://handleb
 
 For all available options, see the [Nunjucks API configure](https://mozilla.github.io/nunjucks/api.html#configure).
 
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="loader-option-preprocessor-options-pug" name="loader-option-preprocessor-options-pug"></a>
+
+#### Options for `preprocessor: 'pug'`
+
+> **Note**
+> 
+> The `pug` preprocessor based on the [@webdiscus/pug-loader](https://github.com/webdiscus/pug-loader) source code 
+> and has the same options and features.
+
+```js
+{
+  preprocessor: 'pug',
+  preprocessorOptions: {
+    // in 99.9% of common use cases you don't need any pug options
+
+    // available useful embedded filters
+    embedFilters: {
+      // enable the :escape filter
+      escape: true,
+      
+      // enable the :code filter
+      code: {
+        className: 'language-', // class name of `<code>` tag
+      },
+      
+      // enable :highlight filter
+      highlight: {
+        verbose: true,
+        use: 'prismjs', // use the prismjs as highlighter
+      },
+      
+      // enable :markdown filter
+      markdown: true,
+    }
+  },
+},
+```
+
+See the [documentation and examples](https://webdiscus.github.io/pug-loader/pug-filters/) for the `embedded filters`.\
+See the [pug compiler options](https://pugjs.org/api/reference.html).
+
+---
+
+#### [↑ back to contents](#contents)
 
 <a id="loader-option-preprocessor-options-twig" name="loader-option-preprocessor-options-twig"></a>
 
@@ -3464,7 +3528,6 @@ The [TwigJS](https://github.com/twigjs/twig.js) have few useful options:
 - `namespaces {Object}` defaults is `{}`.\
   The key is a namespace (like Webpack alias) used in the template instead a relative path.\
   The value is an absolute a path relative to the project directory.
-
 
 ```js
 {
@@ -3628,15 +3691,18 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 - [Eta](https://eta.js.org)
 - [EJS](https://ejs.co)
 - [Handlebars](https://handlebarsjs.com)
+- [LiquidJS](https://github.com/harttle/liquidjs)
 - [Mustache](https://github.com/janl/mustache.js)
 - [Nunjucks](https://mozilla.github.io/nunjucks/)
+- [Pug](https://pugjs.org)
 - [TwigJS](https://github.com/twigjs/twig.js)
-- [LiquidJS](https://github.com/harttle/liquidjs)
 
+<!--
 > **Note**
 >
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
 > This plugin works on the same codebase but has additional Pug-specific options and features.
+-->
 
 <a id="using-template-eta" name="using-template-eta"></a>
 
@@ -3940,6 +4006,79 @@ module.exports = {
 ```
 
 See the [`nunjucks` preprocessor options](#loader-option-preprocessor-options-nunjucks).
+
+#### [↑ back to contents](#contents)
+
+<a id="using-template-pug" name="using-template-pug"></a>
+
+### Using the Pug
+
+You need to install the `pug` package:
+
+```
+npm i -D pug
+```
+
+For example, there is the layout template _src/views/layout/default.pug_
+
+```pug
+html
+  head
+    title= title
+    script(src="@scripts/main.js" defer="defer")
+  body
+    h1= headline
+    block content
+    include @partials/footer
+```
+
+The page template _src/views/pages/home.pug_ can be extended from the layout:
+
+```pug
+extends @layouts/default
+
+block content
+  ul#people
+    each item in people
+      li= item
+```
+
+Define the `preprocessor` as `pug`:
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  resolve: {
+    alias: {
+      '@scripts': path.join(__dirname, 'src/scripts/'), // alias to scripts used in template
+      '@layouts': path.join(__dirname, 'src/views/layouts/'), // alias to template layouts
+      '@partials': path.join(__dirname, 'src/views/partials/'), // alias to template partials
+    },
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: {
+          import: 'src/views/page/home.pug',
+          data: {
+            title: 'Strartpage',
+            headline: 'Breaking Bad',
+            people: ['Walter White', 'Jesse Pinkman'],
+          },
+        },
+      },
+      preprocessor: 'pug', // use Pug templating engine
+      preprocessorOptions: {
+        // Pug options
+      },
+    }),
+  ],
+};
+```
+
+See the [`pug` options](#loader-option-preprocessor-options-pug).
 
 
 #### [↑ back to contents](#contents)

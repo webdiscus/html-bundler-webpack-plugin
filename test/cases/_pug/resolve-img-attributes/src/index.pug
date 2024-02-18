@@ -1,0 +1,12 @@
+html
+  head
+    title Test
+  body
+    h1 Hello World!
+    img(src='@images/apple.png')
+    img&attributes({
+      class: 'image',
+      src: '@images/fig.png',
+      srcset: '@images/pear.png 300w, @images/plum.png 600w',
+      alt: 'picture',
+    })

@@ -1,0 +1,58 @@
+extends layout
+include mixins
+
+//- NamedBlock
+block content
+  //- Tag attributes
+  img(src=require('./image.png') srcset=`${require('./image1.png')} 80w, ${require('./image2.png')} 90w`).a
+
+  //- Code
+  - var imageFile = require('./image.png');
+  img(src=imageFile).b
+
+  //- Mixin
+  +image(require('./image.png'), 'logo-b').c
+
+  //- Case, When
+  - var num = 1;
+  case num
+    when 1
+      img(src=require('./image1.png')).d1
+
+  //- Conditional
+  if true
+    img(src=require('./image1.png')).e1
+  if false
+    //- do nothing
+  else
+    //- Conditional alternate
+    img(src=require('./image2.png')).e2
+
+  //- Each obj as array
+  each img in [require('./image1.png'), require('./image2.png')]
+    img(src=img).f1
+
+  //- Each obj as json
+  each img, key in { apple: require('./image1.png'), sony: require('./image2.png') }
+    img(src=img alt=key).f2
+
+  //- EachOf obj as Map, see feature: https://github.com/pugjs/pug/pull/3179
+  each [key, img] of new Map([['apple', require('./image1.png')], ['sony', require('./image2.png')]])
+    img(src=img alt=key).f3
+
+  //- While
+  - var n = 0;
+  while n++ < 2
+    img(src=require('./image.png') class=`g-${n}`)
+
+  //- Mixin block
+  +images-container
+    img(src=require('./image1.png')).h1
+    img(src=require('./image2.png')).h2
+
+  //- Block
+  include include-images
+
+  //- Text, do nothing
+  :code
+    img(src=require('./image.png')).h

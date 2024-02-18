@@ -1,5 +1,5 @@
 const { loadModule } = require('../../../Common/FileUtils');
-const { stringifyData } = require('../../Utils');
+const { stringifyJSON } = require('../../Utils');
 
 // replace the partial file and data to load nested included template via the Webpack loader
 // include("./file.html")                   => require("./file.eta")({...locals, ...{}})
@@ -64,17 +64,17 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} templateFunction The source code of the template function.
-     * @param {{}} data The object with variables passed in template.
+     * @param {{}} data The object with external variables passed in template from data option.
      * @return {string} The exported template function.
      */
     export(templateFunction, { data }) {
       // the name of template function in generated code
-      const exportFunction = 'anonymous';
+      const exportFunctionName = 'anonymous';
       const exportCode = 'module.exports=';
 
       return `${templateFunction};
-        var __data__ = ${stringifyData(data)};
-        var template = (context) => ${exportFunction}(Object.assign(__data__, context));
+        var data = ${stringifyJSON(data)};
+        var template = (context) => ${exportFunctionName}(Object.assign(data, context));
         ${exportCode}template;`;
     },
   };

@@ -18,7 +18,7 @@ describe('loader exceptions', () => {
   });
 
   test('exception resolve: resolve file', () => {
-    const containString = `Can't resolve`;
+    const containString = `Resolving of source files in the template file failed`;
     return exceptionContain('msg-exception-loader-resolve-file', containString);
   });
 
@@ -28,7 +28,7 @@ describe('loader exceptions', () => {
   });
 
   test('exception resolve: resolve js file', () => {
-    const containString = `Can't resolve`;
+    const containString = `Resolving of source files in the template file failed`;
     return exceptionContain('msg-exception-loader-resolve-js', containString);
   });
 

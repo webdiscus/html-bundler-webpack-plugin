@@ -1,0 +1,10 @@
+h1 Hello World!
+
+//- Static resource URL from public web path should not be parsed, leave as is.
+link(rel='stylesheet' href='/absolute/assets/styles2.css')
+img(src='//relative/assets/image2.png')
+
+//- Required resource must be processed.
+link(rel='stylesheet' href=require('../styles.css'))
+- var image = '../image.webp';
+img(src=require(image))

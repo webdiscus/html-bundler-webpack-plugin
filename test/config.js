@@ -7,8 +7,6 @@ const PATHS = {
   webRoot: '/dist/',
   // relative path in the test directory to expect files for test
   expected: '/expected/',
-  // relative path in the public directory
-  output: '/assets/',
 };
 
 export { PATHS };

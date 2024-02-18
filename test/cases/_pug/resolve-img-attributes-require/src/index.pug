@@ -1,0 +1,12 @@
+html
+  head
+    title Test
+  body
+    h1 Hello World!
+    img(src=require('@images/apple.png'))
+    img&attributes({
+      class: 'image',
+      src: require('@images/fig.png'),
+      srcset: `${require('@images/pear.png')} 300w, ${require('@images/plum.png')} 600w`,
+      alt: 'picture',
+    })

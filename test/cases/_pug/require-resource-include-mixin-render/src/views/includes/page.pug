@@ -1,0 +1,7 @@
+//- Test case with included from sub directory template:
+    if a mixin file is included before the img with the embedded resource,
+    then pugjs/pug-loader can't resolve the file in require().
+
+include mixins
++some-mixin('test')
+img(src=require('./image.webp'))

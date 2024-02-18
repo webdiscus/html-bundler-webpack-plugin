@@ -1,0 +1,8 @@
+p require-string
+
+//- not works with method `compile`, the relative path must start with './'
+  img(src=require('image.png'))
+
+img.a1(src=require('./image.png'))
+img.a2(src=require('./images/image.png'))
+img.a3(src=require('../images/image.png'))

@@ -1,0 +1,51 @@
+//- test the argument
+:highlight(html)
+  <h1>Header</h1>
+
+//- test add language in `pre` tag
+:highlight
+  <pre class="block">
+    <code class="language-js">
+      const obj = { key: 'value' };
+    </code>
+  </pre>
+
+//- test override language in `pre` tag from `code`
+:highlight
+  <pre class="block language-java">
+    <code class="language-js">
+      const obj = { key: 'value' };
+    </code>
+  </pre>
+
+//- test language detection from `pre` tag
+:highlight
+  <pre class="language-js">
+    <code>
+      const obj = { key: 'value' };
+    </code>
+  </pre>
+
+//- test language detection from `code` or `pre` tag
+:highlight
+  <pre class="language-dart">
+    <code class="language-dart">
+      const obj = { key: 'value' };
+    </code>
+  </pre>
+
+//- test lazy load of language and dependencies
+:highlight
+  <pre>
+    <code class="language-php">
+      $arr = [1, 2];
+    </code>
+  </pre>
+
+//- test unsupported language `meta`
+:highlight
+  <pre>
+    <code class="language-meta">
+      const id = 123;
+    </code>
+  </pre>

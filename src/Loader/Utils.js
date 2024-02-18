@@ -6,6 +6,28 @@ const urlPathPrefix = '/__HTML_BUNDLER_PLUGIN__/';
 const cssLoaderName = 'HTMLBundlerCSSLoader';
 
 /**
+ * Resolve absolute path to node module main file what can be dynamically required anywhere in code.
+ *
+ * @param {string} moduleName The resolving module name.
+ * @param {string} context The current working directory where is the node_modules folder.
+ * @return {string | false} If module exists return resolved module path otherwise false.
+ * @throws
+ */
+const resolveModule = (moduleName, context = process.cwd()) => {
+  let moduleFile;
+  try {
+    moduleFile = require.resolve(moduleName, { paths: [context] });
+  } catch (error) {
+    if (error.code === 'MODULE_NOT_FOUND') {
+      return false;
+    }
+    throw error;
+  }
+
+  return moduleFile;
+};
+
+/**
  * Call an async function for the each array item.
  *
  * @param {Array<any>} data The array of data.
@@ -119,11 +141,12 @@ const escapeCodesForJSON = (str) => {
  *
  * @note The quality of function source code defined in the data limited by function.toString().
  *   See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString
+ *   TODO: for complex data structure should be implemented ideas from https://github.com/yahoo/serialize-javascript/blob/main/index.js
  *
  * @param {Object} data The JSON data.
  * @return {string}
  */
-const stringifyData = (data) => {
+const stringifyJSON = (data) => {
   const quoteMark = '__REMOVE_QUOTE__';
   let hasQuoteMarks = false;
 
@@ -156,6 +179,7 @@ module.exports = {
   urlPathPrefix,
   cssLoaderName,
   hotUpdateFile: path.join(__dirname, 'Hmr/hot-update.js'),
+  resolveModule,
   eachAsync,
   makeTemplateId,
   injectBeforeEndHead,
@@ -163,5 +187,5 @@ module.exports = {
   decodeReservedChars,
   escapeSequences,
   escapeCodesForJSON,
-  stringifyData,
+  stringifyJSON,
 };

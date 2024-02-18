@@ -1,0 +1,10 @@
+p require-variable-sub-dir
+
+img.a1(src=require('./images/image.png'))
+
+- var file = 'images/image.png'
+img.b1(src=require(file))
+
+- var file = 'image.png'
+img.c1(src=require('./images/' + file))
+img.c2(src=require(`./images/${file}`))

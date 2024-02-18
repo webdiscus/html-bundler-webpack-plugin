@@ -1,5 +1,5 @@
 const path = require('path');
-const { stringifyData } = require('../../Utils');
+const { stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
 // replace the partial file and data to load nested included template via the Webpack loader
@@ -78,22 +78,22 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} templateFunction The source code of the template function.
-     * @param {{}} data The object with variables passed in template.
+     * @param {{}} data The object with external variables passed in template from data option.
      * @return {string} The exported template function.
      */
     export(templateFunction, { data }) {
       // note: resolved the file is for node, therefore, we need to get the module path plus file for browser
       const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs');
-      const exportFunction = 'templateFn';
+      const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 
       return `
         var { Eta } = require('${runtimeFile}');
-        var eta = new Eta(${stringifyData(options)});
-        var __data__ = ${stringifyData(data)};
+        var eta = new Eta(${stringifyJSON(options)});
+        var data = ${stringifyJSON(data)};
         var etaFn = ${templateFunction};
-        var ${exportFunction} = (context) => etaFn.bind(eta)(Object.assign(__data__, context));
-        ${exportCode}${exportFunction};`;
+        var ${exportFunctionName} = (context) => etaFn.bind(eta)(Object.assign(data, context));
+        ${exportCode}${exportFunctionName};`;
     },
   };
 };

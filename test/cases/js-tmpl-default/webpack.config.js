@@ -20,15 +20,11 @@ module.exports = {
         index: './src/index.html',
       },
 
-      loaderOptions: {
-        data: {
-          component: {
-            title: 'My component',
-          },
+      data: {
+        component: {
+          title: 'My component',
         },
       },
-
-      //preprocessor: 'ejs',
     }),
   ],
 

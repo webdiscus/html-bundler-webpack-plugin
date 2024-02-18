@@ -14,6 +14,14 @@ class Resolver {
   static hasPlugins = false;
   static fs = null;
 
+  /** The list of ResolverType values, see types.d.ts */
+  static types = {
+    default: 'default',
+    script: 'script',
+    style: 'style',
+    include: 'include',
+  };
+
   /**
    * @param {Object} loaderContext
    */
@@ -26,7 +34,6 @@ class Resolver {
     this.basedir = Option.getBasedir();
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;
-    this.hasPlugins = options.plugins && Object.keys(options.plugins).length > 0;
 
     // resolver for scripts from the 'script' tag, npm modules, and other js files
     this.resolveScript = ResolverFactory.create.sync({
@@ -53,14 +60,16 @@ class Resolver {
       restrictions: this.getStyleResolveRestrictions(),
     });
 
-    // resolver for resources: images, fonts, etc.
+    // resolver for resources: scripts w/o an ext (e.g. in pug: require('./data')), images, fonts, etc.
     this.resolveFile = ResolverFactory.create.sync({
       ...options,
       preferRelative: options.preferRelative !== false,
       // resolve 'exports' field in package.json, default value is: ['webpack', 'production', 'browser']
       conditionNames: ['require', 'node'],
+      // restrict default extensions list '.js', '.json', '.wasm' for faster resolving of script files
+      extensions: options.extensions.length ? options.extensions : ['.js'],
       // remove extensions for faster resolving of files different from styles and scripts
-      extensions: [],
+      //extensions: [], // don't work if required js file w/o an ext in template
     });
 
     // const resolveFileAsync = loaderContext.getResolve({
@@ -108,20 +117,19 @@ class Resolver {
    *
    * @param {string} request The request to resolve.
    * @param {string} issuer The issuer of resource.
-   * @param {string} [type = 'default'] The require type: 'default', 'script', 'style'.
+   * @param {ResolverType} [type = 'default'] The type of resolving request.
    * @return {string}
    */
-  static resolve(request, issuer, type = 'default') {
-    const fs = this.fs;
+  static resolve(request, issuer, type = Resolver.types.default) {
     const [issuerFile] = issuer.split('?', 1);
     const context = path.dirname(issuerFile);
-    const isScript = type === 'script';
-    const isStyle = type === 'style';
+    const isScript = type === Resolver.types.script;
+    const isStyle = type === Resolver.types.style;
     let isAliasArray = false;
     let resolvedRequest = null;
 
     // resolve an absolute path by prepending options.basedir
-    if (request[0] === '/') {
+    if (this.basedir && request[0] === '/') {
       resolvedRequest = path.join(this.basedir, request);
     }
 
@@ -132,7 +140,7 @@ class Resolver {
 
     // resolve a file by webpack `resolve.alias`
     if (resolvedRequest == null) {
-      resolvedRequest = this.resolveAlias(request);
+      resolvedRequest = this.resolveAlias(request, type);
       isAliasArray = Array.isArray(resolvedRequest);
     }
 
@@ -146,8 +154,8 @@ class Resolver {
         resolvedRequest = isScript
           ? this.resolveScript(context, normalizedRequest)
           : isStyle
-          ? this.resolveStyle(context, normalizedRequest)
-          : this.resolveFile(context, normalizedRequest);
+            ? this.resolveStyle(context, normalizedRequest)
+            : this.resolveFile(context, normalizedRequest);
       } catch (error) {
         if (isScript) {
           // extract important ending of filename from the request
@@ -176,7 +184,7 @@ class Resolver {
     const separator = resolvedRequest.indexOf('#') > 0 ? '#' : '?';
     const [resolvedFile] = resolvedRequest.split(separator, 1);
 
-    if (!fs.existsSync(resolvedFile)) {
+    if (!require.resolve(resolvedFile)) {
       if (isScript) {
         Snapshot.addMissingFile(issuer, resolvedFile);
       }
@@ -186,6 +194,125 @@ class Resolver {
     }
 
     return resolvedRequest;
+  }
+
+  /**
+   * Interpolate filename for `compile` mode.
+   *
+   * @note: the file is the argument of require() and can be any expression, like require('./' + file + '.jpg').
+   * See https://webpack.js.org/guides/dependency-management/#require-with-expression.
+   *
+   * @param {string} value The expression to resolve.
+   * @param {string} templateFile The template file.
+   * @param {ResolverType} [type = 'default'] The type of resolving request.
+   * @return {string}
+   */
+  static interpolate(value, templateFile, type = Resolver.types.default) {
+    value = value.trim();
+    const [, quote, file] = /(^"|'|`)(.+?)(?=`|'|")/.exec(value) || [];
+    const isScript = type === 'script';
+    const isStyle = type === 'style';
+    let interpolatedValue = null;
+    let valueFile = file;
+
+    // the argument begin with a string quote
+    const context = path.dirname(templateFile) + '/';
+
+    if (!file) {
+      // fix webpack require issue `Cannot find module` for the case:
+      // - var file = './image.jpeg';
+      // require(file) <- error
+      // require(file + '') <- solution
+      return value + ` + ''`;
+    }
+
+    // resolve an absolute path by prepending options.basedir
+    if (this.basedir && file[0] === '/') {
+      interpolatedValue = quote + this.basedir + value.slice(2);
+    }
+
+    // resolve a file in current directory
+    if (interpolatedValue == null && file.slice(0, 2) === './') {
+      interpolatedValue = quote + context + value.slice(3);
+    }
+
+    // resolve a file in parent directory
+    if (interpolatedValue == null && file.slice(0, 3) === '../') {
+      interpolatedValue = quote + context + value.slice(1);
+    }
+
+    // resolve a webpack `resolve.alias`
+    if (interpolatedValue == null) {
+      interpolatedValue = this.resolveAlias(value.slice(1), type);
+
+      if (typeof interpolatedValue === 'string') {
+        interpolatedValue = quote + interpolatedValue;
+      } else if (Array.isArray(interpolatedValue)) {
+        interpolatedValue = null;
+        valueFile = this.removeAliasPrefix(file);
+      }
+    }
+
+    // try the enhanced resolver for alias from tsconfig or for alias as array of paths
+    // the following examples work:
+    // '@data/path/script'
+    // '@data/path/script.js'
+    // '@images/logo.jpg'
+    // `${file}`
+    if (interpolatedValue == null) {
+      if (file.indexOf('{') < 0 && !file.endsWith('/')) {
+        try {
+          const resolvedValueFile = isStyle
+            ? this.resolveStyle(context, valueFile)
+            : this.resolveFile(context, valueFile);
+          interpolatedValue = value.replace(file, resolvedValueFile);
+        } catch (error) {
+          resolveException(error, value, templateFile);
+        }
+      } else if (file.indexOf('/') >= 0) {
+        // @note: resolve of alias from tsconfig in interpolating string is not supported for `compile` method,
+        // the following examples not work:
+        // `@data/${pathname}/script`
+        // `@data/${pathname}/script.js`
+        // `@data/path/${filename}`
+        // '@data/path/' + filename
+        // TODO: exception
+        //unsupportedInterpolationException(value, templateFile);
+      }
+    }
+
+    if (interpolatedValue == null) {
+      return value;
+    }
+
+    // TODO: check on win
+    //if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
+
+    // remove quotes: '/path/to/file.js' -> /path/to/file.js
+    let resolvedValue = interpolatedValue.slice(1, -1);
+    let resolvedFile;
+
+    // detect only full resolved path, w/o interpolation like: '/path/to/' + file or `path/to/${file}`
+    if (!/["'`$]/g.test(resolvedValue)) {
+      resolvedFile = resolvedValue;
+    }
+
+    if (isScript || isStyle) {
+      if (!resolvedFile) {
+        // TODO: exception
+        //unsupportedInterpolationException(value, templateFile);
+      }
+      if (isScript) resolvedFile = this.resolveScriptExtension(resolvedFile);
+
+      // TODO: check on win
+      //return isWin ? pathToPosix(resolvedFile) : resolvedFile;
+      return resolvedFile;
+    }
+
+    // TODO: test add dependency to watch
+    //if (resolvedFile) Dependency.add(resolvedFile);
+
+    return interpolatedValue;
   }
 
   /**
@@ -211,14 +338,27 @@ class Resolver {
    *
    * @param {string} request The value of extends/include/require().
    * @return {string | [] | null} If found an alias return the resolved normalized path otherwise return null.
+   * @param {ResolverType} type The type of resolving request.
    * @private
    */
-  static resolveAlias(request) {
+  static resolveAlias(request, type) {
     if (this.hasAlias === false) return null;
 
     const fs = this.fs;
     const hasPath = request.indexOf('/') > -1;
     const aliasRegexp = hasPath ? this.aliasRegexp : this.aliasFileRegexp;
+
+    // special use case for a templating engine, e.g. Pug,
+    // when the webpack alias is a file and used by include e.g., `include FILE_ALIAS`,
+    // the Pug compiler adds to the alias the `.pug` extension automatically,
+    // this added extension must be removed from request
+    if (type === Resolver.types.include && !hasPath && PluginService.getOptions().isEntry(request)) {
+      let pos = request.lastIndexOf('.');
+      if (pos > 0) {
+        request = request.slice(0, pos);
+      }
+    }
+
     const [, prefix, aliasName] = aliasRegexp.exec(request) || [];
     if (!prefix && !aliasName) return null;
 
@@ -228,7 +368,8 @@ class Resolver {
 
     if (typeof aliasPath === 'string') {
       let paths = [aliasPath, request.slice(alias.length)];
-      if (!fs.existsSync(aliasPath)) {
+
+      if (this.basedir && !fs.existsSync(aliasPath)) {
         paths.unshift(this.basedir);
       }
       resolvedFile = path.join(...paths);

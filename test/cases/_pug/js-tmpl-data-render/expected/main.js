@@ -1,0 +1,1 @@
+(()=>{"use strict";document.getElementById("root").innerHTML="<h1>Widget</h1><div>Param[a]: global a</div><div>Param[b]: global b</div><h1>Widget</h1><div>Param[a]: 10</div><div>Param[b]: global b</div><h1>Widget</h1><div>Param[a]: 20</div><div>Param[b]: abc</div>",console.log(">> main")})();

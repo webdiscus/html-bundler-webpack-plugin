@@ -1,6 +1,6 @@
 const path = require('path');
 const Dependency = require('../../Dependency');
-const { escapeSequences, stringifyData } = require('../../Utils');
+const { escapeSequences, stringifyJSON } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
@@ -208,23 +208,23 @@ const preprocessor = (loaderContext, options) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The source code of the precompiled template function.
-     * @param {{}} data The object with variables passed in template.
+     * @param {{}} data The object with external variables passed in template from data option.
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data }) {
       const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min');
-      const exportFunction = 'templateFn';
+      const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 
       return `
         var Handlebars = require('${runtimeFile}');
-        var __data__ = ${stringifyData(data)};
+        var data = ${stringifyJSON(data)};
         var precompiledTemplate = ${precompiledTemplate};
-        var ${exportFunction} = (context) => {
+        var ${exportFunctionName} = (context) => {
           var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
-          return template(Object.assign(__data__, context));
+          return template(Object.assign(data, context));
         };
-        ${exportCode}${exportFunction};`;
+        ${exportCode}${exportFunctionName};`;
     },
 
     /**

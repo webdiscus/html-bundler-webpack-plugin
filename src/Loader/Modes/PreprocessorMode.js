@@ -60,7 +60,15 @@ class PreprocessorMode {
    * @return {{requireExpression: string, resolvedFile: string}}
    */
   requireFile(file, issuer, entryId) {
-    let resolvedFile = Resolver.resolve(file, issuer);
+    let resolvedFile = '';
+
+    // if the source file is already resolved in a templating engine or preprocessor
+    // then extract the argument of the require('/path/to/file.ext') as /path/to/file.ext
+    if (file.startsWith('require(')) {
+      resolvedFile = file.slice(9, -2);
+    } else {
+      resolvedFile = Resolver.resolve(file, issuer);
+    }
 
     return {
       resolvedFile,
@@ -77,8 +85,14 @@ class PreprocessorMode {
    * @return {{requireExpression: string, resolvedFile: string}}
    */
   requireScript(file, issuer, entryId) {
-    const type = 'script';
-    const resolvedFile = Resolver.resolve(file, issuer, type);
+    const type = Resolver.types.script;
+
+    let resolvedFile = '';
+    if (file.startsWith('require(')) {
+      resolvedFile = file.slice(9, -2);
+    } else {
+      resolvedFile = Resolver.resolve(file, issuer, type);
+    }
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
@@ -97,8 +111,14 @@ class PreprocessorMode {
    * @return {{requireExpression: string, resolvedFile: string}}
    */
   requireStyle(file, issuer, entryId) {
-    const type = 'style';
-    const resolvedFile = Resolver.resolve(file, issuer, type);
+    const type = Resolver.types.style;
+
+    let resolvedFile = '';
+    if (file.startsWith('require(')) {
+      resolvedFile = file.slice(9, -2);
+    } else {
+      resolvedFile = Resolver.resolve(file, issuer, type);
+    }
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 

@@ -5,6 +5,15 @@ const { unsupportedPreprocessorException } = require('./Messages/Exeptions');
 class Preprocessor {
   static cache = new Map();
 
+  static dirs = {
+    eta: 'Eta',
+    ejs: 'Ejs',
+    handlebars: 'Handlebars',
+    nunjucks: 'Nunjucks',
+    twig: 'Twig',
+    pug: 'Pug',
+  };
+
   /**
    * Whether the preprocessor is used.
    *
@@ -26,15 +35,6 @@ class Preprocessor {
    * @throws
    */
   static load(preprocessor) {
-    const preprocessorDirs = {
-      eta: 'Eta',
-      ejs: 'Ejs',
-      handlebars: 'Handlebars',
-      nunjucks: 'Nunjucks',
-      twig: 'Twig',
-      pug: 'Pug',
-    };
-
     // disabled preprocessor
     if (preprocessor === false) return null;
 
@@ -45,7 +45,7 @@ class Preprocessor {
       return this.cache.get(preprocessor);
     }
 
-    let dirname = preprocessorDirs[preprocessor];
+    let dirname = this.dirs[preprocessor];
 
     if (dirname) {
       // we are sure the file exists
@@ -90,15 +90,15 @@ class Preprocessor {
    * Factory preprocessor as a function.
    *
    * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
-   * @param {string|null|*} preprocessor The preprocessor value, should be a string
-   * @param {Object} options The preprocessor options.
+   * @param {Object} options The loader options.
    * @param {boolean} watch Whether is serve/watch mode.
    * @return {Function|Promise|Object}
    */
-  static factory(loaderContext, { preprocessor, options = {}, watch }) {
+  static factory(loaderContext, options = {}, watch) {
+    const { preprocessor, preprocessorOptions, esModule } = options;
     const module = this.load(preprocessor);
 
-    return module(loaderContext, options, watch);
+    return module(loaderContext, preprocessorOptions || {}, { esModule, watch });
   }
 
   static watchRun({ preprocessor }) {

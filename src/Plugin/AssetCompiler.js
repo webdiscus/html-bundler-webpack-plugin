@@ -911,7 +911,6 @@ class AssetCompiler {
     };
 
     if (sourceFile === entry.sourceFile) {
-      //const assetFile = AssetEntry.getFilename(entry);
       const assetFile = entry.filename;
       // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
@@ -1203,6 +1202,7 @@ class AssetCompiler {
    * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
   renderModule({ type, source, sourceFile, resource, assetFile }) {
+    const loaderOptions = PluginService.getLoaderOptions();
     /** @type  FileInfo */
     const issuer = {
       resource,
@@ -1220,7 +1220,7 @@ class AssetCompiler {
 
     // the css-loader defaults generate ESM code, which must be transformed into CommonJS to compile the code
     // the template loader generates CommonJS code, no need to transform
-    const esModule = type === 'style';
+    const esModule = type === 'style' || loaderOptions.esModule === true;
     let result = vmScript.exec(source.source(), { filename: sourceFile, esModule });
 
     if (type === 'style') {

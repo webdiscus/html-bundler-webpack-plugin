@@ -1,0 +1,10 @@
+extends ../partials/layout
+
+block content
+  h1
+    //- test include pug with variables defined here
+    - var items = ['Hello', ' Pug!']
+    each str in items
+      include ../partials/italic
+
+  include ../partials/nested-a

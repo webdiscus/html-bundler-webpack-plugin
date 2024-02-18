@@ -22,6 +22,7 @@ declare namespace HtmlBundlerPlugin {
     isProduction: () => boolean;
     isMinify: () => boolean;
     isVerbose: () => boolean;
+    isEntry: (resource: string) => boolean;
     isScript: (resource: string) => boolean;
     isStyle: (resource: string) => boolean;
 
@@ -260,6 +261,7 @@ type Preprocessor =
   | 'ejs'
   | 'handlebars'
   | 'nunjucks'
+  | 'pug'
   | 'twig'
   | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 
@@ -340,5 +342,14 @@ type WatchFiles = {
   files?: Array<RegExp>;
   ignore?: Array<RegExp>;
 };
+
+// Private types: used in source code only
+
+type ResolverType =
+  | 'default'
+  | 'script'
+  | 'style'
+  // used in a preprocessor for the resolving of including partials
+  | 'include';
 
 export = HtmlBundlerPlugin;

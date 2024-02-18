@@ -1,14 +1,14 @@
 const path = require('path');
-const { makeTemplateId, stringifyData } = require('../../Utils');
+const { makeTemplateId, stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
-const preprocessor = (loaderContext, options = {}, watch) => {
+const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
   const nunjucks = loadModule('nunjucks');
   const env = new nunjucks.Environment();
   const { rootContext } = loaderContext;
   const viewPaths = (options.views = [...new Set([...(options.views || []), rootContext])]);
   const async = options?.async === true;
-  const exportFunction = 'templateFn';
+  const exportFunctionName = 'templateFn';
   const exportCode = 'module.exports=';
 
   if (watch === true) {
@@ -58,11 +58,11 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      */
     compile(source, { resourcePath, data }) {
       // the template name must be unique, e.g. partial file, to allow import many partials in the same js
-      const templateName = makeTemplateId(rootContext, resourcePath);
+      const templateId = makeTemplateId(rootContext, resourcePath);
 
       let precompiledTemplate = nunjucks.precompileString(source, {
         env,
-        name: templateName,
+        name: templateId,
         asFunction: false,
       });
 
@@ -78,17 +78,17 @@ const preprocessor = (loaderContext, options = {}, watch) => {
         const file = require.resolve(templateFile, { paths: viewPaths });
 
         if (file) {
-          // unique template name
-          const templateName = path.relative(rootContext, file);
-          dependencies += `dependencies["${templateName}"] = require("${file}");`;
+          // unique template name as the template path
+          const templatePath = path.relative(rootContext, file);
+          dependencies += `dependencies["${templatePath}"] = require("${file}");`;
 
           // if used partial paths (defined in `views` option) to include a partial,
           // replace the required partial file with the real partial name, e.g.:
           // "partials/footer.html" -> "src/partials/footer.html"
-          if (templateFile !== templateName) {
+          if (templateFile !== templatePath) {
             precompiledTemplate = precompiledTemplate.replaceAll(
               `env.getTemplate("${templateFile}"`,
-              `env.getTemplate("${templateName}"`
+              `env.getTemplate("${templatePath}"`
             );
           }
         }
@@ -101,10 +101,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
           'var dependencies = nunjucks.dependencies || (nunjucks.dependencies = {});' + dependencies;
       }
 
-      return (
-        precompiledTemplate +
-        `;var ${exportFunction} = (context) => nunjucks.render("${templateName}", Object.assign(__data__, context));`
-      );
+      return precompiledTemplate + `;var templateId="${templateId}";`;
     },
 
     /**
@@ -112,7 +109,7 @@ const preprocessor = (loaderContext, options = {}, watch) => {
      * Note: this method is required for `compile` mode.
      *
      * @param {string} precompiledTemplate The source code of the precompiled template function.
-     * @param {{}} data The object with variables passed in template.
+     * @param {{}} data The object with external variables passed in template from data option.
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data }) {
@@ -120,9 +117,10 @@ const preprocessor = (loaderContext, options = {}, watch) => {
 
       return `
         var nunjucks = require('${runtimeFile}');
-        var __data__ = ${stringifyData(data)};
         ${precompiledTemplate};
-        ${exportCode}${exportFunction};`;
+        var data = ${stringifyJSON(data)};
+        var ${exportFunctionName} = (context) => nunjucks.render(templateId, Object.assign(data, context));
+        ${exportCode}${exportFunctionName};`;
     },
   };
 };

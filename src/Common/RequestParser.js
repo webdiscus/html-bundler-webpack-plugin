@@ -25,6 +25,7 @@ const parseRequest = (request) => {
     true: true,
     false: false,
   };
+
   const queryArgs = query.split(/[,&]/g);
   const result = {};
 

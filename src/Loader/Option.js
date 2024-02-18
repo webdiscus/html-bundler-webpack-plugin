@@ -49,10 +49,12 @@ class Option {
       // save the initial value defined in the webpack config
       options.originalPreprocessorMode = options.preprocessorMode;
 
-      // the assets root path is used for resolving files specified in attributes (`sources` option)
-      // allow both 'root' and 'basedir' option name for compatibility
-      const basedir = options.root || options.basedir || false;
-      options.basedir = basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
+      // basedir option
+      const loaderOptionsBasedir = this.#getBaseDirFromOptions(options);
+      const preprocessorOptionsBasedir = this.#getBaseDirFromOptions(loaderOptions.preprocessorOptions);
+
+      // rule: the loader root/basedir option override the preprocessor root/basedir option
+      options.basedir = loaderOptionsBasedir || preprocessorOptionsBasedir || false;
 
       // whether it should be used ESM export for the rendered/compiled result
       options.esModule = options?.esModule === true;
@@ -85,6 +87,22 @@ class Option {
     if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
 
     if (this.#watch) this.#initWatchFiles();
+  }
+
+  /**
+   * The root path is used for resolving files specified in attributes (`sources` option).
+   *
+   * Note: the `root` and `basedir` options are synonym, no difference.
+   *
+   * @param {{}} options
+   * @return {string|boolean}
+   */
+  static #getBaseDirFromOptions(options) {
+    if (!options) return false;
+
+    let basedir = options.root || options.basedir || false;
+
+    return basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
   }
 
   /**
@@ -134,11 +152,7 @@ class Option {
     }
 
     if (!Preprocessor.isUsed(options.preprocessor)) {
-      options.preprocessor = Preprocessor.factory(loaderContext, {
-        preprocessor: options.preprocessor,
-        options: options.preprocessorOptions,
-        watch: this.#watch,
-      });
+      options.preprocessor = Preprocessor.factory(loaderContext, options, this.#watch);
     }
   }
 

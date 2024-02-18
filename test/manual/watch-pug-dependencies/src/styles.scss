@@ -1,0 +1,22 @@
+// styles.scss
+@use 'github-markdown-css';
+@use 'prismjs';
+
+body {
+  font-family: sans-serif;
+  font-size: 14px;
+  margin: 0;
+}
+
+h1 {
+  color: darkcyan;
+}
+
+.content {
+  margin: 32px;
+}
+
+.container {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}

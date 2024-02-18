@@ -1,0 +1,12 @@
+html
+  head
+    title Test SVG
+  body
+    svg(width="160" height="130")
+      image(href=require("./fig.png"))
+
+    svg(width="24" height="24")
+      use(href=require("./shapes.svg#circle"))
+
+    svg(width="24" height="24")
+      use(href=require("./shapes.svg#rect"))
