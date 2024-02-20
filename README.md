@@ -63,7 +63,7 @@ For example, using source asset files is HTML template _./src/views/index.html_:
 </html>
 ```
 
-[Open an example in StackBlitz](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
+[Open an example in StackBlitz](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js)
 
 The folder structure of the example:
 ```
@@ -326,6 +326,8 @@ module.exports = {
         // simple page config w/o variables
         about: 'src/views/about.html', // => dist/about.html
         'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
+        // add more templates if needed
+        // 'another-page': 'src/views/anotherPage.html', // => dist/another-page.html
       },
       // - OR - define a relative or absolute path to page templates
       entry: 'src/views/',
@@ -379,7 +381,7 @@ For custom templates, you can use the [preprocessor](#loader-option-preprocessor
 <td>Simple example SPA</td>
 <td>
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js)
 
 </td>
 </tr>
@@ -500,7 +502,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 1. <a id="usage-examples" name="usage-examples"></a>
    Usage examples
-   - Simple example "Hello World!" [View in browser](https://stackblitz.com/edit/stackblitz-starters-78r926?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
+   - Simple example "Hello World!" [View in browser](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world)
+   - Simple example "Hello World!" using `Pug` [View in browser](https://stackblitz.com/edit/hello-world-webpack-pug?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/hello-world-pug)
    - Automatically processing **multiple HTML** templates [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-diop8g?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/simple-site/)
    - **Bootstrap** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-kjnlvk?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/bootstrap)
    - **Tailwind CSS** with Webpack [View in browser](https://stackblitz.com/edit/webpack-webpack-js-org-auem8r?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tailwindcss/)

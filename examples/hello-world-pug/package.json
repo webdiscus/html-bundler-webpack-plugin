@@ -1,5 +1,5 @@
 {
-  "name": "hello-world",
+  "name": "hello-world-pug",
   "description": "HTML / Sass / JavaScript / Webpack",
   "version": "0.0.1",
   "repository": "webdiscus/html-bundler-webpack-plugin",
@@ -15,6 +15,7 @@
   "devDependencies": {
     "css-loader": "^6.10.0",
     "html-bundler-webpack-plugin": "^3.5.0",
+    "pug": "^3.0.2",
     "sass": "^1.71.0",
     "sass-loader": "^14.1.1",
     "webpack": "^5.90.3",

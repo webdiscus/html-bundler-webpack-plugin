@@ -13,7 +13,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         // define templates here
-        index: 'src/index.html',
+        index: 'src/index.pug',
       },
       js: {
         // output filename of compiled JavaScript
@@ -23,6 +23,8 @@ module.exports = {
         // output filename of extracted CSS
         filename: 'css/[name].[contenthash:8].css',
       },
+      // define the preprocessor for compile Pug templates
+      preprocessor: 'pug',
     }),
   ],
 
