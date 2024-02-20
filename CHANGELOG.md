@@ -1,5 +1,9 @@
 # Change log
 
+## 3.5.2 (2024-02-20)
+
+- fix: when used TS then could not find a declaration file for module 'html-bundler-webpack-plugin'
+
 ## 3.5.1 (2024-02-20)
 
 - fix(pug): correct resolving required resources in multiple pages

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "es2020",
+    //"module": "node16", /* ERROR TS1479 by import { Options as MinifyOptions } from 'html-minifier-terser'; */
+
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  }
+}
