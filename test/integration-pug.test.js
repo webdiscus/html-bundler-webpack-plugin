@@ -19,6 +19,10 @@ describe('simple tests', () => {
   test('escape special chars, render', () => compareFiles('_pug/escape-mode-render'));
 });
 
+describe('special cases', () => {
+  test('resolve js, css in multiple pages', () => compareFiles('_pug/resolve-js-css-multipage'));
+});
+
 describe('extend / include / raw include', () => {
   test('resolve extends alias', () => compareFiles('_pug/extends-alias'));
   test('resolve extends relative', () => compareFiles('_pug/extends-relative'));

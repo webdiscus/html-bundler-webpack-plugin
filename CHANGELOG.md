@@ -1,5 +1,9 @@
 # Change log
 
+## 3.5.1 (2024-02-20)
+
+- fix(pug): correct resolving required resources in multiple pages
+
 ## 3.5.0 (2024-02-18)
 
 - feat: add support for the `Pug` template engine.

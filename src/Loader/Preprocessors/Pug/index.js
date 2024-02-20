@@ -13,7 +13,6 @@ const PugCompiler = require('./PugCompiler');
 const preprocessor = (loaderContext, options, { esModule, watch }) => {
   const exportCode = esModule ? 'export default ' : 'module.exports=';
   const Pug = new PugCompiler(loaderContext, options);
-  const { rootContext } = loaderContext;
 
   return {
     /**

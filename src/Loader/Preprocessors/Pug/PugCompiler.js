@@ -65,7 +65,7 @@ class PugCompiler {
    * @param {{}} loaderOptions
    */
   constructor(loaderContext, loaderOptions) {
-    const { rootContext: context, resource, resourcePath: filename, resourceQuery } = loaderContext;
+    const { rootContext: context } = loaderContext;
     let basedir = loaderOptions.basedir || context;
 
     this.pug = loadModule('pug');
@@ -74,9 +74,6 @@ class PugCompiler {
     Filter.loadFilters(loaderOptions);
 
     this.pugOptions = {
-      // used to resolve import/extends and to improve errors
-      filename,
-
       // the root directory of all absolute inclusions, defaults is `/`.
       basedir,
 
@@ -113,15 +110,19 @@ class PugCompiler {
     };
   }
 
-  _compile(source) {
+  _compile(source, file) {
+    // note: for each new compilation must be defined the `filename` with current template filename
+    // used to resolve import/extends and to improve errors
+    this.pugOptions.filename = file;
+
     return this.pug.compileClientWithDependenciesTracked(source, this.pugOptions).body;
   }
 
-  compile(source) {
+  compile(source, { file }) {
     ResolvePlugin.mode = 'compile';
 
     const exportFunctionName = 'templateFn';
-    const templateFunctionSource = this._compile(source);
+    const templateFunctionSource = this._compile(source, file);
 
     return templateFunctionSource + `;var ${exportFunctionName}=${this.pugOptions.name};`;
   }
@@ -136,7 +137,7 @@ class PugCompiler {
   render(source, { file, data, esModule }) {
     ResolvePlugin.mode = 'render';
 
-    const templateFunctionSource = this._compile(source);
+    const templateFunctionSource = this._compile(source, file);
     const name = this.pugOptions.name;
 
     const vmScript = new VMScript(
