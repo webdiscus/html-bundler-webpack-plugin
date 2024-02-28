@@ -48,7 +48,7 @@ module.exports = {
             // output filename of images
             // note: GitHub generate different hash as local test
             //name: 'assets/img/[name].[hash:8]-[width]w.[ext]',
-            name: 'assets/img/[name]-[width]w.[ext]',
+            name: 'img/[name]-[width]w.[ext]',
             sizes: [300], // default size for all images
           },
         },

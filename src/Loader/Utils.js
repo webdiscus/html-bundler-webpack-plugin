@@ -80,6 +80,22 @@ const injectBefore = (content, string, before = []) => {
 };
 
 /**
+ * Encode reserved HTML chars.
+ *
+ * @param {string} str
+ * @return {string}
+ */
+const encodeReservedChars = (str) => {
+  if (str.indexOf('?') < 0) return str;
+
+  const match = /[&'"]/g;
+  const replacements = { '&': '\\u0026', "'": '\\u0060', '"': '\\u0060' };
+  const replacer = (value) => replacements[value];
+
+  return str.replace(match, replacer);
+};
+
+/**
  * Decode/encode reserved HTML chars.
  *
  * @param {string} str
@@ -184,6 +200,7 @@ module.exports = {
   makeTemplateId,
   injectBeforeEndHead,
   injectBeforeEndBody,
+  encodeReservedChars,
   decodeReservedChars,
   escapeSequences,
   escapeCodesForJSON,

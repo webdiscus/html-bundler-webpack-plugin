@@ -4,10 +4,12 @@ const { outToConsole } = require('../../Common/Helpers');
 
 const header = `\n${black.bgYellow` ${pluginName} `}${black.bgAnsi(227)` DEPRECATE `} `;
 
-const deprecateOptionExtractCss = () => {
-  outToConsole(header + `Use the '${green`css`}' option name instead of '${red`extractCss`}'.\n`);
-};
+// Example for deprecations
 
-module.exports = {
-  deprecateOptionExtractCss,
-};
+// const deprecateSomeOption = () => {
+//   outToConsole(header + `Use the '${green`css`}' option name instead of the '${red`deprecate`}'.\n`);
+// };
+//
+// module.exports = {
+//   deprecateSomeOption,
+// };

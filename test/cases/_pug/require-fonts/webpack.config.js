@@ -20,7 +20,6 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       preprocessor: 'pug',
-      preprocessorOptions: {},
     }),
   ],
 

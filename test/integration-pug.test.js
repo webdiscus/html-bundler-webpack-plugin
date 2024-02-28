@@ -1,5 +1,7 @@
 import { compareFiles, exceptionContain, watchCompareFiles } from './utils/helpers';
 import { filterLoadException } from '../src/Loader/Preprocessors/Pug/Exeptions';
+import adapterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight/adapter';
+import filterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight';
 
 // TODO: add in docs
 // BRAKING CHANGE (to compare with pug-loader)
@@ -64,9 +66,9 @@ describe('resolve assets', () => {
   test('require-variable-current-dir', () => compareFiles('_pug/require-resource-variable-current-dir'));
   test('require-variable-parent-dir', () => compareFiles('_pug/require-resource-variable-parent-dir'));
   test('require-variable-sub-dir', () => compareFiles('_pug/require-resource-variable-sub-dir'));
-  test('require-assets-method-compile', () => compareFiles('_pug/require-assets-method-compile'));
-  test('require-assets-method-compile-esm', () => compareFiles('_pug/require-assets-method-compile-esm'));
-  test('require-assets-method-render', () => compareFiles('_pug/require-assets-method-render'));
+  test('require-assets-compile', () => compareFiles('_pug/require-assets-compile'));
+  test('require-assets-compile-esm', () => compareFiles('_pug/require-assets-compile-esm'));
+  test('require-assets-render', () => compareFiles('_pug/require-assets-render'));
   test('require-resource-in-mixin-argument', () => compareFiles('_pug/require-resource-in-mixin-argument'));
   test('require svg fragment', () => compareFiles('_pug/require-img-svg-fragment'));
 });
@@ -78,7 +80,7 @@ describe('resolve assets in attrs', () => {
 
 describe('resolve scripts', () => {
   test('script tags', () => compareFiles('_pug/require-script-tags'));
-  test('webpack config: resolve.modules', () => compareFiles('_pug/resolve-modules'));
+  test('resolve path in resolve.modules', () => compareFiles('_pug/resolve-path'));
 });
 
 describe('require pug in javascript', () => {
@@ -89,20 +91,20 @@ describe('require pug in javascript', () => {
 });
 
 describe('options tests', () => {
-  test('basedir', () => compareFiles('_pug/option-basedir'));
-  test('doctype html5', () => compareFiles('_pug/option-doctype-html5'));
-  test(`default mode in js`, () => compareFiles('_pug/option-mode-default-js'));
-  test(`render mode in js`, () => compareFiles('_pug/option-mode-render-js'));
-  test(`mix modes in js: default with render`, () => compareFiles('_pug/option-mode-default-with-render-js'));
-  test(`name`, () => compareFiles('_pug/option-name'));
-  test(`loader option: esModule=false`, () => compareFiles('_pug/option-esModule-false'));
-  test(`loader option: esModule=true`, () => compareFiles('_pug/option-esModule-true'));
+  test('basedir', () => compareFiles('_pug/loader-option-basedir'));
+  test('doctype html5', () => compareFiles('_pug/loader-option-doctype-html5'));
+  test(`default mode in js`, () => compareFiles('_pug/js-tmpl-default'));
+  test(`render mode in js`, () => compareFiles('_pug/js-tmpl-render'));
+  test(`mix modes in js: default with render`, () => compareFiles('_pug/js-tmpl-data-query-render'));
+  test(`name`, () => compareFiles('_pug/loader-option-name'));
+  test(`loader option: esModule=false`, () => compareFiles('_pug/loader-option-esModule-false'));
+  test(`loader option: esModule=true`, () => compareFiles('_pug/loader-option-esModule-true'));
 });
 
 describe('option data', () => {
-  test('pass global data', () => compareFiles('_pug/option-data'));
-  test('pass page data', () => compareFiles('_pug/option-data-mulipage'));
-  test(`using self option`, () => compareFiles('_pug/option-data-self'));
+  test('pass global data', () => compareFiles('_pug/loader-option-data'));
+  test('pass page data', () => compareFiles('_pug/loader-option-data-mulipage'));
+  test(`using self option`, () => compareFiles('_pug/loader-option-data-self'));
 });
 
 describe('embedded filters tests', () => {
@@ -161,3 +163,77 @@ describe('exception tests', () => {
     done();
   });
 });
+
+// pug-plugin tests
+
+// TODO:
+//  BREAKING CHANGES in compare to the pug-plugin v4.x
+//   - removed the `modules` options, now you can use the plugin, `js` or `css` options
+//   - removed the `modules.test` options, you can use followings:
+//     - `test` option for template extensions
+//     - `js.test` option for script extensions
+//     - `css.test` option for style extensions
+//   - removed the `modules.postprocess` options, use the `postprocess` option
+//   - inline CSS/JS via query:
+//     OLD:
+//       - script=require('./main.js?inline')
+//       - style=require('./style.css?inline' rel='stylesheet')
+//     NEW:
+//       - script(src=require('./main.js?inline')) or script(src='./main.js?inline')
+//       - link(href=require('./style.css?inline') rel='stylesheet') or link(href='./style.css?inline' rel='stylesheet')
+//    - require() in srcset attribute not works anymore, use a file w/o require() function
+//     OLD:
+//       - img(srcset=`${require('./image1.png')} 400w, ${require('@images/image2.png')} 800w` src=require('./image.png'))
+//         Note: the required file is relative to the current pug partial file, recommends to use an webpack alias
+//     NEW:
+//       - img(srcset=`./image1.png 400w, @images/image2.png 800w` src='./image.png')
+//         Note: the file is relative to the main entrypoint pug file, recommends to use an webpack alias
+
+describe('pug-plugin tests', () => {
+  // TODO: add pretty option
+  //test('options.pretty', () => compareFiles('_pug/option-pretty'));
+  // TODO: Pug - OK / HTML - fix issue (see webpack config)
+  test('entry: use styles in entry with same', () => compareFiles('_pug/entry-sass-same-names'));
+
+  test('pass data via query', () => compareFiles('_pug/data-entry-query'));
+  test('resolve assets in required data', () => compareFiles('_pug/resolve-assets-require-data'));
+  test('entry: keep output folder structure', () => compareFiles('_pug/entry-keep-output-dir'));
+
+  // root context
+  test('resolve same image in template and scss', () => compareFiles('_pug/resolve-context-image-pug-scss'));
+  test('resolve script with auto publicPath', () => compareFiles('_pug/resolve-context-script'));
+  test('resolve script with and w/o extension', () => compareFiles('_pug/resolve-context-script-ext'));
+
+  // resolve assets
+  test('resolve images, require', () => compareFiles('_pug/resolve-img-require'));
+  test('resolve images variable, require', () => compareFiles('_pug/resolve-img-require-variable'));
+  //- TODO: ignore/resolve source files via filter
+  test('resolve/ignore source files using filter', () => compareFiles('_pug/resolve-assets-source-filter'));
+
+  // special cases
+  test('resolve manifest.json via require', () => compareFiles('_pug/resolve-manifest.json-require'));
+  test('compile template function in js', () => compareFiles('_pug/js-tmpl-entry-js'));
+  test('inline js and css via query `?inline`', () => compareFiles('_pug/inline-js-css-query'));
+
+  // resolve responsive images
+  test('responsive images in template', () => compareFiles('_pug/responsive-images'));
+  test('require images in pug and in style', () => compareFiles('_pug/responsive-images-tmpl-scss'));
+});
+
+// TODO: implement detection of duplicates for script and styles in entry
+// describe('warning tests', () => {
+//   test('duplicate scripts', () => {
+//     const containString = 'Duplicate scripts are not allowed';
+//     return stdoutContain('_pug/msg-warning-duplicate-scripts', containString);
+//   });
+//
+//   test('duplicate scripts using alias', () => {
+//     const containString = 'Duplicate scripts are not allowed';
+//     return stdoutContain('_pug/msg-warning-duplicate-scripts-alias', containString);
+//   });
+//
+//   test('duplicate styles', () => {
+//     const containString = 'Duplicate styles are not allowed';
+//     return stdoutContain('_pug/msg-warning-duplicate-styles', containString);
+//   });
+// });

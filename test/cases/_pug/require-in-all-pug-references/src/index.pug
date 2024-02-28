@@ -3,8 +3,9 @@ include mixins
 
 //- NamedBlock
 block content
-  //- Tag attributes
-  img(src=require('./image.png') srcset=`${require('./image1.png')} 80w, ${require('./image2.png')} 90w`).a
+  //- TODO: BREAKING CHANGES - require in srcset not works
+  //-img(src=require('./image.png') srcset=`${require('./image1.png')} 80w, ${require('./image2.png')} 90w`).a
+  img(src=require('./image.png') srcset=`./image1.png 80w, ./image2.png 90w`).a
 
   //- Code
   - var imageFile = require('./image.png');

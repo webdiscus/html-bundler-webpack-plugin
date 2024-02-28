@@ -1,5 +1,13 @@
 # Change log
 
+## 3.5.3 (2024-02-28)
+
+- fix: correct parsing the data passed via query in JSON notation, e.g.: `index.ejs?{"title":"Homepage","lang":"en"}`
+- fix: by paring of the generated html ignore files already resolved via a preprocessor, e.g. pug
+- fix(pug): resolve resource required in pug code and content, also outer tag attributes
+- fix(pug): resolve images generated via `responsive-loader` when used query parameters with `,` and `&` separators
+- test: add tests from pug-plugin
+
 ## 3.5.2 (2024-02-20)
 
 - fix: when used TS then could not find a declaration file for module 'html-bundler-webpack-plugin'

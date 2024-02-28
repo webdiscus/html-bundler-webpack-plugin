@@ -1,0 +1,15 @@
+- var DATA = require('../data/index.json');
+
+doctype html
+html
+
+  include ./includes/head.pug
+  include ./includes/menuItem.pug
+
+  head
+    +head(DATA)
+
+  body
+    +menuItem('index')
+    h1 Home
+    img(src=require(DATA.body.image))

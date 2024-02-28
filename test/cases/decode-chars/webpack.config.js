@@ -13,7 +13,6 @@ module.exports = {
   },
 
   plugins: [
-    // zero config
     new HtmlBundlerPlugin(),
   ],
 };

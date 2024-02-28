@@ -1,0 +1,48 @@
+html
+  head
+    link(rel='icon' href=require('~Images/favicon.png?size=16'))
+    style.
+      img {
+        max-width: 160px;
+      }
+  body
+    //- test: escape `&` char in attributes
+    img.im11(src="~Images/image.png?format=webp&size=105" alt="unescape &amp; as & char" class="a && b")
+    img.im12(src=require("~Images/image.png?format=webp&size=105") alt="responsive image & 105px")
+
+    //- test: `,` as parameter separator
+    //- WARNING: the `,` char as query parameter separator in the `srcset` attribute can be used only in require()
+    img.im13(src=require("~Images/image.png?prop=src,format=webp,size=100") srcset=require('~Images/image.png?sizes[]=110,sizes[]=120&format=jpg'))
+
+    //- test: `prop=srcSet` query parameter
+    img.im21(src="~Images/image.png?prop=src&format=webp&size=100" srcset="~Images/image.png?prop=srcSet&sizes[]=110&sizes[]=120&format=jpg")
+    img.im22(src=require("~Images/image.png?prop=src&format=webp&size=100") srcset=require("~Images/image.png?prop=srcSet&sizes[]=110&sizes[]=120&format=jpg"))
+
+    //- test: `&` as parameter separator
+    img.im31(src="~Images/image.png?prop=src&format=webp&size=100" srcset="~Images/image.png?sizes[]=110&sizes[]=120&format=jpg")
+    img.im32(src=require("~Images/image.png?prop=src&format=webp&size=100") srcset=require('~Images/image.png?sizes[]=110&sizes[]=120&format=jpg'))
+
+    //- test: parameter as JSON5 notation
+    img.im41(src="~Images/image.png?prop=src&format=webp&size=100" srcset="~Images/image.png?{sizes: [110,120], format: 'jpg'}")
+    img.im42(src=require("~Images/image.png?prop=src&format=webp&size=100") srcset=require("~Images/image.png?{sizes: [110,120], format: 'jpg'}"))
+
+    //- test: define single files in srcset
+    img.im50(src="~Images/image.png?prop=src&format=webp&size=100" srcset="~Images/image.png?size=110&format=jpg 110w, ~Images/image.png?size=120&format=jpg 120w")
+
+    //- test: resolve in code
+    -
+      const img = {
+        src: require('~Images/image.png?size=100&format=jpg'),
+        srcSet: require('~Images/image.png?sizes[]=100,sizes[]=110,sizes[]=120&format=jpg'),
+      }
+
+    //- test: resolve attributes as variables
+    img.im60(src=img.src srcset=img.srcSet alt="responsive image")
+
+    //- test: resolve in content
+    pre
+      div Image properties
+      div    src: #{img.src}
+      div srcSet: #{img.srcSet}
+      div  width: #{require("~Images/image.png?size=150&prop=width")} px
+      div height: #{require("~Images/image.png?prop=height&size=150")} px

@@ -1,0 +1,16 @@
+html
+  head
+    //- load source manifest file via require
+    link(href=require('./webmanifest.json') rel='manifest')
+    //-link(href='./webmanifest.json' rel='manifest')
+
+    //- load source style
+    link(href=require('./style.css') rel='stylesheet')
+
+    //- load source script
+    script(src=require('./main.js') defer='defer')
+  body
+    h1 Hello World!
+
+    //- load source image
+    img(src=require('./image.png'))

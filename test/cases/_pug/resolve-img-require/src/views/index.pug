@@ -1,0 +1,10 @@
+html
+  head
+    title Test
+    link(rel='icon' href=require('~Images/favicon.ico'))
+  body
+    img.s1(src=require('image.png'))
+    img.s2(src=require('../../src/assets/images/image.png'))
+    img.s3(src=require('./image.png'))
+    img.s4(src=require('../assets/images/image.png'))
+    img.s5(src=require('~Images/image.png'))

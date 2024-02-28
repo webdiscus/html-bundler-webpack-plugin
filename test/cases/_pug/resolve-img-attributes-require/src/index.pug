@@ -7,6 +7,8 @@ html
     img&attributes({
       class: 'image',
       src: require('@images/fig.png'),
-      srcset: `${require('@images/pear.png')} 300w, ${require('@images/plum.png')} 600w`,
+      //- TODO: BREAKING CHANGE - the syntax with require not works
+      //-srcset: `${require('@images/pear.png')} 300w, ${require('@images/plum.png')} 600w`,
+      srcset: `@images/pear.png 300w, @images/plum.png 600w`,
       alt: 'picture',
     })

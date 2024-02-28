@@ -1,0 +1,14 @@
+html
+  head
+    //- test root path in context
+    link(href=require('/assets/styles/main.scss') rel='stylesheet')
+    //- test for same file with same query in both Pug and SCSS
+    link(href=require('~Styles/main2.scss') rel='stylesheet')
+  body
+    h1 Hello World!
+    .image background image
+    .image2 background image
+    img.a(src=require('../assets/images/image.png'))
+    img.b(src=require('~Images/image.png'))
+    //- test root path in context
+    img.c(src=require('/assets/images/image2.png'))

@@ -26,6 +26,9 @@ You can import a template into JS as a compiled [template function](#template-in
 
 This plugin is an **advanced successor** to `html-webpack-plugin` and a replacement of the [plugins and loaders](#list-of-plugins).
 
+> 📢 Please help promote this plugin on social networks so that developers know about this useful plugin.\
+> Special Thanks to [Andrew Lisowski](https://twitter.com/HipsterSmoothie) for the tooltips in the video [www.youtube.com/@devtoolsfm](https://youtu.be/w4l89214zN4?si=x-eVXN-iLlOE_Gqy&t=3463).
+
 <!--
 <table align="center">
 <tr><th>Entry point is HTML</th></tr>
@@ -127,7 +130,7 @@ You can use a relative path or Webpack alias to a source file.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
 - You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
-- Over 400 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
+- Over 500 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
 
 See the [full list of features](#features).
 
@@ -540,7 +543,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - auto processing multiple HTML templates using the [entry path](#option-entry-path)
 - [pass data](#option-entry-advanced) into template from the plugin config
 - dynamically loading template variables using the [data](#loader-option-data) option, change data w/o restarting
-- supports the [integrity](#option-integrity) attribute in the `link` and `script` tags
+- generates the `integrity hashes` and adds the [integrity](#option-integrity) attribute to the `link` and `script` tags
 - [minification](#option-minify) of generated HTML
 - allows extending base functionality using [hooks & callbacks](#plugin-hooks-and-callbacks)
 - [generates favicons](#favicons-bundler-plugin) of different sizes for various platforms and injects them into HTML
@@ -2346,7 +2349,7 @@ Type: `'auto'|boolean|IntegrityOptions` Default: `false`
 The [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) is a cryptographic value of the integrity attribute that used by a browser to verify that the content of an asset has not been manipulated.
 If the asset has been manipulated, the browser will never load it.
 
-The Bundler Plugin adds the integrity attribute to the `link` and `script` tags when generating HTML.
+The Bundler Plugin generates the integrity hashes and adds the integrity attribute to the `link` and `script` tags when generating HTML.
 
 > No additional plugins required. This plugin computes integrity hashes itself.
 
@@ -2384,9 +2387,11 @@ or an array to specify multiple hash functions for compatibility with many brows
 >
 > When used the `integrity` option:
 >
-> - the [`js.filename`](#option-js) and [`css.filename`](#option-css) options must contain the `contenthash`;
-> - the [`output.crossOriginLoading`](https://webpack.js.org/configuration/output/#outputcrossoriginloading) Webpack option must be specified;
-> - the [`optimization.realContentHash`](https://webpack.js.org/configuration/optimization/#optimizationrealcontenthash) Webpack option must be enabled, is enabled by default in production mode only.
+> - The [`js.filename`](#option-js) and [`css.filename`](#option-css) options must contain the `contenthash`.
+> - The [`output.crossOriginLoading`](https://webpack.js.org/configuration/output/#outputcrossoriginloading) Webpack option must be specified as `'use-credentials'` or `'anonymous'`.
+>   The bundler plugin adds the `crossorigin` attribute with the value defined in the `crossOriginLoading`.
+>   The `crossorigin` attribute  tells the browser to request the script with CORS enabled, which is necessary because the integrity check fails without CORS.
+> - The [`optimization.realContentHash`](https://webpack.js.org/configuration/optimization/#optimizationrealcontenthash) Webpack option must be enabled, is enabled by default in production mode only.
 >
 > This requirement is necessary to avoid the case where the browser tries to load a contents of a file from the local cache since the filename has not changed, but the `integrity` value has changed on the server.
 > In this case, the browser will not load the file because the `integrity` of the cached file computed by the browser will not match the `integrity` attribute computed on the server.

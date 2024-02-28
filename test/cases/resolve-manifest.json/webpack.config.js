@@ -19,13 +19,11 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
-
       js: {
-        filename: 'assets/js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js',
       },
-
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
     }),
   ],
@@ -51,8 +49,7 @@ module.exports = {
         type: 'asset/resource',
         generator: {
           // TODO: replace in manifest the source images
-          //filename: 'assets/img/[name].[hash:8][ext]',
-          filename: 'assets/img/[name][ext]',
+          filename: 'img/[name][ext]',
         },
       },
     ],

@@ -1,0 +1,13 @@
+@font-face {
+  font-family: 'OpenSans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('OpenSans'),
+  local('OpenSans-Regular'),
+  url('../../fonts/OpenSans/open-sans-regular.svg') format('svg');
+}
+
+h1 {
+  color: red;
+  font-family: OpenSans, serif;
+}

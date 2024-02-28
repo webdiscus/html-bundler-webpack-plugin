@@ -13,11 +13,19 @@
  * @returns {{url: string, query: {}}}
  */
 const parseRequest = (request) => {
-  const [url, query] = request.split('?', 2);
+  let [url, query] = request.split('?', 2);
   if (!query) return { url, query: {} };
 
+  // when decoded query is a JSON w/o key,
+  // then after JSON data will be the value separator char `=`, e.g.: ?{"lang":"en"}=
+  if (query.slice(-1) === '=') {
+    query = query.slice(0, -1);
+  }
+
+  query = decodeURIComponent(query);
+
   if (isJSON(query)) {
-    return { url, query: parseJSON5Query(decodeURIComponent(query)) || {} };
+    return { url, query: parseJSON5Query(query) || {} };
   }
 
   const specialValues = {

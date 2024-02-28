@@ -1,0 +1,9 @@
+html
+  head
+    script(src=require('Scripts/file1'))
+
+    //- WARNING: second same script WILL NOT be resolved in generated HTML
+    script(src=require('Scripts/file2.js?q=123'))
+    script(src=require('../assets/scripts/file2'))
+  body
+    h1 Hello Pug!

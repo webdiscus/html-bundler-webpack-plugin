@@ -41,11 +41,16 @@ describe('resolve files', () => {
   test('svg with fragment', () => compareFiles('resolve-svg-use-fragment'));
   test('svg with fragment, filename', () => compareFiles('resolve-svg-use-fragment-filename'));
   test('assets in multi pages', () => compareFiles('multipages'));
+  test('assets/resource filename', () => compareFiles('asset-filename'));
+  test('the same asset with different raw request', () => compareFiles('resolve-assets-same-file-in-html-scss'));
+  test('resolve js in many entries with the same template', () => compareFiles('resolve-js-same-tmpl'));
+  test('use the same js file in many html', () => compareFiles('resolve-js-diff-tmpl'));
 });
 
 describe('resolve styles', () => {
-  test('resolve styles loaded from node_modules', () => compareFiles('resolve-styles-from-module'));
-  test('resolve styles with same name', () => compareFiles('resolve-styles-with-same-name'));
+  test('styles loaded from node_modules', () => compareFiles('resolve-styles-from-module'));
+  test('styles with same name', () => compareFiles('resolve-styles-with-same-name'));
+  test('styles with same name, hash', () => compareFiles('resolve-styles-with-same-name-hash'));
 });
 
 describe('resolve url() in style', () => {
@@ -72,6 +77,7 @@ describe('plugin options', () => {
   test('publicPath = "http://localhost:8080/"', () => compareFiles('option-output-public-path-url2'));
   test('sourcePath and outputPath (default)', () => compareFiles('option-default-path'));
   test('sourcePath and outputPath', () => compareFiles('option-custom-path'));
+  test('filename as template', () => compareFiles('option-filename-template'));
   test('filename as function', () => compareFiles('option-filename-function'));
   test('js.filename', () => compareFiles('option-js-filename'));
   test('js.filename undefined', () => compareFiles('option-js-filename-undefined'));
@@ -247,18 +253,20 @@ describe('usage template in js on client side', () => {
 });
 
 describe('inline images', () => {
-  test('inline-asset-bypass-data-url', () => compareFiles('inline-asset-bypass-data-url'));
-  test('inline-asset-decide-size', () => compareFiles('inline-asset-decide-size'));
-  test('inline-asset-query', () => compareFiles('inline-asset-query'));
+  test('bypass data url', () => compareFiles('inline-asset-bypass-data-url'));
+  test('decide size', () => compareFiles('inline-asset-decide-size'));
+  test('inline via query', () => compareFiles('inline-asset-query'));
   test('inline-asset-html-css', () => compareFiles('inline-asset-html-css'));
-  test('inline-asset-exclude-svg-fonts', () => compareFiles('inline-asset-exclude-svg-fonts'));
-  test('inline-asset-source-svg', () => compareFiles('inline-asset-source-svg'));
-  test('inline-asset-svg-favicon', () => compareFiles('inline-asset-svg-favicon'));
+  test('exclude svg fonts', () => compareFiles('inline-asset-exclude-svg-fonts'));
+  test('inline source svg', () => compareFiles('inline-asset-source-svg'));
+  test('inline svg favicon', () => compareFiles('inline-asset-svg-favicon'));
+  test('using svgo loader', () => compareFiles('inline-asset-svg-svgo'));
 });
 
 describe('inline styles & scripts', () => {
-  test('inline css via `?inline` and resolve url()', () => compareFiles('inline-style-query'));
-  test('inline css, source map, via `?inline`', () => compareFiles('inline-style-query-with-source-map'));
+  test('inline CSS via `?inline` and resolve url()', () => compareFiles('inline-style-query'));
+  test('inline CSS, source map, via `?inline`', () => compareFiles('inline-style-query-with-source-map'));
+  test('inline minimized CSS', () => compareFiles('inline-style-cssnano'));
   test('inline js via `?inline`', () => compareFiles('inline-script-query'));
   test('inline js, runtimeChunk:single', () => compareFiles('inline-script-runtimeChunk-single'));
   test('inline js and css, minify', () => compareFiles('inline-js-css-with-minify'));
@@ -328,6 +336,13 @@ describe('import lazy styles in JavaScript', () => {
   test('lazy url in js', () => compareFiles('js-import-css-lazy-url'));
 });
 
+describe('CSS source map', () => {
+  // TODO: research why the source map has wrong indexing on source SCSS files
+  test('css with source-map', () => compareFiles('css-devtool-source-map'));
+  test('css with inline-source-map', () => compareFiles('css-devtool-inline-source-map'));
+  test('css no source-map', () => compareFiles('css-devtool-no-source-map'));
+});
+
 describe('split chunks', () => {
   test('extract css and js w/o runtime code of css-loader', () => compareFiles('split-chunk-css-js'));
   test('import nested JS files', () => compareFiles('split-chunk-js-many-prod'));
@@ -372,6 +387,11 @@ describe('entry', () => {
   //test('js and css in the same entry name', () => compareFiles('entry-js-css'));
 });
 
+describe('extract CSS', () => {
+  test('entry: scss font url', () => compareFiles('entry-scss-font-url'));
+  test('entry: sass resolve url', () => compareFiles('entry-sass-resolve-url')); // tested for: compile, render
+});
+
 describe('special cases', () => {
   test('resolve values with invalid syntax', () => compareFiles('resolve-values-invalid-syntax'));
   test('resolve assets without extension', () => compareFiles('resolve-assets-without-ext'));
@@ -388,6 +408,10 @@ describe('special cases', () => {
   test('ignore files defined in webpack entry', () => compareFiles('ignore-webpack-entry'));
   test('issue if copy plugin copies a html file', () => compareFiles('issue-copy-plugin'));
   test('import raw content of a file', () => compareFiles('import-raw-html'));
+
+  test('import image filename in JS', () => compareFiles('js-import-image-filename'));
+
+  test('multiple chunks with the same filename', () => compareFiles('entry-multiple-chunks-same-filename'));
 
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));

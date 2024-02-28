@@ -21,7 +21,7 @@ module.exports = {
         index: './src/views/index.html',
       },
       css: {
-        filename: 'assets/css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css',
       },
     }),
   ],
@@ -37,7 +37,7 @@ module.exports = {
         test: /\.(png|jpg|jpeg|ico)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
+          filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],

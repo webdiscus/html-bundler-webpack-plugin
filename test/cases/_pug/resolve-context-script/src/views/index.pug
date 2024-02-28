@@ -1,0 +1,11 @@
+html
+  head
+    //- test root path in context
+    script(src=require('/assets/scripts/file1.js'))
+    script(src=require('/assets/scripts/file2'))
+    //- test relative path with context
+    script(src=require('../assets/scripts/file3.js'))
+    //- test alias with context
+    script(src=require('Scripts/file4'))
+  body
+    h1 Hello Pug!

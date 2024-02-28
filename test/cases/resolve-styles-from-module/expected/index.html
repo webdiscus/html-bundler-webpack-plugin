@@ -2,11 +2,16 @@
 <html>
 <head>
   <title>Home</title>
-  <!-- resolve 'style' field in package.json of the style module -->
-  <!-- must be resolved compiled CSS file from node module -->
-  <link href="assets/css/fixture-styles.28854a3c.css" rel="stylesheet">
+  <!-- resolve 'style' field in package.json of the style module
+       resolves compiled CSS file from node_module -->
+  <link href="css/fixture-styles.28854a3c.css" rel="stylesheet">
+
+  <!-- resolve the style module containing in the name the '.css' suffix,
+       resolves compiled CSS file from node_module -->
+  <link href="css/normalize.36c54718.css" rel="stylesheet">
+
   <!-- load scss from local directory -->
-  <link href="assets/css/style.99b7171e.css" rel="stylesheet">
+  <link href="css/style.99b7171e.css" rel="stylesheet">
 </head>
 <body>
   <h1>Hello World!</h1>

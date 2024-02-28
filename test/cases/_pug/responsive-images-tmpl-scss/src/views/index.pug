@@ -1,0 +1,39 @@
+doctype html
+html
+  head
+    link(rel="icon" type="image/png" sizes="64x64" href='Images/favicon.png?size=64')
+    link(href='Styles/main.scss' rel="stylesheet" )
+    script(src='Scripts/main.js')
+
+  body
+    -
+      const responsiveImage = {
+        src: require('Images/abstract.webp?size=300'),
+        srcSet: require('Images/abstract.webp?sizes[]=320,sizes[]=480&format=png'),
+        placeholder: require('Images/abstract.webp?prop=placeholder&placeholder=true&placeholderSize=50'),
+      }
+
+    h3 Placeholder via style attribute
+    .header-container(style=`background-image: url(${responsiveImage.placeholder})`)
+    h3 Placeholder via CSS
+    .header-container.placeholder-css
+
+    h3 Responsive image
+    img(srcset=responsiveImage.srcSet src=responsiveImage.src alt="responsive image")
+
+    h3 Resized images
+
+    img(src='Images/image.webp?size=80' alt="size=80")
+    img(src='Images/image.webp?size=120&format=png' alt="size=120&format=png")
+
+    //- see the styles for this demo in `main.scss`
+    h3 Resized image in CSS
+    .resized-image
+
+    h3 Placeholder via style attribute
+    -
+      const width = 200
+      const height = require("Images/image.webp?prop=height&emitFile=false&size=" + width)
+      const placeholder = require("Images/image.webp?prop=placeholder&emitFile=false&placeholder=true&placeholderSize=50")
+
+    div(style=`background-image: url(${placeholder}); width:${width}px; height:${height}px; background-size:cover;`)

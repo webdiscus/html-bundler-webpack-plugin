@@ -1,0 +1,15 @@
+- var DATA = require('../data/about.json')
+
+doctype html
+html
+
+  include ./includes/head.pug
+  include ./includes/menuItem.pug
+
+  head
+    +head(DATA)
+
+  body
+    +menuItem('about')
+    h1 About
+    img(src=require(DATA.body.image))

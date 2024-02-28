@@ -10,13 +10,21 @@
     <!-- default image -->
     <img src="@images/apple.png">
 
+    <!-- using the query parameters -->
+    <img src="@images/apple.png?size=105&format=webp">
     <!-- using the query as JSON -->
     <img src="@images/apple.png?{size:105, format:'webp'}">
 
     <!-- responsible image -->
     <img
-      src="@images/apple.png?size=120"
+      src="@images/apple.png?size=120,format=webp"
       srcset="@images/apple.png?{sizes: [50,100,150], format: 'jpg'}"
+    >
+
+    <!-- responsible image, require() -->
+    <img
+      src="@images/apple.png?size=120,format=webp"
+      srcset="require('@images/apple.png?sizes[]=50,sizes[]=100,sizes[]=150&format=jpg')"
     >
 
     <!-- image placeholder and properties -->

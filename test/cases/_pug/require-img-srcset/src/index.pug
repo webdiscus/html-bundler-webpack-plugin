@@ -1,4 +1,7 @@
 p Hello World!
 
 img(src=require('./image.png')).a
-img(srcset=`${require('./image1.png')} 80w, ${require('./image2.png')} 90w` src=require('./image.png')).b
+
+//- TODO: BREAKING CHANGES - require in srcset not works
+//-img(srcset=`${require('./image1.png')} 80w, ${require('./image2.png')} 90w` src=require('./image.png')).b
+img(srcset=`./image1.png 80w, ./image2.png 90w` src='./image.png').b

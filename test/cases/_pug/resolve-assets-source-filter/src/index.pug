@@ -1,0 +1,16 @@
+h1 Hello World!
+
+//- Static resource URL from public web path should not be parsed, leave as is.
+link(rel='stylesheet' href='/absolute/assets/styles2.css')
+img(src='relative/assets/image2.png')
+
+//- Required resource must be processed.
+link(rel='stylesheet' href=require('./style.css'))
+link(rel='stylesheet' href=require('./about.scss'))
+img.a1(src=require('./image.png'))
+img.a2(src='./image.png')
+
+//- TODO: unterscheiden
+  img(src='relative/assets/image2.png') <- ignore resolving (because it's output filename, not exists in source dir)
+  img(src=require('./image.png')) <- resolve
+  img(src='./image.png') <- resolve

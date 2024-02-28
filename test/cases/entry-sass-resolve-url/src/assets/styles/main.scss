@@ -1,0 +1,10 @@
+// test deep @use
+@use 'fonts';
+@use 'images';
+
+/*! main.scss */
+
+h1 {
+  color: darkred;
+  font-family: Montserrat, sans-serif;
+}

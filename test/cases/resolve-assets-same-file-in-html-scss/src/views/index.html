@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="../assets/styles/style.scss">
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <!--
+      test resolve the same asset in template and in style, but with different raw request. e.g.
+        - in template with alias: `@images/image.webp`
+        - in style relative: `../images/image.webp`
+    -->
+    <img class="image" src="@images/image.webp">
+    <span class="icon-iphone"></span>
+  </body>
+</html>

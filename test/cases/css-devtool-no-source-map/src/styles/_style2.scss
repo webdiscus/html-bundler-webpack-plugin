@@ -1,0 +1,7 @@
+.test-2 {
+  color: limegreen;
+}
+
+.test-2::before {
+  content: '✓';
+}

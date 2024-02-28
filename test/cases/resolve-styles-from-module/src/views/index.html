@@ -2,9 +2,14 @@
 <html>
 <head>
   <title>Home</title>
-  <!-- resolve 'style' field in package.json of the style module -->
-  <!-- must be resolved compiled CSS file from node module -->
+  <!-- resolve 'style' field in package.json of the style module
+       resolves compiled CSS file from node_module -->
   <link href="@test-fixtures/scss" rel="stylesheet">
+
+  <!-- resolve the style module containing in the name the '.css' suffix,
+       resolves compiled CSS file from node_module -->
+  <link href="normalize.css" rel="stylesheet">
+
   <!-- load scss from local directory -->
   <link href="./style.scss" rel="stylesheet">
 </head>

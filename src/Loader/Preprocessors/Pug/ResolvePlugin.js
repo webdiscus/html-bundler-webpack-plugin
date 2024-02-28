@@ -1,5 +1,9 @@
+const path = require('path');
 const Resolver = require('../../Resolver');
-const { isWin, pathToPosix } = require('../../Utils');
+const { encodeReservedChars, isWin, pathToPosix } = require('../../Utils');
+
+const scriptExtensionRegexp = /\.js[a-z\d]*$/i;
+const isRequireableScript = (file) => !path.extname(file) || scriptExtensionRegexp.test(file);
 
 /**
  * Whether the node value contains the require() function.
@@ -19,10 +23,116 @@ const isStyle = (item) => item.name === 'rel' && item.val.indexOf('stylesheet') 
 
 let lastTag = '';
 
+/**
+ * Resolve the resource file after compilation of source code.
+ * Called in vm.Script by rendering.
+ *
+ * @param {string} file The required file.
+ * @param {string} issuer The issuer of required file.
+ * @return {string}
+ */
+const loaderRequire = (file, issuer) => {
+  let resolvedFile = Resolver.resolve(file, issuer);
+
+  if (isRequireableScript(resolvedFile)) return require(resolvedFile);
+
+  resolvedFile = encodeReservedChars(resolvedFile);
+
+  return `require('${resolvedFile}')`;
+};
+
+/**
+ * Resolve the asset file after compilation of source code.
+ * Called in vm.Script by rendering.
+ *
+ * @param {string} file The required file.
+ * @param {string} issuer The issuer of required file.
+ * @return {string}
+ */
+const loaderRequireAsset = (file, issuer) => {
+  let resolvedFile = Resolver.resolve(file, issuer);
+
+  resolvedFile = encodeReservedChars(resolvedFile);
+
+  return `require('${resolvedFile}')`;
+};
+
+/**
+ * Resolve the script file after compilation of source code.
+ * Called in vm.Script by rendering.
+ *
+ * @param {string} file The required file.
+ * @param {string} issuer The issuer of required file.
+ * @return {string}
+ */
+const loaderRequireScript = (file, issuer) => {
+  let resolvedFile = Resolver.resolve(file, issuer, Resolver.types.script);
+
+  resolvedFile = encodeReservedChars(resolvedFile);
+
+  return `require('${resolvedFile}')`;
+};
+
+/**
+ * Resolve the style file after compilation of source code.
+ * Called in vm.Script by rendering.
+ *
+ * @param {string} file The required file.
+ * @param {string} issuer The issuer of required file.
+ * @return {string}
+ */
+const loaderRequireStyle = (file, issuer) => {
+  let resolvedFile = Resolver.resolve(file, issuer, Resolver.types.style);
+
+  resolvedFile = encodeReservedChars(resolvedFile);
+
+  return `require('${resolvedFile}')`;
+};
+
+/**
+ * Resolve the required file in a code, not in a tag attribute.
+ * Called in vm.Script by rendering.
+ *
+ * @param {string} file The required file.
+ * @param {string} issuer The issuer of required file.
+ * @return {string}
+ */
+const loaderRequireExpression = (file, issuer) => {
+  let resolvedFile = Resolver.resolve(file, issuer);
+
+  if (isRequireableScript(resolvedFile)) return require(resolvedFile);
+
+  resolvedFile = encodeReservedChars(resolvedFile);
+
+  return `\\u0027 + require(\\u0027${resolvedFile}\\u0027) + \\u0027`;
+};
+
+/**
+ * Resolve function names.
+ * It will be defined before the compilation pug into the template js function.
+ *
+ * @type {{default: string, expression: string, style: string, asset: string, script: string}}
+ */
 const requireTypes = {
-  default: '__LOADER_REQUIRE__',
+  default: '__LOADER_REQUIRE__', // can load requireable file, e.g. raw json file in pug variable
+  asset: '__LOADER_REQUIRE_ASSET__',
   script: '__LOADER_REQUIRE_SCRIPT__',
   style: '__LOADER_REQUIRE_STYLE__',
+  expression: '__LOADER_REQUIRE_EXPRESSION__', // resolve required file in code, not in tag attributes
+};
+
+/**
+ * The mapping of resolve function names to callable functions.
+ * Used by calling in VM during the compilation pug into the template js function.
+ *
+ * @type {{__LOADER_REQUIRE_SCRIPT__: (function(string, string): string), __LOADER_REQUIRE_STYLE__: (function(string, string): string), __LOADER_REQUIRE__: ((function(string, string): string)|*), __LOADER_REQUIRE_EXPRESSION__: ((function(string, string): string)|*), __LOADER_REQUIRE_ASSET__: (function(string, string): string)}}
+ */
+const LoaderResolvers = {
+  __LOADER_REQUIRE__: loaderRequire,
+  __LOADER_REQUIRE_ASSET__: loaderRequireAsset,
+  __LOADER_REQUIRE_SCRIPT__: loaderRequireScript,
+  __LOADER_REQUIRE_STYLE__: loaderRequireStyle,
+  __LOADER_REQUIRE_EXPRESSION__: loaderRequireExpression,
 };
 
 /**
@@ -30,76 +140,27 @@ const requireTypes = {
  *
  * @param {string} value The resource value or code included require().
  * @param {string} issuer The filename of the template where resolves the resource.
+ * @param {string} type The filename of the template where resolves the resource.
  * @return {string}
  */
-const requireExpression = (value, issuer) => {
-  if (ResolvePlugin.mode === 'render') {
-    const type = 'default';
-    const requireType = requireTypes[type];
-
-    return `${requireType}(${value},'${issuer}')`;
-  }
-
-  if (ResolvePlugin.mode === 'compile') {
-    const interpolatedValue = Resolver.interpolate(value, issuer);
-
-    return `require(${interpolatedValue})`;
-  }
-
-  return value;
-};
-
-/**
- * Resolve script file in the script tag.
- *
- * @param {string} value
- * @param {string} issuer
- * @return {string}
- */
-const resolveScript = (value, issuer) => {
-  const [, file] = /require\((.+?)(?=\))/.exec(value) || [];
+const requireExpression = (value, issuer, type = 'default') => {
+  const [, requiredFile] = /require\((.+?)(?=\))/.exec(value) || [];
+  const file = requiredFile || value;
   //if (isWin) issuer = pathToPosix(issuer);
 
   if (ResolvePlugin.mode === 'render') {
-    const type = 'script';
     const requireType = requireTypes[type];
 
     return `${requireType}(${file},'${issuer}')`;
   }
 
   if (ResolvePlugin.mode === 'compile') {
-    const interpolatedValue = Resolver.interpolate(file, issuer, 'script');
+    const interpolatedValue = Resolver.interpolate(file, issuer, type);
 
-    return `require('${interpolatedValue}')`;
+    return requiredFile ? `require('${interpolatedValue}')` : `require(${interpolatedValue})`;
   }
 
-  return value;
-};
-
-/**
- * Resolve style file in the link tag.
- *
- * @param {string} value
- * @param {string} issuer
- * @return {string}
- */
-const resolveStyle = (value, issuer) => {
-  const [, file] = /require\((.+?)(?=\))/.exec(value) || [];
-  //if (isWin) issuer = pathToPosix(issuer);
-
-  if (ResolvePlugin.mode === 'render') {
-    const type = 'style';
-    const requireType = requireTypes[type];
-    return `${requireType}(${file},'${issuer}')`;
-  }
-
-  if (ResolvePlugin.mode === 'compile') {
-    const resolvedFile = Resolver.interpolate(file, issuer, 'style');
-
-    return `require('${resolvedFile}')`;
-  }
-
-  return value;
+  return file;
 };
 
 /**
@@ -107,9 +168,10 @@ const resolveStyle = (value, issuer) => {
  *
  * @param {string} value The resource value or code included require().
  * @param {string} issuer The filename of the template where resolves the resource.
+ * @param {string|undefined} type
  * @return {string}
  */
-const resolveResource = (value, issuer) => {
+const resolveResource = (value, issuer, type = undefined) => {
   const openTag = 'require(';
   const openTagLen = openTag.length;
   let pos = value.indexOf(openTag);
@@ -140,7 +202,7 @@ const resolveResource = (value, issuer) => {
     }
 
     const file = value.slice(startPos, endPos);
-    const replacement = requireExpression(file, issuer);
+    const replacement = requireExpression(file, issuer, type);
 
     result += value.slice(lastPos, pos) + replacement;
     lastPos = endPos + 1;
@@ -164,7 +226,9 @@ const resolveNode = (node) => {
     case 'Code':
       if (isRequired(node.val)) {
         node.val =
-          lastTag === 'script' ? resolveScript(node.val, node.filename) : resolveResource(node.val, node.filename);
+          lastTag === 'script'
+            ? requireExpression(node.val, node.filename, Resolver.types.script)
+            : resolveResource(node.val, node.filename, 'expression');
       }
       break;
     case 'Mixin':
@@ -200,14 +264,23 @@ const resolveNodeAttributes = (node, attrName) => {
 
   for (let attr of attrs) {
     const value = attr.val;
+
     if (isRequired(value)) {
       if (node.name === 'script') {
-        attr.val = resolveScript(value, attr.filename);
-      } else if (node.name === 'link' && node.attrs.find(isStyle)) {
-        attr.val = resolveStyle(value, attr.filename);
+        attr.val = requireExpression(value, attr.filename, Resolver.types.script);
+      } else if (node.name === 'link') {
+        if (node.attrs.find(isStyle)) {
+          attr.val = requireExpression(value, attr.filename, Resolver.types.style);
+        } else {
+          attr.val = requireExpression(value, attr.filename, 'asset');
+        }
       } else {
         attr.val = resolveResource(value, attr.filename);
       }
+    } else if (typeof value === 'string') {
+      // TODO: fix pugjs BUG - in attributes the `&` will be escaped into `&amp;`
+      //       e.g.: src="file.png?param1=1&param2=2" => src="file.png?param1=1&amp;param2=2"
+      attr.val = value.replaceAll('&', '__DECODE_AMP__');
     }
   }
 };
@@ -284,4 +357,4 @@ const ResolvePlugin = {
   },
 };
 
-module.exports = ResolvePlugin;
+module.exports = { LoaderResolvers, ResolvePlugin };

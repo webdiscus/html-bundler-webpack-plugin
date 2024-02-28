@@ -395,10 +395,11 @@ class HtmlParser {
     let attrs = [];
     const type = 'asset';
 
-    // support for 'responsive-loader' value, e.g.: image.png?{sizes: [100,200,300], format: 'jpg'}
-    if (srcsetValue.indexOf('?{') > 0) {
+    // supports the query for 'responsive-loader' in following notations:
+    // - image.png?{sizes: [100,200,300], format: 'jpg'} // JSON5
+    // - require('image.png?sizes[]=100,sizes[]=200,sizes[]=300,format=jpg') // `,` as parameter separator in require(), used in pug
+    if (srcsetValue.indexOf('?{') > 0 || srcsetValue.indexOf('require(') > -1) {
       return {
-        // TODO: parse this complex non-standard use case
         values: [srcsetValue],
         attrs: [
           { type, attr: 'srcset', value: srcsetValue, startPos: valueOffset, endPos: valueOffset + lastPos, offset },

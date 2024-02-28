@@ -1,62 +1,7 @@
-const path = require('path');
 const { loadModule } = require('../../../Common/FileUtils');
 const VMScript = require('../../../Common/VMScript');
-const ResolvePlugin = require('./ResolvePlugin');
-const Resolver = require('../../Resolver');
+const { LoaderResolvers, ResolvePlugin } = require('./ResolvePlugin');
 const Filter = require('./Filter');
-
-const scriptExtensionRegexp = /\.js[a-z\d]*$/i;
-const isRequireableScript = (file) => !path.extname(file) || scriptExtensionRegexp.test(file);
-
-/**
- * Encode reserved HTML chars.
- *
- * @param {string} str
- * @return {string}
- */
-const encodeReservedChars = (str) => {
-  if (str.indexOf('?') < 0) return str;
-
-  const match = /[&'"]/g;
-  const replacements = { '&': '\\u0026', "'": '\\u0060', '"': '\\u0060' };
-  const replacer = (value) => replacements[value];
-
-  return str.replace(match, replacer);
-};
-
-/**
- * Resolve resource file after compilation of source code.
- * At this stage the filename is interpolated in VM.
- *
- * @param {string} file The required file.
- * @param {string} issuer The issuer of required file.
- * @return {string}
- */
-const loaderRequire = (file, issuer) => {
-  let resolvedFile = Resolver.resolve(file, issuer);
-
-  if (isRequireableScript(resolvedFile)) return require(resolvedFile);
-
-  resolvedFile = encodeReservedChars(resolvedFile);
-
-  return `require('${resolvedFile}')`;
-};
-
-const loaderRequireScript = (file, issuer) => {
-  let resolvedFile = Resolver.resolve(file, issuer, Resolver.types.script);
-
-  resolvedFile = encodeReservedChars(resolvedFile);
-
-  return `require('${resolvedFile}')`;
-};
-
-const loaderRequireStyle = (file, issuer) => {
-  let resolvedFile = Resolver.resolve(file, issuer, Resolver.types.style);
-
-  resolvedFile = encodeReservedChars(resolvedFile);
-
-  return `require('${resolvedFile}')`;
-};
 
 class PugCompiler {
   /**
@@ -115,7 +60,9 @@ class PugCompiler {
     // used to resolve import/extends and to improve errors
     this.pugOptions.filename = file;
 
-    return this.pug.compileClientWithDependenciesTracked(source, this.pugOptions).body;
+    let tmplFn = this.pug.compileClientWithDependenciesTracked(source, this.pugOptions).body;
+
+    return tmplFn.replaceAll('__DECODE_AMP__', '&');
   }
 
   compile(source, { file }) {
@@ -140,15 +87,8 @@ class PugCompiler {
     const templateFunctionSource = this._compile(source, file);
     const name = this.pugOptions.name;
 
-    const vmScript = new VMScript(
-      {
-        require,
-        __LOADER_REQUIRE__: loaderRequire,
-        __LOADER_REQUIRE_SCRIPT__: loaderRequireScript,
-        __LOADER_REQUIRE_STYLE__: loaderRequireStyle,
-      },
-      name
-    );
+    const vmContext = { require, ...LoaderResolvers };
+    const vmScript = new VMScript(vmContext, name);
 
     return vmScript.exec(templateFunctionSource, { filename: file, data });
   }

@@ -1,0 +1,10 @@
+// test relative import
+@use '../assets/styles/fonts';
+// image from npm package
+@use '@test-fixtures/scss';
+
+/*! styles.scss */
+
+h2 {
+  color: blue;
+}
