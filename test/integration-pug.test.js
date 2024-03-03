@@ -194,6 +194,7 @@ describe('pug-plugin tests', () => {
   //test('options.pretty', () => compareFiles('_pug/option-pretty'));
   // TODO: Pug - OK / HTML - fix issue (see webpack config)
   test('entry: use styles in entry with same', () => compareFiles('_pug/entry-sass-same-names'));
+  test('entry: html, pug', () => compareFiles('_pug/entry-html-pug'));
 
   test('pass data via query', () => compareFiles('_pug/data-entry-query'));
   test('resolve assets in required data', () => compareFiles('_pug/resolve-assets-require-data'));

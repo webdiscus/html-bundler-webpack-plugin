@@ -1,4 +1,8 @@
-const Option = require('./Plugin/Option');
+const Config = require('./Common/Config');
+
+// Note: init config before import any source file
+Config.init('./config.js');
+
 const AssetCompiler = require('./Plugin/AssetCompiler');
 const loader = require.resolve('./Loader');
 
@@ -37,17 +41,8 @@ class Plugin extends AssetCompiler {
    *
    * @param {Compiler} compiler The instance of the webpack compilation.
    */
-  initialize(compiler) {
-    // Note: the default templating engine is Eta.
-    const defaultLoader = {
-      test: Option.get().test,
-      // ignore 'asset/source' with the '?raw' query
-      // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
-      resourceQuery: { not: [/raw/] },
-      loader,
-    };
-
-    Option.addLoader(defaultLoader);
+  init(compiler) {
+    // TODO: do some thing in an extended plugin
   }
 }
 

@@ -6,10 +6,12 @@ const makeSerializable = require('webpack/lib/util/makeSerializable');
 
 const ansis = require('ansis');
 const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis');
-const { pluginName } = require('../../config');
+const Config = require('../../Common/Config');
+
+const { pluginLabel } = Config.get();
 
 const redBright = ansi256(203);
-const pluginHeaderHtml = `<span style="color:#e36049">[${pluginName}]</span>`;
+const pluginHeaderHtml = `<span style="color:#e36049">[${pluginLabel}]</span>`;
 
 class LoaderException extends WebpackError {
   error = null;
@@ -20,7 +22,7 @@ class LoaderException extends WebpackError {
    * @param {Error?} error The original error.
    */
   constructor(message, error) {
-    message = `\n${reset.whiteBright.bgRedBright` ${pluginName} `} ${whiteBright(message)}\n`;
+    message = `\n${reset.whiteBright.bgRedBright` ${pluginLabel} `} ${whiteBright(message)}\n`;
 
     if (error && error.stack) {
       message += error.stack;
@@ -63,7 +65,7 @@ class LoaderException extends WebpackError {
  * @returns {string}
  */
 const errorToHtml = (error) => {
-  let message = ansis.strip(error.toString()).replace(pluginName, pluginHeaderHtml).replace(/\n/g, '<br>');
+  let message = ansis.strip(error.toString()).replace(pluginLabel, pluginHeaderHtml).replace(/\n/g, '<br>');
 
   return `<!DOCTYPE html><html><head></head><body>${message}</body></html>`;
 };

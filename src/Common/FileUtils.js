@@ -2,7 +2,9 @@
 
 const path = require('path');
 const { isWin, pathToPosix } = require('./Helpers');
-const { pluginName } = require('../config');
+const Config = require('../Common/Config');
+
+const { pluginName } = Config.get();
 
 // string containing the '/node_modules/'
 const nodeModuleDirname = path.sep + 'node_modules' + path.sep;

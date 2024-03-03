@@ -1,5 +1,29 @@
 # Change log
 
+## 3.5.4 (2024-03-03)
+
+- optimize: lazy load the plugin config file
+- refactor: change the label in output: `html-bundler-webpack-plugin` => `HTML bundler plugin`
+- refactor: optimize code for other plugins extending from this plugin.\
+  For example: the [pug-plugin](https://github.com/webdiscus/pug-plugin) since the version `5.0.0` is extended from the `html-bundler-webpack-plugin` with Pug specifically settings.
+- docs: add description how to use the `entry` plugin option as the array of the `EntryDescription`, e.g.:
+  ```js
+  {
+    entry: [
+      {
+        filename: 'index.html', // output filename in dist/
+        import: 'src/views/index.html', // template file
+        data: { title: 'Homepage' }, // page specifically variables
+      },
+      {
+        filename: 'news/sport.html',
+        import: 'src/views/news/sport/index.html',
+        data: { title: 'Sport' },
+      },
+    ],
+  }
+  ```
+
 ## 3.5.3 (2024-02-28)
 
 - fix: correct parsing the data passed via query in JSON notation, e.g.: `index.ejs?{"title":"Homepage","lang":"en"}`

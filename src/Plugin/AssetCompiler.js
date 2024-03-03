@@ -10,7 +10,7 @@ const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
 //const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 //const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
 
-const { pluginName } = require('../config');
+const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
@@ -37,6 +37,7 @@ const { compilationName, verbose } = require('./Messages/Info');
 const { PluginError, afterEmitException } = require('./Messages/Exception');
 
 const loaderPath = require.resolve('../Loader');
+const { pluginName } = Config.get();
 
 /**
  * The CSS loader.
@@ -181,7 +182,22 @@ class AssetCompiler {
    * @param {Compiler} compiler The instance of the webpack compiler.
    * @abstract
    */
-  initialize(compiler) {}
+  init(compiler) {}
+
+  /**
+   * Initialize loader for entry files.
+   */
+  initLoader() {
+    const defaultLoader = {
+      test: Option.get().test,
+      // ignore 'asset/source' with the '?raw' query
+      // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
+      resourceQuery: { not: [/raw/] },
+      loader: loaderPath,
+    };
+
+    Option.addLoader(defaultLoader);
+  }
 
   /**
    * Apply plugin.
@@ -194,6 +210,7 @@ class AssetCompiler {
     const { webpack } = compiler;
     const { NormalModule, Compilation } = webpack;
 
+    this.promises = [];
     this.fs = compiler.inputFileSystem.fileSystem;
     this.webpack = webpack;
     HotUpdateChunk = webpack.HotUpdateChunk;
@@ -204,8 +221,8 @@ class AssetCompiler {
     Option.enableLibraryType(this.entryLibrary.type);
     AssetResource.init(compiler);
 
-    this.initialize(compiler);
-    this.promises = [];
+    this.init(compiler);
+    this.initLoader();
 
     // initialize integrity plugin
     this.integrityPlugin = new Integrity(Option);

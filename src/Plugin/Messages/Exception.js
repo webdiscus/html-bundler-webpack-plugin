@@ -1,8 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { reset, green, cyan, cyanBright, yellow, white, whiteBright, redBright } = require('ansis');
-const { pluginName } = require('../../config');
+const Config = require('../../Common/Config');
 
+const { pluginLabel } = Config.get();
 const PluginError = new Set();
 
 class PluginException extends Error {
@@ -11,7 +12,7 @@ class PluginException extends Error {
    * @param {Error?} error The original error.
    */
   constructor(message, error) {
-    message = `\n${reset.whiteBright.bgRedBright` ${pluginName} `} ${whiteBright(message)}\n`;
+    message = `\n${reset.whiteBright.bgRedBright` ${pluginLabel} `} ${whiteBright(message)}\n`;
 
     if (error && error.stack) {
       message += error.stack;

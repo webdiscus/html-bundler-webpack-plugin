@@ -2,7 +2,7 @@
 
 exports[`build verbose output 1`] = `
 "
- html-bundler-webpack-plugin  Entry processing 
+ HTML Bundler Plugin  Entry processing 
 
  ENTRY  index.html 
 source: src/views/home/index.html
@@ -118,7 +118,7 @@ assets:
 
 exports[`watch watchFiles.files 1`] = `
 "
- html-bundler-webpack-plugin  Entry processing 
+ HTML Bundler Plugin  Entry processing 
 
 watch files:
   - src/index.html
@@ -140,7 +140,7 @@ assets:
 
 exports[`watch watchFiles.ignore 1`] = `
 "
- html-bundler-webpack-plugin  Entry processing 
+ HTML Bundler Plugin  Entry processing 
 
 watch files:
   - src/index.html
@@ -162,7 +162,7 @@ assets:
 
 exports[`watch watchFiles.paths 1`] = `
 "
- html-bundler-webpack-plugin  Entry processing 
+ HTML Bundler Plugin  Entry processing 
 
 watch files:
   - src/index.html

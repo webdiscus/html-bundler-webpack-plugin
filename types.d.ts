@@ -61,7 +61,7 @@ declare namespace HtmlBundlerPlugin {
      * If the value is string, it should be an absolute or relative path to templates.
      * If the entry is undefined, then must be defined the Webpack entry option.
      */
-    entry?: EntryObject | string;
+    entry?: EntryObject | Array<EntryDescription> | string;
     // defaults is options.output.path
     outputPath?: string;
     // html output filename

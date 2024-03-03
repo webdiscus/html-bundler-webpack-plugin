@@ -435,6 +435,10 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (RegEx to handle matching templates)
    - [entry](#option-entry) (entry as a list of template files)
+     - [entry as an array](#option-entry-array) (array notation)
+     - [entry as an object](#option-entry-object) (object notation)
+     - [entry as a path](#option-entry-path) (find templates in a directory recursively)
+     - [entry data](#option-entry-data) (pass data in the single template as an object or a file)
    - [entry dynamic](#option-entry-path) (entry as a path to template files)
    - [outputPath](#option-outputpath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
@@ -467,7 +471,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [pug](#loader-option-preprocessor-options-pug)
      - [twig](#loader-option-preprocessor-options-twig)
      - [custom](#loader-option-preprocessor-custom) (using any template engine)
-   - [data](#loader-option-data) (pass data into templates)
+   - [data](#loader-option-data) (pass global data into all templates as an object or a file)
 1. [Using template engines](#template-engine)
    - [Eta](#using-template-eta)
    - [EJS](#using-template-ejs)
@@ -1219,7 +1223,7 @@ This plugin can completely replace the functionality of `mini-css-extract-plugin
 
 ### `entry`
 
-Type: `EntryObject | string`.
+Type: `EntryObject | Array<EntryDescription> | string`.
 
 The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property to pass custom variables into the HTML template.
@@ -1384,7 +1388,62 @@ To pass global variables in all templates use the [data](#loader-option-data) lo
 > **Note**
 >
 > You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
-> But the `data` property can only be defined in the `entry` option of the plugin.
+> But the `data` property can only be used in the `entry` option of the plugin.
+
+<a id="option-entry-array" name="option-entry-array"></a>
+#### Entry as an array
+
+If the `entry` is the array of the `EntryDescription` then the `filename` property is required.
+
+```js
+{
+  entry: [
+    {
+      filename: 'index.html', // => output filename dist/index.html
+      import: 'src/views/index.html', // template file
+      data: { title: 'Homepage' }, // page specifically variables
+    },
+    {
+      filename: 'about.html',
+      import: 'src/views/about.html',
+      data: { title: 'About' },
+    },
+    {
+      filename: 'news/sport.html',
+      import: 'src/views/news/sport.html',
+      data: { title: 'Sport' },
+    },
+  ],
+}
+```
+
+<a id="option-entry-object" name="option-entry-object"></a>
+#### Entry as an object
+
+The absolute equivalent to the example above using an object is:
+
+```js
+{
+  entry: {
+    index: { // => output filename dist/index.html
+      import: 'src/views/index.html', // template file
+      data: { title: 'Homepage' }, // page specifically variables
+    },
+    about: {
+      import: 'src/views/about.html',
+      data: { title: 'About' },
+    },
+    'news/sport': {
+      import: 'src/views/news/sport.html',
+      data: { title: 'Sport' },
+    },
+  },
+}
+```
+
+The difference between **object** and **array** notation: 
+- Using the **object** notation the output **filename** is the key of the entry item without the `.html` file extension.
+- Using the **array** notation the output **filename** is the `filename` property of the array item contained the file with `.html` file extension.
 
 <a id="option-entry-path" name="option-entry-path"></a>
 

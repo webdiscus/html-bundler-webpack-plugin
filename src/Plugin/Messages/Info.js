@@ -15,10 +15,12 @@ const {
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { relativePathForView } = require('../../Common/FileUtils');
-const { pluginName } = require('../../config');
+const Config = require('../../Common/Config');
 
 const Dependency = require('../../Loader/Dependency');
 const PluginService = require('../PluginService');
+
+const { pluginLabel } = Config.get();
 
 const gray = ansi256(244);
 const padLevel1 = 16;
@@ -36,8 +38,8 @@ const padChunks = padLevel1 + 4;
  */
 const compilationName = (error) =>
   error
-    ? bgAnsi(196).whiteBright` HTML Bundler Plugin ` + red` ▶▶▶`
-    : bgAnsi(118).black` HTML Bundler Plugin ` + green` ▶▶▶`;
+    ? bgAnsi(196).whiteBright` ${pluginLabel} ` + red` ▶▶▶`
+    : bgAnsi(118).black` ${pluginLabel} ` + green` ▶▶▶`;
 
 const colorType = (item, pad) => {
   let { type, inline } = item;
@@ -100,7 +102,7 @@ const renderAssets = (item, pad = padLevel2) => {
  * Display all processed assets in entry points.
  */
 const verbose = () => {
-  let str = '\n' + black.bgGreen` ${pluginName} ` + bgAnsi256(193).black` Entry processing ` + '\n';
+  let str = '\n' + black.bgGreen` ${pluginLabel} ` + bgAnsi256(193).black` Entry processing ` + '\n';
 
   // display loader watch dependencies
   if (PluginService.isWatchMode()) {

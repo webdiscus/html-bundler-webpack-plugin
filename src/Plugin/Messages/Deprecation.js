@@ -1,8 +1,10 @@
 const { red, green, black } = require('ansis');
-const { pluginName } = require('../../config');
 const { outToConsole } = require('../../Common/Helpers');
+const Config = require('../../Common/Config');
 
-const header = `\n${black.bgYellow` ${pluginName} `}${black.bgAnsi(227)` DEPRECATE `} `;
+const { pluginLabel } = Config.get();
+
+const header = `\n${black.bgYellow` ${pluginLabel} `}${black.bgAnsi(227)` DEPRECATE `} `;
 
 // Example for deprecations
 

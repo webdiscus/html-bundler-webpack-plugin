@@ -2,12 +2,9 @@ const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const LoaderOption = require('../Loader/Option');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
-
-const pluginName = require('../config');
 const Preprocessor = require('../Loader/Preprocessor');
 
 class Option {
-  static pluginName = pluginName;
   /** @type {HtmlBundlerPlugin.PluginOptions} */
   static options = {};
   /** @type {AssetEntry} */
