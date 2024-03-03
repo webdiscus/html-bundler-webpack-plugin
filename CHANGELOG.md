@@ -1,5 +1,9 @@
 # Change log
 
+## 3.5.5 (2024-03-03)
+
+- fix: initialize the singleton of the Config only once
+
 ## 3.5.4 (2024-03-03)
 
 - optimize: lazy load the plugin config file

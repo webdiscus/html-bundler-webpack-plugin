@@ -13,10 +13,13 @@ class Config {
   };
 
   static init(file) {
-    this.#configFile = path.isAbsolute(file)
-      ? require.resolve(file)
-      : // path relative to `./src/Common`
-        require.resolve(path.join('../', file));
+    // initialize only once
+    if (!this.#configFile) {
+      this.#configFile = path.isAbsolute(file)
+        ? require.resolve(file)
+        : // path relative to `./src/Common`
+          require.resolve(path.join('../', file));
+    }
   }
 
   static get() {
