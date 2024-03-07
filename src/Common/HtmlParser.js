@@ -2,6 +2,7 @@
 // - comparing numbers is faster than comparing strings
 // - transforming a string to a byte array with TextEncoder.encode() is 100x faster than charCodeAt() via `for` loop
 
+const { Obj } = require('nunjucks/src/object');
 const textEncoder = new TextEncoder();
 const spaceCodes = textEncoder.encode(' \n\r\t\f');
 const tagEndCodes = textEncoder.encode(' \n\r\t\f/>');
@@ -311,6 +312,8 @@ class HtmlParser {
    * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number, offset: number, inEscapedDoubleQuotes: boolean}|boolean}
    */
   static parseAttr(content, attr, type = 'asset', offset = 0) {
+    // TODO: allow zero or more spaces around `=`
+    // https://www.w3.org/TR/2011/WD-html5-20110113/syntax.html#attributes-0
     const open = `${attr}=`;
     let startPos = 0;
     let pos;
@@ -335,13 +338,16 @@ class HtmlParser {
     //    module.exports = fn("<img src=\"" + require('image.png') + "\">")
 
     // find open quote pos
-    startPos = content.indexOf('"', startPos);
-    let inEscapedDoubleQuotes = content.charCodeAt(startPos - 1) === escapeCode;
-    let quote = inEscapedDoubleQuotes ? `\\"` : '"';
+    let openQuotePos = indexOfQuote(content, startPos);
+    let quoteChar = content.charAt(openQuotePos);
+    let inEscapedDoubleQuotes = content.charCodeAt(openQuotePos - 1) === escapeCode;
+    let quote = inEscapedDoubleQuotes ? `\\` + quoteChar : quoteChar;
+
+    startPos = openQuotePos + 1;
 
     // find close quote pos
-    startPos++;
     let endPos = content.indexOf(quote, startPos);
+
     if (endPos < 0) endPos = content.length - 1;
 
     let value = content.slice(startPos, endPos);
@@ -361,16 +367,65 @@ class HtmlParser {
       };
     }
 
-    return {
+    let result = {
       type,
       attr,
       value,
-      parsedValue: [value.split('?', 1)[0]],
+      parsedValue: '',
       startPos,
       endPos,
       offset,
       inEscapedDoubleQuotes,
     };
+
+    // parse for required values which are not yet resolved by a preprocessor like pug
+    if (value.indexOf('\\u0027') < 0 && value.indexOf('require(') > 0) {
+      const { values, attrs } = this.parseRequiredValues(value, startPos, offset);
+
+      return { ...result, parsedValue: values, attrs };
+    }
+
+    result.parsedValue = [value.split('?', 1)[0]];
+
+    return result;
+  }
+
+  /**
+   * Parse require() in the attribute value.
+   *
+   * For example:
+   *   <a href="#" data-picture='{ "alt":"picture", "imgSrc": require("./picture.png") }'></a>
+   *
+   * @param {string} content The attribute value.
+   * @param {Number} valueOffset The offset of value in the tag.
+   * @param {Number} offset The absolute tag offset in the content.
+   * @return {{values: *[], attrs: *[]}}
+   */
+  static parseRequiredValues(content, valueOffset, offset) {
+    let pos;
+    let values = [];
+    let attrs = [];
+
+    while ((pos = content.indexOf('require(', pos)) > -1) {
+      let valueStartPos = pos + 8;
+      let valueEndPos = content.indexOf(')', valueStartPos);
+      let quote = content.charAt(valueStartPos);
+      let value = content.slice(valueStartPos + 1, valueEndPos - 1); // skip quotes around value
+
+      values.push(value);
+
+      attrs.push({
+        value,
+        quote, // quotes used in require()
+        startPos: valueOffset + pos, // skip `require(`
+        endPos: valueOffset + valueEndPos + 1, // skip `)`
+        offset,
+      });
+
+      pos = valueEndPos + 1;
+    }
+
+    return { values, attrs };
   }
 
   /**
@@ -380,14 +435,14 @@ class HtmlParser {
    *   "img1.png"
    *   "img1.png, img2.png 100w, img3.png 1.5x"
    *
-   * @param {string} srcsetValue
+   * @param {string} content The srcset value.
    * @param {Number} valueOffset The offset of value in the tag.
    * @param {Number} offset The absolute tag offset in the content.
    * @param {boolean} inEscapedDoubleQuotes Bypass the property to all `attrs` objects.
    * @return {{values: Array<string>, attrs: [{attr: string, value, startPos: Number, endPos: Number, offset: number, inEscapedDoubleQuotes: boolean}]}}
    */
-  static parseSrcsetValue(srcsetValue, valueOffset, offset, inEscapedDoubleQuotes) {
-    const lastPos = srcsetValue.length;
+  static parseSrcsetValue(content, valueOffset, offset, inEscapedDoubleQuotes) {
+    const lastPos = content.length;
     let startPos = 0;
     let endPos = 0;
     let currentPos;
@@ -398,25 +453,23 @@ class HtmlParser {
     // supports the query for 'responsive-loader' in following notations:
     // - image.png?{sizes: [100,200,300], format: 'jpg'} // JSON5
     // - require('image.png?sizes[]=100,sizes[]=200,sizes[]=300,format=jpg') // `,` as parameter separator in require(), used in pug
-    if (srcsetValue.indexOf('?{') > 0 || srcsetValue.indexOf('require(') > -1) {
+    if (content.indexOf('?{') > 0 || content.indexOf('require(') > -1) {
       return {
-        values: [srcsetValue],
-        attrs: [
-          { type, attr: 'srcset', value: srcsetValue, startPos: valueOffset, endPos: valueOffset + lastPos, offset },
-        ],
+        values: [content],
+        attrs: [{ type, attr: 'srcset', value: content, startPos: valueOffset, endPos: valueOffset + lastPos, offset }],
       };
     }
 
     do {
-      currentPos = srcsetValue.indexOf(',', startPos);
+      currentPos = content.indexOf(',', startPos);
       if (currentPos < 0) {
         currentPos = lastPos;
       }
 
-      startPos = indexOfNonSpace(srcsetValue, startPos);
+      startPos = indexOfNonSpace(content, startPos);
 
       // parse value like "img.png"
-      let value = srcsetValue.slice(startPos, currentPos);
+      let value = content.slice(startPos, currentPos);
       let pos = value.indexOf(' ');
 
       // parse value like "img.png 100w"

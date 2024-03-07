@@ -223,6 +223,47 @@ describe('parse attributes unit tests', () => {
     return expect(received).toEqual(expected);
   });
 
+  test('parseAttr JSON value', () => {
+    const source = `<a href="#" data-bigpicture='{ "alt":"big picture", "imgSrc": "./image.png" }'>`;
+    const received = HtmlParser.parseAttr(source, 'data-bigpicture', 'asset');
+    const expected = {
+      type: 'asset',
+      attr: 'data-bigpicture',
+      startPos: 29,
+      endPos: 77,
+      inEscapedDoubleQuotes: false,
+      offset: 0,
+      value: '{ "alt":"big picture", "imgSrc": "./image.png" }',
+      parsedValue: ['{ "alt":"big picture", "imgSrc": "./image.png" }'],
+    };
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseAttr JSON value with require', () => {
+    const source = `<a href="#" data-image='{ "alt":"picture", "imgSrc": require("./image.png") }'>`;
+    const received = HtmlParser.parseAttr(source, 'data-image', 'asset');
+    const expected = {
+      type: 'asset',
+      attr: 'data-image',
+      startPos: 24,
+      endPos: 77,
+      offset: 0,
+      attrs: [
+        {
+          endPos: 75,
+          offset: 0,
+          quote: '"',
+          startPos: 53,
+          value: './image.png',
+        },
+      ],
+      inEscapedDoubleQuotes: false,
+      value: '{ "alt":"picture", "imgSrc": require("./image.png") }',
+      parsedValue: ['./image.png'],
+    };
+    return expect(received).toEqual(expected);
+  });
+
   test('parseAttr value', () => {
     const source = '<img src="img1.png?size=800" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
     const received = HtmlParser.parseAttr(source, 'src', 'asset', 0);
@@ -356,6 +397,34 @@ describe('parse tags unit tests', () => {
             parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
+            inEscapedDoubleQuotes: false,
+            offset: 0,
+          },
+        ],
+        attrs: null,
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('single-quoted attribute value', () => {
+    const html = `<img src= 'img1.png' alt="logo">`;
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
+    const expected = [
+      {
+        tag: 'img',
+        source: `<img src= 'img1.png' alt="logo">`,
+        type: 'asset',
+        startPos: 0,
+        endPos: 32,
+        parsedAttrs: [
+          {
+            type: 'asset',
+            attr: 'src',
+            value: 'img1.png',
+            parsedValue: ['img1.png'],
+            startPos: 11,
+            endPos: 19,
             inEscapedDoubleQuotes: false,
             offset: 0,
           },

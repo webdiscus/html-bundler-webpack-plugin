@@ -166,29 +166,6 @@ describe('exception tests', () => {
 
 // pug-plugin tests
 
-// TODO:
-//  BREAKING CHANGES in compare to the pug-plugin v4.x
-//   - removed the `modules` options, now you can use the plugin, `js` or `css` options
-//   - removed the `modules.test` options, you can use followings:
-//     - `test` option for template extensions
-//     - `js.test` option for script extensions
-//     - `css.test` option for style extensions
-//   - removed the `modules.postprocess` options, use the `postprocess` option
-//   - inline CSS/JS via query:
-//     OLD:
-//       - script=require('./main.js?inline')
-//       - style=require('./style.css?inline' rel='stylesheet')
-//     NEW:
-//       - script(src=require('./main.js?inline')) or script(src='./main.js?inline')
-//       - link(href=require('./style.css?inline') rel='stylesheet') or link(href='./style.css?inline' rel='stylesheet')
-//    - require() in srcset attribute not works anymore, use a file w/o require() function
-//     OLD:
-//       - img(srcset=`${require('./image1.png')} 400w, ${require('@images/image2.png')} 800w` src=require('./image.png'))
-//         Note: the required file is relative to the current pug partial file, recommends to use an webpack alias
-//     NEW:
-//       - img(srcset=`./image1.png 400w, @images/image2.png 800w` src='./image.png')
-//         Note: the file is relative to the main entrypoint pug file, recommends to use an webpack alias
-
 describe('pug-plugin tests', () => {
   // TODO: add pretty option
   //test('options.pretty', () => compareFiles('_pug/option-pretty'));

@@ -492,6 +492,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
+   - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css)
    - [How to process a PHP template](#recipe-preprocessor-php)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
@@ -4378,7 +4379,7 @@ _./partials/people.ejs_
   `include` is supported
 - [twig](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~110KB)\
   `include` is supported
-- pug (the support will be added later) - generates a small pure template function
+- [pug](#loader-option-preprocessor-options-pug) - generates a small pure template function
 
 #### Template engines that do NOT support the `template function` on client-side
 
@@ -5091,6 +5092,56 @@ module: {
 ```
 
 The plugin automatically inlines images smaller then `maxSize`.
+
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-resolve-attr-json" name="recipe-resolve-attr-json"></a>
+
+## How to resolve source assets in an attribute containing JSON value
+
+For example, source images should be defined in the custom `data-image` attribute of the `a` tag: 
+
+```html
+<a data-image='{ "imgSrc": "./pic1.png", "bgImgSrc": "./pic2.png" }' href="#" >
+  ...
+</a>
+```
+
+To resolve such files, just use the `require()` function:
+
+```html
+<a data-image='{ "imgSrc": require("./pic1.png"), "bgImgSrc": require("./pic2.png") }' href="#" >
+  ...
+</a>
+```
+
+Add to `sources` loader option the `data-image` attribute for the `a` tag:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/index.html',
+  },
+  loaderOptions: {
+    sources: [
+      {
+        tag: 'a',                   // <= specify the 'a' tag
+        attributes: ['data-image'], // <= specify custom attribute for the 'a' tag
+      },
+    ],
+  },
+}),
+```
+
+The custom attribute will contains in the generated HTML the resolved output assets filenames:
+
+```html
+<a data-image='{ "imgSrc": "img/pic1.da3e3cc9.png", "bgImgSrc": "img/pic2.e3cc9da3.png" }' href="#" >
+  ...
+</a>
+```
 
 ---
 

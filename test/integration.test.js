@@ -413,6 +413,9 @@ describe('special cases', () => {
 
   test('import image filename in JS', () => compareFiles('js-import-image-filename'));
 
+  // TODO:
+  test('resolve img in attr json', () => compareFiles('resolve-attr-json-require'));
+
   test('multiple chunks with the same filename', () => compareFiles('entry-multiple-chunks-same-filename'));
 
   // for debugging

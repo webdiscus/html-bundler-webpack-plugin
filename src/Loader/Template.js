@@ -24,6 +24,7 @@ class Template {
     let parsedTags = [];
     for (let opts of sources) {
       opts.resourcePath = issuer;
+
       parsedTags.push(...HtmlParser.parseTag(content, opts));
     }
     parsedTags = parsedTags.sort(comparePos);
@@ -34,7 +35,7 @@ class Template {
     let pos = 0;
 
     for (let { tag, source, parsedAttrs } of parsedTags) {
-      for (let { type, attr, startPos, endPos, value, offset, inEscapedDoubleQuotes } of parsedAttrs) {
+      for (let { type, attr, startPos, endPos, value, quote, offset, inEscapedDoubleQuotes } of parsedAttrs) {
         const result = this.resolveFile({
           isBasedir,
           type,
@@ -61,7 +62,10 @@ class Template {
         // note: if the hook returns `undefined`, then the hookResult contains the value of the first argument
         const resolvedValue = hookResult && hookResult !== source ? hookResult : requireExpression;
 
-        output += content.slice(pos, startPos + offset) + resolvedValue;
+        // enclose the value in quotes
+        if (!quote) quote = '';
+
+        output += content.slice(pos, startPos + offset) + quote + resolvedValue + quote;
         pos = endPos + offset;
       }
     }

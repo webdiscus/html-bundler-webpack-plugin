@@ -1,5 +1,17 @@
 # Change log
 
+## 3.6.0 (2024-03-08)
+
+- feat: resolve resource files in an attribute containing the JSON value using the `require()` function,\
+  source template:
+  ```js
+  <a href="#" data-image='{ "alt":"image", "imgSrc": require("./pic1.png"), "bgImgSrc": require("./pic2.png") }'> ... </a>
+  ```
+  generated HTML contains resolved output assets filenames:
+  ```js
+  <a href="#" data-image='{ "alt":"image", "imgSrc": "img/pic1.da3e3cc9.png", "bgImgSrc": "img/pic2.e3cc9da3.png" }'> ... </a>
+  ```
+
 ## 3.5.5 (2024-03-03)
 
 - fix: initialize the singleton of the Config only once
@@ -31,7 +43,7 @@
 ## 3.5.3 (2024-02-28)
 
 - fix: correct parsing the data passed via query in JSON notation, e.g.: `index.ejs?{"title":"Homepage","lang":"en"}`
-- fix: by paring of the generated html ignore files already resolved via a preprocessor, e.g. pug
+- fix: by parsing of the generated html ignore files already resolved via a preprocessor, e.g. pug
 - fix(pug): resolve resource required in pug code and content, also outer tag attributes
 - fix(pug): resolve images generated via `responsive-loader` when used query parameters with `,` and `&` separators
 - test: add tests from pug-plugin
