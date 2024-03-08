@@ -1,6 +1,10 @@
 # Change log
 
-## 3.6.0 (2024-03-08)
+## 3.6.1 (2024-03-08)
+
+- fix: cannot find module 'nunjucks/src/object', introduced in v3.6.0
+
+## 3.6.0 (2024-03-08) DEPRECATED
 
 - feat: resolve resource files in an attribute containing the JSON value using the `require()` function,\
   source template:

@@ -2,7 +2,6 @@
 // - comparing numbers is faster than comparing strings
 // - transforming a string to a byte array with TextEncoder.encode() is 100x faster than charCodeAt() via `for` loop
 
-const { Obj } = require('nunjucks/src/object');
 const textEncoder = new TextEncoder();
 const spaceCodes = textEncoder.encode(' \n\r\t\f');
 const tagEndCodes = textEncoder.encode(' \n\r\t\f/>');
