@@ -494,6 +494,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css)
+   - [How to load JS and CSS from `node_modules` in template](#recipe-load-js-css-from-node-modules)
+   - [How to import CSS or SCSS from `node_modules` in SCSS](#recipe-import-style-from-node-modules)
    - [How to process a PHP template](#recipe-preprocessor-php)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to use some different template engines](#recipe-diff-templates)
@@ -502,6 +504,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to split CSS files](#recipe-split-css)
 2. [Problems & Solutions](#solutions)
    - [Automatic resolving of file extensions](#solutions-resolve-extensions)
+   - [How to use `@import url()` in CSS](#solutions-import-url-in-css)
 3. <a id="demo-sites" name="demo-sites"></a> 
    Demo sites
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
@@ -530,15 +533,15 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - [extracts JS](#option-js) from the source script filename specified in HTML via a `<script>` tag
 - [extracts CSS](#option-css) from the source style filename specified in HTML via a `<link>` tag
 - importing style files in JavaScript
-- resolves source asset files in HTML attributes and in the CSS `url()`
+- resolves source asset files in HTML attributes and in the CSS `url()`, without using [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)
 - supports styles used in `*.vue` files
 - generated HTML contains output filenames
 - supports the module types `asset/resource` `asset/inline` `asset` `asset/source` ([\*](#note-asset-source))
 - [inline CSS](#recipe-inline-css) in HTML
 - [inline JavaScript](#recipe-inline-js) in HTML
 - [inline image](#recipe-inline-image) as `base64 encoded` data-URL for PNG, JPG, etc. in HTML and CSS
-- [inline SVG](#recipe-inline-image) as SVG tag in HTML
-- [inline SVG](#recipe-inline-image) as `utf-8` data-URL in CSS
+- [inline SVG](#recipe-inline-image) as SVG tag in HTML, e.g.: `<svg>...</svg>`
+- [inline SVG](#recipe-inline-image) as `utf-8` data-URL in CSS, e.g.: `url("data:image/svg+xml,<svg>...</svg>")`
 - auto generation of `<link rel="preload">` to [preload assets](#option-preload)
 - supports the `auto` [publicPath](#webpack-option-output-publicpath)
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
@@ -5173,8 +5176,96 @@ loadCSS(cssFile);
 
 The CSS will be extracted into separate file and the `cssFile` variable will contains the CSS output filename. 
 
+#### [↑ back to contents](#contents)
 
----
+
+<a id="recipe-load-js-css-from-node-modules" name="recipe-load-js-css-from-node-modules"></a>
+## How to load JS and CSS from `node_modules` in template
+
+Some node modules specifies compiled bundle files for the browser in `package.json`.
+
+For example: 
+- the [material-icons](https://github.com/marella/material-icons/blob/main/package.json) specifies the `browser ready` CSS file.
+- the [bootstrap](https://github.com/twbs/bootstrap/blob/main/package.json) specifies the `browser ready` JS and CSS files.
+
+You can use only the module name, the plugin automatically resolves `browser ready` files for script and style:
+
+```html
+<html>
+<head>
+  <!-- plugin resolves the bootstrap/dist/css/bootstrap.css -->
+  <link href="bootstrap" rel="stylesheet">
+  <!-- plugin resolves the bootstrap/dist/js/bootstrap.js -->
+  <script src="bootstrap" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+If you need to load a specific version of a file, use the module name and the path to that file:
+
+```html
+<html>
+<head>
+  <link href="bootstrap/dist/css/bootstrap.rtl.css" rel="stylesheet">
+  <script src="bootstrap/dist/js/bootstrap.bundle.js" defer="defer"></script>
+</head>
+<body>
+  <h1>Hello World!</h1>
+</body>
+</html>
+```
+
+> **Warning**
+> 
+> Don't use a relative path to `node_modules`, like `../node_modules/bootstrap`. The plugin resolves node module path by the name automatically.
+
+#### [↑ back to contents](#contents)
+
+
+<a id="recipe-import-style-from-node-modules" name="recipe-import-style-from-node-modules"></a>
+## How to import CSS or SCSS from `node_modules` in SCSS
+
+The plugin resolves default style files defined in node_modules automatically.
+
+For example, import source styles of material-icons:
+
+```scss
+// import source styles from `material-icons` module
+@use 'material-icons';
+
+// define short class name for original `.material-icons-outlined` class name from module
+.mat-icon {
+  @extend .material-icons-outlined;
+}
+```
+
+You can import a file from a module using the module name and the path to the file:
+```scss
+@use 'MODULE_NAME/path/to/style';
+```
+
+> **Warning**
+> 
+> The file extension, e.g. .scss, .css, must be omitted.
+
+> **Warning**
+> 
+> Use the `@use` instead of `@import`, because it is [deprecated](https://github.com/sass/sass/blob/main/accepted/module-system.md#timeline).
+
+
+For example, import the style theme `tomorrow` from the [prismjs](https://github.com/PrismJS/prism) module:
+```scss
+@use 'prismjs/themes/prism-tomorrow.min';
+```
+
+> **Warning**
+> 
+> Don't use [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)!
+> 
+> The HTML bundler plugin resolves styles faster than `resolve-url-loader` and don't requires using the `source map` in `sass-loader` options.
 
 #### [↑ back to contents](#contents)
 
@@ -5855,9 +5946,47 @@ import moduleB from './moduleB';
 import './app.scss'; // <= use the style extension
 ```
 
----
+#### [↑ back to contents](#contents)
+
+
+<a id="solutions-import-url-in-css" name="solutions-import-url-in-css"></a>
+
+## How to use `@import url()` in CSS
+
+> **Warning**
+> 
+> Don't use `@import in CSS`. It's very `bad practice`.
+>
+
+Bad example, _main.css_:
+```css
+@import 'path/to/style.css';
+```
+
+The plugin does not support handling of `@import url()` in CSS. Imported url will be passed 1:1 into resulting CSS.
+
+**Problem:** defaults, `css-loader` handles `@import at-rule`, which causes an issue in the plugin.
+
+**Solution:** add the `import: false` into `css-loader` options:
+
+```js
+{
+  test: /\.(css)$/i,
+  loader: 'css-loader',
+  options: {
+    import: false, // disable handling of @import at-rule in CSS
+  },
+},
+```
+
+> **Warning**
+> 
+> The `*.css` files imported in CSS are not handled, therefore these files must be manually copied to the `dist/` folder using the `copy-webpack-plugin`.
 
 #### [↑ back to contents](#contents)
+
+---
+
 
 ## Also See
 
