@@ -1,5 +1,9 @@
 # Change log
 
+## 3.6.2 (2024-03-11)
+
+- fix: avoid recompiling all entry templates after changes of a non-entry partial file, [pug-plugin issue](https://github.com/webdiscus/pug-plugin/issues/66)
+
 ## 3.6.1 (2024-03-08)
 
 - fix: cannot find module 'nunjucks/src/object', introduced in v3.6.0
