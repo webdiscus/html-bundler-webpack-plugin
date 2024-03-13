@@ -1,0 +1,13 @@
+{
+  "description": "IMPORTANT: don't install webpack here because the Webpack instance MUST be one, otherwise appear the error: The 'compilation' argument must be an instance of Compilation.",
+  "scripts": {
+    "start": "webpack serve --mode development",
+    "watch": "webpack watch --mode development",
+    "build": "webpack --mode=production --progress"
+  },
+  "devDependencies": {
+    "html-bundler-webpack-plugin": "file:../../..",
+    "prismjs": "^1.29.0",
+    "swiper": "^11.0.7"
+  }
+}

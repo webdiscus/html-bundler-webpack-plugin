@@ -1,0 +1,6 @@
+// TEST: import css files form various node modules
+
+//@use 'prismjs/themes/prism-tomorrow.min'; // OK
+
+//@use 'swiper/swiper-bundle'; // <= NOT works, because it is BUG in node_modules/swiper/package.json
+@use 'swiper/css/bundle'; // <= works from `exports` field in package.json
