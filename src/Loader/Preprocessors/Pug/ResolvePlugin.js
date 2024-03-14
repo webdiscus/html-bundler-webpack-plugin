@@ -1,6 +1,7 @@
 const path = require('path');
 const Resolver = require('../../Resolver');
-const { encodeReservedChars, isWin, pathToPosix } = require('../../Utils');
+const { encodeReservedChars } = require('../../Utils');
+const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
 const scriptExtensionRegexp = /\.js[a-z\d]*$/i;
 const isRequireableScript = (file) => !path.extname(file) || scriptExtensionRegexp.test(file);
@@ -146,7 +147,8 @@ const LoaderResolvers = {
 const requireExpression = (value, issuer, type = 'default') => {
   const [, requiredFile] = /require\((.+?)(?=\))/.exec(value) || [];
   const file = requiredFile || value;
-  //if (isWin) issuer = pathToPosix(issuer);
+
+  if (isWin) issuer = pathToPosix(issuer);
 
   if (ResolvePlugin.mode === 'render') {
     const requireType = requireTypes[type];
@@ -155,7 +157,9 @@ const requireExpression = (value, issuer, type = 'default') => {
   }
 
   if (ResolvePlugin.mode === 'compile') {
-    const interpolatedValue = Resolver.interpolate(file, issuer, type);
+    let interpolatedValue = Resolver.interpolate(file, issuer, type);
+
+    if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
 
     return requiredFile ? `require('${interpolatedValue}')` : `require(${interpolatedValue})`;
   }

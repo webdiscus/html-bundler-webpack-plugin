@@ -92,6 +92,10 @@ class Template {
    *  - mailto:admin@test.com
    *  - `\\u0027 + require(\\u0027/resolved/path/to/file.ext\\u0027) + \\u0027` // an expression of resolved file via a template engine
    *
+   *  Allow special cases when value contains `:`
+   *  - C:\path\to\file.ext
+   *  - image.png?{size:600}
+   *
    * @param {boolean} isBasedir Whether is used the `root` option.
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} value The attribute value to resolve as an absolute file path.
@@ -108,7 +112,7 @@ class Template {
       value.startsWith('//') ||
       value.startsWith('#') ||
       value.startsWith('\\u0027') ||
-      (value.indexOf(':') > 0 && value.indexOf('?{') < 0)
+      (value.indexOf(':') > 0 && value.indexOf(':\\') < 0 && value.indexOf('?{') < 0)
     ) {
       return false;
     }

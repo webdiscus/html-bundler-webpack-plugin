@@ -7,7 +7,8 @@ const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
  * @return {Array<{resource: string, assetFile: string | Array<string>}>}
  */
 const manifest = (entries) => {
-  const relPath = (file) => path.relative(__dirname, file);
+  // fix windows-like path
+  const relPath = (file) => path.relative(__dirname, file).replace(/\\/g, '/');
   const assets = [];
 
   //console.dir({ entries }, { depth: 7 });

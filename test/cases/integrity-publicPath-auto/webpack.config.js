@@ -7,7 +7,7 @@ module.exports = {
   target: 'web',
 
   output: {
-    publicPath: 'auto', // test empty
+    //publicPath: 'auto', // test auto
     path: path.join(__dirname, 'dist/'),
     crossOriginLoading: 'use-credentials', // required for test Subresource Integrity
   },

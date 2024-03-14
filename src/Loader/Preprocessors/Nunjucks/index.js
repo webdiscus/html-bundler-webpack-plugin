@@ -75,11 +75,14 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
         if (requiredTemplates.has(templateFile)) continue;
 
         // try to resolve the template file in multiple paths
-        const file = require.resolve(templateFile, { paths: viewPaths });
+        let file = require.resolve(templateFile, { paths: viewPaths });
 
         if (file) {
-          // unique template name as the template path
-          const templatePath = path.relative(rootContext, file);
+          // unique template name as the template path, fix windows-like path
+          const templatePath = path.relative(rootContext, file).replace(/\\/g, '/');
+
+          // fix windows-like path
+          file = file.replace(/\\/g, '/');
           dependencies += `dependencies["${templatePath}"] = require("${file}");`;
 
           // if used partial paths (defined in `views` option) to include a partial,
@@ -113,7 +116,8 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data }) {
-      const runtimeFile = require.resolve('nunjucks/browser/nunjucks-slim.min');
+      // fix windows-like path
+      const runtimeFile = require.resolve('nunjucks/browser/nunjucks-slim.min').replace(/\\/g, '/');
 
       return `
         var nunjucks = require('${runtimeFile}');

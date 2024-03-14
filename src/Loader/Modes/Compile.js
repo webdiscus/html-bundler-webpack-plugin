@@ -1,6 +1,7 @@
 const PreprocessorMode = require('./PreprocessorMode');
 const { errorToHtml } = require('../Messages/Exeptions');
 const { decodeReservedChars, escapeSequences } = require('../Utils');
+const { isWin, pathToPosix } = require('../../Common/Helpers');
 
 /**
  * Compile into JS function and export as a JS module.
@@ -27,6 +28,8 @@ class Compile extends PreprocessorMode {
    */
   requireExpression(file) {
     const quote = this.enclosingQuotes;
+
+    if (isWin) file = pathToPosix(file);
 
     return `${quote} + require('${file}') + ${quote}`;
   }

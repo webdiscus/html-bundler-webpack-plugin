@@ -285,9 +285,6 @@ class Resolver {
       return value;
     }
 
-    // TODO: check on win
-    //if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
-
     // remove quotes: '/path/to/file.js' -> /path/to/file.js
     let resolvedValue = interpolatedValue.slice(1, -1);
     let resolvedFile;
@@ -304,8 +301,6 @@ class Resolver {
       }
       if (isScript) resolvedFile = this.resolveScriptExtension(resolvedFile);
 
-      // TODO: check on win
-      //return isWin ? pathToPosix(resolvedFile) : resolvedFile;
       return resolvedFile;
     }
 

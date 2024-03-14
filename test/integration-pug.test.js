@@ -46,7 +46,7 @@ describe('require code', () => {
   test('require js module relative', () => compareFiles('_pug/require-js-relative'));
 });
 
-describe('resolve assets', () => {
+describe('resolve assets with require', () => {
   test('img attributes', () => compareFiles('_pug/resolve-img-attributes'));
   test('img attributes, require', () => compareFiles('_pug/resolve-img-attributes-require'));
 

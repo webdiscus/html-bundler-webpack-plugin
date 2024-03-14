@@ -82,8 +82,9 @@ const preprocessor = (loaderContext, options) => {
      * @return {string} The exported template function.
      */
     export(templateFunction, { data }) {
-      // note: resolved the file is for node, therefore, we need to get the module path plus file for browser
-      const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs');
+      // resolved the file is for node, therefore, we need to get the module path plus file for browser,
+      // fix windows-like path into the posix standard :-/
+      const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs').replace(/\\/g, '/');
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 

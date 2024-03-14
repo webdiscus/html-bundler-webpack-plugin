@@ -161,7 +161,7 @@ describe('plugin hooks', () => {
 });
 
 describe('plugin callbacks', () => {
-  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
+  test('beforePreprocessor, return template', () => compareFiles('option-beforePreprocessor'));
   test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
 
   test('preprocessor', () => compareFiles('option-preprocessor'));
@@ -419,12 +419,13 @@ describe('special cases', () => {
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });
 
-describe('integrity', () => {
+describe('integrity, common use cases', () => {
   // TODO: implement and add tests for preload
 
+  // TODO: fix issue on windows
+  test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
-  test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
 
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));
