@@ -7,7 +7,8 @@ const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
  * @return {Array<{resource: string, assetFile: string | Array<string>}>}
  */
 const manifest = (entries) => {
-  const relPath = (file) => path.relative(__dirname, file);
+  // fix windows-like path
+  const relPath = (file) => path.relative(__dirname, file).replace(/\\/g, '/');
   const assets = [];
 
   //console.dir({ entries }, { depth: 7 });
@@ -102,48 +103,48 @@ module.exports = {
         chunkFilename: '[name].[contenthash:8].chunk.css',
       },
       // test with integrity hash
-      //integrity: true,
+      integrity: true,
       //verbose: true,
     }),
-    // {
-    //   apply(compiler) {
-    //     const pluginName = 'myPlugin';
-    //     compiler.hooks.compilation.tap(pluginName, (compilation) => {
-    //       const hooks = HtmlBundlerPlugin.getHooks(compilation);
+    {
+      apply(compiler) {
+        const pluginName = 'myPlugin';
+        compiler.hooks.compilation.tap(pluginName, (compilation) => {
+          const hooks = HtmlBundlerPlugin.getHooks(compilation);
 
-    //       // test sync hook - ok
-    //       hooks.afterEmit.tap(pluginName, (entries, options) => {
-    //         const saveAs = path.join(__dirname, 'dist/assets.json');
-    //         const assets = manifest(entries);
-    //         const data = JSON.stringify(assets, null, '  ');
+          // test sync hook - ok
+          hooks.afterEmit.tap(pluginName, (entries, options) => {
+            const saveAs = path.join(__dirname, 'dist/assets.json');
+            const assets = manifest(entries);
+            const data = JSON.stringify(assets, null, '  ');
 
-    //         fs.writeFileSync(saveAs, data);
-    //       });
+            fs.writeFileSync(saveAs, data);
+          });
 
-    //       // test issue: the file is created but the content is saved after test is done
-    //       // hooks.afterEmit.tapAsync(pluginName, (entries, options, cb) => {
-    //       //   const saveAs = path.join(__dirname, 'dist/assets.json');
-    //       //   const assets = manifest(entries);
-    //       //   const data = JSON.stringify(assets, null, '  ');
-    //       //
-    //       //   fs.writeFile(saveAs, data, { flush: true }, cb);
-    //       // });
+          // test issue: the file is created but the content is saved after test is done
+          // hooks.afterEmit.tapAsync(pluginName, (entries, options, cb) => {
+          //   const saveAs = path.join(__dirname, 'dist/assets.json');
+          //   const assets = manifest(entries);
+          //   const data = JSON.stringify(assets, null, '  ');
+          //
+          //   fs.writeFile(saveAs, data, { flush: true }, cb);
+          // });
 
-    //       // test issue: the file is created but the content is saved (by promises.writeFile) after test is done
-    //       // hooks.afterEmit.tapPromise(
-    //       //   pluginName,
-    //       //   (entries, options) =>
-    //       //     new Promise((resolve, reject) => {
-    //       //       const saveAs = path.join(__dirname, 'dist/assets.json');
-    //       //       const assets = manifest(entries);
-    //       //       const data = JSON.stringify(assets, null, '  ');
-    //       //
-    //       //       resolve(fs.promises.writeFile(saveAs, data, { flush: true }));
-    //       //     })
-    //       // );
-    //     });
-    //   },
-    // },
+          // test issue: the file is created but the content is saved (by promises.writeFile) after test is done
+          // hooks.afterEmit.tapPromise(
+          //   pluginName,
+          //   (entries, options) =>
+          //     new Promise((resolve, reject) => {
+          //       const saveAs = path.join(__dirname, 'dist/assets.json');
+          //       const assets = manifest(entries);
+          //       const data = JSON.stringify(assets, null, '  ');
+          //
+          //       resolve(fs.promises.writeFile(saveAs, data, { flush: true }));
+          //     })
+          // );
+        });
+      },
+    },
   ],
 
   module: {
