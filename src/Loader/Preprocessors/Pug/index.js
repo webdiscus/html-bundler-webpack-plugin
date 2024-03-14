@@ -25,7 +25,13 @@ const preprocessor = (loaderContext, options, { esModule, watch }) => {
      * @return {string}
      */
     render(source, { resourcePath, data = {} }) {
-      return Pug.render(source, { file: resourcePath, data, esModule });
+
+      //return Pug.render(source, { file: resourcePath, data, esModule });
+
+      let html = Pug.render(source, { file: resourcePath, data, esModule });
+      //console.log('### HTML TMPL:', html);
+
+      return html;
     },
 
     /**

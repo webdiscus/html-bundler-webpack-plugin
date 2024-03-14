@@ -60,6 +60,8 @@ class PugCompiler {
     // used to resolve import/extends and to improve errors
     this.pugOptions.filename = file;
 
+
+
     let tmplFn = this.pug.compileClientWithDependenciesTracked(source, this.pugOptions).body;
 
     return tmplFn.replaceAll('__DECODE_AMP__', '&');
@@ -67,6 +69,8 @@ class PugCompiler {
 
   compile(source, { file }) {
     ResolvePlugin.mode = 'compile';
+
+    //console.log('##### compile SOURCE for PUG 2:', file, source);
 
     const exportFunctionName = 'templateFn';
     const templateFunctionSource = this._compile(source, file);

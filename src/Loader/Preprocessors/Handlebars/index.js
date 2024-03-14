@@ -212,7 +212,7 @@ const preprocessor = (loaderContext, options) => {
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data }) {
-      const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min');
+      const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min').replace(/\\/g, '/');
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 

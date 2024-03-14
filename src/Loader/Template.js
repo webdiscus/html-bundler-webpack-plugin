@@ -60,10 +60,12 @@ class Template {
         });
 
         // note: if the hook returns `undefined`, then the hookResult contains the value of the first argument
-        const resolvedValue = hookResult && hookResult !== source ? hookResult : requireExpression;
+        let resolvedValue = hookResult && hookResult !== source ? hookResult : requireExpression;
 
         // enclose the value in quotes
         if (!quote) quote = '';
+
+        //console.log('### resolve: ', {value, result, resolvedValue, issuer });
 
         output += content.slice(pos, startPos + offset) + quote + resolvedValue + quote;
         pos = endPos + offset;
@@ -89,7 +91,7 @@ class Template {
    *  - /style.css (ignore only if `loader.root` is false)
    *  - javascript:alert('hello')
    *  - data:image/png
-   *  - mailto:admin@test.com
+   *  - mailto:admin@test.com (but allow `D:\\path\\to\\file.ext`)
    *  - `\\u0027 + require(\\u0027/resolved/path/to/file.ext\\u0027) + \\u0027` // an expression of resolved file via a template engine
    *
    * @param {boolean} isBasedir Whether is used the `root` option.
@@ -103,12 +105,21 @@ class Template {
   static resolveFile({ isBasedir, type, value, issuer, entryId, inEscapedDoubleQuotes }) {
     value = value.trim();
 
+    // let isNotResolvaible =  (!isBasedir && value.startsWith('/')) ||
+    // value.startsWith('//') ||
+    // value.startsWith('#') ||
+    // value.startsWith('\\u0027') ||
+    // // TODO: allowed D:\\path\\to\\file.ext
+    // (value.indexOf(':') > 0 && value.indexOf(':\\') < 0 && value.indexOf('?{') < 0);
+
+    //console.log('### TMPL:resolveFile: ', {type, value, issuer });
+
     if (
       (!isBasedir && value.startsWith('/')) ||
       value.startsWith('//') ||
       value.startsWith('#') ||
       value.startsWith('\\u0027') ||
-      (value.indexOf(':') > 0 && value.indexOf('?{') < 0)
+      (value.indexOf(':') > 0 && value.indexOf(':\\') < 0 && value.indexOf('?{') < 0)
     ) {
       return false;
     }
@@ -122,6 +133,8 @@ class Template {
       case 'script':
         return Loader.compiler.requireScript(value, issuer, entryId);
     }
+
+    //console.log('### TMPL:resolveFile: ', {type, value, issuer, re: Loader.compiler.requireFile(value, issuer, entryId) });
 
     return Loader.compiler.requireFile(value, issuer, entryId);
   }

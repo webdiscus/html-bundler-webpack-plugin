@@ -2,6 +2,7 @@ const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
 
+const { isWin, pathToPosix } = require('../Common/Helpers');
 const Option = require('./Option');
 const PluginService = require('../Plugin/PluginService');
 const Snapshot = require('../Plugin/Snapshot');
@@ -136,6 +137,7 @@ class Resolver {
     // resolve a relative file
     if (resolvedRequest == null && request[0] === '.') {
       resolvedRequest = path.join(context, request);
+      //console.log('*** Resolve 1: ', {issuerFile, context, request, resolvedRequest});
     }
 
     // resolve a file by webpack `resolve.alias`
@@ -183,6 +185,8 @@ class Resolver {
     // request of the svg file can contain a fragment id, e.g., shapes.svg#circle
     const separator = resolvedRequest.indexOf('#') > 0 ? '#' : '?';
     const [resolvedFile] = resolvedRequest.split(separator, 1);
+
+    //console.log('*** Resolve: ', {request, resolvedRequest, resolvedFile});
 
     if (!require.resolve(resolvedFile)) {
       if (isScript) {
@@ -285,8 +289,7 @@ class Resolver {
       return value;
     }
 
-    // TODO: check on win
-    //if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
+    if (isWin) interpolatedValue = pathToPosix(interpolatedValue);
 
     // remove quotes: '/path/to/file.js' -> /path/to/file.js
     let resolvedValue = interpolatedValue.slice(1, -1);
@@ -304,8 +307,6 @@ class Resolver {
       }
       if (isScript) resolvedFile = this.resolveScriptExtension(resolvedFile);
 
-      // TODO: check on win
-      //return isWin ? pathToPosix(resolvedFile) : resolvedFile;
       return resolvedFile;
     }
 

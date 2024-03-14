@@ -1,5 +1,6 @@
 const Resolver = require('../Resolver');
 const Collection = require('../../Plugin/Collection');
+const { isWin, pathToPosix } = require('../../Common/Helpers');
 
 /**
  * Abstract Preprocessor Mode class.
@@ -70,6 +71,8 @@ class PreprocessorMode {
       resolvedFile = Resolver.resolve(file, issuer);
     }
 
+    if (isWin) resolvedFile = pathToPosix(resolvedFile);
+
     return {
       resolvedFile,
       requireExpression: this.requireExpression(resolvedFile),
@@ -93,6 +96,8 @@ class PreprocessorMode {
     } else {
       resolvedFile = Resolver.resolve(file, issuer, type);
     }
+
+    if (isWin) resolvedFile = pathToPosix(resolvedFile);
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 
@@ -119,6 +124,8 @@ class PreprocessorMode {
     } else {
       resolvedFile = Resolver.resolve(file, issuer, type);
     }
+
+    if (isWin) resolvedFile = pathToPosix(resolvedFile);
 
     Collection.addResource({ type, resource: resolvedFile, issuer, entryId });
 

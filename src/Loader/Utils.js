@@ -36,7 +36,7 @@ const resolveModule = (moduleName, context = process.cwd()) => {
  */
 const eachAsync = async (data, fn) => (Array.isArray(data) ? Promise.all(data.map(fn)) : Promise.resolve());
 
-const makeTemplateId = (context, filePath) => path.relative(context, filePath);
+const makeTemplateId = (context, filePath) => path.relative(context, filePath).replace(/\\/g, '/');
 
 /**
  * Inject a string before closing </head> tag.

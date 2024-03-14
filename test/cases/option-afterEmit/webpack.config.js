@@ -13,7 +13,8 @@ const manifest = (entries) => {
 
   for (let entry of entries) {
     assets.push({
-      resource: path.relative(__dirname, entry.resource),
+      // fix windows-like path
+      resource: path.relative(__dirname, entry.resource).replace(/\\/g, '/'),
       assetFile: entry.assetFile,
     });
 
@@ -21,7 +22,8 @@ const manifest = (entries) => {
       switch (asset.type) {
         case 'script':
           let assetItem = {
-            resource: path.relative(__dirname, asset.resource),
+            // fix windows-like path
+            resource: path.relative(__dirname, asset.resource).replace(/\\/g, '/'),
             assetFile: [],
           };
           assets.push(assetItem);
@@ -37,7 +39,8 @@ const manifest = (entries) => {
           break;
         case 'style':
           assets.push({
-            resource: path.relative(__dirname, asset.resource),
+            // fix windows-like path
+            resource: path.relative(__dirname, asset.resource).replace(/\\/g, '/'),
             assetFile: asset.assetFile,
           });
           break;

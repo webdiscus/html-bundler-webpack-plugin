@@ -19,9 +19,12 @@ const preprocessor = (loaderContext, options) => {
   const resolveDependency = async (token) => {
     // if the `namespaces` twig option contains not absolute path, then a parsed path is the path relative to root context
     const filePath = TwigEngine.path.parsePath(template, token.value);
-    const file = path.isAbsolute(filePath) ? filePath : path.resolve(rootContext, filePath);
+    let file = path.isAbsolute(filePath) ? filePath : path.resolve(rootContext, filePath);
 
     token.value = makeTemplateId(rootContext, file);
+
+    // fix windows-like path
+    file = file.replace(/\\/g, '/');
     dependencies.add(file);
     loaderContext.addDependency(file);
   };
@@ -144,7 +147,8 @@ const preprocessor = (loaderContext, options) => {
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data, hot }) {
-      const runtimeFile = require.resolve('twig/twig.min.js');
+      // fix windows-like path
+      const runtimeFile = require.resolve('twig/twig.min.js').replace(/\\/g, '/');
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
       let loadDependencies = '';

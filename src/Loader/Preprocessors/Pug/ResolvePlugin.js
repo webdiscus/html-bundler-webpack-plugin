@@ -1,6 +1,7 @@
 const path = require('path');
 const Resolver = require('../../Resolver');
-const { encodeReservedChars, isWin, pathToPosix } = require('../../Utils');
+const { encodeReservedChars } = require('../../Utils');
+const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
 const scriptExtensionRegexp = /\.js[a-z\d]*$/i;
 const isRequireableScript = (file) => !path.extname(file) || scriptExtensionRegexp.test(file);
@@ -146,7 +147,9 @@ const LoaderResolvers = {
 const requireExpression = (value, issuer, type = 'default') => {
   const [, requiredFile] = /require\((.+?)(?=\))/.exec(value) || [];
   const file = requiredFile || value;
-  //if (isWin) issuer = pathToPosix(issuer);
+
+  //console.log('--- requireExpression: ', {issuerL: issuer, issuerW: pathToPosix(issuer)});
+  if (isWin) issuer = pathToPosix(issuer);
 
   if (ResolvePlugin.mode === 'render') {
     const requireType = requireTypes[type];
@@ -302,6 +305,7 @@ const ResolvePlugin = {
    * @return {string}
    */
   resolve(filename, templateFile, options) {
+    //return filename;
     return Resolver.resolve(filename.trim(), templateFile.trim(), Resolver.types.include);
   },
 

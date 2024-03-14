@@ -96,10 +96,12 @@ const loader = function (content, map, meta) {
       return Template.resolve(value, resource, entryId, hooks);
     })
     .then((value) => {
+      //console.log('### SRC: ', value);
       errorStage = 'export';
       return Loader.export(value, loaderContext);
     })
     .then((value) => {
+      //console.log('### SRC export:\n', value);
       errorStage = 'watch';
       Dependency.init(loaderContext);
       Dependency.watch();

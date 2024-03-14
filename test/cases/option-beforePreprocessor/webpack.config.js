@@ -26,7 +26,7 @@ module.exports = {
         const loaderObject = loaderContext.loaders[loaderIndex];
 
         let sitename = 'Homepage';
-        if (resourcePath.includes('/about.html')) sitename = 'About';
+        if (resourcePath.includes('about.html')) sitename = 'About';
 
         let dataAsString = JSON.stringify(data).replace('[sitename]', sitename);
         const newData = JSON.parse(dataAsString);

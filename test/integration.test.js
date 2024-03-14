@@ -161,7 +161,7 @@ describe('plugin hooks', () => {
 });
 
 describe('plugin callbacks', () => {
-  test('beforePreprocessor', () => compareFiles('option-beforePreprocessor'));
+  test('beforePreprocessor, return template', () => compareFiles('option-beforePreprocessor'));
   test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
 
   test('preprocessor', () => compareFiles('option-preprocessor'));
