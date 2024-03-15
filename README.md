@@ -18,11 +18,12 @@
 
 ## HTML template as entry point
 
-> Define your **source files** of scripts, styles and images directly in HTML template.
+> This plugin allows using a template file as an [entry point](#option-entry).
 
-The **Bundler Plugin** generates static HTML or [template function](#template-in-js) from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root) or [Parcel](https://parceljs.org/).
-This plugin allows using a template file as an [entry point](#option-entry).
-You can import a template into JS as a compiled [template function](#template-in-js) and render it with variables in runtime on the client-side in the browser.
+The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
+
+A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
+
 
 This plugin is an **advanced successor** to `html-webpack-plugin` and a replacement of the [plugins and loaders](#list-of-plugins).
 
@@ -100,7 +101,7 @@ You can use a relative path or Webpack alias to a source file.
 ---
 
 ### 📋 [Table of Contents](#contents)
-### 🛠️ [Install and Quick Start](#install)
+### 🚀 [Install and Quick Start](#install)
 ### 🖼 [Usage examples](#usage-examples)
 
 ---
@@ -257,7 +258,7 @@ npm install css-loader sass-loader sass --save-dev
 Start with an HTML template. Add the `<link>` and `<script>` tags.
 You can include asset source files such as SCSS, JS, images, and other media files directly in an HTML template.
 
-The plugin resolves `<script src="...">` `<link href="...">` and `<img src="...">` that references your script, style and image source files.
+The plugin resolves `<script src="...">` `<link href="...">` and `<img src="..." srcset="...">` that references your script, style and image source files.
 
 For example, there is the template _./src/views/home.html_:
 
@@ -274,15 +275,14 @@ For example, there is the template _./src/views/home.html_:
     <script src="./main.js" defer="defer"></script>
   </head>
   <body>
-    <!-- variable from Webpack config -->
-    <h1>Hello <%= name %>!</h1>
+    <h1>Hello World!</h1>
     <!-- relative path to image source file -->
     <img src="./picture.png" />
   </body>
 </html>
 ```
 
-All source filenames should be relative to the current HTML template, or you can use [Webpack alias](https://webpack.js.org/configuration/resolve/#resolvealias).
+All source filenames should be relative to the entrypoint template, or you can use [Webpack alias](https://webpack.js.org/configuration/resolve/#resolvealias).
 The references are rewritten in the generated HTML so that they link to the correct output files.
 
 The generated HTML contains URLs of the output filenames:
@@ -319,21 +319,40 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
-      // define many page templates manually
-      entry: {
-        // advanced page config with external variables passed into template
-        index: { // => dist/index.html
-          import: 'src/views/home.html', // template file
-          data: { title: 'Homepage', name: 'World' }, // pass variables into template
-        },
-        // simple page config w/o variables
-        about: 'src/views/about.html', // => dist/about.html
-        'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
-        // add more templates if needed
-        // 'another-page': 'src/views/anotherPage.html', // => dist/another-page.html
-      },
-      // - OR - define a relative or absolute path to page templates
+      // automatically processing all templates in the path
       entry: 'src/views/',
+      
+      // - OR - define pages manually (key is output filename w/o `.html`)
+      entry: {
+        index: 'src/views/home.html', // => dist/index.html
+        'news/sport': 'src/views/news/sport/index.html', // => dist/news/sport.html
+      },
+      
+      // - OR - define pages with variables
+      entry: [
+        {
+          import: 'src/views/home.html', // template file
+          filename: 'index.html', // => dist/index.html
+          data: { title: 'Homepage' }, // pass variables into template
+        },
+        {
+          import: 'src/views/news/sport/index.html', // template file
+          filename: 'news/sport.html', // => dist/news/sport.html
+          data: { title: 'Sport news' }, // pass variables into template
+        },
+      ],
+      
+      // - OR - combine both the pages with and w/o variables in one entry
+      entry: {
+        // simple page config w/o variables
+        index: 'src/views/home.html', // => dist/index.html
+        // advanced page config with variables
+        'news/sport': { // => dist/news/sport.html
+          import: 'src/views/home.html', // template file
+          data: { title: 'Sport news' }, // pass variables into template
+        },
+      },
+
       js: {
         // JS output filename, used if `inline` option is false (defaults)
         filename: 'js/[name].[contenthash:8].js',
@@ -560,7 +579,12 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 (\*) - `asset/source` works currently for SVG only, in a next version will work for other files too
 
 <a id="list-of-plugins" name="list-of-plugins"></a>
-Just one HTML bundler plugin replaces the functionality of the plugins and loaders:
+
+#### Why do many developers switch from Webpack to other bundlers?
+One of the reasons they cite is the complex configuration many different plugins and loaders for one simple thing - rendering an HTML page with assets.
+
+The HTML bundler plugin "changes the rule of the game", making configuration very simple and clear.
+Just one plugin replaces the functionality of the plugins and loaders:
 
 | Package                                                                                                 | Features                                                            |
 |---------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
@@ -576,12 +600,12 @@ Just one HTML bundler plugin replaces the functionality of the plugins and loade
 | [posthtml-inline-svg](https://github.com/andrey-hohlov/posthtml-inline-svg)                             | injects an inline SVG icon into HTML                                |
 | [resolve-url-loader](https://github.com/bholloway/resolve-url-loader)                                   | resolves a relative URL in CSS                                      |
 | [svg-url-loader](https://github.com/bhovhannes/svg-url-loader)                                          | encodes a SVG data-URL as utf8                                      |
-| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders handlebars templates                                        |
-| [handlebars-loader](https://github.com/pcardune/handlebars-loader)                                      | import a templates function in JS on client-side                    |
 | [webpack-subresource-integrity ](https://www.npmjs.com/package/webpack-subresource-integrity)           | enables Subresource Integrity                                       |
 | [favicons-webpack-plugin ](https://github.com/jantimon/favicons-webpack-plugin)                         | generates favicons and icons                                        |
-
-
+| [handlebars-webpack-plugin](https://github.com/sagold/handlebars-webpack-plugin)                        | renders Handlebars templates                                        |
+| [handlebars-loader](https://github.com/pcardune/handlebars-loader)                                      | compiles Handlebars templates                    |
+| [pug-loader](https://www.npmjs.com/package/pug-loader)          | compiles Pug templates                    |
+| [nunjucks-loader](https://github.com/at0g/nunjucks-loader)          | compiles Nunjucks templates                    |
 
 
 #### [↑ back to contents](#contents)
@@ -1208,13 +1232,20 @@ The content of the `dist/integrity.json` file looks like:
 
 ### `test`
 
-Type: `RegExp` Default: `/\.(html|ejs|eta|hbs|handlebars|njk)$/`
+Type: `RegExp` Default: `/\.(html|eta)$/`
 
 The `test` option allows to handel only those templates as entry points that match the name of the source file.
 
 For example, if you have other templates, e.g. `*.liquid`, as entry points, then you can set the option to match custom template files: `test: /\.(html|liquid)$/`.
 
 The `test` value is used in the [default loader](#loader-options).
+
+> **Note**
+> 
+> Using the [preprocessor](#loader-option-preprocessor) options will be added the templating engine extensions in the `test` automatically.
+> Defaults `preprocessor` is [Eta](#loader-option-preprocessor-options-eta) therefore is used the `/\.(html|eta)$/` RegExp.
+> 
+> For example, if you define the preprocessor option as the [handlebars](#loader-option-preprocessor-options-handlebars), then will be used the `/\.(html|hbs|handlebars)$/` RegExp automatically.
 
 **Why is it necessary to define it? Can't it be automatically processed?**
 
@@ -2729,7 +2760,7 @@ The `default loader`:
 
 ```js
 {
-  test: /\.(html|ejs|eta|hbs|handlebars|njk)$/,
+  test: /\.(html)$/,
   loader: HtmlBundlerPlugin.loader,
 }
 ```
