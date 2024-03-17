@@ -3591,22 +3591,29 @@ For all available options, see the [Nunjucks API configure](https://mozilla.gith
 
     // available useful embedded filters
     embedFilters: {
-      // enable the :escape filter
+      // enable the `:escape` filter
       escape: true,
       
-      // enable the :code filter
+      // enable the `:code` filter
       code: {
         className: 'language-', // class name of `<code>` tag
       },
       
-      // enable :highlight filter
+      // enable `:highlight` filter
       highlight: {
+        use: 'prismjs', // use the `prismjs` module as highlighter, must be installed
         verbose: true,
-        use: 'prismjs', // use the prismjs as highlighter
       },
       
-      // enable :markdown filter
+      // enable `:markdown` filter for markdown only, w/o code blocks
       markdown: true,
+      // - OR - you can enable highlighter for code blocks used in markdown
+      markdown: {
+        highlight: {
+          use: 'prismjs', // use the `prismjs` module as highlighter, must be installed
+          verbose: true,
+        },
+      },
     }
   },
 },

@@ -3,6 +3,8 @@ import { filterLoadException } from '../src/Loader/Preprocessors/Pug/Exeptions';
 import adapterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight/adapter';
 import filterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight';
 
+import FugFilter from '../src/Loader/Preprocessors/Pug/Filter';
+
 // TODO: add in docs
 // BRAKING CHANGE (to compare with pug-loader)
 // The inlined loader in URL is no longer supported because it is an ugly/terrible usage syntax:
@@ -134,6 +136,32 @@ describe('exception tests', () => {
     const expected = `Error by load`;
     const result = () => {
       filterLoadException('filter', '/path/', new Error('module not found'));
+    };
+    expect(result).toThrow(expected);
+    done();
+  });
+
+  test('exception 1: by load peer dependency for a filter', (done) => {
+    const expected = /The required (.+?) module not found/;
+
+    const result = () => {
+      FugFilter.loadModuleException({
+        error: new Error(`Cannot find module 'parse5'\n`),
+        filterName: 'highlight',
+      });
+    };
+    expect(result).toThrow(expected);
+    done();
+  });
+
+  test('exception 2: by load peer dependency for a filter', (done) => {
+    const expected = /Error by load the (.+?) filter/;
+
+    const result = () => {
+      FugFilter.loadModuleException({
+        error: new Error(`Other exception`),
+        filterName: 'highlight',
+      });
     };
     expect(result).toThrow(expected);
     done();

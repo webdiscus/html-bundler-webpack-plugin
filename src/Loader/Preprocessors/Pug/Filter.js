@@ -33,26 +33,7 @@ class Filter {
         try {
           filter = require(filterPath);
         } catch (error) {
-          const message = error.toString();
-          const posEOL = message.indexOf('\n');
-          const messageFirstLine = message.slice(0, posEOL);
-
-          if (messageFirstLine.indexOf('Cannot find module') >= 0) {
-            if (messageFirstLine.indexOf(filterPath) > 0) {
-              const entries = fs.readdirSync(filtersPath, { withFileTypes: true });
-              const files = entries
-                .filter((file) => !file.isDirectory())
-                .map((file) => path.basename(file.name, '.js'));
-
-              filterNotFoundException(filterName, files.join(', '));
-            } else {
-              const [, module] = /Cannot find module '(.*?)' from/.exec(messageFirstLine);
-
-              loadNodeModuleException(module);
-            }
-          }
-
-          filterLoadException(filterName, filterPath, error);
+          this.loadModuleException({ filterName, filterPath, error });
         }
 
         try {
@@ -66,6 +47,34 @@ class Filter {
         }
       }
     }
+  }
+
+  /**
+   * @param {string} filterName
+   * @param {string} filterPath
+   * @param {Error} error
+   */
+  static loadModuleException({ filterName, filterPath, error }) {
+    const message = error.toString();
+    const posEOL = message.indexOf('\n');
+    const messageFirstLine = message.slice(0, posEOL);
+
+    if (messageFirstLine.indexOf('Cannot find module') >= 0) {
+      if (messageFirstLine.indexOf(filterPath) > 0) {
+        const entries = fs.readdirSync(filtersPath, { withFileTypes: true });
+        const files = entries.filter((file) => !file.isDirectory()).map((file) => path.basename(file.name, '.js'));
+
+        filterNotFoundException(filterName, files.join(', '));
+      } else {
+        const [, module] = /Cannot find module '(.*?)'/.exec(messageFirstLine) || [];
+
+        if (module) {
+          loadNodeModuleException(module);
+        }
+      }
+    }
+
+    filterLoadException(filterName, filterPath, error);
   }
 }
 
