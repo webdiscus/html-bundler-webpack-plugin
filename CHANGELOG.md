@@ -1,5 +1,9 @@
 # Change log
 
+## 3.6.5 (2024-03-19)
+
+- fix: define the unique instance name for the plugin as `HtmlBundlerPlugin` instead of `Plugin`
+
 ## 3.6.4 (2024-03-17)
 
 - fix: catching of the error when a peer dependency for a Pug filter is not installed

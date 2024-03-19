@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
-module.exports = {
+const config = {
   mode: 'production',
   stats: 'minimal',
 
@@ -64,3 +64,7 @@ module.exports = {
     },
   },
 };
+
+//console.log(config);
+
+module.exports = config;

@@ -10,7 +10,7 @@ const loader = require.resolve('./Loader');
  * @typedef {PluginOptions} HtmlBundlerPluginOptions
  */
 
-class Plugin extends AssetCompiler {
+class HtmlBundlerPlugin extends AssetCompiler {
   /**
    * @param {HtmlBundlerPluginOptions|{}} options
    */
@@ -46,5 +46,5 @@ class Plugin extends AssetCompiler {
   }
 }
 
-module.exports = Plugin;
+module.exports = HtmlBundlerPlugin;
 module.exports.loader = loader;
