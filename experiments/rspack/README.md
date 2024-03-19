@@ -2,7 +2,7 @@
 
 A symbiosis of the fast RSPack and the powerful [html-bundler-webpack-plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) could be a `Vite` killer.
 
-But currently RSPack `v0.5.6` is yet not 100% compatible with the Webpack.
+But currently RSPack `v0.5.8` is yet not 100% compatible with the Webpack.
 
 Using the `html-bundler-webpack-plugin` with `RSPack` occurs the issue:
 
@@ -30,13 +30,15 @@ Error: Failed to convert JavaScript value `function filenameFn(..) ` into rust t
 
 - macOS 14.4 (23E214)
 - version of Node.js: v18.18.2
-- version of RSPack: 0.5.6
+- version of RSPack: 0.5.8
 - version of Webpack: 5.90.3
 - version of the HTML Bundler Plugin: 3.6.1
 
 ## How to reproduce
 
 ```
+clone https://github.com/webdiscus/html-bundler-webpack-plugin.git
+cd html-bundler-webpack-plugin/experiments/rspack
 npm i
 npm run dev
 ```
