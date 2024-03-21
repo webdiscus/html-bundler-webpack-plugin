@@ -167,7 +167,8 @@ describe('plugin callbacks', () => {
   test('preprocessor', () => compareFiles('option-preprocessor'));
   test('preprocessor data', () => compareFiles('option-preprocessor-data'));
 
-  test('postprocess', () => compareFiles('option-postprocess'));
+  test('postprocess default', () => compareFiles('option-postprocess'));
+  test('postprocess pipe', () => compareFiles('option-postprocess-pipe'));
 
   test('modify publicPath in html', () => compareFiles('option-beforeEmit-modify-urls-in-html-css'));
   test('beforeEmit', () => compareFiles('option-beforeEmit'));

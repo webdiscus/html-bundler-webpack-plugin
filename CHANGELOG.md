@@ -1,5 +1,32 @@
 # Change log
 
+## 3.7.0 (2024-03-21)
+
+- feat: add the possibility to add many post processes. Next postprocess receives the result from previous.
+  So you can extend this plugin with additional default functionality.
+  ```js
+  class MyPlugin extends HtmlBundlerPlugin {
+    init(compiler) {
+      MyPlugin.option.addProcess('postprocess', (content) => {
+        // TODO: modify the generated HTML content
+        return content;
+      });
+    }
+  }
+  
+  module.exports = {
+    plugins: [
+      new MyPlugin({
+        entry: {
+          index: './src/index.html',
+        },
+      }),
+    ],
+  };
+  ```
+  This feature is used in the [pug-plugin](https://github.com/webdiscus/pug-plugin) for pretty formatting generated HTML.\
+  See an example in the [test case](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test/cases/option-postprocess-pipe).
+
 ## 3.6.5 (2024-03-19)
 
 - fix: define the unique instance name for the plugin as `HtmlBundlerPlugin` instead of `Plugin`

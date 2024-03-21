@@ -1013,7 +1013,6 @@ class Collection {
       // 9. beforeEmit hook allows plugins to change the html after chunks and inlined assets are injected
       promise = promise.then((content) => hooks.beforeEmit.promise(content, compileEntry) || content);
 
-      // TODO: add in readme: use callbacks for debugging or small features
       // 10. beforeEmit callback
       if (Option.hasBeforeEmit()) {
         promise = promise.then((content) => Option.beforeEmit(content, compileEntry, compilation) || content);

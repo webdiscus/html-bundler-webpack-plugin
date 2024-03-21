@@ -42,7 +42,7 @@ class HtmlBundlerPlugin extends AssetCompiler {
    * @param {Compiler} compiler The instance of the webpack compilation.
    */
   init(compiler) {
-    // TODO: do some thing in an extended plugin
+    // do some thing in an extended plugin
   }
 }
 

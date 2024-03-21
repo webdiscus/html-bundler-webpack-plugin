@@ -230,11 +230,26 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
-> **Warning**\
-> **Limitation**
->
-> The current version works stable with `cache.type` as `'memory'` (Webpack's default setting).\
-> Support for the `'filesystem'` cache type is experimental and under development.
+## ⚠️ Limitations
+
+### Cache type
+
+The current version works stable with `cache.type` as `'memory'` (Webpack's default setting).\
+Support for the `'filesystem'` cache type is experimental.
+
+### Multiple config files
+
+The multiple config files are not supported, because in some special use cases the Webpack API works not properly (all previous configurations are overridden by the latest configuration).
+
+Instead of this:
+```
+npx webpack -c app1.config.js app2.config.js
+```
+you can use following:
+```
+npx webpack -c app1.config.js
+npx webpack -c app2.config.js
+```
 
 ---
 
@@ -524,6 +539,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 2. [Problems & Solutions](#solutions)
    - [Automatic resolving of file extensions](#solutions-resolve-extensions)
    - [How to use `@import url()` in CSS](#solutions-import-url-in-css)
+   - [How to disable resolving in commented out tag](#solutions-disable-resolving-in-commented-out-tag)
 3. <a id="demo-sites" name="demo-sites"></a> 
    Demo sites
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
@@ -6020,6 +6036,25 @@ The plugin does not support handling of `@import url()` in CSS. Imported url wil
 > **Warning**
 > 
 > The `*.css` files imported in CSS are not handled, therefore these files must be manually copied to the `dist/` folder using the `copy-webpack-plugin`.
+
+#### [↑ back to contents](#contents)
+
+<a id="solutions-disable-resolving-in-commented-out-tag" name="solutions-disable-resolving-in-commented-out-tag"></a>
+
+## How to disable resolving in commented out tag
+
+In [default attributes](#default-attributes), files will be resolved automatically, regardless of whether the tag is commented out or not.
+This is not a bug, it is a feature for very fast attribute parsing.
+
+If you commented out a tag and don't want to resolve files in the tag's [attributes](#default-attributes), rename the attribute.
+For example: `href` -> `x-href` or `src` -> `x-src`.
+
+```html
+<!-- <link x-href="./styles.css" rel="stylesheet /> -->
+<!-- <script x-src="./main.js" defer="defer"></script> -->
+<!-- <img x-src="./image.png"> -->
+```
+
 
 #### [↑ back to contents](#contents)
 

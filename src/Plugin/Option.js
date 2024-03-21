@@ -15,6 +15,7 @@ class Option {
   static cacheable = false;
   static context = '';
   static testEntry = null;
+
   static js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
     enabled: true,
@@ -23,6 +24,7 @@ class Option {
     outputPath: undefined,
     inline: false,
   };
+
   static css = {
     test: /\.(css|scss|sass|less|styl)$/,
     enabled: true,
@@ -31,6 +33,14 @@ class Option {
     outputPath: undefined,
     inline: false,
   };
+
+  /**
+   * The pipeline of processes.
+   * The result of one will be passed into next.
+   *
+   * @type {Map<string, Array<Function>>}
+   */
+  static #process = new Map();
 
   /**
    * Initialize plugin options.
@@ -50,6 +60,9 @@ class Option {
 
     const loaderOptions = this.options.loaderOptions;
 
+    // remove cached data from previous webpack running
+    this.#process.clear();
+
     // add reference for the preprocessor option into the plugin options
     if (loaderOptions && loaderOptions.preprocessor != null) {
       options.preprocessor = loaderOptions.preprocessor;
@@ -62,6 +75,10 @@ class Option {
     if (!isFunction(options.postprocess)) this.options.postprocess = null;
     if (!isFunction(options.beforeEmit)) this.options.beforeEmit = null;
     if (!isFunction(options.afterEmit)) this.options.afterEmit = null;
+
+    if (this.options.postprocess != null) {
+      this.addProcess('postprocess', this.options.postprocess);
+    }
 
     if (!options.watchFiles) this.options.watchFiles = {};
     this.options.hotUpdate = this.options.hotUpdate === true;
@@ -437,7 +454,7 @@ class Option {
   }
 
   static hasPostprocess() {
-    return this.options.postprocess != null;
+    return this.#process.has('postprocess');
   }
 
   static hasBeforeEmit() {
@@ -678,6 +695,46 @@ class Option {
   }
 
   /**
+   * Add the process to pipeline.
+   *
+   * @param {string} name The name of process. Currently supported only `postprocess` pipeline.
+   * @param {Function} fn The process function.
+   */
+  static addProcess(name, fn) {
+    let processes = this.#process.get(name);
+
+    if (!processes) {
+      processes = [];
+      this.#process.set(name, processes);
+    }
+
+    processes.push(fn);
+  }
+
+  /**
+   * @param {string} name The name of a process.
+   * @param {Array<*>} args The arguments of a process.
+   * @return {*|null} The result of passed through all processes.
+   */
+  static #runProcesses(name, args) {
+    let processPipe = this.#process.get(name);
+    let i = 0;
+    let result;
+
+    for (; i < processPipe.length; i++) {
+      const postprocess = processPipe[i];
+      result = postprocess.apply(null, args);
+
+      // the result will be pipelined in the next function as the first argument
+      if (result != null) {
+        args[0] = result;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Called after js template is compiled into html string.
    *
    * @param {string} content A content of processed file.
@@ -688,7 +745,7 @@ class Option {
    */
   static postprocess(content, info, compilation) {
     try {
-      return this.options.postprocess(content, info, compilation);
+      return this.#runProcesses('postprocess', [content, info, compilation]);
     } catch (error) {
       postprocessException(error, info);
     }
@@ -696,8 +753,6 @@ class Option {
 
   /**
    * Called after processing all plugins, before emit.
-   *
-   * TODO: test not yet documented experimental feature
    *
    * @param {string} content
    * @param {CompileEntry} entry
