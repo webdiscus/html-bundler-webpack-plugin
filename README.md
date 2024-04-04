@@ -527,7 +527,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
-   - [How to load CSS file dynamically](#recipe-dynamic-load-css)
+   - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
    - [How to load JS and CSS from `node_modules` in template](#recipe-load-js-css-from-node-modules)
    - [How to import CSS or SCSS from `node_modules` in SCSS](#recipe-import-style-from-node-modules)
    - [How to process a PHP template](#recipe-preprocessor-php)
@@ -2417,7 +2417,7 @@ Possible values:
 
 - `false` - disable minification
 - `true` - enable minification with default options
-- `auto` - in `development` mode disable minification, in `production` mode enable minification with default options,
+- `'auto'` - in `development` mode disable minification, in `production` mode enable minification with default options,
   use [minifyOptions](#option-minify-options) to customize options
 - `{}` - enable minification with custom options, this object are merged with `default options`\
   see [options reference](https://github.com/terser/html-minifier-terser#options-quick-reference)
@@ -2428,7 +2428,7 @@ Possible values:
 
 Type: `Object` Default: `null`
 
-When the [minify](#option-minify) option is set to `auto`, you can configure minification options using the `minifyOptions`.
+When the [minify](#option-minify) option is set to `'auto'` or `true`, you can configure minification options using the `minifyOptions`.
 
 #### [↑ back to contents](#contents)
 
@@ -5209,26 +5209,47 @@ The custom attribute will contains in the generated HTML the resolved output ass
 ## How to load CSS file dynamically
 
 For dynamic file loading, we need the output filename of extracted CSS from a source style file.
-To get the CSS output filename in JavaScript, you can use the `url` query in `require()` function:
+To get the CSS output filename in JavaScript, you can use the `url` query:
 ```js
-const cssFile = require('./style.scss?url');
+import cssUrl from './style.scss?url';
+// - OR -
+const cssUrl = require('./style.scss?url');
 ```
 Where the `./style.scss` is the source SCSS file relative to the JavaScript file.
 
-To load a CSS file dynamically, you can use the function:
+To load a CSS file dynamically, you can use following function:
 ```js
-function loadCSS(file) {
+import cssUrl from './style.scss?url';
+
+function loadCSS(url) {
   const style = document.createElement('link');
-  style.href = file;
+  style.href = url;
   style.rel = 'stylesheet';
   document.head.appendChild(style);
 }
 
-const cssFile = require('./style.scss?url');
-loadCSS(cssFile);
+loadCSS(cssUrl);
 ``` 
 
-The CSS will be extracted into separate file and the `cssFile` variable will contains the CSS output filename. 
+The CSS will be extracted into separate file and the `cssUrl` variable will contains the CSS output filename.
+
+Since 2023, many browsers support the modern way to add the stylesheets into DOM without creating the `link` tag.
+
+```js
+import cssUrl from './style.scss?url';
+
+async function loadCSS(url) {
+  const response = await fetch(url);
+  const css = await response.text();
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(css);
+  document.adoptedStyleSheets = [sheet];
+}
+
+loadCSS(cssUrl);
+```
+
+See the [browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptedStyleSheets#browser_compatibility).
 
 #### [↑ back to contents](#contents)
 

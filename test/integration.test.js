@@ -335,8 +335,8 @@ describe('import styles in JavaScript', () => {
 });
 
 describe('import lazy styles in JavaScript', () => {
-  // TODO: yet experimental, undocumented
   test('lazy url in js', () => compareFiles('js-import-css-lazy-url'));
+  test('lazy load CSS in js using fetch', () => compareFiles('js-import-css-lazy-url-fetch'));
 });
 
 describe('CSS source map', () => {

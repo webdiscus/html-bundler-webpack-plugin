@@ -11,10 +11,10 @@ module.exports = {
   entry: {
     // Test case multiple chunks with same filename:
     // - the `main.css` file is defined here, in entry point
-    // - the same `main.css` file is defined in `index.pug`
+    // - the same `main.css` file is defined in `index.html`
 
     // Note: this use case has no sense and should not be used!
-    // Specify all scripts and styles directly in Pug.
+    // Specify all scripts and styles directly in HTML.
 
     index: './src/index.html',
 
