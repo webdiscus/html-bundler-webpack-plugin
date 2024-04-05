@@ -1,5 +1,20 @@
 # Change log
 
+## 3.8.0 (2024-04-06)
+
+- feat(Pug): add experimental (undocumented) syntax to include (using `?include` query) compiled CSS directly into style tag to allow keep tag attributes
+  ```pug
+  style(scope='some')=require('./component.scss?include')
+  ```
+  will be generate
+  ```html
+  <style scope="some">
+    ... CSS ...
+  </style>
+  ```
+- test: add test for lazy loading CSS using `fetch()` and `document.adoptedStyleSheets`
+- docs: update readme
+
 ## 3.7.0 (2024-03-21)
 
 - feat: add the possibility to add many post processes. Next postprocess receives the result from previous.

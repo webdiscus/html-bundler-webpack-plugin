@@ -1,0 +1,11 @@
+html
+  head
+    //- inline CSS
+    link(href=require('./style.css?inline') rel='stylesheet')
+  body
+    h1 Home
+
+    .my-component
+      //- include compiled CSS directly into style tag to keep custom attributes
+      style(scope='some')=require('./component.css?include')
+      div my component

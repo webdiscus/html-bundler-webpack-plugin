@@ -901,6 +901,17 @@ class Collection {
                 importedStyles.push(asset);
               } else if (inline) {
                 content = this.#inlineStyle(content, resource, asset, LF) || content;
+              } else {
+                // special use case for Pug only e.g.: style(scope='some')=require('./component.css?include')
+                const [, query] = resource.split('?');
+                const isIncluded = query?.includes('include');
+                if (isIncluded) {
+                  const startPos = content.indexOf(asset.assetFile);
+                  if (startPos > 0) {
+                    const source = CssExtractModule.getInlineSource(asset.assetFile);
+                    content = content.slice(0, startPos) + source + content.slice(startPos + asset.assetFile.length);
+                  }
+                }
               }
 
               // 1.1 compute CSS integrity

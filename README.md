@@ -536,6 +536,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to keep package name for **split chunks** from **node_modules**](#recipe-split-chunks-keep-module-name)
    - [How to split CSS files](#recipe-split-css)
+   - [How to split CSS files](#recipe-split-css)
 2. [Problems & Solutions](#solutions)
    - [Automatic resolving of file extensions](#solutions-resolve-extensions)
    - [How to use `@import url()` in CSS](#solutions-import-url-in-css)
@@ -6071,10 +6072,25 @@ If you commented out a tag and don't want to resolve files in the tag's [attribu
 For example: `href` -> `x-href` or `src` -> `x-src`.
 
 ```html
-<!-- <link x-href="./styles.css" rel="stylesheet /> -->
+<!-- <link x-href="./styles.scss" rel="stylesheet /> -->
 <!-- <script x-src="./main.js" defer="defer"></script> -->
 <!-- <img x-src="./image.png"> -->
 ```
+
+If used any [template engine](#template-engine) (defaults is [Eta](#loader-option-preprocessor-options-eta))
+then can be used [templating comments](https://eta.js.org/docs/intro/template-syntax) `<%/* ... */%>`.
+
+```html
+<%/* <link rel="stylesheet href="./style.scss" /> Single line comment w/o resolving */%>
+
+<%/*
+  Multiline comment w/o resolving of files in attributes
+  <img src="./image1.png" />
+  <img src="./image2.png" />
+*/%>
+```
+
+The generated HTML will not contain templating comments.
 
 
 #### [↑ back to contents](#contents)

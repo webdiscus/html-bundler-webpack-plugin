@@ -221,6 +221,8 @@ describe('pug-plugin tests', () => {
   test('compile template function in js', () => compareFiles('_pug/js-tmpl-entry-js'));
   test('inline js and css via query `?inline`', () => compareFiles('_pug/inline-js-css-query'));
 
+  test('inline CSS in style tag with attributes', () => compareFiles('_pug/inline-css-in-style-tag'));
+
   // resolve responsive images
   test('responsive images in template', () => compareFiles('_pug/responsive-images'));
   test('require images in pug and in style', () => compareFiles('_pug/responsive-images-tmpl-scss'));

@@ -45,6 +45,8 @@ describe('resolve files', () => {
   test('the same asset with different raw request', () => compareFiles('resolve-assets-same-file-in-html-scss'));
   test('resolve js in many entries with the same template', () => compareFiles('resolve-js-same-tmpl'));
   test('use the same js file in many html', () => compareFiles('resolve-js-diff-tmpl'));
+
+  test('not resolve in template comment', () => compareFiles('comment-not-resolve'));
 });
 
 describe('resolve styles', () => {
@@ -95,6 +97,9 @@ describe('plugin options', () => {
   test('css filename and undefined chunkFilename', () => compareFiles('option-css-filename-chunkFilename-undefined'));
   test('css.inline auto, dev', () => compareFiles('option-css-inline-auto-dev'));
   test('css.inline auto, prod', () => compareFiles('option-css-inline-auto-prod'));
+
+  // TODO: implement the feature if anybody need it
+  //test('css.inline keep additional attrs in style tag', () => compareFiles('option-css-inline-keep-attrs'));
 
   // test manually, because in development mode, IDs are generated randomly
   //test('js.inline auto, dev', () => compareFiles('option-js-inline-auto-dev'));
