@@ -486,8 +486,11 @@ class Collection {
     let order = '';
 
     const walk = (module) => {
-      const { dependencies } = module;
+      // dependencies contains modules from normal imports, e.g. import './main.js'
+      // blocks contains modules from dynamic imports, e.g. import('./main.js')
+      const { dependencies, blocks } = module;
       const result = [];
+      let allDependencies = dependencies;
 
       // avoid an infinity walk by circular dependency
       if (circularDependencyIds.has(module.debugId)) {
@@ -495,14 +498,24 @@ class Collection {
       }
       circularDependencyIds.add(module.debugId);
 
-      for (const dependency of dependencies) {
+      // add dynamic imports
+      if (blocks.length > 0) {
+        for (const block of blocks) {
+          if (block.dependencies.length > 0) {
+            allDependencies = allDependencies.concat(block.dependencies);
+          }
+        }
+      }
+
+      for (const dependency of allDependencies) {
         // TODO: detect whether the userRequest is a file, not a runtime, e.g. of vue
         if (
           !dependency.userRequest ||
           // skip vue runtime dependencies
           dependency.userRequest === 'vue'
-        )
+        ) {
           continue;
+        }
 
         let depModule = moduleGraph.getModule(dependency);
 
@@ -519,7 +532,7 @@ class Collection {
 
         const index = moduleGraph.getParentBlockIndex(dependency);
 
-        if (depModule.dependencies.length > 0) {
+        if (depModule.dependencies.length > 0 || depModule.blocks.length > 0) {
           // save current order before recursive walking
           orderStack.push(order);
           order += (order ? '.' : '') + index;

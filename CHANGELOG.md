@@ -1,5 +1,14 @@
 # Change log
 
+## 3.9.0 (2024-04-07)
+
+- feat: add support for dynamic import of styles
+  ```
+  const loadStyles = () => import('./component.scss');
+  loadStyles();
+  ```
+- fix: extract CSS from styles imported in dynamically imported JS
+
 ## 3.8.0 (2024-04-06)
 
 - feat(Pug): add experimental (undocumented) syntax to include (using `?include` query) compiled CSS directly into style tag to allow keep tag attributes

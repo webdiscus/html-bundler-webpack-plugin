@@ -282,6 +282,10 @@ describe('inline styles & scripts', () => {
 
 describe('import styles in JavaScript', () => {
   test('import css in js', () => compareFiles('js-import-css'));
+
+  // dynamic import of the style in the dynamic imported js
+  test('dynamic import css in js', () => compareFiles('js-import-css-dynamic-import'));
+
   test('import css in ts, verbose', () => compareFiles('js-import-css-ts'));
   test('import scss in js', () => compareFiles('js-import-scss'));
   test('simple import CJS', () => compareFiles('js-import-css-cjs'));
