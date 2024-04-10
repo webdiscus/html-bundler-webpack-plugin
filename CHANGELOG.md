@@ -1,5 +1,10 @@
 # Change log
 
+## 3.9.1 (2024-04-10)
+
+- fix: issue when used js dynamic import with magic comments /* webpackPrefetch: true */ and css.inline=true, #88
+- fix: ansi colors for verbose output in some terminals
+
 ## 3.9.0 (2024-04-07)
 
 - feat: add support for dynamic import of styles

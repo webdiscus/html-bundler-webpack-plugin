@@ -955,6 +955,11 @@ class AssetCompiler {
       return assetModule;
     }
 
+    // fix #88: when used js dynamic import with magic comments /* webpackPrefetch: true */ and css.inline=true
+    if (!this.currentEntryPoint && entry.isTemplate) {
+      this.currentEntryPoint = entry;
+    }
+
     // extract CSS
     const cssOptions = Option.getStyleOptions(sourceFile);
     if (cssOptions == null) return;

@@ -425,6 +425,8 @@ describe('special cases', () => {
   test('resolve img in attr json', () => compareFiles('resolve-attr-json-require'));
   test('multiple chunks with the same filename', () => compareFiles('entry-multiple-chunks-same-filename'));
 
+  test('dynamic import in js', () => compareFiles('js-dynamic-import-js'));
+
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });

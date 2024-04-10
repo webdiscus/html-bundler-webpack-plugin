@@ -1,17 +1,5 @@
 const path = require('path');
-const {
-  red,
-  green,
-  cyan,
-  cyanBright,
-  magenta,
-  black,
-  ansi256,
-  bgAnsi256,
-  yellowBright,
-  bgAnsi,
-  yellow,
-} = require('ansis');
+const { red, green, cyan, cyanBright, magenta, black, yellow, yellowBright, fg, bg } = require('ansis');
 const Collection = require('../Collection');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
 const { relativePathForView } = require('../../Common/FileUtils');
@@ -22,7 +10,7 @@ const PluginService = require('../PluginService');
 
 const { pluginLabel } = Config.get();
 
-const gray = ansi256(244);
+const gray = fg(244);
 const padLevel1 = 16;
 const padLevel2 = padLevel1 + 10;
 const padLevel3 = padLevel2 + 8;
@@ -37,13 +25,11 @@ const padChunks = padLevel1 + 4;
  * @return {string}
  */
 const compilationName = (error) =>
-  error
-    ? bgAnsi(196).whiteBright` ${pluginLabel} ` + red` ▶▶▶`
-    : bgAnsi(118).black` ${pluginLabel} ` + green` ▶▶▶`;
+  error ? bg(196).whiteBright` ${pluginLabel} ` + red` ▶▶▶` : bg(118).black` ${pluginLabel} ` + green` ▶▶▶`;
 
 const colorType = (item, pad) => {
   let { type, inline } = item;
-  const color = inline ? yellowBright : ansi256(112);
+  const color = inline ? yellowBright : fg(112);
 
   if (type === Collection.type.style && item.imported) {
     type = inline ? `inline styles` : `import styles`;
@@ -82,7 +68,7 @@ const renderAssets = (item, pad = padLevel2) => {
       padLen = padLevel1;
     } else {
       padLen = padChunks;
-      str += `${'->'.padStart(padLevel1)} ${ansi256(120)`chunks:`}` + '\n';
+      str += `${'->'.padStart(padLevel1)} ${fg(120)`chunks:`}` + '\n';
     }
 
     for (let { inline, chunkFile, assetFile } of item.chunks) {
@@ -102,7 +88,7 @@ const renderAssets = (item, pad = padLevel2) => {
  * Display all processed assets in entry points.
  */
 const verbose = () => {
-  let str = '\n' + black.bgGreen` ${pluginLabel} ` + bgAnsi256(193).black` Entry processing ` + '\n';
+  let str = '\n' + black.bgGreen` ${pluginLabel} ` + bg(193).black` Entry processing ` + '\n';
 
   // display loader watch dependencies
   if (PluginService.isWatchMode()) {
@@ -110,13 +96,13 @@ const verbose = () => {
 
     if (watchFiles && watchFiles.size > 0) {
       str += '\n';
-      str += ansi256(134)`watch files:` + `\n`;
+      str += fg(134)`watch files:` + `\n`;
 
       // TODO: correct sort paths
       const files = Array.from(watchFiles).sort();
       for (let file of files) {
         file = relativePathForView(file);
-        str += `${'-'.padStart(3)} ${ansi256(147)(file)}` + '\n';
+        str += `${'-'.padStart(3)} ${fg(147)(file)}` + '\n';
       }
     }
   }
@@ -127,16 +113,16 @@ const verbose = () => {
     const outputPath = relativePathForView(entry.outputPath);
 
     str += '\n';
-    str += bgAnsi256(27).whiteBright` ENTRY ` + ansi256(195).inverse` ${entryAsset} ` + '\n';
+    str += bg(27).whiteBright` ENTRY ` + bg(195).black` ${entryAsset} ` + '\n';
     // str += `${magenta`output:`} ${cyanBright(entry.outputPath)}\n`; // for debugging only
     str += `${magenta`source:`} ${cyanBright(entrySource)}\n`;
     str += `${magenta`output:`} ${cyanBright(outputPath)}\n`;
 
     // preload
     if (preloads?.length > 0) {
-      str += ansi256(202)(`preloads:`) + `\n`;
+      str += fg(202)(`preloads:`) + `\n`;
       for (const item of preloads) {
-        str += ansi256(209)(`${item.type}:`.padStart(padLevel1)) + ` ${yellowBright(item.tag)}\n`;
+        str += fg(209)(`${item.type}:`.padStart(padLevel1)) + ` ${yellowBright(item.tag)}\n`;
       }
     }
 
@@ -164,11 +150,11 @@ const verbose = () => {
 
       // styles imported in JS
       if (item.imported) {
-        str += `${''.padStart(padLevel1)} ${ansi256(214)`imports:`}\n`;
+        str += `${''.padStart(padLevel1)} ${fg(214)`imports:`}\n`;
         // note: if a style is imported, then resource is an array
         for (let importItem of item.imports) {
           sourceFile = relativePathForView(importItem.resource);
-          str += `${''.padStart(padChunks)} ${ansi256(143)(sourceFile)}\n`;
+          str += `${''.padStart(padChunks)} ${fg(143)(sourceFile)}\n`;
           str += renderAssets(importItem, padLevel3);
         }
       } else {
