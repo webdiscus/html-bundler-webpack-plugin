@@ -227,6 +227,9 @@ describe('loader preprocessor options', () => {
 
   test('twig', () => compareFiles('loader-option-preprocessor-twig'));
 
+  // TODO: add support for jsx/tsx as entrypoint, currently works only simplest example, w/o imports
+  //test('jsx', () => compareFiles('loader-option-preprocessor-jsx'));
+
   test('simple multiple pages', () => compareFiles('loader-option-preprocessor-multipage'));
   test('multiple templating engines', () => compareFiles('loader-option-preprocessor-many-ejs-hbs'));
 });
@@ -283,13 +286,18 @@ describe('inline styles & scripts', () => {
 describe('import styles in JavaScript', () => {
   test('import css in js', () => compareFiles('js-import-css'));
 
+  test('simple import, CJS', () => compareFiles('js-import-css-cjs'));
+  test('simple import, ESM', () => compareFiles('js-import-css-esm'));
+
+  test('import CSS Modules, CJS', () => compareFiles('js-import-css-modules-cjs'));
+  test('import CSS Modules, ESM', () => compareFiles('js-import-css-modules-esm'));
+
   // dynamic import of the style in the dynamic imported js
   test('dynamic import css in js', () => compareFiles('js-import-css-dynamic-import'));
 
   test('import css in ts, verbose', () => compareFiles('js-import-css-ts'));
   test('import scss in js', () => compareFiles('js-import-scss'));
-  test('simple import CJS', () => compareFiles('js-import-css-cjs'));
-  test('simple import ESM', () => compareFiles('js-import-css-esm'));
+
   test('import css deep in js', () => compareFiles('js-import-css-deep'));
   test('simple import with images', () => compareFiles('js-import-css-images'));
   test('import scss from node module', () => compareFiles('js-import-css-from-module'));

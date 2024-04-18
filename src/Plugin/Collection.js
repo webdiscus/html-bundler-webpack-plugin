@@ -532,17 +532,17 @@ class Collection {
 
         const index = moduleGraph.getParentBlockIndex(dependency);
 
-        if (depModule.dependencies.length > 0 || depModule.blocks.length > 0) {
-          // save current order before recursive walking
-          orderStack.push(order);
-          order += (order ? '.' : '') + index;
-          result.push(...walk(depModule));
-        } else if (depModule.resourceResolveData?._bundlerPluginMeta.isImportedStyle === true) {
+        if (depModule.resourceResolveData?._bundlerPluginMeta.isImportedStyle === true) {
           result.push({
             resource: depModule.resource,
             order: order + (order ? '.' : '') + index,
             module: depModule,
           });
+        } else if (depModule.dependencies.length > 0 || depModule.blocks.length > 0) {
+          // save current order before recursive walking
+          orderStack.push(order);
+          order += (order ? '.' : '') + index;
+          result.push(...walk(depModule));
         }
       }
 

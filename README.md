@@ -4,10 +4,7 @@
         <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
-    <div>The plugin renders various templates with referenced source asset files into HTML</div>
 </div>
-
----
 
 [![npm](https://img.shields.io/npm/v/html-bundler-webpack-plugin?logo=npm&color=brightgreen 'npm package')](https://www.npmjs.com/package/html-bundler-webpack-plugin 'download npm package')
 [![node](https://img.shields.io/node/v/html-bundler-webpack-plugin)](https://nodejs.org)
@@ -18,9 +15,8 @@
 
 ## HTML template as entry point
 
-> This plugin allows using a template file as an [entry point](#option-entry).
-
-The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [any template](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
+The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
+This plugin allows using a template file as an [entry point](#option-entry).
 
 A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
 
@@ -215,9 +211,11 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v3
 
-- **NEW** added support for the [template function](#template-in-js) in JS runtime on the client-side.
+- **NEW** added supports the [template function](#template-in-js) in JS runtime on the client-side.
 - **NEW** added [Pug](#using-template-pug) preprocessor.
 - **NEW** added [Twig](#using-template-twig) preprocessor.
+- **NEW** added supports the dynamic import of styles.
+- **NEW** added supports the [CSS Modules](#recipe-css-modules) for styles imported in JS.
 - **NEW** added CSS extraction from **styles** used in `*.vue` files.
 - **NEW** added [Hooks & Callbacks](#plugin-hooks-and-callbacks). Now you can create own plugin to extend this plugin.
 - **NEW** added the build-in [FaviconsBundlerPlugin](#favicons-bundler-plugin) to generate and inject favicon tags.
@@ -528,6 +526,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
+   - [How to import CSS class names in JS](#recipe-css-modules) (CSS modules)
    - [How to load JS and CSS from `node_modules` in template](#recipe-load-js-css-from-node-modules)
    - [How to import CSS or SCSS from `node_modules` in SCSS](#recipe-import-style-from-node-modules)
    - [How to process a PHP template](#recipe-preprocessor-php)
@@ -5251,6 +5250,59 @@ loadCSS(cssUrl);
 ```
 
 See the [browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API/Document/adoptedStyleSheets#browser_compatibility).
+
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-css-modules" name="recipe-css-modules"></a>
+
+## How to import CSS class names in JS
+
+To import style `class names` in JS, add in the webpack config the [modules](https://github.com/webpack-contrib/css-loader#modules) option into `css-loader`:
+```js
+{
+  test: /\.(css)$/,
+  use: [
+    {
+      loader: 'css-loader',
+      options: {
+        modules: {
+          localIdentName: '[name]__[local]--[hash:base64:5]',
+          exportLocalsConvention: 'camelCase',
+        },
+      },
+    },
+  ],
+},
+```
+
+For example there is _./style.css_ file:
+```css
+.error-message {
+  color: red;
+}
+```
+
+In _./main.js_ file you can use class names with `camelCase`:
+```js
+import styles from './style.css';
+
+element.innerHTML = `<div class="${styles.errorMessage}">`;
+```
+
+The imported `styles` object contains generated class names like followings:
+```js
+{
+  errorMessage: 'main__error-message--gvFM4',
+}
+```
+
+
+Read more information about [CSS Modules](https://github.com/css-modules/css-modules).
+
+
+---
 
 #### [↑ back to contents](#contents)
 

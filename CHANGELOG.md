@@ -1,5 +1,40 @@
 # Change log
 
+## 3.10.0 (2024-04-18)
+
+- feat: add support the [CSS Modules](https://github.com/css-modules/css-modules) for styles imported in JS using the [css-loader modules](https://github.com/webpack-contrib/css-loader#modules) option.\
+  The CSS _module rule_ in the webpack config:
+  ```js
+  {
+    test: /\.(css)$/,
+    use: [
+      {
+        loader: 'css-loader',
+        options: {
+          modules: {
+            localIdentName: '[name]__[local]__[hash:base64:5]',
+            exportLocalsConvention: 'camelCase',
+          },
+        },
+      },
+    ],
+  },
+  ```
+  CSS:
+  ```css
+  .red {
+    color: red;
+  }
+  .green {
+    color: green;
+  }
+  ```
+  Using in JS:
+  ```js
+  // the styles contains CSS class names: { red: 'main__red__us4Tv', green: 'main__green__bcpRp' }
+  import styles from './main.css';
+  ```
+
 ## 3.9.1 (2024-04-10)
 
 - fix: issue when used js dynamic import with magic comments /* webpackPrefetch: true */ and css.inline=true, #88

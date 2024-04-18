@@ -1,0 +1,19 @@
+h1 {
+  color: coral;
+  font-size: 20px;
+}
+
+.red {
+  border: 5px solid red;
+  color: indianred;
+}
+
+.lime-green {
+  border: 5px solid limegreen;
+  color: limegreen;
+}
+
+.royal_blue {
+  border: 5px solid royalblue;
+  color: royalblue;
+}

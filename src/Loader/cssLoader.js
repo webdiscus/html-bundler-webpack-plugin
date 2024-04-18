@@ -27,6 +27,7 @@ const pitchLoader = async function (remaining) {
   const { resource, resourcePath, _module: module } = this;
   const options = this.getOptions() || {};
   const isUrl = module.resourceResolveData?.query.includes('url');
+  const exportComment = '/* extracted by HTMLBundler CSSLoader */';
 
   remaining += resource.includes('?') ? '&' : '?';
 
@@ -41,12 +42,30 @@ const pitchLoader = async function (remaining) {
 
   // defaults, the css-loader option `esModule` is `true`
   const esModule = result.default != null;
+  let styles;
+
+  if (esModule) {
+    const exports = Object.keys(result).filter((key) => key !== 'default');
+
+    if (exports.length > 0) {
+      styles = {};
+      for (const className of exports) {
+        styles[className] = result[className];
+      }
+    }
+  } else if ('locals' in result) {
+    styles = result.locals;
+  }
 
   module._cssSource = esModule ? result.default : result;
   Collection.setImportStyleEsModule(esModule);
 
   // support for lazy load CSS in JavaScript, see the test js-import-css-lazy-url
-  return '/* extracted by HTMLBundler CSSLoader */' + (isUrl ? module._cssSource : '');
+  if (isUrl) {
+    return exportComment + module._cssSource;
+  }
+
+  return styles ? (esModule ? 'export default' : 'module.exports = ') + JSON.stringify(styles) : exportComment;
 };
 
 module.exports = loader;
