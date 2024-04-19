@@ -535,7 +535,6 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to config `splitChunks`](#recipe-split-chunks)
    - [How to keep package name for **split chunks** from **node_modules**](#recipe-split-chunks-keep-module-name)
    - [How to split CSS files](#recipe-split-css)
-   - [How to split CSS files](#recipe-split-css)
 2. [Problems & Solutions](#solutions)
    - [Automatic resolving of file extensions](#solutions-resolve-extensions)
    - [How to use `@import url()` in CSS](#solutions-import-url-in-css)
@@ -5259,6 +5258,8 @@ See the [browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API
 
 ## How to import CSS class names in JS
 
+**Required:** `css-loader >= 7.0.0`
+
 To import style `class names` in JS, add in the webpack config the [modules](https://github.com/webpack-contrib/css-loader#modules) option into `css-loader`:
 ```js
 {
@@ -5284,7 +5285,7 @@ For example there is _./style.css_ file:
 }
 ```
 
-In _./main.js_ file you can use class names with `camelCase`:
+In _./main.js_ file you can use the class name with `camelCase`:
 ```js
 import styles from './style.css';
 

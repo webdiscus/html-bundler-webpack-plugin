@@ -3,6 +3,7 @@
 ## 3.10.0 (2024-04-18)
 
 - feat: add support the [CSS Modules](https://github.com/css-modules/css-modules) for styles imported in JS using the [css-loader modules](https://github.com/webpack-contrib/css-loader#modules) option.\
+  Required: `css-loader` >= `7.0.0`\
   The CSS _module rule_ in the webpack config:
   ```js
   {
