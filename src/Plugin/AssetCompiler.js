@@ -268,11 +268,8 @@ class AssetCompiler {
       PluginService.watchRun();
     });
 
-    // TODO:
-    //  - before AssetEntry.initEntry() init preprocessor by Loader.Options to get `test`
-
     // entry option
-    AssetEntry.initEntry();
+    AssetEntry.init({ fs: this.fs, entryLibrary: this.entryLibrary, collection: Collection });
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
     // watch changes for entry-points
@@ -289,7 +286,7 @@ class AssetCompiler {
       PluginService.plugin = AssetCompiler;
       PluginService.compilation = compilation;
 
-      AssetEntry.init({ compilation, entryLibrary: this.entryLibrary, collection: Collection });
+      AssetEntry.initCompilation(compilation);
       AssetTrash.init(compilation);
       CssExtractModule.init(compilation);
       Collection.init({ compilation, assetEntry: AssetEntry, hooks: AssetCompiler.getHooks(compilation) });

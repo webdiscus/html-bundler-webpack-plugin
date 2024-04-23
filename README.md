@@ -472,6 +472,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [entry as a path](#option-entry-path) (find templates in a directory recursively)
      - [entry data](#option-entry-data) (pass data in the single template as an object or a file)
    - [entry dynamic](#option-entry-path) (entry as a path to template files)
+   - [entryFilter](#option-entry-filter) (filter for entry dynamic)
    - [outputPath](#option-outputpath) (output path of HTML file)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options for JS)
@@ -542,7 +543,6 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 3. <a id="demo-sites" name="demo-sites"></a> 
    Demo sites
    - Multiple page e-shop template (`Handlebars`) [demo](https://alpine-html-bootstrap.vercel.app/) | [source](https://github.com/webdiscus/demo-shop-template-bundler-plugin)
-   - Design system NIHR: Components, Elements, Layouts (`Handlebars`) [demo](https://design-system.nihr.ac.uk) | [source](https://github.com/webdiscus/design-system)
    - Asia restaurant (`Nunjucks`) [demo](https://webdiscus.github.io/demo-asia-restaurant-bundler-plugin) | [source](https://github.com/webdiscus/demo-asia-restaurant-bundler-plugin)
    - 10up / Animation Best Practices [demo](https://animation.10up.com/) | [source](https://github.com/10up/animation-best-practices)
 1. <a id="usage-examples" name="usage-examples"></a>
@@ -1558,6 +1558,95 @@ new HtmlBundlerPlugin({
 > **Note**
 >
 > In serve/watch mode, you can add/delete/rename a template file in the entry path without restarting Webpack.
+
+#### [↑ back to contents](#contents)
+
+<a id="option-entry-filter" name="option-entry-filter"></a>
+
+### `entryFilter`
+
+Filter to process only matching template files.
+This option works only if the [entry](#option-entry-path) option is a path.
+
+Type:
+```ts
+type entryFilter = 
+  | RegExp
+  | Array<RegExp>
+  | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+  | ((file: string) => void | false);
+```
+
+Default value:
+
+```ts
+{
+  includes: [
+    /\.(html|eta)$/,
+  ], 
+  excludes: [] 
+}
+```
+
+The default `includes` property depends on the used [preprocessor](#loader-option-preprocessor) option.
+Each preprocessor has its own filter to include from the entry path only relevant template files.
+
+#### `entryFilter` as `RegExp`
+
+The filter works as `include` only files that match the regular expressions.
+For example:
+```js
+new HtmlBundlerPlugin({
+  entry: 'src/views/pages/',
+  entryFilter: /index\.html$/, // render only `index.html` files in all sub dirs
+})
+```
+
+#### `entryFilter` as `Array<RegExp>`
+
+The filter works as `include` only files that match one of the regular expressions.
+For example:
+```js
+new HtmlBundlerPlugin({
+  entry: 'src/views/pages/',
+  entryFilter: [
+    // render only page specifically files, e.g.: `index.html`, `contact.html`, `about.html`
+    /index\.html$/,
+    /contact\.html$/,
+    /about\.html$/,
+  ],
+})
+```
+
+#### `entryFilter` as `{ includes: Array<RegExp>, excludes: Array<RegExp> }`
+
+The filter includes only files that match one of the regular expressions, except excluded files.
+For example:
+```js
+new HtmlBundlerPlugin({
+  entry: 'src/views/pages/',
+  entryFilter: {
+    includes: [/\.(html|eta)$/,], // render all `.html` and `.eta` template files
+    excludes: [/partial/],  // except partial files
+  },
+})
+``` 
+
+#### `entryFilter` as `callback`
+
+In addition to the default `includes` filter, this filter works as `exclude` a file if it returns `false`.
+If the callback returns `true` or nothing, then the file will be processed.
+
+For example:
+```js
+new HtmlBundlerPlugin({
+  entry: 'src/views/pages/',
+  entryFilter: (file) => {
+    if (/partial/.test(file)) return false; // ignore files containing the `partial` in the path
+  },
+})
+```
+The `file` argument is the absolute path of a template file.
 
 #### [↑ back to contents](#contents)
 
@@ -2705,7 +2794,7 @@ The `HtmlBundlerPlugin.loader` will be added automatically.
 
 For example, both configurations are functionally identical:
 
-_1) the variant using the `loaderOptions`_ (recommended for common use cases)
+_1) the variant using the `loaderOptions`_, **recommended** for common use cases:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -2715,18 +2804,18 @@ module.exports = {
       entry: {
         index: 'src/views/index.ejs',
       },
+      // compile a template into HTML using `ejs` module
+      preprocessor: 'ejs',
       loaderOptions: {
         // resolve files specified in non-standard attributes 'data-src', 'data-srcset'
         sources: [{ tag: 'img', attributes: ['data-src', 'data-srcset'] }],
-        // compile a template into HTML using `ejs` module
-        preprocessor: 'ejs',
       },
     }),
   ],
 };
 ```
 
-_2) the variant using the `module.rules`_
+_2) the `low level` variant using the `module.rules`_:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
@@ -2753,10 +2842,13 @@ module.exports = {
 };
 ```
 
-For common use cases, the first option is recommended. So your config is smaller and cleaner.
-
-The second variant use only for special cases, e.g. when you have templates with different syntax.
-An example see by [How to use some different template engines](#recipe-diff-templates).
+> ⚠️ **Warning**
+> 
+> If you don't know what it's for, don't define a module rule for template files.
+> The plugin automatically configures this rule.
+> 
+> Define this rule only for special cases, e.g. when you have templates with different templating engines.\
+> An example see by [How to use some different template engines](#recipe-diff-templates).
 
 > **Note**
 >
@@ -3151,7 +3243,7 @@ module.exports = {
 > **Note**
 >
 > Since the `v2.2.0` is available new syntax, the [preprocessor](#option-preprocessor)
-> and the [preprocessorOptions](#option-preprocessor) can be defined directly in the plugin option
+> and the [preprocessorOptions](#option-preprocessor) should be defined directly in the plugin option
 > to simplify the config:
 >
 > ```js

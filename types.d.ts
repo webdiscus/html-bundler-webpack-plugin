@@ -62,6 +62,12 @@ declare namespace HtmlBundlerPlugin {
      * If the entry is undefined, then must be defined the Webpack entry option.
      */
     entry?: EntryObject | Array<EntryDescription> | string;
+    entryFilter?:
+      | RegExp
+      | Array<RegExp>
+      | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+      | ((file: string) => void | false);
+
     // defaults is options.output.path
     outputPath?: string;
     // html output filename

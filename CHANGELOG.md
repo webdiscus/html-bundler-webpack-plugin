@@ -1,5 +1,9 @@
 # Change log
 
+## 3.11.0 (2024-04-23)
+
+- feat: add `entryFilter` option to include or exclude entry files when the `entry` option is the path
+
 ## 3.10.0 (2024-04-18)
 
 - feat: add support the [CSS Modules](https://github.com/css-modules/css-modules) for styles imported in JS using the [css-loader modules](https://github.com/webpack-contrib/css-loader#modules) option.\

@@ -120,9 +120,17 @@ describe('plugin options', () => {
   // test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
 
   test('entry data file', () => compareFiles('option-entry-data-file'));
-  test('entry array', () => compareFiles('option-entry-as-array'));
-  test('entry object', () => compareFiles('option-entry-as-object'));
-  test('entry path', () => compareFiles('option-entry-as-path'));
+  test('entry array', () => compareFiles('option-entry-array'));
+  test('entry object', () => compareFiles('option-entry-object'));
+
+  // dynamic entry
+  test('entry path', () => compareFiles('option-entry-path'));
+  test('entry path filter fn', () => compareFiles('option-entry-path-filter-fn'));
+  test('entry path filter regexp', () => compareFiles('option-entry-path-filter-regexp'));
+  test('entry path filter array', () => compareFiles('option-entry-path-filter-array'));
+  test('entry path filter includes', () => compareFiles('option-entry-path-filter-includes'));
+  test('entry path filter excludes', () => compareFiles('option-entry-path-filter-excludes'));
+
   test('preload', () => compareFiles('option-preload'));
   test('preload attributes', () => compareFiles('option-preload-attributes'));
   test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));

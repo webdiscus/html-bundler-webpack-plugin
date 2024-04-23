@@ -1,0 +1,19 @@
+{{assign title='About'}}
+
+{{! define the block with page-specific scripts }}
+{{#partial 'scripts'}}
+  <script src="./about.js" defer="defer"></script>
+{{/partial}}
+
+{{! define the block with page-specific styles }}
+{{#partial 'styles'}}
+  <link href="./about.css" rel="stylesheet">
+{{/partial}}
+
+{{! define the block content: include the `about/content.hbs` partial }}
+{{#partial 'content'}}
+  {{> about/content}}
+{{/partial}}
+
+{{! extends the layout template with blocks defined above }}
+{{> layout}}

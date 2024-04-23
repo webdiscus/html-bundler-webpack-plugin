@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const Option = require('./Option');
 const PluginService = require('./PluginService');
@@ -82,21 +81,18 @@ class AssetEntry {
   static entryNamePrefix = '__bundler-plugin-entry__';
 
   /**
-   * Init the object, inject dependencies.
+   * Init the asset entry.
    *
-   * @param {Compilation} compilation
+   * @param {FileSystem} fs
    * @param {Object} entryLibrary
    * @param {Collection} collection
    */
-  static init({ compilation, entryLibrary, collection }) {
-    this.compilation = compilation;
+  static init({ fs, entryLibrary, collection }) {
+    this.fs = fs;
     this.entryLibrary = entryLibrary;
     this.collection = collection;
-    this.fs = compilation.compiler.inputFileSystem.fileSystem;
     this.entryIdRegexp = new RegExp(`\\?${this.entryIdKey}=(\\d+)`);
-  }
 
-  static initEntry() {
     const { entry } = Option.webpackOptions;
     let pluginEntry;
 
@@ -137,14 +133,44 @@ class AssetEntry {
   }
 
   /**
+   * Init for the compilation.
+   *
+   * @param {Compilation} compilation
+   */
+  static initCompilation(compilation) {
+    this.compilation = compilation;
+  }
+
+  /**
    * Returns dynamic entries read recursively from the entry path.
    *
    * @return {Object}
    * @throws
    */
   static getDynamicEntry() {
-    //const { fs } = this; // TODO: fix error with injected fs
+    const { fs } = this;
     const dir = Option.get().entry;
+    const entryFilter = Option.get().entryFilter;
+    const isFunctionEntryFilter = typeof entryFilter === 'function';
+    let includes = [Option.get().test];
+    let excludes = [];
+
+    if (entryFilter && !isFunctionEntryFilter) {
+      if (entryFilter instanceof RegExp) {
+        includes = [entryFilter];
+      } else {
+        if (Array.isArray(entryFilter)) {
+          includes = entryFilter;
+        } else {
+          if ('includes' in entryFilter && Array.isArray(entryFilter.includes)) {
+            includes = entryFilter.includes;
+          }
+          if ('excludes' in entryFilter && Array.isArray(entryFilter.excludes)) {
+            excludes = entryFilter.excludes;
+          }
+        }
+      }
+    }
 
     try {
       if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
@@ -152,10 +178,14 @@ class AssetEntry {
       optionEntryPathException(dir);
     }
 
-    const files = readDirRecursiveSync(dir, { fs, includes: [Option.get().test] });
+    const files = readDirRecursiveSync(dir, { fs, includes, excludes });
     const entry = {};
 
     files.forEach((file) => {
+      if (isFunctionEntryFilter && entryFilter(file) === false) {
+        return;
+      }
+
       const outputFile = path.relative(dir, file);
       const name = outputFile.slice(0, outputFile.lastIndexOf('.'));
       const entryName = this.createEntryName(name);

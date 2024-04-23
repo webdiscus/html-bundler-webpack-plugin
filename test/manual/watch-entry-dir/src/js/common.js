@@ -1,1 +1,1 @@
-console.log('>> common 2');
+console.log('>> common');
