@@ -525,6 +525,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline CSS in HTML](#recipe-inline-css)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
+   - [How to inline all resources into single HTML file](#recipe-inline-all-assets-to-html)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
    - [How to import CSS class names in JS](#recipe-css-modules) (CSS modules)
@@ -5240,6 +5241,64 @@ module: {
 ```
 
 The plugin automatically inlines images smaller then `maxSize`.
+
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-inline-all-assets-to-html" name="recipe-inline-all-assets-to-html"></a>
+
+## How to inline all resources into single HTML file
+
+The bundler plugin can generate a single HTML file included all embedded dependencies
+such as JS, CSS, fonts, images (PNG, SVG, etc..).
+
+The fonts and images used in CSS will be inlined into CSS.
+The generated CSS including inlined images will be inlined into HTML.
+
+Just use the following config:
+
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  mode: 'production',
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/views/index.html',
+      },
+      css: {
+        inline: true, // inline CSS into HTML
+      },
+      js: {
+        inline: true, // inline JS into HTML
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader', 'sass-loader'],
+      },
+      // inline all assets: images, svg, fonts
+      {
+        test: /\.(png|jpe?g|webp|svg|woff2?)$/i,
+        type: 'asset/inline',
+      },
+    ],
+  },
+  performance: false, // disable warning max size
+};
+```
+
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/inline-all-assets-to-html?file=README.md)
+
 
 ---
 

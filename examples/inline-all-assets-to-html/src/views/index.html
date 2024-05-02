@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Home</title>
+
+    <!-- inlined favicon -->
+    <link href="@images/favicon.svg" rel="icon" />
+
+    <!-- inlined CSS -->
+    <link href="@styles/style.scss" rel="stylesheet" />
+
+    <!-- inlined JS -->
+    <script src="@scripts/main.js" defer="defer"></script>
+  </head>
+  <body>
+    <h1>Inline all resources into HTML</h1>
+
+    <!-- inlined font -->
+    <div class="dummy-font">Inlined font</div>
+
+    <!-- inlined component assets -->
+    <div class="component-a">Component</div>
+
+    <h2>PNG and SVG images inlined into HTML</h2>
+
+    <!-- inlined PNG, src contains data-URL -->
+    <img src="@images/picture.png" />
+
+    <!-- inlined SVG, tag `<img>` will be replaced with `<svg>...</svg>` -->
+    <img src="@images/picture.svg" />
+
+    <h2>PNG and SVG images inlined into CSS</h2>
+
+    <!-- inlined PNG in CSS -->
+    <div class="bg-image-png"></div>
+
+    <!-- inlined SVG in CSS -->
+    <div class="bg-image-svg"></div>
+
+    <!-- inlined JS -->
+    <script src="../components/a/a.js"></script>
+  </body>
+</html>

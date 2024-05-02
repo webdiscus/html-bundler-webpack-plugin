@@ -38,6 +38,14 @@ module.exports = {
         verbose: true,
         filename: 'css/[name].bundle.css',
       },
+      beforeEmit: (content, entry, compilation) => {
+        // output asset tree of the current entry point
+        //console.dir(entry, { depth: 5 });
+      },
+      afterEmit: (entries) => {
+        // output asset tree of all entry points
+        //console.dir(entries, { depth: 6 });
+      },
     }),
   ],
 
