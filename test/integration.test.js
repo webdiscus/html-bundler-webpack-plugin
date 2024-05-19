@@ -301,6 +301,8 @@ describe('import styles in JavaScript', () => {
 
   test('import CSS Modules, CJS', () => compareFiles('js-import-css-modules-cjs'));
   test('import CSS Modules, ESM', () => compareFiles('js-import-css-modules-esm'));
+  test('import CSS, css-style-sheet', () => compareFiles('js-import-css-modules-type-css-style-sheet'));
+  test('import CSS, css-style-sheet mix types', () => compareFiles('js-import-css-modules-type-css-style-sheet-mix'));
 
   // dynamic import of the style in the dynamic imported js
   test('dynamic import css in js', () => compareFiles('js-import-css-dynamic-import'));

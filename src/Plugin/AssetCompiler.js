@@ -580,9 +580,10 @@ class AssetCompiler {
 
     // the filename with an extension is available only after resolve
     meta.isStyle = Option.isStyle(file);
+    meta.isCSSStyleSheet = this.isCSSStyleSheet(createData);
 
     // skip: module loaded via importModule, css url, data-URL
-    if (meta.isLoaderImport || meta.isDependencyUrl || request.startsWith('data:')) return;
+    if (meta.isLoaderImport || meta.isCSSStyleSheet || meta.isDependencyUrl || request.startsWith('data:')) return;
 
     if (issuer) {
       const isIssuerStyle = Option.isStyle(issuer);
@@ -640,6 +641,21 @@ class AssetCompiler {
     }
 
     meta.isScript = Collection.hasScript(request);
+  }
+
+  /**
+   * Whether the module is imported CSSStyleSheet in JS.
+   *
+   * @param {{}} module
+   * @return {boolean}
+   */
+  isCSSStyleSheet(module) {
+    return (
+      Array.isArray(module.loaders) &&
+      module?.loaders.some(
+        (loader) => loader.loader.includes('css-loader') && loader.options?.exportType === 'css-style-sheet'
+      )
+    );
   }
 
   /**
@@ -812,12 +828,13 @@ class AssetCompiler {
 
     for (const module of chunkModules) {
       const { buildInfo, resource, resourceResolveData } = module;
-      const { isScript, isImportedStyle } = resourceResolveData?._bundlerPluginMeta || {};
+      const { isScript, isImportedStyle, isCSSStyleSheet } = resourceResolveData?._bundlerPluginMeta || {};
       let moduleType = module.type;
 
       if (
         isScript ||
         isImportedStyle ||
+        isCSSStyleSheet ||
         !resource ||
         !resourceResolveData?.context ||
         AssetInline.isDataUrl(resource)
@@ -959,7 +976,10 @@ class AssetCompiler {
 
     // extract CSS
     const cssOptions = Option.getStyleOptions(sourceFile);
-    if (cssOptions == null) return;
+    if (cssOptions == null) {
+      // ignore file if css option is disabled
+      return;
+    }
 
     const inline = Collection.isInlineStyle(resource);
     const { name } = path.parse(sourceFile);

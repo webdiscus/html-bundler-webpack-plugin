@@ -1,5 +1,11 @@
 # Change log
 
+## 3.12.0 (2024-05-19)
+
+- feat: add support for the `css-loader` option `exportType` as [css-style-sheet](https://github.com/webpack-contrib/css-loader?#exporttype)
+- test: add tests for import of CSS stylesheet
+- docs: update readme
+
 ## 3.11.0 (2024-04-23)
 
 - feat: add `entryFilter` option to include or exclude entry files when the `entry` option is the path

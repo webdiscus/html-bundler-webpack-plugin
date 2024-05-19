@@ -529,6 +529,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
    - [How to import CSS class names in JS](#recipe-css-modules) (CSS modules)
+   - [How to import CSS stylesheet in JS](#recipe-css-style-sheet) ([CSSStyleSheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet))
    - [How to load JS and CSS from `node_modules` in template](#recipe-load-js-css-from-node-modules)
    - [How to import CSS or SCSS from `node_modules` in SCSS](#recipe-import-style-from-node-modules)
    - [How to process a PHP template](#recipe-preprocessor-php)
@@ -5450,9 +5451,98 @@ The imported `styles` object contains generated class names like followings:
 }
 ```
 
-
 Read more information about [CSS Modules](https://github.com/css-modules/css-modules).
 
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-css-style-sheet" name="recipe-css-style-sheet"></a>
+
+## How to import CSS stylesheet in JS
+
+Using the `css-loader` option [exportType](https://github.com/webpack-contrib/css-loader?#exporttype) as `css-style-sheet`
+you can import the CSS stylesheets as the instance of the [CSSStyleSheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet) object.
+
+Import a CSS module script and apply it to a document or a shadow root like this:
+
+```js
+import sheet from './style.scss?sheet';
+
+document.adoptedStyleSheets = [sheet];
+shadowRoot.adoptedStyleSheets = [sheet];
+```
+
+You can use the `?sheet` URL query to import a style file as stylesheets. 
+The query must be configured in the webpack config:
+
+```js
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+      js: {
+        filename: '[name].[contenthash:8].js',
+      },
+      css: {
+        filename: '[name].[contenthash:8].css',
+      },
+    }),
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.(s?css)$/,
+        oneOf: [
+          // Import CSS/SCSS source file as a CSSStyleSheet object
+          {
+            resourceQuery: /sheet/, // <= the query, e.g. style.scss?sheet
+            use: [
+              {
+                loader: 'css-loader',
+                options: {
+                  exportType: 'css-style-sheet', // <= define this option
+                },
+              },
+              {
+                loader: 'sass-loader',
+              },
+            ],
+          },
+          // Import CSS/SCSS source file as a CSS string
+          {
+            use: [
+              'css-loader',
+              'sass-loader',
+            ],
+          }
+        ],
+      }
+    ],
+  },
+};
+```
+
+Using the universal configuration above you can apply CSS stylesheets in JS and extract CSS into separate file or inject CSS into HTML:
+
+```js
+import sheet from './style.scss?sheet'; // import as CSSStyleSheet object
+import './style2.scss?inline'; // the extracted CSS will be injected into HTML
+import './style3.scss'; // the extracted CSS will be saved into separate output file
+
+// apply stylesheet to document and shadow root
+document.adoptedStyleSheets = [sheet];
+shadowRoot.adoptedStyleSheets = [sheet];
+```
+
+This is useful for [custom elements](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements) and shadow DOM.
+
+More information:
+
+- [Using CSS Module Scripts to import stylesheets](https://web.dev/css-module-scripts/)
+- [Constructable Stylesheets: seamless reusable styles](https://developers.google.com/web/updates/2019/02/constructable-stylesheets)
 
 ---
 
@@ -6067,7 +6157,7 @@ dist/js/app-5fa74877.1aceb2db.js
 
 Using the bundler plugin, all your style source files should be specified directly in the template.
 You can import style files in JavaScript, like it works using the `mini-css-extract-plugin` and `html-webpack-plugin`,
-but it is a **dirty hack**, **bad practice**, processing is **slow**, avoid it if possible.
+but it is a **bad practice** and processing is **slower**.
 
 You can separate the styles into multiple bundles yourself.
 
