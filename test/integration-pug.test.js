@@ -124,6 +124,7 @@ describe('embedded filters tests', () => {
     expect(result).toBeTruthy();
     done();
   });
+  test(`:markdown`, () => compareFiles('_pug/filter-markdown'));
 });
 
 describe('exception tests', () => {

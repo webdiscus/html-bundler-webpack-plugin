@@ -447,6 +447,8 @@ describe('special cases', () => {
 
   test('dynamic import in js', () => compareFiles('js-dynamic-import-js'));
 
+  test('modify js in postprocess', () => compareFiles('postprocess-modify-js'));
+
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });
