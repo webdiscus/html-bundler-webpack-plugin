@@ -12,7 +12,6 @@ class Template {
    * @param { HtmlBundlerPlugin.Hooks} hooks The plugin hooks.
    * @return {string}
    */
-
   static resolve(content, issuer, entryId, hooks) {
     const sources = Option.getSources();
 
@@ -24,7 +23,6 @@ class Template {
     let parsedTags = [];
     for (let opts of sources) {
       opts.resourcePath = issuer;
-
       parsedTags.push(...HtmlParser.parseTag(content, opts));
     }
     parsedTags = parsedTags.sort(comparePos);
@@ -36,6 +34,8 @@ class Template {
 
     for (let { tag, source, parsedAttrs } of parsedTags) {
       for (let { type, attr, startPos, endPos, value, quote, offset, inEscapedDoubleQuotes } of parsedAttrs) {
+        if (!value) continue;
+
         const result = this.resolveFile({
           isBasedir,
           type,

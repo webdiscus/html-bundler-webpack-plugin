@@ -449,6 +449,8 @@ describe('special cases', () => {
 
   test('modify js in postprocess', () => compareFiles('postprocess-modify-js'));
 
+  test('resolve-attr-style-url', () => compareFiles('resolve-attr-style-url'));
+
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });

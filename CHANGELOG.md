@@ -1,5 +1,12 @@
 # Change log
 
+## 3.13.0 (2024-05-26)
+
+- feat: add resolving the url() value in the style attribute:
+  ```html
+  <div style="background-image: url(./image.png);"></div>
+  ```
+
 ## 3.12.0 (2024-05-19)
 
 - feat: add support for the `css-loader` option `exportType` as [css-style-sheet](https://github.com/webpack-contrib/css-loader?#exporttype)

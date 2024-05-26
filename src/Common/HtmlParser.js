@@ -308,7 +308,7 @@ class HtmlParser {
    * @param {string} attr The attribute to parse value.
    * @param {string} type The type of attribute value.
    * @param {Number} offset The absolute tag offset in the content.
-   * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number, offset: number, inEscapedDoubleQuotes: boolean}|boolean}
+   * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number, offset: number, inEscapedDoubleQuotes: boolean} | {} | boolean}
    */
   static parseAttr(content, attr, type = 'asset', offset = 0) {
     // TODO: allow zero or more spaces around `=`
@@ -356,21 +356,37 @@ class HtmlParser {
 
       return {
         attr,
-        attrs,
         value,
-        parsedValue: values,
         startPos,
         endPos,
         offset,
+        attrs,
+        parsedValue: values,
         inEscapedDoubleQuotes,
       };
+    }
+
+    if (attr === 'style') {
+      const { values, attrs } = this.parseStyleUrlValues(value, startPos, offset);
+
+      return values
+        ? {
+            attr,
+            value,
+            startPos,
+            endPos,
+            offset,
+            attrs,
+            parsedValue: values,
+            inEscapedDoubleQuotes,
+          }
+        : {};
     }
 
     let result = {
       type,
       attr,
       value,
-      parsedValue: '',
       startPos,
       endPos,
       offset,
@@ -387,6 +403,45 @@ class HtmlParser {
     result.parsedValue = [value.split('?', 1)[0]];
 
     return result;
+  }
+
+  /**
+   * Parse url() in the style attribute.
+   *
+   * For example:
+   *   <div style="background-image: url(./image.png);"></div>
+   *
+   * @param {string} content The attribute value.
+   * @param {Number} valueOffset The offset of value in the tag.
+   * @param {Number} offset The absolute tag offset in the content.
+   * @return {{values: *[], attrs: *[]} | {}}
+   */
+  static parseStyleUrlValues(content, valueOffset, offset) {
+    let pos = content.indexOf('url(');
+
+    if (pos < 0) return {};
+
+    let valueStartPos = pos + 4;
+    let valueEndPos = content.indexOf(')', valueStartPos);
+    let quote = content.charAt(valueStartPos);
+    let skipQuotes = 1;
+
+    if (quote !== '"' && quote !== "'") {
+      quote = '';
+      skipQuotes = 0;
+    }
+
+    let parsedValue = content.slice(valueStartPos + skipQuotes, valueEndPos - skipQuotes); // skip quotes around value
+
+    let attrs = {
+      value: parsedValue,
+      quote,
+      startPos: valueStartPos,
+      endPos: valueEndPos,
+      offset: offset + valueOffset,
+    };
+
+    return { values: [parsedValue], attrs: [attrs] };
   }
 
   /**

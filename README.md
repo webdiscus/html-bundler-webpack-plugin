@@ -527,6 +527,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to inline all resources into single HTML file](#recipe-inline-all-assets-to-html)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
+   - [How to resolve source image in the `style` attribute](#recipe-resolve-attr-style-url)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
    - [How to import CSS class names in JS](#recipe-css-modules) (CSS modules)
    - [How to import CSS stylesheet in JS](#recipe-css-style-sheet) ([CSSStyleSheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet))
@@ -5350,6 +5351,51 @@ The custom attribute will contains in the generated HTML the resolved output ass
   ...
 </a>
 ```
+
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-resolve-attr-style-url" name="recipe-resolve-attr-style-url"></a>
+
+## How to resolve source image in the `style` attribute
+
+For example, there is the source image file defined in the `style` attribute as the background of the `div` tag:
+
+```html
+<div style="background-image: url(./pic1.png);"></div>
+```
+
+The source image file can be a file relative to the template or you can use a webpack alias to the image directory.
+
+> **Note**
+> 
+> This is BAD practice. Use it only in special cases.
+> The background image should be defined in CSS.
+
+By default, the `style` attribute is not parsed and therefore needs to be configured:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/index.html',
+  },
+  loaderOptions: {
+    sources: [
+      {
+        tag: 'div',            // <= specify the tag where should be parsed style
+        attributes: ['style'], // <= specify the style attribute
+      },
+    ],
+  },
+}),
+```
+
+The plugin resolves the `url()` value and replaces it in the generated HTML with the output filename:
+```html
+<div style="background-image: url(assets/img/pic1.d4711676.png);"></div>
+```
+
 
 ---
 
