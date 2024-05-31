@@ -18,13 +18,14 @@
 The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
 This plugin allows using a template file as an [entry point](#option-entry).
 
+The plugin resolves source files of assets in templates and replaces them with correct output URLs in the generated HTML.
+The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
+You can use a relative path or Webpack alias to a source file.
+
 A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
 
 
-This plugin is an **advanced successor** to `html-webpack-plugin` and a replacement of the [plugins and loaders](#list-of-plugins).
-
-> 📢 Please help promote this plugin on social networks so that developers know about this useful plugin.\
-> Special Thanks to [Andrew Lisowski](https://twitter.com/HipsterSmoothie) for the tooltips in the video [www.youtube.com/@devtoolsfm](https://youtu.be/w4l89214zN4?si=x-eVXN-iLlOE_Gqy&t=3463).
+This plugin is an **advanced replacer**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
 
 <!--
 <table align="center">
@@ -90,9 +91,7 @@ src/
 -->
 
 
-All source file paths in dependencies will be resolved and auto-replaced with correct URLs in the bundled output. 
-The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
-You can use a relative path or Webpack alias to a source file.
+All source file paths in dependencies will be resolved and auto-replaced with correct URLs in the bundled output.
 
 ---
 
@@ -127,7 +126,7 @@ You can use a relative path or Webpack alias to a source file.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
 - You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
-- Over 500 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
+- Over 550 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
 
 See the [full list of features](#features).
 
@@ -139,38 +138,36 @@ Thank you to all our sponsors and patrons!
 <table align="center">
   <tr align="center" valign="top" style="border: 0">
     <td style="border: 0"><a href="https://www.jetbrains.com/">
-      <img src="https://avatars.githubusercontent.com/u/878437?s=72&v=4" title="JetBrains" alt="JetBrains">
+      <img src="https://avatars.githubusercontent.com/u/878437?s=50&v=4" title="JetBrains" alt="JetBrains">
       <p>JetBrains</p>
     </a></td>
     <td style="border: 0"><a href="https://github.com/getsentry">
-      <img src="https://avatars.githubusercontent.com/u/1396951?s=72&amp;v=4" title="Sentry" alt="Sentry">
+      <img src="https://avatars.githubusercontent.com/u/1396951?s=50&amp;v=4" title="Sentry" alt="Sentry">
       <p>Sentry</p>
     </a></td>
     <td style="border: 0"><a href="https://github.com/stackaid">
-      <img src="https://avatars.githubusercontent.com/u/84366591?s=72&amp;v=4" title="StackAid" alt="StackAid">
+      <img src="https://avatars.githubusercontent.com/u/84366591?s=50&amp;v=4" title="StackAid" alt="StackAid">
       <p>StackAid</p>
     </a></td>
     <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
-      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/96645548/020234154757463b939824efe62db137/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=GYnR3xvy7qBr2w1CihOfDOq87nOr4AbuW0ytvwg7Kgs%3D" width="72" title="Buckley Robinson" alt="patron" style="max-width: 100%;">
-      <p>Buckley Robinson</p>
+      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/96645548/020234154757463b939824efe62db137/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=GYnR3xvy7qBr2w1CihOfDOq87nOr4AbuW0ytvwg7Kgs%3D" width="50" title="Buckley Robinson" alt="patron" style="max-width: 100%;">
+      <p>Buckley<br>Robinson</p>
     </a></td>
     <td style="border: 0"><a href="https://github.com/pirang">
-      <img src="https://avatars.githubusercontent.com/u/6986749?s=72&amp;v=4" title="Pirang" alt="Pirang">
+      <img src="https://avatars.githubusercontent.com/u/6986749?s=50&amp;v=4" title="Pirang" alt="Pirang">
       <p>Pirang</p>
     </a></td>
     <td style="border: 0"><a href="https://github.com/MarcelRobitaille">
-      <img src="https://avatars.githubusercontent.com/u/8503756?s=72&amp;v=4" title="Marcel Robitaille" alt="Marcel Robitaille">
-      <p>Marcel Robitaille</p>
+      <img src="https://avatars.githubusercontent.com/u/8503756?s=50&amp;v=4" title="Marcel Robitaille" alt="Marcel Robitaille">
+      <p>Marcel<br>Robitaille</p>
     </a></td>
-  </tr>
-  <tr align="center" valign="top" style="border: 0">
     <td style="border: 0"><a href="https://github.com/kannwism">
-      <img src="https://avatars.githubusercontent.com/u/18029781?s=72&amp;v=4" width="72" title="Marian Kannwischer (kannwism)" alt="patron" style="max-width: 100%;">
-      <p>Marian Kannwischer</p>
+      <img src="https://avatars.githubusercontent.com/u/18029781?s=50&amp;v=4" width="50" title="Marian Kannwischer (kannwism)" alt="patron" style="max-width: 100%;">
+      <p>Marian<br>Kannwischer</p>
     </a></td>
     <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
-      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="72" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
-      <p>Raymond Ackloo</p>
+      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="50" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
+      <p>Raymond<br>Ackloo</p>
     </a></td>
   </tr>
 </table>

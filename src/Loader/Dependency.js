@@ -34,18 +34,52 @@ class Dependency {
       if (!watchFile.startsWith(entryDir)) this.excludeDirs.push(entryDir);
     });
 
-    this.addFile = this.addFile.bind(this);
+    this.addFileToWatch = this.addFileToWatch.bind(this);
 
     const fs = this.fileSystem;
     const { files: includes, ignore: excludes, paths = [] } = this.watchFiles;
 
     for (const watchDir of paths) {
       const files = readDirRecursiveSync(watchDir, { fs, includes, excludes });
-      files.forEach(this.addFile);
+      files.forEach(this.addFileToWatch);
     }
 
     const customWatchFiles = Option.getCustomWatchFiles();
-    if (customWatchFiles.length > 0) customWatchFiles.forEach(this.addFile);
+    if (customWatchFiles.length > 0) customWatchFiles.forEach(this.addFileToWatch);
+  }
+
+  /**
+   * Check whether the adding file is watchable.
+   *
+   * TODO: add to documentation the new options: includes (defaults as watchFiles.files), excludes
+   *
+   * @param {string} watchFile
+   * @return boolean
+   */
+  static isFileWatchable(watchFile) {
+    let { includes, excludes } = this.watchFiles;
+
+    let isIncluded = includes
+      ? includes.some((item) => {
+          if (item.constructor.name === 'RegExp') {
+            return item.test(watchFile);
+          }
+
+          return item === watchFile;
+        })
+      : true;
+
+    let isExcluded = excludes
+      ? excludes.some((item) => {
+          if (item.constructor.name === 'RegExp') {
+            return item.test(watchFile);
+          }
+
+          return item === watchFile;
+        })
+      : false;
+
+    return isIncluded && !isExcluded;
   }
 
   /**
@@ -56,9 +90,20 @@ class Dependency {
   }
 
   /**
+   * Add file using include & exculude filter.
+   *
    * @param {string} file
    */
   static addFile(file) {
+    if (this.isFileWatchable(file)) {
+      this.addFileToWatch(file);
+    }
+  }
+
+  /**
+   * @param {string} file
+   */
+  static addFileToWatch(file) {
     this.files.add(file);
 
     // delete the file from require.cache to reload cached file after change

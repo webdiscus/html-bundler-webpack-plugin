@@ -1,4 +1,5 @@
 const path = require('path');
+const Dependency = require('../../Dependency');
 const Resolver = require('../../Resolver');
 const { encodeReservedChars } = require('../../Utils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
@@ -306,7 +307,12 @@ const ResolvePlugin = {
    * @return {string}
    */
   resolve(filename, templateFile, options) {
-    return Resolver.resolve(filename.trim(), templateFile.trim(), Resolver.types.include);
+    const file = Resolver.resolve(filename.trim(), templateFile.trim(), Resolver.types.include);
+
+    // add included file as dependency to watch
+    Dependency.addFile(file);
+
+    return file;
   },
 
   /**

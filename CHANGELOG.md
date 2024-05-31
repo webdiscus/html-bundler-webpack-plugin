@@ -1,5 +1,10 @@
 # Change log
 
+## 3.14.0 (2024-05-31)
+
+- feat(Pug): add `watchFiles.includes` and `watchFiles.excludes` options to allow watch specifically external file,
+  e.g. *.md file included via Pug filter from any location outer project directory
+
 ## 3.13.0 (2024-05-26)
 
 - feat: add resolving the url() value in the style attribute:

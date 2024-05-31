@@ -26,10 +26,12 @@ module.exports = {
         let source = compilation.assets[jsFilename].source();
 
         // modify JS code
-        source = source.replace(/\$[^\{]/g, 'dollars');
+        let newSource = source.replace(/\$[^\{]/g, '__S__');
+
+        //console.log('\n## OLD SOURCE: ', source, '\n## NEW SOURCE: ', newSource);
 
         // update compilation with new JS code before this code will be inlined into HTML
-        compilation.updateAsset(jsFilename, new RawSource(source));
+        compilation.updateAsset(jsFilename, new RawSource(newSource));
       },
     }),
   ],

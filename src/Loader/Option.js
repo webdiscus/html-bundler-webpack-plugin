@@ -175,10 +175,16 @@ class Option {
         /webpack\.(.+)\.js$/,
         /\.(je?pg|png|ico|gif|webp|svg|woff2?|ttf|otf|eot)$/,
       ],
+
+      // include custom files
+      includes: null,
+
+      // exclude custom files
+      excludes: null,
     };
 
     const fs = this.fileSystem;
-    const { paths, files, ignore } = pluginOption.getWatchFiles();
+    let { paths, files, ignore, includes, excludes } = pluginOption.getWatchFiles();
     const watchDirs = new Set([rootSourceDir(this.#rootContext, this.#resourcePath)]);
     const rootContext = this.#rootContext;
 
@@ -223,6 +229,14 @@ class Option {
         watchFiles.ignore.push(item);
       }
     }
+
+    if (!includes) {
+      watchFiles.includes = watchFiles.files;
+    } else {
+      if (!Array.isArray(includes)) includes = [includes];
+      watchFiles.includes = [...watchFiles.files, ...includes];
+    }
+    watchFiles.excludes = excludes && !Array.isArray(excludes) ? [excludes] : excludes;
 
     this.#watchFiles = watchFiles;
   }

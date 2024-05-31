@@ -48,6 +48,7 @@ const loader = function (content, map, meta) {
     errorStage = 'init';
     Option.init(loaderContext);
     Loader.init(loaderContext);
+    Dependency.init(loaderContext);
     resolve();
   })
     .then(() => {
@@ -101,7 +102,6 @@ const loader = function (content, map, meta) {
     })
     .then((value) => {
       errorStage = 'watch';
-      Dependency.init(loaderContext);
       Dependency.watch();
       callback(null, value);
     })
