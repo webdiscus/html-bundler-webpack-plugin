@@ -3059,7 +3059,7 @@ new HtmlBundlerPlugin({
       {
         tag: 'meta',
         attributes: ['content'],
-        // allow to handlen an image in the 'content' attribute of the 'meta' tag
+        // allow to handle an image in the 'content' attribute of the 'meta' tag
         // when the 'property' attribute contains one of: 'og:image', 'og:video'
         filter: ({ attributes }) => {
           const attrName = 'property';
