@@ -3954,7 +3954,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          // output dist/imdex.html
+          // output dist/index.html
           import: './src/views/page/index.eta',
           data: {
             headline: 'Breaking Bad',
@@ -4026,7 +4026,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          // output dist/imdex.html
+          // output dist/index.html
           import: './src/views/page/index.ejs',
           data: {
             headline: 'Breaking Bad',
