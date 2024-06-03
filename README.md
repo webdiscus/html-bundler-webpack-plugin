@@ -25,7 +25,7 @@ You can use a relative path or Webpack alias to a source file.
 A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
 
 
-This plugin is an **advanced replacer**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
+This plugin is an **advanced replacement**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
 
 <!--
 <table align="center">
@@ -399,14 +399,14 @@ module.exports = {
 > Don't use Webpack's `output.filename`, hold all relevant settings in one place - in plugin options.\
 > Both places have the same effect, but `js.filename` has priority over `output.filename`.
 
-No additional template loader is required. The plugin handels templates with base `EJS`-like syntax automatically.
+No additional template loader is required. The plugin handles templates with base `EJS`-like syntax automatically.
 The default templating engine is [Eta](https://eta.js.org).
 
 For using the native `EJS` syntax see [Templating with EJS](#using-template-ejs).\
 For using the `Handlebars` see [Templating with Handlebars](#using-template-handlebars).\
 For other templates see [Template engines](#template-engine).
 
-For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handels any template engine.
+For custom templates, you can use the [preprocessor](#loader-option-preprocessor) option to handle any template engine.
 
 <table>
 <tr>
@@ -3954,7 +3954,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          // output dist/imdex.html
+          // output dist/index.html
           import: './src/views/page/index.eta',
           data: {
             headline: 'Breaking Bad',
@@ -4026,7 +4026,7 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: {
-          // output dist/imdex.html
+          // output dist/index.html
           import: './src/views/page/index.ejs',
           data: {
             headline: 'Breaking Bad',
