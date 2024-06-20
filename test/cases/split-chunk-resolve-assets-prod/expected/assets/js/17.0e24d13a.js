@@ -1,1 +1,0 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[17,870],{870:(o,l,e)=>{const{lorem:n,libA:s,libB:c}=e(815),b=e(691),g=e(703);console.log(">> main-b:"),console.log(" - B: ",b),console.log(" - C: ",g),console.log("Lorem: ",n.getTitle())}}]);

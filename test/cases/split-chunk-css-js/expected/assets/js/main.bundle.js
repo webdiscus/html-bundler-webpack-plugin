@@ -1,1 +1,1 @@
-"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[179],{225:(e,s,l)=>{l.r(s);var n=l(117),a=l.n(n);console.log(">> main.js",a().getTitle())}},e=>{e.O(0,[216],(()=>(225,e(e.s=225)))),e.O()}]);
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[792],{803:(e,s,l)=>{l.r(s);var n=l(41),a=l.n(n);console.log(">> main.js",a().getTitle())}},e=>{e.O(0,[96],(()=>e(e.s=803))),e.O()}]);

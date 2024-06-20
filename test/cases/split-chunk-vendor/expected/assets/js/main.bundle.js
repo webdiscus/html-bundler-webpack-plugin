@@ -1,1 +1,1 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[179],{225:()=>{console.log(">> main.js")}},s=>{s(s.s=225)}]);
+(self.webpackChunk=self.webpackChunk||[]).push([[792],{803:()=>{console.log(">> main.js")}},s=>{s(s.s=803)}]);

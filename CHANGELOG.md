@@ -1,5 +1,10 @@
 # Change log
 
+## 3.15.0 (2024-06-20)
+
+- feat: update `eta` package to latest version 3.4.0
+- chore: update dev dependencies and tests
+
 ## 3.14.0 (2024-05-31)
 
 - feat(Pug): add `watchFiles.includes` and `watchFiles.excludes` options to allow watch specifically external file,

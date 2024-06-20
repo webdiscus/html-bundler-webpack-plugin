@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[724],{724:(e,l,n)=>{n.r(l);var s=n(992),t=n.n(s),u=n(881),c=n.n(u);console.log(">> dyn-module",[t().getTitle(),c().getTitle()])}}]);

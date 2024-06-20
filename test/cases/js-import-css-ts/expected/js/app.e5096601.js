@@ -1,1 +1,0 @@
-(()=>{var r={716:()=>{},97:()=>{}},o={};function t(e){var s=o[e];if(void 0!==s)return s.exports;var p=o[e]={exports:{}};return r[e](p,p.exports,t),p.exports}(()=>{"use strict";t(716),t(97),console.log(">> app")})()})();

@@ -1,0 +1,1 @@
+(self.webpackChunk=self.webpackChunk||[]).push([[287],{287:()=>{console.log(">> About: split chunks")}}]);

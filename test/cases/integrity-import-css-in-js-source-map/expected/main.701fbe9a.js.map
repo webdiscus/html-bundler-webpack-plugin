@@ -1,0 +1,1 @@
+{"version":3,"file":"main.701fbe9a.js","mappings":"yFAEAA,QAAQC,IAAI,U","sources":["webpack:///./src/main.js"],"sourcesContent":["import './style.css';\n\nconsole.log('>> main');\n"],"names":["console","log"],"sourceRoot":""}

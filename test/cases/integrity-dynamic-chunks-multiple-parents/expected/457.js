@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[457],{457:(c,u,e)=>{e.r(u),e.d(u,{default:()=>k}),console.log(">> chunk");const k={chunk:"chunk"}}}]);

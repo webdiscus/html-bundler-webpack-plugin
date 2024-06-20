@@ -104,11 +104,11 @@ assets:
               -> ../assets/img/hardware-200w.webp 200w,../assets/img/hardware-400w.webp 400w
          script: src/views/about/about-split.js
               -> chunks:
-                     ../js/612.bundle.js
+                     ../js/287.bundle.js
                      ../js/about-split.bundle.js
          script: src/views/about/about-inline-split.js?inline
               -> chunks:
-                     544.bundle.js (inline)
+                     433.bundle.js (inline)
                      about-inline-split.bundle.js (inline)
          script: src/views/about/about.js
               -> ../js/about.bundle.js
