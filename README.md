@@ -3936,10 +3936,9 @@ For example, there is the template _src/views/page/index.eta_
     <h1><%= headline %></h1>
     <ul class="people">
       <% for (let i = 0; i < people.length; i++) {%>
-      <li><%= people[i] %>></li>
+      <li><%= people[i] %></li>
       <% } %>
     </ul>
-    <%~ include('/src/views/partials/footer') %>
   </body>
 </html>
 ```
@@ -4008,10 +4007,9 @@ For example, there is the template _src/views/page/index.ejs_
     <h1><%= headline %></h1>
     <ul class="people">
       <% for (let i = 0; i < people.length; i++) {%>
-      <li><%= people[i] %>></li>
+      <li><%= people[i] %></li>
       <% } %>
     </ul>
-    <%- include('/src/views/partials/footer.html'); %>
   </body>
 </html>
 ```
