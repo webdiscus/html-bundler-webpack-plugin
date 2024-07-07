@@ -5,7 +5,7 @@ const ResolverFactory = require('enhanced-resolve');
 const Option = require('./Option');
 const PluginService = require('../Plugin/PluginService');
 const Snapshot = require('../Plugin/Snapshot');
-const { resolveException } = require('./Messages/Exeptions');
+const { resolveException, unsupportedInterpolationException } = require('./Messages/Exeptions');
 
 class Resolver {
   static aliasRegexp = /^([~@])?(.*?)(?=\/)/;

@@ -178,6 +178,8 @@ class Collection {
     const { chunks } = asset;
     let openTag = '<script>';
     const closeTag = '</script>';
+    const tagStartCode = '<'.charCodeAt(0);
+    const attrPos = openTag.length;
 
     let srcStartPos = pos;
     let srcEndPos = srcStartPos + resource.length;
@@ -193,12 +195,13 @@ class Collection {
         : replaceAll(content, resource, chunks[0].assetFile);
     }
 
-    while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
-    let tagEndPos2 = content.indexOf(closeTag, tagEndPos);
+    // find the starting position of the tag to the left of the `src` attribute
+    while (tagStartPos >= 0 && content.charCodeAt(--tagStartPos) !== tagStartCode) {}
     tagEndPos = content.indexOf(closeTag, tagEndPos) + closeTag.length;
 
     let beforeTagSrc = content.slice(tagStartPos, srcStartPos);
     let afterTagSrc = content.slice(srcEndPos, tagEndPos);
+    let isCreatedOpenTag = false;
 
     for (let { inline, chunkFile, assetFile } of chunks) {
       if (LF && replacement) replacement += LF;
@@ -206,9 +209,8 @@ class Collection {
       if (inline) {
         const code = sources[chunkFile].source();
 
-        if (attributeFilter) {
-          let tag = content.slice(tagStartPos, tagEndPos2);
-          const attributes = HtmlParser.parseAttrAll(tag);
+        if (!isCreatedOpenTag && attributeFilter) {
+          const { attrs: attributes } = HtmlParser.parseTagAttributes(content, 'script', tagStartPos, attrPos);
           let attrsStr = '';
 
           for (const [attribute, value] of Object.entries(attributes)) {
@@ -222,6 +224,8 @@ class Collection {
           if (attrsStr) {
             openTag = `<script ${attrsStr}>`;
           }
+
+          isCreatedOpenTag = true;
         }
 
         replacement += openTag + code + closeTag;

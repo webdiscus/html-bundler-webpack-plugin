@@ -32,8 +32,8 @@ class Template {
     let output = '';
     let pos = 0;
 
-    for (let { tag, source, parsedAttrs } of parsedTags) {
-      for (let { type, attr, startPos, endPos, value, quote, offset, inEscapedDoubleQuotes } of parsedAttrs) {
+    for (let { type, tag, raw, parsedAttrs } of parsedTags) {
+      for (let { attr, value, startPos, endPos, quote, inEscapedDoubleQuotes } of parsedAttrs) {
         if (!value) continue;
 
         const result = this.resolveFile({
@@ -49,7 +49,7 @@ class Template {
         if (!result) continue;
 
         const { resolvedFile, requireExpression } = result;
-        const hookResult = hooks.resolveSource.call(source, {
+        const hookResult = hooks.resolveSource.call(raw, {
           type,
           tag,
           attribute: attr,
@@ -60,13 +60,13 @@ class Template {
         });
 
         // note: if the hook returns `undefined`, then the hookResult contains the value of the first argument
-        const resolvedValue = hookResult && hookResult !== source ? hookResult : requireExpression;
+        const resolvedValue = hookResult && hookResult !== raw ? hookResult : requireExpression;
 
         // enclose the value in quotes
         if (!quote) quote = '';
 
-        output += content.slice(pos, startPos + offset) + quote + resolvedValue + quote;
-        pos = endPos + offset;
+        output += content.slice(pos, startPos) + quote + resolvedValue + quote;
+        pos = endPos;
       }
     }
 

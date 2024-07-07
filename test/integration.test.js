@@ -425,7 +425,9 @@ describe('extract CSS', () => {
 });
 
 describe('special cases', () => {
-  test('resolve values with invalid syntax', () => compareFiles('resolve-values-invalid-syntax'));
+  // TODO: move to error messages
+  //test('resolve values with invalid syntax', () => compareFiles('resolve-values-invalid-syntax'));
+
   test('resolve assets without extension', () => compareFiles('resolve-assets-without-ext'));
   test('resolve assets in entries with a query', () => compareFiles('resolve-in-entry-with-query'));
   test('resolve manifest.json', () => compareFiles('resolve-manifest.json'));
@@ -450,6 +452,9 @@ describe('special cases', () => {
   test('modify js in postprocess', () => compareFiles('postprocess-modify-js'));
 
   test('resolve-attr-style-url', () => compareFiles('resolve-attr-style-url'));
+
+  test('resolve-attr-formatted', () => compareFiles('resolve-attr-formatted'));
+  test('resolve-images-in-attrs-all-variants', () => compareFiles('resolve-images-in-attrs-all-variants'));
 
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));

@@ -10,7 +10,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, '../../fixtures/images'),
+      '@images': path.join(__dirname, '../../../fixtures/images'),
     },
   },
 

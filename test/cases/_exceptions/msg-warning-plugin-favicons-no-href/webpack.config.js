@@ -1,6 +1,6 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
-const { FaviconsBundlerPlugin } = require('../../../plugins');
+const { FaviconsBundlerPlugin } = require('../../../../plugins');
 
 module.exports = {
   mode: 'production',

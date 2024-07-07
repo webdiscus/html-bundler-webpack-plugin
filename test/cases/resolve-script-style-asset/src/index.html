@@ -44,9 +44,9 @@
     <!-- w/o space around values in srcset attribute -->
     <img srcset="@images/lemon.png,@images/lemon2.png 100w,@images/lemon3.png 1.5x" src="@images/lemon.png">
 
-    <!-- multiline attributes -->
+    <!-- multiline attributes, attribute contains `<` and `>` chars -->
     <img
-      alt="apple"
+      alt="apple <-> pear"
       src="@images/apple.png"
     >
 
@@ -71,11 +71,11 @@
 
     <object width="200" height="150" data="@images/apple.png"></object>
 
-    <h2>Ignore resources</h2>
-
-    <!-- ignore resolving of src attribute when leading char is not a space symbol
+    <!-- resolving of src attribute when leading char is not a space symbol
          there should be a space between attribute and previous attribute -->
     <img title="kiwi"src="@images/kiwi.png">
+
+    <h2>Ignore resources</h2>
 
     <!-- bypass url -->
     <img src="https://example.com/img/image.png">

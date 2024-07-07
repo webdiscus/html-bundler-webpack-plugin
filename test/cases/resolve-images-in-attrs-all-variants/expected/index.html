@@ -1,0 +1,19 @@
+<html>
+<head>
+</head>
+
+<body>
+  <!-- test parseRequiredValues -->
+  <a href="#" data-image='{ "alt": "picture", "imgSrc": "img/lemon.7b66be8e.png", "bigImgSrc": "img/lemon2.7b66be8e.png" }'>
+
+  <!-- test parseStyleUrlValues -->
+  <div style="width: 160px; height: 130px; background-image: url('img/kiwi.da3e3cc9.png'); border: 2px solid #ff4500;"></div>
+
+  <!-- test parseSrcsetValue, test `<` and `>` chars in attribute value -->
+  <img
+    src="img/pear.6b9b072a.png"
+    alt="left <-> right"
+    srcset="img/fig.c6809878.png, img/fig2.c6809878.png 100w, img/fig3.c6809878.png 1.5x"
+  />
+</body>
+</html>

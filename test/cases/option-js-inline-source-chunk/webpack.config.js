@@ -22,6 +22,13 @@ module.exports = {
 
           // Inlines when source filename contains `-inline.js` string.
           source: /.+-inline[.]js/,
+
+          attributeFilter: ({ attributes, attribute, value }) => {
+            // keep attributes for inline script chunks
+            if (attribute === 'id') return true;
+            if (attribute === 'nomodule') return true;
+            //console.log('attributeFilter: ', { attributes, attribute, value });
+          },
         },
       },
 

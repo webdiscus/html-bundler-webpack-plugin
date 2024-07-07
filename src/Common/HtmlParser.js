@@ -4,8 +4,10 @@
 
 const textEncoder = new TextEncoder();
 const spaceCodes = textEncoder.encode(' \n\r\t\f');
-const tagEndCodes = textEncoder.encode(' \n\r\t\f/>');
 const valueSeparatorCodes = textEncoder.encode('= \n\r\t\f');
+const slashCode = '/'.charCodeAt(0);
+const tagStartCode = '<'.charCodeAt(0);
+const tagEndCode = '>'.charCodeAt(0);
 const equalCode = '='.charCodeAt(0);
 const escapeCode = `\\`.charCodeAt(0);
 const quotCodes = textEncoder.encode(`"'`);
@@ -13,102 +15,81 @@ const quotCodes = textEncoder.encode(`"'`);
 const comparePos = (a, b) => a.startPos - b.startPos;
 
 /**
- * Returns the first index of a space char.
- * The space char can be one of: space, tab, new line, carrier return, page break.
- *
- * @param {string} content
- * @param {number} startPos
- * @return {number}
- */
-const indexOfSpace = (content, startPos = 0) => {
-  const len = content.length;
-  for (; spaceCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
-
-  return startPos < len ? startPos : -1;
-};
-
-/**
  * Returns the first index of a non-space char.
  * The space char can be one of: space, tab, new line, carrier return, page break.
  *
  * @param {string} content
- * @param {number} startPos
+ * @param {number} pos
  * @return {number}
  */
-const indexOfNonSpace = (content, startPos = 0) => {
-  for (; spaceCodes.indexOf(content.charCodeAt(startPos)) > -1; startPos++) {}
+const indexOfNonSpace = (content, pos = 0) => {
+  for (; spaceCodes.indexOf(content.charCodeAt(pos)) > -1; pos++) {}
 
-  return startPos;
+  return pos;
 };
 
 /**
- * Returns the first index of an attribute/value separator char.
- * The char can be one of: =, space, tab, new line, carrier return, page break.
+ * Returns the first index of a space char or current position.
+ * The space char can be one of: space, tab, new line, carrier return, page break.
  *
+ * @param {string} content The tag raw content.
+ * @param {string} tagName Used for exception only.
+ * @param {number} startPos Used for exception only.
+ * @param {number} pos The current position in the content.
+ * @return {{pos: number, tagEnd: boolean}} The `pos` is the last position of non tag end char.
+ *  The `tagEnd` indicates whether the end of the tag has been reached.
+ */
+const indexOfSpaceOrTagEnd = (content, tagName, startPos, pos = 0) => {
+  const len = content.length;
+  let code, next;
+  do {
+    code = content.charCodeAt(pos);
+
+    if (code === tagEndCode || (code === slashCode && content.charCodeAt(pos + 1) === tagEndCode)) {
+      return { pos, tagEnd: true };
+    }
+
+    next = valueSeparatorCodes.indexOf(code) < 0;
+    if (next) {
+      pos++;
+    }
+
+    if (pos > len) {
+      throw new Error(`The '${tagName}' tag starting at ${startPos} position is missing the closing '>' char.`);
+    }
+  } while (next);
+
+  return { pos, tagEnd: false };
+};
+
+/**
  * @param {string} content
- * @param {number} startPos
+ * @param {string} tagName Used for exception only.
+ * @param {number} startPos Used for exception only.
+ * @param {number} pos
  * @return {number}
  */
-const indexOfValueSeparator = (content, startPos = 0) => {
+const indexOfNonSpaceOrTagEnd = (content, tagName, startPos, pos = 0) => {
   const len = content.length;
-  for (; valueSeparatorCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
+  let code, next;
+  do {
+    code = content.charCodeAt(pos);
 
-  return startPos < len ? startPos : -1;
-};
+    if (code === tagEndCode || (code === slashCode && content.charCodeAt(pos + 1) === tagEndCode)) {
+      return -1;
+    }
 
-/**
- * Returns the first index of a quote.
- * The quote can be escaped, e.g. attr=\"value\" in a template function code.
- *
- * @param {string} content
- * @param {number} startPos
- * @return {number}
- */
-const indexOfQuote = (content, startPos = 0) => {
-  const len = content.length;
-  for (; quotCodes.indexOf(content.charCodeAt(startPos)) < 0 && startPos < len; startPos++) {}
+    if (pos > len || code === tagStartCode) {
+      throw new Error(`The '${tagName}' tag starting at ${startPos} position is missing the closing '>' char.`);
+    }
 
-  return startPos < len ? startPos : -1;
-};
+    next = spaceCodes.indexOf(code) > -1;
+    if (next) {
+      pos++;
+    }
+  } while (next);
 
-/**
- * Return end position of the last attribute in a tag.
- *
- * @param {string} content The tag content.
- * @param {number} startAttrsPos The start position of first attribute.
- * @return {number}
- */
-const indexOfAttributesEnd = (content, startAttrsPos) => {
-  const len = content.length;
-  let pos = content.length - 1;
-
-  for (; tagEndCodes.indexOf(content.charCodeAt(pos)) >= 0 && pos > 0; pos--) {}
-
-  return pos < len && pos > startAttrsPos ? pos : -1;
-};
-
-/**
- * Returns the first index of the searched char if none of the excluded chars was found before it.
- *
- * @param {string} search The search char.
- * @param {string} content Where to search for a char.
- * @param {number} startPos The offset in content.
- * @param {string} except A string containing chars that should not be before the searched character.
- * @return {number} TThe index of the found char, otherwise -1.
- */
-const indexOfChar = (search, content, startPos = 0, except = '') => {
-  const searchCode = search.charCodeAt(0);
-  const exceptCodes = textEncoder.encode(except);
-  let offset = 0;
-  let code;
-
-  while ((code = content.charCodeAt(startPos))) {
-    if (code === searchCode) return startPos;
-    if (offset++ > 0 && exceptCodes.indexOf(code) > -1) return -1;
-    startPos++;
-  }
-
-  return -1;
+  return pos;
 };
 
 /**
@@ -159,49 +140,40 @@ class HtmlParser {
    * @param {string} resourcePath The file of content. This is passed into the filter function.
    * @return {Array<{}> | boolean}
    */
-  static parseTag(content, { tag, attributes = [], filter, resourcePath = '' }) {
+  static parseTag(content, { tag, attributes: attrList, filter, resourcePath = '' }) {
     const open = `<${tag}`;
-    const close = '>';
+    const offset = open.length;
     const result = [];
-    let startPos = 0;
-    let endPos = 0;
+    let pos = 0;
 
-    while ((startPos = content.indexOf(open, startPos)) >= 0) {
+    // detect all attributes in the tag
+    // <tag{space|>}attr{space|=|>}{space}{quote}value{quote}{space|>}...
+    while ((pos = content.indexOf(open, pos)) >= 0) {
+      const { attrs, attrsData, startPos, endPos } = this.parseTagAttributes(content, tag, pos, offset);
+      const raw = content.slice(startPos, endPos);
       const parsedAttrs = [];
-      endPos = indexOfChar(close, content, startPos, '<');
-
-      if (endPos < 1) {
-        throw new Error(`The '${tag}' tag starting at ${startPos} position is missing the closing '>' char.`);
-      }
-
-      endPos += close.length;
-
-      const source = content.slice(startPos, endPos);
       let type = 'asset';
-      let attrs = null;
 
       if (tag === 'script') {
         type = 'script';
       } else if (tag === 'link') {
-        if (isLinkStyle(source)) type = 'style';
-        else if (isLinkScript(source)) type = 'script';
+        if (isLinkStyle(raw)) type = 'style';
+        else if (isLinkScript(raw)) type = 'script';
       }
 
-      for (let attribute of attributes) {
-        const parsedAttr = this.parseAttr(source, attribute, type, startPos);
-        if (parsedAttr === false) continue;
+      for (let attrName of attrList) {
+        if (!(attrName in attrs)) continue;
 
+        const attrValue = attrs[attrName];
+        const attrData = attrsData[attrName];
+        const parsedAttr = this.parseAttributeValue(attrName, attrValue, attrData);
         let res = true;
 
         if (filter) {
-          const { value, parsedValue } = parsedAttr;
-
-          // when is the filter defined, parse all attributes once
-          if (!attrs) {
-            attrs = this.parseAttrAll(source);
-          }
-
-          res = filter({ tag, attribute, value, parsedValue, attributes: attrs, resourcePath }) !== false;
+          const { parsedValue } = parsedAttr;
+          res =
+            filter({ tag, attribute: attrName, value: attrValue, parsedValue, attributes: attrs, resourcePath }) !==
+            false;
         }
 
         if (res === true) {
@@ -219,52 +191,64 @@ class HtmlParser {
       }
 
       result.push({
-        tag,
-        source,
         type,
+        tag,
+        raw,
         parsedAttrs,
         attrs,
         startPos,
         endPos,
       });
 
-      startPos = endPos;
+      pos = endPos;
     }
 
     return result;
   }
 
   /**
-   * Parse all attributes in the tag.
+   * Parse all tag attributes in the content.
    *
-   * @param {string} content The HTML tag.
-   * @return {{ [k: string]: string }}
+   * Note: allow zero or more spaces around `=`.
+   * https://www.w3.org/TR/2011/WD-html5-20110113/syntax.html#attributes-0
+   *
+   * @param {string} content The string contains html.
+   * @param {string} tagName The tag name.
+   * @param {number} pos The starting tag position in the content.
+   * @param {number} offset The offset of the first attribute in the tag.
+   * @return {{attrs: {}, attrsData: {}, startPos: number, endPos: number}}
    */
-  static parseAttrAll(content) {
+  static parseTagAttributes(content, tagName, pos, offset = 0) {
     let attrs = {};
-    let pos = indexOfSpace(content, 1);
+    let attrsData = {};
+    let startPos = pos;
+    let endPos = pos;
+    let isTagEnd = false;
 
-    // no attributes
-    if (pos < 0) return attrs;
+    pos += offset;
 
-    let attrsEndPos = indexOfAttributesEnd(content, pos);
-
-    // no attributes
-    if (attrsEndPos < 0) return attrs;
-
-    while (pos < attrsEndPos) {
-      let attrStartPos = indexOfNonSpace(content, pos);
-      pos = indexOfValueSeparator(content, attrStartPos + 1);
-      let hasValue = pos >= 0 && content.charCodeAt(pos) === equalCode;
-
-      if (pos < 0) pos = attrsEndPos + 1;
-
-      let attr = content.slice(attrStartPos, pos);
+    while (!isTagEnd && (pos = indexOfNonSpaceOrTagEnd(content, tagName, startPos, pos)) > -1) {
+      let { pos: attrEndPos, tagEnd } = indexOfSpaceOrTagEnd(content, tagName, startPos, pos);
+      let attrStartPos = pos;
+      let attrName = content.substring(attrStartPos, attrEndPos);
       let value = undefined;
 
+      if (tagEnd) {
+        // `<img disabled>`
+        attrs[attrName] = value;
+        break;
+      }
+
+      // next position should be the separator `=`
+      pos = indexOfNonSpace(content, attrEndPos);
+      endPos = pos;
+
+      let hasValue = content.charCodeAt(pos) === equalCode;
+
       if (hasValue) {
-        // TODO: allow a space around equal, e.g., `attr =  value`
-        let valueStartPos = pos + 1;
+        // allow a space around equal, e.g., `attr =  value`
+        const initialValueStartPos = indexOfNonSpace(content, pos + 1);
+        let valueStartPos = initialValueStartPos;
         let valueEndPos = -1;
         let nextCharCode = content.charCodeAt(valueStartPos);
         let isEscaped = false;
@@ -276,55 +260,60 @@ class HtmlParser {
 
         if (quotCodes.indexOf(nextCharCode) >= 0) {
           // value with quotes
-          let quote = String.fromCharCode([nextCharCode]);
+          let quote = String.fromCharCode(nextCharCode);
           if (isEscaped) quote = `\\` + quote;
 
           valueEndPos = content.indexOf(quote, ++valueStartPos);
-          if (valueEndPos > -1) pos = valueEndPos + 1;
+          if (valueEndPos > -1) {
+            pos = valueEndPos + 1;
+            isEscaped && pos++;
+          }
+          if (valueEndPos < 0) {
+            throw new Error(
+              `The '${tagName}' '${attrName}' attribute, starting at ${initialValueStartPos} position, is missing a closing quote:\n${content.slice(startPos)}`
+            );
+          }
         } else {
           // value w/o quotes
-          valueEndPos = indexOfSpace(content, valueStartPos);
-          if (valueEndPos > -1) pos = valueEndPos;
-        }
-
-        if (valueEndPos < 0) {
-          valueEndPos = attrsEndPos + 1;
+          let { pos: valueEndPos2, tagEnd } = indexOfSpaceOrTagEnd(content, tagName, startPos, valueStartPos);
+          isTagEnd = tagEnd;
+          valueEndPos = valueEndPos2;
           pos = valueEndPos;
         }
 
         value = content.slice(valueStartPos, valueEndPos);
+        endPos = valueEndPos;
+
+        attrsData[attrName] = {
+          valueStartPos,
+          valueEndPos,
+          isEscaped,
+        };
       }
 
-      attrs[attr] = value;
+      attrs[attrName] = value;
     }
 
-    return attrs;
+    // find the tag end pos
+    endPos = content.indexOf('>', endPos) + 1;
+
+    return {
+      attrs,
+      attrsData,
+      startPos,
+      endPos,
+    };
   }
 
   /**
-   * Parse the attribute in the tag.
+   * Parse the value of the attribute.
    *
-   * @param {string} content The HTML tag.
-   * @param {string} attr The attribute to parse value.
-   * @param {string} type The type of attribute value.
-   * @param {Number} offset The absolute tag offset in the content.
+   * @param {string} attr The attribute name.
+   * @param {string} value The value to parse files.
+   * @param {{}} attrData The parsed info of the attribute.
    * @return {{attr: string, attrs?: Array, value: string, parsedValue: Array<string>, startPos: number, endPos: number, offset: number, inEscapedDoubleQuotes: boolean} | {} | boolean}
    */
-  static parseAttr(content, attr, type = 'asset', offset = 0) {
-    // TODO: allow zero or more spaces around `=`
-    // https://www.w3.org/TR/2011/WD-html5-20110113/syntax.html#attributes-0
-    const open = `${attr}=`;
-    let startPos = 0;
-    let pos;
-
-    // find the starting position of an attribute with a leading space char
-    do {
-      pos = content.indexOf(open, startPos);
-      startPos = pos + open.length;
-    } while (pos > 0 && spaceCodes.indexOf(content.charCodeAt(pos - 1)) < 0);
-
-    if (pos <= 0) return false;
-
+  static parseAttributeValue(attr, value, attrData) {
     // Note:
     // 1. The HTML string contains the normal quote:
     //    <img src="image.png">
@@ -336,66 +325,40 @@ class HtmlParser {
     //    the require function should be injected as:
     //    module.exports = fn("<img src=\"" + require('image.png') + "\">")
 
-    // find open quote pos
-    let openQuotePos = indexOfQuote(content, startPos);
-    let quoteChar = content.charAt(openQuotePos);
-    let inEscapedDoubleQuotes = content.charCodeAt(openQuotePos - 1) === escapeCode;
-    let quote = inEscapedDoubleQuotes ? `\\` + quoteChar : quoteChar;
-
-    startPos = openQuotePos + 1;
-
-    // find close quote pos
-    let endPos = content.indexOf(quote, startPos);
-
-    if (endPos < 0) endPos = content.length - 1;
-
-    let value = content.slice(startPos, endPos);
-
-    if (attr.indexOf('srcset') > -1) {
-      const { values, attrs } = this.parseSrcsetValue(value, startPos, offset, inEscapedDoubleQuotes);
-
-      return {
-        attr,
-        value,
-        startPos,
-        endPos,
-        offset,
-        attrs,
-        parsedValue: values,
-        inEscapedDoubleQuotes,
-      };
-    }
-
-    if (attr === 'style') {
-      const { values, attrs } = this.parseStyleUrlValues(value, startPos, offset);
-
-      return values
-        ? {
-            attr,
-            value,
-            startPos,
-            endPos,
-            offset,
-            attrs,
-            parsedValue: values,
-            inEscapedDoubleQuotes,
-          }
-        : {};
-    }
-
+    let inEscapedDoubleQuotes = attrData.isEscaped;
     let result = {
-      type,
       attr,
       value,
-      startPos,
-      endPos,
-      offset,
+      startPos: attrData.valueStartPos,
+      endPos: attrData.valueEndPos,
       inEscapedDoubleQuotes,
     };
 
+    if (attr.indexOf('srcset') > -1) {
+      const { values, attrs } = this.parseSrcsetValue(value, attrData.valueStartPos, inEscapedDoubleQuotes);
+
+      result.parsedValue = values;
+      result.attrs = attrs;
+
+      return result;
+    }
+
+    if (attr === 'style') {
+      const { values, attrs } = this.parseStyleUrlValues(value, attrData.valueStartPos);
+
+      if (!values) {
+        return {};
+      }
+
+      result.parsedValue = values;
+      result.attrs = attrs;
+
+      return result;
+    }
+
     // parse for required values which are not yet resolved by a preprocessor like pug
     if (value.indexOf('\\u0027') < 0 && value.indexOf('require(') > 0) {
-      const { values, attrs } = this.parseRequiredValues(value, startPos, offset);
+      const { values, attrs } = this.parseRequiredValues(value, attrData.valueStartPos);
 
       return { ...result, parsedValue: values, attrs };
     }
@@ -412,11 +375,10 @@ class HtmlParser {
    *   <div style="background-image: url(./image.png);"></div>
    *
    * @param {string} content The attribute value.
-   * @param {Number} valueOffset The offset of value in the tag.
-   * @param {Number} offset The absolute tag offset in the content.
+   * @param {Number} valueOffset The absolute offset of value in the raw content.
    * @return {{values: *[], attrs: *[]} | {}}
    */
-  static parseStyleUrlValues(content, valueOffset, offset) {
+  static parseStyleUrlValues(content, valueOffset) {
     let pos = content.indexOf('url(');
 
     if (pos < 0) return {};
@@ -436,9 +398,8 @@ class HtmlParser {
     let attrs = {
       value: parsedValue,
       quote,
-      startPos: valueStartPos,
-      endPos: valueEndPos,
-      offset: offset + valueOffset,
+      startPos: valueOffset + valueStartPos,
+      endPos: valueOffset + valueEndPos,
     };
 
     return { values: [parsedValue], attrs: [attrs] };
@@ -451,11 +412,10 @@ class HtmlParser {
    *   <a href="#" data-picture='{ "alt":"picture", "imgSrc": require("./picture.png") }'></a>
    *
    * @param {string} content The attribute value.
-   * @param {Number} valueOffset The offset of value in the tag.
-   * @param {Number} offset The absolute tag offset in the content.
+   * @param {Number} valueOffset The absolute offset of value in the raw content.
    * @return {{values: *[], attrs: *[]}}
    */
-  static parseRequiredValues(content, valueOffset, offset) {
+  static parseRequiredValues(content, valueOffset) {
     let pos;
     let values = [];
     let attrs = [];
@@ -466,14 +426,13 @@ class HtmlParser {
       let quote = content.charAt(valueStartPos);
       let value = content.slice(valueStartPos + 1, valueEndPos - 1); // skip quotes around value
 
-      values.push(value);
+      values.push(value.split('?', 1)[0]);
 
       attrs.push({
         value,
         quote, // quotes used in require()
         startPos: valueOffset + pos, // skip `require(`
         endPos: valueOffset + valueEndPos + 1, // skip `)`
-        offset,
       });
 
       pos = valueEndPos + 1;
@@ -490,19 +449,17 @@ class HtmlParser {
    *   "img1.png, img2.png 100w, img3.png 1.5x"
    *
    * @param {string} content The srcset value.
-   * @param {Number} valueOffset The offset of value in the tag.
-   * @param {Number} offset The absolute tag offset in the content.
+   * @param {Number} valueOffset The absolute offset of value in the raw content.
    * @param {boolean} inEscapedDoubleQuotes Bypass the property to all `attrs` objects.
-   * @return {{values: Array<string>, attrs: [{attr: string, value, startPos: Number, endPos: Number, offset: number, inEscapedDoubleQuotes: boolean}]}}
+   * @return {{values: *[], attrs: *[]}}
    */
-  static parseSrcsetValue(content, valueOffset, offset, inEscapedDoubleQuotes) {
+  static parseSrcsetValue(content, valueOffset, inEscapedDoubleQuotes) {
     const lastPos = content.length;
     let startPos = 0;
     let endPos = 0;
     let currentPos;
     let values = [];
     let attrs = [];
-    const type = 'asset';
 
     // supports the query for 'responsive-loader' in following notations:
     // - image.png?{sizes: [100,200,300], format: 'jpg'} // JSON5
@@ -510,7 +467,7 @@ class HtmlParser {
     if (content.indexOf('?{') > 0 || content.indexOf('require(') > -1) {
       return {
         values: [content],
-        attrs: [{ type, attr: 'srcset', value: content, startPos: valueOffset, endPos: valueOffset + lastPos, offset }],
+        attrs: [{ attr: 'srcset', value: content, startPos: valueOffset, endPos: valueOffset + lastPos }],
       };
     }
 
@@ -537,12 +494,10 @@ class HtmlParser {
       values.push(value.split('?', 1)[0]);
 
       attrs.push({
-        type,
         attr: 'srcset',
         value,
         startPos: valueOffset + startPos,
         endPos: valueOffset + endPos,
-        offset,
         inEscapedDoubleQuotes,
       });
 

@@ -1,5 +1,14 @@
 # Change log
 
+## 3.15.1 (2024-07-07)
+
+- fix: resolving source file in a tag attribute when another attribute contains the `>` char, e.g.:
+  ```html
+  <img src="./arrow.png" alt="right->">
+  ```
+- chore: improve error handling when attributes parsing
+- test: improve test coverage
+
 ## 3.15.0 (2024-06-20)
 
 - feat: update `eta` package to latest version 3.4.0

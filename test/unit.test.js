@@ -6,7 +6,7 @@ import Asset from '../src/Plugin/Asset';
 import Snapshot from '../src/Plugin/Snapshot';
 import Template from '../src/Loader/Template';
 import { HtmlParser } from '../src/Common/HtmlParser';
-import { injectBeforeEndHead, injectBeforeEndBody } from '../src/Loader/Utils';
+import { injectBeforeEndHead, injectBeforeEndBody, escapeSequences, escapeCodesForJSON } from '../src/Loader/Utils';
 import Option from '../src/Plugin/Option';
 import Collection from '../src/Plugin/Collection';
 
@@ -197,157 +197,209 @@ describe('utils unit tests', () => {
     const expected = `<p>body</p><script src="test.js"></script>`;
     return expect(received).toEqual(expected);
   });
+
+  test('escapeSequences', () => {
+    const html = `
+<img
+  src="img.png"
+>
+`;
+    const received = escapeSequences(html);
+    const expected = `\\n<img\\n  src=\"img.png\"\\n>\\n`;
+    return expect(received).toEqual(expected);
+  });
+
+  test('escapeCodesForJSON', () => {
+    const html = '<div data-json="{key: `text\\ntext`}">';
+    const received = escapeCodesForJSON(html);
+    const expected = '<div data-json="{key: \\`text\\\\ntext\\`}">';
+    return expect(received).toEqual(expected);
+  });
 });
 
-describe('parse attributes unit tests', () => {
-  test('parseAttr without attr', () => {
+describe('parse attributes in tag', () => {
+  test('parseTag img without src attr', () => {
     const source = '<img alt="apple">';
-    const received = HtmlParser.parseAttr(source, 'src');
-    const expected = false;
+    const received = HtmlParser.parseTag(source, { tag: 'img', attributes: ['src'] });
+
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'img',
+        raw: '<img alt="apple">',
+        attrs: { alt: 'apple' },
+        parsedAttrs: [],
+        startPos: 0,
+        endPos: 17,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 
-  test('parseAttr empty value', () => {
+  test('parseTag empty value', () => {
     const source = '<img src="">';
-    const received = HtmlParser.parseAttr(source, 'src', 'asset');
-    const expected = {
-      type: 'asset',
-      attr: 'src',
-      startPos: 10,
-      endPos: 10,
-      inEscapedDoubleQuotes: false,
-      offset: 0,
-      value: '',
-      parsedValue: [''],
-    };
+    const received = HtmlParser.parseTag(source, { tag: 'img', attributes: ['src'] });
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'img',
+        raw: source,
+        attrs: { src: '' },
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: '',
+            parsedValue: [''],
+            startPos: 10,
+            endPos: 10,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        startPos: 0,
+        endPos: 12,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 
-  test('parseAttr JSON value', () => {
+  test('parseTag JSON value', () => {
     const source = `<a href="#" data-bigpicture='{ "alt":"big picture", "imgSrc": "./image.png" }'>`;
-    const received = HtmlParser.parseAttr(source, 'data-bigpicture', 'asset');
-    const expected = {
-      type: 'asset',
-      attr: 'data-bigpicture',
-      startPos: 29,
-      endPos: 77,
-      inEscapedDoubleQuotes: false,
-      offset: 0,
-      value: '{ "alt":"big picture", "imgSrc": "./image.png" }',
-      parsedValue: ['{ "alt":"big picture", "imgSrc": "./image.png" }'],
-    };
-    return expect(received).toEqual(expected);
-  });
-
-  test('parseAttr JSON value with require', () => {
-    const source = `<a href="#" data-image='{ "alt":"picture", "imgSrc": require("./image.png") }'>`;
-    const received = HtmlParser.parseAttr(source, 'data-image', 'asset');
-    const expected = {
-      type: 'asset',
-      attr: 'data-image',
-      startPos: 24,
-      endPos: 77,
-      offset: 0,
-      attrs: [
-        {
-          endPos: 75,
-          offset: 0,
-          quote: '"',
-          startPos: 53,
-          value: './image.png',
+    const received = HtmlParser.parseTag(source, { tag: 'a', attributes: ['data-bigpicture'] });
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'a',
+        raw: source,
+        attrs: {
+          'data-bigpicture': '{ "alt":"big picture", "imgSrc": "./image.png" }',
+          href: '#',
         },
-      ],
-      inEscapedDoubleQuotes: false,
-      value: '{ "alt":"picture", "imgSrc": require("./image.png") }',
-      parsedValue: ['./image.png'],
-    };
+        parsedAttrs: [
+          {
+            attr: 'data-bigpicture',
+            value: '{ "alt":"big picture", "imgSrc": "./image.png" }',
+            parsedValue: ['{ "alt":"big picture", "imgSrc": "./image.png" }'],
+            startPos: 29,
+            endPos: 77,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        startPos: 0,
+        endPos: 79,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 
-  test('parseAttr value', () => {
-    const source = '<img src="img1.png?size=800" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = HtmlParser.parseAttr(source, 'src', 'asset', 0);
-    const expected = {
-      type: 'asset',
-      attr: 'src',
-      startPos: 10,
-      endPos: 27,
-      inEscapedDoubleQuotes: false,
-      offset: 0,
-      value: 'img1.png?size=800',
-      parsedValue: ['img1.png'],
-    };
+  test('parseTag JSON value with require', () => {
+    const source = `<a href="#" data-image='{ "alt":"picture", "imgSrc": require("./1.png?size=300"), "bigImgSrc": require("./2.png") }'>`;
+    const received = HtmlParser.parseTag(source, { tag: 'a', attributes: ['data-image'] });
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'a',
+        raw: source,
+        attrs: {
+          'data-image': '{ "alt":"picture", "imgSrc": require("./1.png?size=300"), "bigImgSrc": require("./2.png") }',
+          href: '#',
+        },
+        parsedAttrs: [
+          {
+            value: './1.png?size=300',
+            startPos: 53,
+            endPos: 80,
+            quote: '"',
+          },
+          {
+            value: './2.png',
+            startPos: 95,
+            endPos: 113,
+            quote: '"',
+          },
+        ],
+        startPos: 0,
+        endPos: 117,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 
-  test('parseSrcset single value', () => {
+  test('parse srcset single value', () => {
     const source = '<source srcset="img1.png?size=200 w200">';
-    const received = HtmlParser.parseAttr(source, 'srcset', 'asset');
-    const expected = {
-      attr: 'srcset',
-      startPos: 16,
-      endPos: 38,
-      inEscapedDoubleQuotes: false,
-      offset: 0,
-      value: 'img1.png?size=200 w200',
-      parsedValue: ['img1.png'],
-      attrs: [
-        {
-          type: 'asset',
-          attr: 'srcset',
-          // TODO: test with a plugin which resizes images via a query param
-          value: 'img1.png?size=200',
-          startPos: 16,
-          endPos: 33,
-          inEscapedDoubleQuotes: false,
-          offset: 0,
+    const received = HtmlParser.parseTag(source, { tag: 'source', attributes: ['src', 'srcset'] });
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'source',
+        raw: source,
+        attrs: {
+          srcset: 'img1.png?size=200 w200',
         },
-      ],
-    };
+        parsedAttrs: [
+          {
+            attr: 'srcset',
+            // TODO: test with a plugin which resizes images via a query param
+            value: 'img1.png?size=200',
+            startPos: 16,
+            endPos: 33,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        startPos: 0,
+        endPos: 40,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 
-  test('parseSrcset multi values', () => {
-    const source = '<img src="img1.png" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
-    const received = HtmlParser.parseAttr(source, 'srcset');
-    const expected = {
-      attr: 'srcset',
-      startPos: 28,
-      endPos: 66,
-      inEscapedDoubleQuotes: false,
-      offset: 0,
-      value: 'img1.png, img2.png 100w, img3.png 1.5x',
-      parsedValue: ['img1.png', 'img2.png', 'img3.png'],
-      attrs: [
-        {
-          type: 'asset',
-          attr: 'srcset',
-          startPos: 28,
-          endPos: 36,
-          inEscapedDoubleQuotes: false,
-          offset: 0,
-          value: 'img1.png',
+  test('parse srcset many values', () => {
+    const source = '<img src="img1.png?size=800" srcset="img1.png, img2.png 100w, img3.png 1.5x">';
+    const received = HtmlParser.parseTag(source, { tag: 'img', attributes: ['src', 'srcset'] });
+    const expected = [
+      {
+        type: 'asset',
+        tag: 'img',
+        raw: source,
+        attrs: {
+          src: 'img1.png?size=800',
+          srcset: 'img1.png, img2.png 100w, img3.png 1.5x',
         },
-        {
-          type: 'asset',
-          attr: 'srcset',
-          startPos: 38,
-          endPos: 46,
-          inEscapedDoubleQuotes: false,
-          offset: 0,
-          value: 'img2.png',
-        },
-        {
-          type: 'asset',
-          attr: 'srcset',
-          startPos: 53,
-          endPos: 61,
-          inEscapedDoubleQuotes: false,
-          offset: 0,
-          value: 'img3.png',
-        },
-      ],
-    };
+        // TODO: einheitlige strukture
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: 'img1.png?size=800',
+            parsedValue: ['img1.png'],
+            startPos: 10,
+            endPos: 27,
+            inEscapedDoubleQuotes: false,
+          },
+          {
+            attr: 'srcset',
+            value: 'img1.png',
+            startPos: 37,
+            endPos: 45,
+            inEscapedDoubleQuotes: false,
+          },
+          {
+            attr: 'srcset',
+            value: 'img2.png',
+            startPos: 47,
+            endPos: 55,
+            inEscapedDoubleQuotes: false,
+          },
+          {
+            attr: 'srcset',
+            value: 'img3.png',
+            startPos: 62,
+            endPos: 70,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        startPos: 0,
+        endPos: 77,
+      },
+    ];
     return expect(received).toEqual(expected);
   });
 });
@@ -378,58 +430,60 @@ describe('resolve parsed values', () => {
   });
 });
 
-describe('parse tags unit tests', () => {
+describe('parse tags', () => {
   test('single tag img', () => {
     const html = `<img src="img1.png" alt="logo">`;
     const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
     const expected = [
       {
         tag: 'img',
-        source: '<img src="img1.png" alt="logo">',
+        raw: '<img src="img1.png" alt="logo">',
         type: 'asset',
         startPos: 0,
         endPos: 31,
         parsedAttrs: [
           {
-            type: 'asset',
             attr: 'src',
             value: 'img1.png',
             parsedValue: ['img1.png'],
             startPos: 10,
             endPos: 18,
             inEscapedDoubleQuotes: false,
-            offset: 0,
           },
         ],
-        attrs: null,
+        attrs: {
+          alt: 'logo',
+          src: 'img1.png',
+        },
       },
     ];
     return expect(received).toEqual(expected);
   });
 
   test('single-quoted attribute value', () => {
-    const html = `<img src= 'img1.png' alt="logo">`;
+    const html = `<img src= "img1.png" alt="logo">`;
     const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
     const expected = [
       {
         tag: 'img',
-        source: `<img src= 'img1.png' alt="logo">`,
+        raw: `<img src= "img1.png" alt="logo">`,
         type: 'asset',
         startPos: 0,
         endPos: 32,
         parsedAttrs: [
           {
-            type: 'asset',
             attr: 'src',
             value: 'img1.png',
             parsedValue: ['img1.png'],
             startPos: 11,
             endPos: 19,
             inEscapedDoubleQuotes: false,
-            offset: 0,
           },
         ],
-        attrs: null,
+        attrs: {
+          alt: 'logo',
+          src: 'img1.png',
+        },
       },
     ];
     return expect(received).toEqual(expected);
@@ -442,42 +496,514 @@ describe('parse tags unit tests', () => {
 
     const expected = [
       {
-        tag: 'img',
-        source: '<img src="img1.png" alt="logo" srcset="1.png?s=200 200w, 2.png">',
         type: 'asset',
+        tag: 'img',
+        raw: '<img src="img1.png" alt="logo" srcset="1.png?s=200 200w, 2.png">',
         startPos: 5,
         endPos: 69,
         parsedAttrs: [
           {
-            type: 'asset',
             attr: 'src',
             value: 'img1.png',
             parsedValue: ['img1.png'],
-            startPos: 10,
-            endPos: 18,
+            startPos: 15,
+            endPos: 23,
             inEscapedDoubleQuotes: false,
-            offset: 5,
           },
           {
-            type: 'asset',
             attr: 'srcset',
             value: '1.png?s=200',
-            startPos: 39,
-            endPos: 50,
+            startPos: 44,
+            endPos: 55,
             inEscapedDoubleQuotes: false,
-            offset: 5,
           },
           {
-            type: 'asset',
             attr: 'srcset',
             value: '2.png',
-            startPos: 57,
-            endPos: 62,
+            startPos: 62,
+            endPos: 67,
             inEscapedDoubleQuotes: false,
-            offset: 5,
           },
         ],
-        attrs: null,
+        attrs: {
+          alt: 'logo',
+          src: 'img1.png',
+          srcset: '1.png?s=200 200w, 2.png',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  // TODO: move to separate suit
+
+  test('parseTag <source>', () => {
+    const html = `<source>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 8,
+        parsedAttrs: [],
+        attrs: {},
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source/>', () => {
+    const html = `<source/>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 9,
+        parsedAttrs: [],
+        attrs: {},
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source />', () => {
+    const html = `<source />`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 10,
+        parsedAttrs: [],
+        attrs: {},
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled>', () => {
+    const html = `<source disabled>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 17,
+        parsedAttrs: [],
+        attrs: {
+          disabled: undefined,
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled/>', () => {
+    const html = `<source disabled/>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 18,
+        parsedAttrs: [],
+        attrs: {
+          disabled: undefined,
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled />', () => {
+    const html = `<source disabled />`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 19,
+        parsedAttrs: [],
+        attrs: {
+          disabled: undefined,
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled="false" />', () => {
+    const html = `<source disabled="false" />`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 27,
+        parsedAttrs: [],
+        attrs: {
+          disabled: 'false',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled = false />', () => {
+    const html = `<source disabled = false />`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 27,
+        parsedAttrs: [],
+        attrs: {
+          disabled: 'false',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled="false"/>', () => {
+    const html = `<source disabled="false"/>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 26,
+        parsedAttrs: [],
+        attrs: {
+          disabled: 'false',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <source disabled = "false"/>', () => {
+    const html = `<source disabled = "false"/>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 28,
+        parsedAttrs: [],
+        attrs: {
+          disabled: 'false',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag <script src="./main.js" async defer type="text/javascript">', () => {
+    const html = `<script src="./main.js" async defer type="text/javascript"></script>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'script', attributes: ['src'] });
+
+    const expected = [
+      {
+        tag: 'script',
+        raw: `<script src="./main.js" async defer type="text/javascript">`,
+        type: 'script',
+        startPos: 0,
+        endPos: 59,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: './main.js',
+            parsedValue: ['./main.js'],
+            startPos: 13,
+            endPos: 22,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          async: undefined,
+          defer: undefined,
+          src: './main.js',
+          type: 'text/javascript',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag attributes containing `<` and `>` chars', () => {
+    const html = `<source  disabled  =  "false" srcset = "1.png" media="(300px <= width < 400px) and (300px > height => 200px)" />`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 112,
+        parsedAttrs: [
+          {
+            attr: 'srcset',
+            value: '1.png',
+            startPos: 40,
+            endPos: 45,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          disabled: 'false',
+          srcset: '1.png',
+          media: '(300px <= width < 400px) and (300px > height => 200px)',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parseTag attributes containing `<` and `>` chars, multiline', () => {
+    // OK
+    const html = `<source
+  disabled  =  "false"
+  media="(300px <= width < 400px) and (300px > height => 200px)"
+  srcset="
+    1.png
+  "
+  data-bp='{"imgSrc": "./img.jpg" , "class": "gallery" }'
+/>`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'source', attributes: ['srcset'] });
+
+    const expected = [
+      {
+        tag: 'source',
+        raw: html,
+        type: 'asset',
+        startPos: 0,
+        endPos: 181,
+        parsedAttrs: [
+          {
+            attr: 'srcset',
+            value: `1.png
+`,
+            startPos: 111,
+            endPos: 117,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          disabled: 'false',
+          srcset: `
+    1.png
+  `,
+          media: '(300px <= width < 400px) and (300px > height => 200px)',
+          'data-bp': '{"imgSrc": "./img.jpg" , "class": "gallery" }',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parse src in many tags, minified', () => {
+    const html = `<img class="a1" src="1.png"><img class="a2" src="2.png"><img class="a3" src="3.png">`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
+
+    const expected = [
+      {
+        tag: 'img',
+        raw: `<img class="a1" src="1.png">`,
+        type: 'asset',
+        startPos: 0,
+        endPos: 28,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: '1.png',
+            parsedValue: ['1.png'],
+            startPos: 21,
+            endPos: 26,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a1',
+          src: '1.png',
+        },
+      },
+      {
+        tag: 'img',
+        raw: `<img class="a2" src="2.png">`,
+        type: 'asset',
+        startPos: 28,
+        endPos: 56,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: '2.png',
+            parsedValue: ['2.png'],
+            startPos: 49,
+            endPos: 54,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a2',
+          src: '2.png',
+        },
+      },
+      {
+        tag: 'img',
+        raw: `<img class="a3" src="3.png">`,
+        type: 'asset',
+        startPos: 56,
+        endPos: 84,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: '3.png',
+            parsedValue: ['3.png'],
+            startPos: 77,
+            endPos: 82,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a3',
+          src: '3.png',
+        },
+      },
+    ];
+    return expect(received).toEqual(expected);
+  });
+
+  test('parse src with require in many tags, minified', () => {
+    const html = `<img class="a1" src="require('image1.png')"><img class="a2" src="require('image2.png')"><img class="a3" src="require('image3.png')">`;
+
+    // test sorting of parsed attrs, filter
+    const received = HtmlParser.parseTag(html, { tag: 'img', attributes: ['src'] });
+
+    const expected = [
+      {
+        tag: 'img',
+        raw: `<img class="a1" src="require('image1.png')">`,
+        type: 'asset',
+        startPos: 0,
+        endPos: 44,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: "require('image1.png')",
+            parsedValue: ["require('image1.png')"],
+            startPos: 21,
+            endPos: 42,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a1',
+          src: "require('image1.png')",
+        },
+      },
+      {
+        tag: 'img',
+        raw: `<img class="a2" src="require('image2.png')">`,
+        type: 'asset',
+        startPos: 44,
+        endPos: 88,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: "require('image2.png')",
+            parsedValue: ["require('image2.png')"],
+            startPos: 65,
+            endPos: 86,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a2',
+          src: "require('image2.png')",
+        },
+      },
+      {
+        tag: 'img',
+        raw: `<img class="a3" src="require('image3.png')">`,
+        type: 'asset',
+        startPos: 88,
+        endPos: 132,
+        parsedAttrs: [
+          {
+            attr: 'src',
+            value: "require('image3.png')",
+            parsedValue: ["require('image3.png')"],
+            startPos: 109,
+            endPos: 130,
+            inEscapedDoubleQuotes: false,
+          },
+        ],
+        attrs: {
+          class: 'a3',
+          src: "require('image3.png')",
+        },
       },
     ];
     return expect(received).toEqual(expected);
@@ -485,9 +1011,9 @@ describe('parse tags unit tests', () => {
 });
 
 describe('escaped quote', () => {
-  test('parseAttrAll: escaped quote', () => {
+  test('parseTagAttributes: escaped quote', () => {
     const html = `<img src=\\"img1.png\\" alt=\\"logo\\">`;
-    const received = HtmlParser.parseAttrAll(html);
+    const { attrs: received } = HtmlParser.parseTagAttributes(html, 'img', 0, 5);
     const expected = {
       src: 'img1.png',
       alt: 'logo',
@@ -501,133 +1027,147 @@ describe('escaped quote', () => {
     const expected = [
       {
         tag: 'img',
-        source: `<img src=\\"img1.png\\" alt=\\"logo\\">`,
+        raw: html,
         type: 'asset',
         startPos: 0,
         endPos: 35,
         parsedAttrs: [
           {
-            type: 'asset',
             attr: 'src',
             value: 'img1.png',
             parsedValue: ['img1.png'],
             startPos: 11,
             endPos: 19,
             inEscapedDoubleQuotes: true,
-            offset: 0,
           },
         ],
-        attrs: null,
+        attrs: {
+          alt: 'logo',
+          src: 'img1.png',
+        },
       },
     ];
     return expect(received).toEqual(expected);
   });
 });
 
-describe('parseAttrAll', () => {
+describe('parseTagAttributes', () => {
   test('tag end 01', () => {
     const source = '<script src="file.js">';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { src: 'file.js' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 02', () => {
     const source = '<script src="file.js" >';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { src: 'file.js' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 03', () => {
     const source = '<script defer=true>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: 'true' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 04', () => {
     const source = '<script defer=true/>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: 'true' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 05', () => {
     const source = '<script defer=true >';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: 'true' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 06', () => {
     const source = '<script defer>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: undefined };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 07', () => {
     const source = '<script defer/>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: undefined };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 08', () => {
     const source = '<script defer >';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { defer: undefined };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 11', () => {
     const source = '<script src="file.js"/>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { src: 'file.js' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 12', () => {
     const source = '<script src="file.js"  />';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 7);
     const expected = { src: 'file.js' };
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 31', () => {
     const source = '<br>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'br', 0, 3);
     const expected = {};
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 32', () => {
     const source = '<br/>';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'br', 0, 3);
     const expected = {};
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 33', () => {
     const source = '<br />';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'br', 0, 3);
     const expected = {};
     return expect(received).toStrictEqual(expected);
   });
 
   test('tag end 34', () => {
     const source = '<br attr />';
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'br', 0, 3);
     const expected = { attr: undefined };
     return expect(received).toStrictEqual(expected);
   });
 
   test('all possible values of attribute', () => {
     const source = `<script  defer data-text="text with spaces"  enabled=true empty="" src='file.js'  />`;
-    const received = HtmlParser.parseAttrAll(source);
+    const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 8);
     const expected = { defer: undefined, 'data-text': 'text with spaces', enabled: 'true', empty: '', src: 'file.js' };
     return expect(received).toStrictEqual(expected);
+  });
+});
+
+describe('Parse Exceptions', () => {
+  test('missing the closing quote', () => {
+    const source = '<div><img src="image.png  /></div>';
+
+    const received = () => {
+      const res = HtmlParser.parseTagAttributes(source, 'img', 5, 4);
+    };
+
+    const expected = `The 'img' 'src' attribute, starting at 14 position, is missing a closing quote`;
+    return expect(received).toThrow(expected);
   });
 });
 
