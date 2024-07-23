@@ -1,5 +1,11 @@
 # Change log
 
+## 3.16.0 (2024-07-23)
+
+- feat: add `runtime` option for the `handlebars` preprocessor
+- test: add test for the `runtime` option
+- docs: update readme
+
 ## 3.15.1 (2024-07-07)
 
 - fix: resolving source file in a tag attribute when another attribute contains the `>` char, e.g.:

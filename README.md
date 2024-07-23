@@ -16,14 +16,14 @@
 ## HTML template as entry point
 
 The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
-This plugin allows using a template file as an [entry point](#option-entry).
+This plugin looks at the template files in [entry](#option-entry) to start building the bundle.
+The source files of dependencies (scripts, styles, etc.) can be defined directly in the template.
 
 The plugin resolves source files of assets in templates and replaces them with correct output URLs in the generated HTML.
 The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
 You can use a relative path or Webpack alias to a source file.
 
 A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
-
 
 This plugin is an **advanced replacement**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
 
@@ -168,6 +168,10 @@ Thank you to all our sponsors and patrons!
     <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
       <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="50" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
       <p>Raymond<br>Ackloo</p>
+    </a></td>
+    <td style="border: 0"><a href="https://github.com/chkpnt">
+      <img src="https://avatars.githubusercontent.com/u/1956979?s=50&amp;v=4" width="50" title="Gregor Dschung" alt="Gregor Dschung" style="max-width: 100%;">
+      <p>Gregor<br>Dschung</p>
     </a></td>
   </tr>
 </table>
@@ -3502,6 +3506,12 @@ Include the partials in the `src/views/page/home.html` template with the `includ
 
 The `include` helper automatically resolves `.html` and `.hbs` extensions, it can be omitted.
 
+**The `runtime` option**
+
+The path to the handlebars runtime library. The path can be absolute or relative to `node_modules` directory.
+Defaults runtime file is `handlebars/runtime`.
+This options is used only by import templates in JavaScript, in [compile mode](#compile-mode).
+
 **The `partials` option**
 
 Type: `Array<string>|Object` Default: `[]`
@@ -4476,6 +4486,8 @@ _./partials/star-button.html_
 </button>
 ```
 
+<a id="compile-mode" name="compile-mode"></a>
+
 ### Compile mode
 
 The `compile` is the default mode for the template imported in JavaScript file.
@@ -4521,7 +4533,7 @@ _./partials/people.ejs_
   `include` is supported
 - [ejs](#loader-option-preprocessor-options-ejs) - generates a fast smallest pure template function w/o runtime (**recommended** for use on client-side)\
   `include` is supported
-- [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~28KB)\
+- [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~18KB)\
   `include` is NOT supported (yet)
 - [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)\
   `include` is supported

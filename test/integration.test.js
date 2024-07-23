@@ -226,6 +226,7 @@ describe('loader preprocessor options', () => {
   test('handlebars partials', () => compareFiles('loader-option-preprocessor-handlebars-partials'));
   test('handlebars partials path', () => compareFiles('loader-option-preprocessor-handlebars-partials-path'));
   test('handlebars access @root', () => compareFiles('hbs-access-root-variable'));
+  test('handlebars runtime', () => compareFiles('loader-option-preprocessor-handlebars-runtime'));
 
   test('liquid', () => compareFiles('loader-option-preprocessor-liquid'));
   test('liquid async', () => compareFiles('loader-option-preprocessor-liquid-async'));

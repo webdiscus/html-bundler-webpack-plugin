@@ -1,6 +1,6 @@
 const path = require('path');
 const Dependency = require('../../Dependency');
-const { escapeSequences, stringifyJSON } = require('../../Utils');
+const { stringifyJSON } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
@@ -11,6 +11,10 @@ const preprocessor = (loaderContext, options) => {
   const extensions = ['.html', '.hbs', '.handlebars'];
   const includeFiles = [/\.(html|hbs|handlebars)$/i];
   const root = options?.root || rootContext;
+  //const runtime = options?.runtime || 'handlebars/dist/handlebars.runtime.min';
+  const runtime = options?.runtime || 'handlebars/runtime';
+  // fix windows-like path
+  const runtimeFile = require.resolve(runtime).replace(/\\/g, '/');
   let views = options?.views || rootContext;
   let helpers = {};
   let partials = {};
@@ -212,8 +216,6 @@ const preprocessor = (loaderContext, options) => {
      * @return {string} The exported template function.
      */
     export(precompiledTemplate, { data }) {
-      // fix windows-like path
-      const runtimeFile = require.resolve('handlebars/dist/handlebars.runtime.min').replace(/\\/g, '/');
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 
