@@ -1029,7 +1029,6 @@ class AssetCompiler {
     const { createHash } = this.webpack.util;
     const isAutoPublicPath = Option.isAutoPublicPath();
     const publicPath = Option.getPublicPath();
-    const inline = Option.getCss().inline;
     const esModule = Collection.isImportStyleEsModule();
     const urlRegex = new RegExp(`${esModule ? baseUri : ''}${urlPathPrefix}(.+?)(?=\\))`, 'g');
     const entry = this.currentEntryPoint;
@@ -1056,19 +1055,24 @@ class AssetCompiler {
       const sources = [];
       const resources = [];
       const imports = [];
+      const inlineSources = [];
+      const inlineResources = [];
+      const inlineImports = [];
       let cssHash = '';
 
       // 1. get styles from all nested files imported in the root JS file and sort them
       const modules = Collection.findImportedModules(entry.id, issuer, chunk);
 
-      // 2. squash styles from all nested files into one file
+      // 2. squash styles from all nested files and group by inline/file type
       const uniqueModuleIds = new Set();
       for (const { module } of modules) {
         if (uniqueModuleIds.has(module.debugId)) {
           continue;
         }
 
-        const isUrl = module.resourceResolveData?.query.includes('url');
+        const urlQuery = module.resourceResolveData?.query || '';
+        const isUrl = urlQuery.includes('url');
+        const isInline = Option.isInlineCss(urlQuery);
         const importData = {
           resource: module.resource,
           assets: [],
@@ -1078,15 +1082,15 @@ class AssetCompiler {
         const { assetsInfo } = module.buildInfo;
 
         if (assetsInfo) {
-          for (const [assetFile2, asset] of assetsInfo) {
+          for (const [assetFile, asset] of assetsInfo) {
             const sourceFilename = asset.sourceFilename;
             const stylePath = path.dirname(module.resource);
 
             const data = {
               type: Collection.type.resource,
-              inline: false,
+              inline: isInline,
               resource: path.resolve(stylePath, sourceFilename),
-              assetFile: assetFile2,
+              assetFile: assetFile,
               issuer: {
                 resource: module.resource,
               },
@@ -1114,20 +1118,26 @@ class AssetCompiler {
         }
 
         cssHash += module.buildInfo.hash;
-        sources.push(...module._cssSource);
-        imports.push(importData);
-        resources.push(module.resource);
         uniqueModuleIds.add(module.debugId);
+
+        if (isInline) {
+          inlineSources.push(...module._cssSource);
+          inlineResources.push(module.resource);
+          inlineImports.push(importData);
+        } else {
+          sources.push(...module._cssSource);
+          resources.push(module.resource);
+          imports.push(importData);
+        }
       }
 
-      if (sources.length === 0) continue;
+      if (sources.length === 0 && inlineSources.length === 0) continue;
 
       // 3. generate output filename
 
       // mixin importStyleIdx into hash to generate new hash after changes
       cssHash += Collection.importStyleIdx++;
 
-      //const hash = this.webpack.util.createHash('md4').update(sources.toString()).digest('hex');
       const hash = createHash('md4').update(cssHash).digest('hex');
       const { isCached, filename } = this.getStyleAsseFile({
         name: issuerEntry.name,
@@ -1137,45 +1147,85 @@ class AssetCompiler {
         useChunkFilename: true,
       });
 
-      const assetFile = inline ? this.getInlineStyleAsseFile(filename, entryFilename) : filename;
-      const outputFilename = inline ? assetFile : Option.getAssetOutputFile(assetFile, entryFilename);
+      // CSS injected into HTML
+      if (inlineSources.length) {
+        const assetFile = this.getInlineStyleAsseFile(filename, entryFilename);
+        const outputFilename = assetFile;
 
-      Collection.setData(
-        entry,
-        { resource: issuer },
-        {
-          type: Collection.type.style,
-          inline,
-          imported: true,
-          // if style is imported then resource is the array of imported source files
-          resource: resources,
-          assetFile: outputFilename,
-          imports,
-        }
-      );
+        Collection.setData(
+          entry,
+          { resource: issuer },
+          {
+            type: Collection.type.style,
+            inline: true,
+            imported: true,
+            // if style is imported then resource is the array of imported source files
+            resource: inlineResources,
+            assetFile: outputFilename,
+            imports: inlineImports,
+          }
+        );
 
-      // skip already processed styles except inlined
-      if (isCached && !inline) {
-        continue;
+        // 4. extracts CSS content from squashed sources
+        const issuerFilename = entryFilename;
+
+        const resolveAssetFile = (match, file) =>
+          isAutoPublicPath ? Option.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
+
+        const cssContent = CssExtractModule.apply(inlineSources, (content) =>
+          content.replace(urlRegex, resolveAssetFile)
+        );
+
+        // 5. add extracted CSS file into compilation
+        const fileManifest = {
+          render: () => cssContent,
+          filename: assetFile,
+          identifier: `${pluginName}.${chunk.id}`,
+          hash,
+        };
+
+        result.push(fileManifest);
       }
 
-      // 4. extracts CSS content from squashed sources
-      const issuerFilename = inline ? entryFilename : assetFile;
+      // CSS saved into file
+      if (sources.length) {
+        const assetFile = filename;
+        const outputFilename = Option.getAssetOutputFile(assetFile, entryFilename);
 
-      const resolveAssetFile = (match, file) =>
-        isAutoPublicPath ? Option.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
+        Collection.setData(
+          entry,
+          { resource: issuer },
+          {
+            type: Collection.type.style,
+            inline: false,
+            imported: true,
+            // if style is imported then resource is the array of imported source files
+            resource: resources,
+            assetFile: outputFilename,
+            imports,
+          }
+        );
 
-      const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFile));
+        if (!isCached) {
+          // 4. extracts CSS content from squashed sources
+          const issuerFilename = assetFile;
 
-      // 5. add extracted CSS file into compilation
-      const fileManifest = {
-        render: () => cssContent,
-        filename: assetFile,
-        identifier: `${pluginName}.${chunk.id}`,
-        hash,
-      };
+          const resolveAssetFile = (match, file) =>
+            isAutoPublicPath ? Option.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
 
-      result.push(fileManifest);
+          const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFile));
+
+          // 5. add extracted CSS file into compilation
+          const fileManifest = {
+            render: () => cssContent,
+            filename: assetFile,
+            identifier: `${pluginName}.${chunk.id}`,
+            hash,
+          };
+
+          result.push(fileManifest);
+        }
+      }
     }
   }
 

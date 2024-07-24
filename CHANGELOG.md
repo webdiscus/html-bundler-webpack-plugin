@@ -1,5 +1,13 @@
 # Change log
 
+## 3.17.0 (2024-07-23)
+
+- feat: add support the `?inline` query for styles imported in JavaScript:
+  ```js
+  import './style-a.css?inline'; // the extracted CSS will be injected into HTML
+  import './style-b.css'; // the extracted CSS will be saved into separate output file
+  ```
+
 ## 3.16.0 (2024-07-23)
 
 - feat: add `runtime` option for the `handlebars` preprocessor

@@ -1257,6 +1257,66 @@ describe('plugin options unit tests', () => {
   });
 });
 
+describe('plugin isInlineCss option', () => {
+  // css.inline: true
+  test('css.inline:true;', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: true };
+    const received = Option.isInlineCss('file.css');
+    return expect(received).toEqual(true);
+  });
+
+  test('css.inline:true; ?inline', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: true };
+    const received = Option.isInlineCss('file.css?inline');
+    return expect(received).toEqual(true);
+  });
+
+  test('css.inline:true; ?inline=true', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: true };
+    const received = Option.isInlineCss('file.css?inline=true');
+    return expect(received).toEqual(true);
+  });
+
+  test('css.inline:true; ?inline=false', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: true };
+    const received = Option.isInlineCss('file.css?inline=false');
+    return expect(received).toEqual(false);
+  });
+
+  // css.inline: false
+  test('css.inline:false;', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: false };
+    const received = Option.isInlineCss('file.css');
+    return expect(received).toEqual(false);
+  });
+
+  test('css.inline:false; ?inline', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: false };
+    const received = Option.isInlineCss('file.css?inline');
+    return expect(received).toEqual(true);
+  });
+
+  test('css.inline:false; ?inline=true', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: false };
+    const received = Option.isInlineCss('file.css?inline=true');
+    return expect(received).toEqual(true);
+  });
+
+  test('css.inline:false; ?inline=false', () => {
+    Option.productionMode = true;
+    Option.options.css = { inline: false };
+    const received = Option.isInlineCss('file.css?inline=false');
+    return expect(received).toEqual(false);
+  });
+});
+
 describe('FileUtils', () => {
   test('load module', (done) => {
     try {

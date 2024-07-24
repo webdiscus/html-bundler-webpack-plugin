@@ -119,6 +119,8 @@ class Collection {
         // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
         styleTags += `<style>` + source + `</style>${LF}`;
       } else {
+        // note: void elements don't need the closing
+        // https://html.spec.whatwg.org/multipage/syntax.html#void-elements
         linkTags += `<link href="${asset.assetFile}" rel="stylesheet">${LF}`;
       }
     }

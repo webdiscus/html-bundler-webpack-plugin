@@ -19,6 +19,7 @@ module.exports = {
       css: {
         filename: '[name].[contenthash:8].css',
       },
+      verbose: true,
     }),
   ],
 
@@ -47,7 +48,7 @@ module.exports = {
               {
                 loader: 'css-loader',
                 options: {
-                  exportType: 'array', // default type
+                  //exportType: 'array', // default type
                 },
               },
             ],

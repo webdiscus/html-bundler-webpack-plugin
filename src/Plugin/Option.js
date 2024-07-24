@@ -423,7 +423,7 @@ class Option {
   }
 
   /**
-   * Whether the CSS resource should be inlined.
+   * Whether the CSS resource should be inlined, regard of the global css.inline option and the file query.
    *
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
@@ -432,8 +432,10 @@ class Option {
     const [, query] = resource.split('?', 2);
     const urlParams = new URLSearchParams(query);
     const value = urlParams.get('inline');
+    const hasQueryInline = value != null;
+    const isInlinedByQuery = this.toBool(value, false, false);
 
-    return this.toBool(value, false, this.options.css.inline);
+    return (this.options.css.inline && (isInlinedByQuery || !hasQueryInline)) || isInlinedByQuery;
   }
 
   /**
