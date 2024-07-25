@@ -135,46 +135,16 @@ See the [full list of features](#features).
 
 Thank you to all our sponsors and patrons!
 
-<table align="center">
-  <tr align="center" valign="top" style="border: 0">
-    <td style="border: 0"><a href="https://www.jetbrains.com/">
-      <img src="https://avatars.githubusercontent.com/u/878437?s=50&v=4" title="JetBrains" alt="JetBrains">
-      <p>JetBrains</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/getsentry">
-      <img src="https://avatars.githubusercontent.com/u/1396951?s=50&amp;v=4" title="Sentry" alt="Sentry">
-      <p>Sentry</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/stackaid">
-      <img src="https://avatars.githubusercontent.com/u/84366591?s=50&amp;v=4" title="StackAid" alt="StackAid">
-      <p>StackAid</p>
-    </a></td>
-    <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
-      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/96645548/020234154757463b939824efe62db137/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=GYnR3xvy7qBr2w1CihOfDOq87nOr4AbuW0ytvwg7Kgs%3D" width="50" title="Buckley Robinson" alt="patron" style="max-width: 100%;">
-      <p>Buckley<br>Robinson</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/pirang">
-      <img src="https://avatars.githubusercontent.com/u/6986749?s=50&amp;v=4" title="Pirang" alt="Pirang">
-      <p>Pirang</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/MarcelRobitaille">
-      <img src="https://avatars.githubusercontent.com/u/8503756?s=50&amp;v=4" title="Marcel Robitaille" alt="Marcel Robitaille">
-      <p>Marcel<br>Robitaille</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/kannwism">
-      <img src="https://avatars.githubusercontent.com/u/18029781?s=50&amp;v=4" width="50" title="Marian Kannwischer (kannwism)" alt="patron" style="max-width: 100%;">
-      <p>Marian<br>Kannwischer</p>
-    </a></td>
-    <td style="border: 0"><a href="https://www.patreon.com/user?u=96645548">
-      <img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="50" title="Raymond Ackloo" alt="patron" style="max-width: 100%;">
-      <p>Raymond<br>Ackloo</p>
-    </a></td>
-    <td style="border: 0"><a href="https://github.com/chkpnt">
-      <img src="https://avatars.githubusercontent.com/u/1956979?s=50&amp;v=4" width="50" title="Gregor Dschung" alt="Gregor Dschung" style="max-width: 100%;">
-      <p>Gregor<br>Dschung</p>
-    </a></td>
-  </tr>
-</table>
+<a href="https://www.jetbrains.com/"><img src="https://avatars.githubusercontent.com/u/878437?s=50&v=4" title="JetBrains" alt="JetBrains" style="margin: 12px;"></a>
+<a href="https://github.com/getsentry"><img src="https://avatars.githubusercontent.com/u/1396951?s=50&v=4" title="Sentry" alt="Sentry" style="margin: 12px;"></a>
+<a href="https://github.com/stackaid"><img src="https://avatars.githubusercontent.com/u/84366591?s=50&v=4" title="StackAid" alt="StackAid" style="margin: 12px;"></a>
+<a href="https://github.com/pirang"><img src="https://avatars.githubusercontent.com/u/6986749?s=50&v=4" title="Pirang" alt="Pirang" style="margin: 12px;"></a>
+<a href="https://www.patreon.com/user?u=96645548"><img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/96645548/020234154757463b939824efe62db137/eyJ3IjoyMDB9/1.jpeg?token-time=2145916800&token-hash=GYnR3xvy7qBr2w1CihOfDOq87nOr4AbuW0ytvwg7Kgs%3D" width="50" title="Buckley Robinson" style="margin: 12px;"></a>
+<a href="https://github.com/MarcelRobitaille"><img src="https://avatars.githubusercontent.com/u/8503756?s=50&v=4" title="Marcel Robitaille" alt="Marcel Robitaille" style="margin: 12px;"></a>
+<a href="https://github.com/kannwism"><img src="https://avatars.githubusercontent.com/u/18029781?s=50&v=4" width="50" title="Marian Kannwischer (kannwism)" style="margin: 12px;"></a>
+<a href="https://www.patreon.com/user?u=96645548"><img src="https://c10.patreonusercontent.com/4/patreon-media/p/user/43568167/0ef77126597d460c9505bdd0aea2eea9/eyJ3IjoyMDB9/1.png?token-time=2145916800&token-hash=7izh1FZTToAqf4Qks3Qrk8YcNbGymF-sBi0hkK_aJO8%3D" width="50" title="Raymond Ackloo" style="margin: 12px;"></a>
+<a href="https://github.com/chkpnt"><img src="https://avatars.githubusercontent.com/u/1956979?s=50&v=4" width="50" title="Gregor Dschung" alt="Gregor Dschung" style="margin: 12px;"></a>
+<a href="https://github.com/daltonboll"><img src="https://avatars.githubusercontent.com/u/5821829?v=4" width="50" title="Dalton Boll" alt="daltonboll" style="margin: 12px;"></a>
 
 
 ## ⚙️ How works the plugin
