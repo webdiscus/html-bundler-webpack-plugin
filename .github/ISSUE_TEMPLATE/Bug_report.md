@@ -13,9 +13,13 @@ about: Create a report to help us improve
 
 <!-- If not included in current behaviour please explain what should happen instead. -->
 
-### Reproduction Example
+### Reproduction
 
-<!-- Please provide a minimal example how to reproduce your problem. -->
+<!-- Please provide a small repository with reproducible issue. -->
+<!-- Or provide a minimal example how to reproduce your problem. -->
+
+- [ ] repository URL
+- [ ] example code
 
 ## Environment
 
@@ -29,3 +33,7 @@ about: Create a report to help us improve
 ## Additional context
 
 <!-- Add any other context about the problem here. -->
+
+## Appreciation for the useful project
+
+- [ ] After the problem is resolved, do not forget to give a star ⭐
