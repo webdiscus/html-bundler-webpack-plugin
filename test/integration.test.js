@@ -468,6 +468,9 @@ describe('integrity, common use cases', () => {
   test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
+  
+  
+  test('script async, prod', () => compareFiles('integrity-script-async-prod'));
 
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));

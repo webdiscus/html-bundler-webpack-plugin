@@ -1,5 +1,9 @@
 # Change log
 
+## 3.17.1 (2024-08-01)
+
+- fix: when using the integrity option, leaves the original attributes in the script tag as is
+
 ## 3.17.0 (2024-07-23)
 
 - feat: add support the `?inline` query for styles imported in JavaScript:

@@ -1028,7 +1028,8 @@ class Collection {
 
               let attrsStr = '';
               for (const attrName in attrs) {
-                attrsStr += ` ${attrName}="${attrs[attrName]}"`;
+                let value = attrs[attrName];
+                attrsStr += value == null ? ` ${attrName}` : ` ${attrName}="${value}"`;
               }
 
               output += content.slice(pos, startPos) + `<${tag}${attrsStr}>`;
