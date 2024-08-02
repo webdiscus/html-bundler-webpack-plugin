@@ -77,19 +77,17 @@ const optionPreloadAsException = (config, type, availableTypes) => {
  * @throws {Error}
  */
 const resolveException = (file, issuer, rootContext) => {
-  let relFile = file;
   let isExistsFile = true;
   issuer = path.relative(rootContext, issuer);
 
   if (path.isAbsolute(file)) {
-    relFile = path.relative(rootContext, file);
     isExistsFile = fs.existsSync(file);
   }
 
-  let message = `Can't resolve ${yellow(relFile)} in the file ${cyan(issuer)}`;
+  let message = `Can't resolve ${yellow(file)} in the file ${cyan(issuer)}`;
 
   if (!isExistsFile) {
-    message += `\n${redBright`The reason:`} this file is not found!`;
+    message = `File ${yellow(file)} not found in ${cyan(issuer)}`;
   } else if (/\.css$/.test(file) && file.indexOf('??ruleSet')) {
     message +=
       `\nThe handling of ${yellow`@import at-rules in CSS`} is not supported. Disable the 'import' option in 'css-loader':\n` +

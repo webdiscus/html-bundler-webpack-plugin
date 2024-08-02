@@ -345,10 +345,8 @@ type Sources =
 
 type WatchFiles = {
   paths?: Array<string>;
-  files?: Array<RegExp>;
-  ignore?: Array<RegExp>;
-  includes?: Array<RegExp | string>;
-  excludes?: Array<RegExp | string>;
+  includes?: Array<RegExp>;
+  excludes?: Array<RegExp>;
 };
 
 // Private types: used in source code only

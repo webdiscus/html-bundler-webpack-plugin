@@ -7,6 +7,9 @@ const { loadModule } = require('../../../Common/FileUtils');
 // include('./file.html', { name: 'Siri' }) => require('./file.eta')({...it, ...{name: 'Siri'}})
 const includeRegexp = /=include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
 
+// node module name
+const moduleName = 'eta';
+
 /**
  * Transform the raw template source to a template function or HTML.
  *
@@ -15,7 +18,7 @@ const includeRegexp = /=include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
  * @return {{compile: (function(string, {resourcePath: string, data?: {}}): string), render: {(*, {resourcePath: *, data?: {}}): *, (*, {resourcePath: *, data?: {}}): *}, export: (function(string, {data: {}}): string)}}
  */
 const preprocessor = (loaderContext, options) => {
-  const Eta = loadModule('eta', () => require('eta').Eta);
+  const Eta = loadModule(moduleName, () => require(moduleName).Eta);
   const { rootContext } = loaderContext;
   let views = options.views;
 
@@ -36,6 +39,11 @@ const preprocessor = (loaderContext, options) => {
   const async = options?.async === true;
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.
@@ -83,8 +91,9 @@ const preprocessor = (loaderContext, options) => {
      */
     export(templateFunction, { data }) {
       // resolved the file is for node, therefore, we need to get the module path plus file for browser,
+      const modulePath = require.resolve('eta');
       // fix windows-like path into the posix standard :-/
-      const runtimeFile = path.join(path.dirname(require.resolve('eta')), 'browser.module.mjs').replace(/\\/g, '/');
+      const runtimeFile = path.join(path.dirname(modulePath), 'browser.module.mjs').replace(/\\/g, '/');
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
 

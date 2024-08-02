@@ -95,19 +95,6 @@ const unsupportedPreprocessorException = (preprocessor) => {
 };
 
 /**
- * @param {string} dir Not founded directory.
- * @param {Array} paths The `watchFiles.paths` option.
- */
-const watchPathsException = (dir, paths) => {
-  const message =
-    `The watch directory not found ${yellow`'${dir}'`}.\n` +
-    `Check the ${green`watchFiles.paths`} option:\n` +
-    cyan(JSON.stringify(paths, null, '  '));
-
-  throw new LoaderException(message);
-};
-
-/**
  * @param {string} file
  * @throws {Error}
  */
@@ -179,20 +166,6 @@ const preprocessorError = (error, file) => {
 };
 
 /**
- * @param {string} value The value to interpolate.
- * @param {string} templateFile The template file.
- * @throws {Error}
- */
-const unsupportedInterpolationException = (value, templateFile) => {
-  const message =
-    `${pluginLabel} the expression ${yellow(value)} can't be interpolated with the 'compile' method.\n` +
-    `Template: ${cyan(templateFile)}\n` +
-    `${yellow`Possible solution: `} Try to use the loader option 'method' as 'render' or change your dynamic filename to static or use webpack alias.`;
-
-  throw new LoaderException(message);
-};
-
-/**
  * @param {Error} error
  * @param {string} file
  * @returns {Error}
@@ -218,7 +191,6 @@ module.exports = {
   errorToHtml,
   resolveException,
   unsupportedPreprocessorException,
-  watchPathsException,
   dataFileNotFoundException,
   dataFileException,
   notInitializedPluginError,

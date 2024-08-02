@@ -1,1 +1,1 @@
-console.log('Hello World! Test: 123');
+console.log('Hello World! Test: 0');

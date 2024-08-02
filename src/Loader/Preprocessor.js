@@ -1,11 +1,12 @@
+const path = require('path');
 const { unsupportedPreprocessorException } = require('./Messages/Exeptions');
 
 /** @typedef {import('webpack').LoaderContext} LoaderContext */
 
 class Preprocessor {
-  static cache = new Map();
+  static dir = 'Preprocessors';
 
-  static dirs = {
+  static moduleDirs = {
     eta: 'Eta',
     ejs: 'Ejs',
     handlebars: 'Handlebars',
@@ -15,15 +16,48 @@ class Preprocessor {
   };
 
   /**
-   * Whether the preprocessor is used.
-   *
-   * @param {*} preprocessor
-   * @return {boolean}
+   * The cache of already loaded preprocessor modules.
+   * @type {Map<string, any>}
    */
-  static isUsed(preprocessor) {
-    // disabled preprocessor
-    if (preprocessor === false) return true;
-    return typeof (preprocessor?.render || preprocessor?.compile || preprocessor) === 'function';
+  static cache = new Map();
+
+  /**
+   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
+   * @param {Object} loaderOption The loader instance.
+   */
+  static init(loaderContext, loaderOption) {
+    if (!loaderOption.isPreprocessorEnabled() || loaderOption.hasPreprocessor()) return;
+
+    const options = loaderOption.get();
+    let module;
+
+    if (typeof options.preprocessor === 'function') {
+      // default structure of the created preprocessor module
+      module = {
+        id: 'userPreprocessor',
+        render: options.preprocessor,
+        compile: options.preprocessor,
+      };
+    } else {
+      module = Preprocessor.factory(loaderContext, options, loaderOption.isWatchMode());
+    }
+
+    loaderOption.setPreprocessorModule(module);
+  }
+
+  /**
+   * Factory preprocessor as a function.
+   *
+   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
+   * @param {Object} options The loader options.
+   * @param {boolean} watch Whether is serve/watch mode.
+   * @return {Function|Promise|Object}
+   */
+  static factory(loaderContext, options = {}, watch) {
+    const { preprocessor, preprocessorOptions, esModule } = options;
+    const module = this.load(preprocessor);
+
+    return module(loaderContext, preprocessorOptions || {}, { esModule, watch });
   }
 
   /**
@@ -45,11 +79,13 @@ class Preprocessor {
       return this.cache.get(preprocessor);
     }
 
-    let dirname = this.dirs[preprocessor];
+    let moduleDir = this.moduleDirs[preprocessor];
 
-    if (dirname) {
-      // we are sure the file exists
-      const module = require(`./Preprocessors/${dirname}/index.js`);
+    if (moduleDir) {
+      // we are sure the `index.js` file exists in the module directory
+      const modulePath = path.join(__dirname, this.dir, moduleDir, 'index.js');
+      const module = require(modulePath);
+
       this.cache.set(preprocessor, module);
 
       return module;
@@ -69,41 +105,16 @@ class Preprocessor {
   }
 
   /**
-   * Returns a preprocessor method to render/compile a template.
+   * Run watch method in the preprocessor module.
+   * Called after changes in watch/serve mode.
    *
-   * @param {Object} options The loader options.
-   * @return {null|(function(string, loaderContext: BundlerPluginLoaderContext): Promise|null)}
-   */
-  static getPreprocessor(options) {
-    const { preprocessor, preprocessorMode } = options;
-
-    if (typeof preprocessor === 'function') return preprocessor;
-
-    // render/compile
-    const modeFn = preprocessor[preprocessorMode];
-    if (typeof modeFn === 'function') return modeFn;
-
-    return null;
-  }
-
-  /**
-   * Factory preprocessor as a function.
+   * TODO: add type of the preprocessorModule
    *
-   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
-   * @param {Object} options The loader options.
-   * @param {boolean} watch Whether is serve/watch mode.
-   * @return {Function|Promise|Object}
+   * @param {Object} preprocessorModule
    */
-  static factory(loaderContext, options = {}, watch) {
-    const { preprocessor, preprocessorOptions, esModule } = options;
-    const module = this.load(preprocessor);
-
-    return module(loaderContext, preprocessorOptions || {}, { esModule, watch });
-  }
-
-  static watchRun({ preprocessor }) {
-    if (typeof preprocessor?.watch === 'function') {
-      preprocessor.watch();
+  static watchRun(preprocessorModule) {
+    if (typeof preprocessorModule?.watch === 'function') {
+      preprocessorModule.watch();
     }
   }
 }

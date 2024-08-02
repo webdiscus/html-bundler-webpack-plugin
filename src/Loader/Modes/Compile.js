@@ -1,18 +1,26 @@
-const PreprocessorMode = require('./PreprocessorMode');
-const { errorToHtml } = require('../Messages/Exeptions');
+const PreprocessorModeAbstract = require('./PreprocessorModeAbstract');
 const { decodeReservedChars, escapeSequences } = require('../Utils');
 const { isWin, pathToPosix } = require('../../Common/Helpers');
+const { errorToHtml } = require('../Messages/Exeptions');
 
 /**
  * Compile into JS function and export as a JS module.
  */
-class Compile extends PreprocessorMode {
+class Compile extends PreprocessorModeAbstract {
   enclosingQuotes = `'`;
   isExport = false;
+  collection = null;
+  pluginCompiler = null;
 
-  constructor({ preprocessor, esModule, hot }) {
-    super({ preprocessor, esModule, hot });
-    this.isExport = typeof preprocessor.export === 'function';
+  /**
+   * @param {PreprocessorModeProperties} props
+   */
+  constructor(props) {
+    super(props);
+
+    this.isExport = typeof props.preprocessor.export === 'function';
+    this.collection = props.collection;
+    this.pluginCompiler = props.pluginCompiler;
   }
 
   /**

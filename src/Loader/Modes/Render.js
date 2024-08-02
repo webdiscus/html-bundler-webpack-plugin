@@ -1,5 +1,4 @@
-const PreprocessorMode = require('./PreprocessorMode');
-const Collection = require('../../Plugin/Collection');
+const PreprocessorModeAbstract = require('./PreprocessorModeAbstract');
 const PluginService = require('../../Plugin/PluginService');
 const { hotUpdateFile, injectBeforeEndHead, decodeReservedChars } = require('../Utils');
 const { errorToHtml } = require('../Messages/Exeptions');
@@ -7,9 +6,18 @@ const { errorToHtml } = require('../Messages/Exeptions');
 /**
  * Render into HTML and export as a JS module.
  */
-class Render extends PreprocessorMode {
-  constructor(options) {
-    super(options);
+class Render extends PreprocessorModeAbstract {
+  collection = null;
+  pluginCompiler = null;
+
+  /**
+   * @param {PreprocessorModeProperties} props
+   */
+  constructor(props) {
+    super(props);
+
+    this.collection = props.collection;
+    this.pluginCompiler = props.pluginCompiler;
   }
 
   /**
@@ -48,11 +56,12 @@ class Render extends PreprocessorMode {
    */
   export(content, loaderContext) {
     const { resource: issuer } = loaderContext;
+    // Webpack API no provide `loaderContext.hot` for testing, therefore we use the ENV property to detect testing
+    const isHotUpdate = this.hot || 'NODE_ENV_TEST' in process.env;
 
-    /* istanbul ignore next: Webpack API no provide `loaderContext.hot` for testing */
-    if (this.hot && PluginService.useHotUpdate()) {
+    if (isHotUpdate && PluginService.useHotUpdate(this.pluginCompiler)) {
       content = this.injectHotScript(content);
-      Collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
+      this.collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
     }
 
     return this.exportCode + "'" + decodeReservedChars(content) + "';";
@@ -68,9 +77,9 @@ class Render extends PreprocessorMode {
   exportError(error, issuer) {
     let content = errorToHtml(error);
 
-    if (PluginService.useHotUpdate()) {
+    if (PluginService.useHotUpdate(this.pluginCompiler)) {
       content = this.injectHotScript(content);
-      Collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
+      this.collection.addResource({ type: 'script', resource: hotUpdateFile, issuer });
     }
 
     return this.exportCode + "'" + decodeReservedChars(content) + "';";

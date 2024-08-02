@@ -1,10 +1,11 @@
 const path = require('path');
+const LoaderFactory = require('./LoaderFactory');
 const PluginService = require('../Plugin/PluginService');
+
+const Preprocessor = require('./Preprocessor');
 const Template = require('./Template');
-const Loader = require('./Loader');
 const Render = require('./Modes/Render');
-const Dependency = require('./Dependency');
-const Option = require('./Option');
+
 const {
   notInitializedPluginError,
   initError,
@@ -20,17 +21,19 @@ const {
  * @param {any} meta
  */
 const loader = function (content, map, meta) {
+  const pluginCompiler = this._compilation.compiler;
+
   /** @type {BundlerPluginLoaderContext} */
   const loaderContext = this;
+
   const loaderCallback = loaderContext.async();
   const { rootContext, resource, resourcePath, entryId } = loaderContext;
-  const hooks = PluginService.getHooks();
   let errorStage = '';
 
   const callback = (error, result = null) => {
     if (error) {
       // in build mode, abort the compilation process and display an error in the output
-      if (result == null || !PluginService.isWatchMode()) return loaderCallback(error);
+      if (result == null || !PluginService.isWatchMode(pluginCompiler)) return loaderCallback(error);
 
       // in watch mode, display an error in the output without abort the compilation process
       loaderContext.emitError(error);
@@ -38,17 +41,53 @@ const loader = function (content, map, meta) {
     loaderCallback(null, result, map, meta);
   };
 
-  if (!PluginService.isUsed()) {
+  if (!PluginService.isUsed(pluginCompiler)) {
     callback(notInitializedPluginError());
     return;
   }
 
+  // create cached instance via PluginService by pluginCompiler to avoid needless double initialisation of instances
+  LoaderFactory.init(pluginCompiler);
+
+  const dependency = LoaderFactory.createDependency(pluginCompiler);
+  const resolver = LoaderFactory.createResolver(pluginCompiler, loaderContext);
+  const loaderOption = LoaderFactory.createOption(pluginCompiler, loaderContext);
+  const loader = LoaderFactory.createLoader(pluginCompiler);
+  const hooks = PluginService.getHooks(pluginCompiler);
+
+  // bind the loaderOption before initialisations
+  PluginService.setLoaderOption(pluginCompiler, loaderOption);
+
   new Promise((resolve) => {
     // the options must be initialized before others
     errorStage = 'init';
-    Option.init(loaderContext);
-    Loader.init(loaderContext);
-    Dependency.init(loaderContext);
+
+    if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
+
+    // INIT dependency must be initialized before init Option, because in Option is initialised preprocessor, that require dependency
+    dependency.init({ loaderContext, loaderOption });
+
+    // INIT preprocessor
+    Preprocessor.init(loaderContext, loaderOption);
+
+    // INIT loader
+    loader.init(loaderContext, {
+      pluginCompiler,
+      loaderOption,
+      resolver,
+      collection: PluginService.getPluginContext(pluginCompiler).collection,
+    });
+
+    // INIT resolver
+    // prevent double initialization with same options, it occurs when many entry files used in one webpack config
+    // TODO: check whether it is here need, because already used LoaderFactory with caching of created/initialised instances
+    if (!PluginService.isCached(pluginCompiler, rootContext)) {
+      resolver.init(loaderOption);
+    }
+
+    // init watching after all initialisations
+    //if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
+
     resolve();
   })
     .then(() => {
@@ -56,7 +95,7 @@ const loader = function (content, map, meta) {
       return hooks.beforePreprocessor.promise(content, loaderContext);
     })
     .then((value) => {
-      const beforePreprocessor = Option.get().beforePreprocessor;
+      const beforePreprocessor = loaderOption.get().beforePreprocessor;
       if (beforePreprocessor != null) {
         errorStage = 'beforePreprocessor';
         return beforePreprocessor(value, loaderContext) || value;
@@ -64,16 +103,18 @@ const loader = function (content, map, meta) {
       return value;
     })
     .then((value) => {
-      const loaderOptions = Option.get();
+      const loaderOptions = loaderOption.get();
       errorStage = 'preprocessor';
       // TODO: add to types.d.ts loaderOptions as 3rd param
       return hooks.preprocessor.promise(value, loaderContext, loaderOptions);
     })
     .then((value) => {
-      const preprocessor = Option.getPreprocessor();
-      if (preprocessor != null) {
-        const loaderOptions = Option.get();
+      // 3
+      const preprocessor = loaderOption.getPreprocessor();
+      if (preprocessor) {
+        const loaderOptions = loaderOption.get();
         errorStage = 'preprocessor';
+
         // TODO: add to types.d.ts loaderOptions as 3rd param
         return preprocessor(value, loaderContext, loaderOptions) || value;
       }
@@ -85,24 +126,25 @@ const loader = function (content, map, meta) {
     //   return hooks.afterPreprocessor.promise(value, loaderContext);
     // })
     // .then((value) => {
-    //   const afterPreprocessor = Option.get().afterPreprocessor;
+    //   const afterPreprocessor = loaderOption.get().afterPreprocessor;
     //   if (afterPreprocessor != null) {
     //     errorStage = 'afterPreprocessor';
     //     return afterPreprocessor(value, loaderContext) || value;
     //   }
     //   return value;
     // })
-    .then((value) => {
+    .then((content) => {
       errorStage = 'resolve';
-      return Template.resolve(value, resource, entryId, hooks);
+      return Template.resolve({ content, issuer: resource, entryId, hooks, loader, loaderOption });
     })
     .then((value) => {
       errorStage = 'export';
-      return Loader.export(value, loaderContext);
+      return loader.export(value, loaderContext);
     })
     .then((value) => {
       errorStage = 'watch';
-      Dependency.watch();
+      dependency.watch();
+
       callback(null, value);
     })
     .catch((error) => {
@@ -133,10 +175,11 @@ const loader = function (content, map, meta) {
           return;
       }
 
-      const browserErrorMessage = Loader.exportError(error, resource);
+      const browserErrorMessage = loader?.exportError(error, resource);
 
-      Dependency.init(loaderContext);
-      Dependency.watch();
+      // initialize dependency when an exception occurs before regular dependency initialisation
+      dependency.init({ loaderContext, loaderOption });
+      dependency.watch();
       callback(error, browserErrorMessage);
     });
 };

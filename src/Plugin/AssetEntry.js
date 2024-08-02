@@ -1,10 +1,8 @@
 const path = require('path');
-const Option = require('./Option');
-const PluginService = require('./PluginService');
 const { isFunction, addQueryParam, deleteQueryParam, getQueryParam } = require('../Common/Helpers');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const { optionEntryPathException } = require('./Messages/Exception');
-const AssetTrash = require('./AssetTrash');
+const PluginService = require('./PluginService');
 
 const loader = require.resolve('../Loader');
 
@@ -45,71 +43,90 @@ const loader = require.resolve('../Loader');
 
 class AssetEntry {
   /** @type {Map<string, AssetEntryOptions>} */
-  static entriesByName = new Map();
+  entriesByName = new Map();
 
   /** @type {Map<Number, AssetEntryOptions>} */
-  static entriesById = new Map();
+  entriesById = new Map();
 
-  static compilationEntryNames = new Set();
-  static removedEntries = new Set();
-
-  /** @type {FileSystem} */
-  static fs;
-
-  /** @type {Compilation} */
-  static compilation;
-
-  /** @type {Collection} */
-  static collection;
+  compilationEntryNames = new Set();
+  removedEntries = new Set();
 
   /** @type {Object} */
-  static entryLibrary;
+  entryLibrary = null;
+
+  /** @type {FileSystem} */
+  fs = null;
+
+  /** @type {Compilation} */
+  compilation = null;
+
+  /** @type {Collection} */
+  collection = null;
+
+  /** @type {{}} */
+  pluginOption = null;
+
+  assetTrash = null;
 
   /** @type {Map<any, any>} The data passed to the entry template. */
-  static data = new Map();
+  data = new Map();
 
   // the id to bind loader with data passed into template via entry.data
-  static idIndex = 1;
-  static entryIdKey = '_entryId';
+  idIndex = 1;
+  entryIdKey = '_entryId';
   // the regexp will be initialized in the init()
-  static entryIdRegexp = null;
+  entryIdRegexp = null;
 
   // the entry name prefix of html entries to avoid a collision with the same name of a js entrypoint,
   // e.g., index.html and index.js have the same base name `index`,
   // but must be defined in entry as two different entries, because each type of entry have own options:
   // entry: { __prefix__index: './index.html', index: './index.js' }
-  static entryNamePrefix = '__bundler-plugin-entry__';
+  entryNamePrefix = '__bundler-plugin-entry__';
+
+  /**
+   *
+   * @param {{}} pluginOption
+   * @param {Collection} collection
+   * @param {AssetTrash} assetTrash
+   * @param {{}} entryLibrary
+   */
+  constructor({ pluginOption, collection, assetTrash, entryLibrary }) {
+    this.pluginOption = pluginOption;
+    this.collection = collection;
+    this.assetTrash = assetTrash;
+    this.entryLibrary = entryLibrary;
+
+    this.entryIdRegexp = new RegExp(`\\?${this.entryIdKey}=(\\d+)`);
+  }
 
   /**
    * Init the asset entry.
    *
+   * @param {{}} pluginOption
+   *
+   *
    * @param {FileSystem} fs
-   * @param {Object} entryLibrary
-   * @param {Collection} collection
    */
-  static init({ fs, entryLibrary, collection }) {
+  init({ fs }) {
     this.fs = fs;
-    this.entryLibrary = entryLibrary;
-    this.collection = collection;
-    this.entryIdRegexp = new RegExp(`\\?${this.entryIdKey}=(\\d+)`);
 
-    const { entry } = Option.webpackOptions;
+    const { entry } = this.pluginOption.webpackOptions;
     let pluginEntry;
 
-    if (Option.isDynamicEntry()) {
+    if (this.pluginOption.isDynamicEntry()) {
       pluginEntry = this.getDynamicEntry();
-      Option.webpackOptions.entry = { ...entry, ...pluginEntry };
+      this.pluginOption.webpackOptions.entry = { ...entry, ...pluginEntry };
       return;
     }
 
-    pluginEntry = { ...entry, ...Option.get().entry };
+    pluginEntry = { ...entry, ...this.pluginOption.get().entry };
 
     for (let name in pluginEntry) {
       const entry = pluginEntry[name];
       const entryName = this.createEntryName(name);
 
       if (entry.import == null) {
-        if (Option.isEntry(entry)) {
+        if (this.pluginOption.isEntry(entry)) {
           delete pluginEntry[name];
           name = entryName;
         }
@@ -123,22 +140,13 @@ class AssetEntry {
         entry.import = [entry.import];
       }
 
-      if (Option.isEntry(entry.import[0])) {
+      if (this.pluginOption.isEntry(entry.import[0])) {
         pluginEntry[entryName] = entry;
         delete pluginEntry[name];
       }
     }
 
-    Option.webpackOptions.entry = pluginEntry;
-  }
-
-  /**
-   * Init for the compilation.
-   *
-   * @param {Compilation} compilation
-   */
-  static initCompilation(compilation) {
-    this.compilation = compilation;
+    this.pluginOption.webpackOptions.entry = pluginEntry;
   }
 
   /**
@@ -147,12 +155,12 @@ class AssetEntry {
    * @return {Object}
    * @throws
    */
-  static getDynamicEntry() {
+  getDynamicEntry() {
     const { fs } = this;
-    const dir = Option.get().entry;
-    const entryFilter = Option.get().entryFilter;
+    const dir = this.pluginOption.get().entry;
+    const entryFilter = this.pluginOption.get().entryFilter;
     const isFunctionEntryFilter = typeof entryFilter === 'function';
-    let includes = [Option.get().test];
+    let includes = [this.pluginOption.get().test];
     let excludes = [];
 
     if (entryFilter && !isFunctionEntryFilter) {
@@ -199,7 +207,7 @@ class AssetEntry {
    * @param {string} name
    * @return {string}
    */
-  static createEntryName(name) {
+  createEntryName(name) {
     return `${this.entryNamePrefix}${name}`;
   }
 
@@ -207,7 +215,7 @@ class AssetEntry {
    * @param {string} name
    * @return {string}
    */
-  static getOriginalEntryName(name) {
+  getOriginalEntryName(name) {
     return name.replace(this.entryNamePrefix, '');
   }
 
@@ -216,7 +224,7 @@ class AssetEntry {
    *
    * @return {Set<string>}
    */
-  static getEntryFiles() {
+  getEntryFiles() {
     const files = new Set();
 
     for (let { sourceFile, isTemplate } of this.entriesByName.values()) {
@@ -233,7 +241,7 @@ class AssetEntry {
    * @param {string} file The source file.
    * @return {boolean}
    */
-  static isUnique(name, file) {
+  isUnique(name, file) {
     const entry = this.entriesByName.get(name);
     return !entry || entry.sourceFile === file;
   }
@@ -244,7 +252,7 @@ class AssetEntry {
    * @param {string} filename The output filename.
    * @return {boolean}
    */
-  static isEntryFilename(filename) {
+  isEntryFilename(filename) {
     return this.collection.isTemplate(filename);
   }
 
@@ -254,7 +262,7 @@ class AssetEntry {
    * @param {string} resource The resource file.
    * @return {boolean}
    */
-  static isEntryResource(resource) {
+  isEntryResource(resource) {
     const [resourceFile] = resource.split('?', 1);
     for (let { isTemplate, sourceFile } of this.entriesByName.values()) {
       if (isTemplate && sourceFile === resourceFile) return true;
@@ -272,7 +280,7 @@ class AssetEntry {
    * @param {string} file The source entry file.
    * @return {boolean}
    */
-  static isDeletedEntryFile(file) {
+  isDeletedEntryFile(file) {
     return this.removedEntries.has(file);
   }
 
@@ -287,15 +295,19 @@ class AssetEntry {
    * @param {Chunk} chunk The webpack chunk.
    * @returns {AssetEntryOptions|null}
    */
-  static getByChunk(chunk) {
+  getByChunk(chunk) {
     const entry = this.entriesByName.get(chunk.name);
 
     if (entry == null) return null;
 
-    if (PluginService.isWatchMode() && Option.isDynamicEntry() && this.isDeletedEntryFile(entry.sourceFile)) {
+    if (
+      PluginService.isWatchMode(this.compilation.compiler) &&
+      this.pluginOption.isDynamicEntry() &&
+      this.isDeletedEntryFile(entry.sourceFile)
+    ) {
       // delete artifacts from compilation in serve/watch mode
-      AssetTrash.add(entry.filename);
-      AssetTrash.add(`${entry.name}.js`);
+      this.assetTrash.add(entry.filename);
+      this.assetTrash.add(`${entry.name}.js`);
 
       return null;
     }
@@ -341,7 +353,7 @@ class AssetEntry {
    * @param {string|number} id
    * @returns {AssetEntryOptions}
    */
-  static getById(id) {
+  getById(id) {
     return this.entriesById.get(Number(id));
   }
 
@@ -352,7 +364,7 @@ class AssetEntry {
    * @param {string} resource
    * @return {AssetEntryOptions|null}
    */
-  static getByResource(resource) {
+  getByResource(resource) {
     const [resourceFile] = resource.split('?', 1);
 
     for (let entry of this.entriesByName.values()) {
@@ -368,7 +380,7 @@ class AssetEntry {
    * @param {string|Number} id The entry id.
    * @return {Object}
    */
-  static getData(id) {
+  getData(id) {
     return this.data.get(Number(id)) || {};
   }
 
@@ -378,7 +390,7 @@ class AssetEntry {
    * @param {Object} resolveData The data object.
    * @return {number|null}
    */
-  static resolveEntryId(resolveData) {
+  resolveEntryId(resolveData) {
     let entryId = getQueryParam(resolveData.request, this.entryIdKey);
 
     if (entryId) {
@@ -398,7 +410,7 @@ class AssetEntry {
    * @param {Module} module The Webpack module.
    * @return {number|undefined}
    */
-  static getEntryId(module) {
+  getEntryId(module) {
     const [, entryId] = this.entryIdRegexp.exec(module.request);
 
     return entryId ? Number(entryId) : undefined;
@@ -408,7 +420,7 @@ class AssetEntry {
    * @param {Module} module The Webpack module object.
    * @param {Object} resolveData The data object.
    */
-  static connectEntryAndModule(module, resolveData) {
+  connectEntryAndModule(module, resolveData) {
     const { entryId, _bundlerPluginMeta: meta } = resolveData;
 
     if (entryId) {
@@ -430,7 +442,7 @@ class AssetEntry {
    * @param {Number} id
    * @param {Object} entry
    */
-  static setEntryId(id, entry) {
+  setEntryId(id, entry) {
     // add the entry id as the query parameter
     entry.import[0] = addQueryParam(entry.import[0], this.entryIdKey, id);
   }
@@ -438,21 +450,21 @@ class AssetEntry {
   /**
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
-  static setCompilation(compilation) {
+  setCompilation(compilation) {
     this.compilation = compilation;
   }
 
   /**
    * @param {Array<Object>} entries
    */
-  static addEntries(entries) {
+  addEntries(entries) {
     for (let name in entries) {
       const entry = entries[name];
       const originalName = this.getOriginalEntryName(name);
       const importFile = entry.import[0];
       let resource = importFile;
       let [sourceFile] = resource.split('?', 1);
-      let options = Option.getEntryOptions(sourceFile);
+      let options = this.pluginOption.getEntryOptions(sourceFile);
 
       if (options == null) continue;
 
@@ -499,8 +511,8 @@ class AssetEntry {
         publicPath: '',
         library: entry.library,
         verbose,
-        isTemplate: Option.isEntry(sourceFile),
-        isStyle: Option.isStyle(sourceFile),
+        isTemplate: this.pluginOption.isEntry(sourceFile),
+        isStyle: this.pluginOption.isStyle(sourceFile),
       };
 
       this.#add(entry, assetEntryOptions);
@@ -515,13 +527,13 @@ class AssetEntry {
    *
    * @param {string} file
    */
-  static addEntry(file) {
-    const pluginOptions = Option.get();
+  addEntry(file) {
+    const pluginOptions = this.pluginOption.get();
     const context = pluginOptions.sourcePath;
     const entryDir = pluginOptions.entry;
 
     if (!path.isAbsolute(file)) {
-      file = path.join(Option.context, file);
+      file = path.join(this.pluginOption.context, file);
     }
 
     let outputFile = path.relative(entryDir, file);
@@ -536,7 +548,7 @@ class AssetEntry {
 
     entries[name] = entrypoint;
     this.addEntries(entries);
-    Option.webpackOptions.entry = { ...Option.webpackOptions.entry, ...entries };
+    this.pluginOption.webpackOptions.entry = { ...this.pluginOption.webpackOptions.entry, ...entries };
 
     // important: the library must be null
     entrypoint.library = null;
@@ -569,7 +581,7 @@ class AssetEntry {
    *
    * @param {string} file
    */
-  static deleteEntry(file) {
+  deleteEntry(file) {
     this.removedEntries.add(file);
     this.collection.deleteData(file);
 
@@ -578,7 +590,7 @@ class AssetEntry {
     // will be used already created entry instead of the new entry
   }
 
-  static deleteMissingFile(file) {
+  deleteMissingFile(file) {
     this.removedEntries.delete(file);
   }
 
@@ -592,7 +604,7 @@ class AssetEntry {
    * @param {string} issuer
    * @return {boolean} Return true if new file was added, if a file exists then return false.
    */
-  static addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
+  addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
     // skip duplicate entries
     if (this.#exists(name, importFile)) {
       return false;
@@ -622,7 +634,7 @@ class AssetEntry {
       importFile,
       sourceFile,
       sourcePath: context,
-      outputPath: Option.getWebpackOutputPath(),
+      outputPath: this.pluginOption.getWebpackOutputPath(),
       verbose: false,
       isTemplate: false,
     };
@@ -640,7 +652,7 @@ class AssetEntry {
     });
 
     // add missing dependencies after rebuild
-    if (PluginService.isWatchMode()) {
+    if (PluginService.isWatchMode(this.compilation.compiler)) {
       new EntryPlugin(context, importFile, { name }).apply(compiler);
     }
 
@@ -652,11 +664,11 @@ class AssetEntry {
    * @param {AssetEntryOptions} assetEntryOptions
    * @private
    */
-  static #add(entry, assetEntryOptions) {
+  #add(entry, assetEntryOptions) {
     const { name, originalName, filenameTemplate, outputPath } = assetEntryOptions;
 
     if (path.isAbsolute(outputPath)) {
-      assetEntryOptions.publicPath = path.relative(Option.getWebpackOutputPath(), outputPath);
+      assetEntryOptions.publicPath = path.relative(this.pluginOption.getWebpackOutputPath(), outputPath);
     }
 
     const filenameFn = (pathData, assetInfo) => {
@@ -704,7 +716,7 @@ class AssetEntry {
    * @return {boolean}
    * @private
    */
-  static #exists(name, importFile) {
+  #exists(name, importFile) {
     const entry = this.entriesByName.get(name);
     return entry != null && entry.importFile === importFile;
   }
@@ -713,7 +725,7 @@ class AssetEntry {
    * Clear caches.
    * Called only once when the plugin is applied.
    */
-  static clear() {
+  clear() {
     this.idIndex = 1;
     this.data.clear();
     this.entriesByName.clear();
@@ -724,7 +736,7 @@ class AssetEntry {
    * Remove entries added not via webpack entry.
    * Called before each new compilation after changes, in the serve/watch mode.
    */
-  static reset() {
+  reset() {
     for (const entryName of this.compilationEntryNames) {
       const entry = this.entriesByName.get(entryName);
       if (entry) {

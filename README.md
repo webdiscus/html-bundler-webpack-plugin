@@ -27,19 +27,6 @@ A template imported in JS will be compiled into [template function](#template-in
 
 This plugin is an **advanced replacement**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
 
-<!--
-<table align="center">
-<tr><th>Entry point is HTML</th></tr>
-<tr><td><pre>
-             html <-- Start from HTML
-     ┌─────────┼────────┐
-    css       img       js
-  ┌──┴──┐          ┌────┼────┐
- img   font        js  css  img
-</pre></td></tr>
-</table>
--->
-
 <center>
   <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
 </center>
@@ -180,6 +167,10 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 - [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
 - [Comparison and Benchmarks of Node.js libraries to colorize text in terminal](https://dev.to/webdiscus/comparison-of-nodejs-libraries-to-colorize-text-in-terminal-4j3a) (_offtopic_)
 
+## 🔆 What's New in v4
+
+- **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations)
+
 ## 🔆 What's New in v3
 
 - **NEW** added supports the [template function](#template-in-js) in JS runtime on the client-side.
@@ -205,20 +196,6 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 The current version works stable with `cache.type` as `'memory'` (Webpack's default setting).\
 Support for the `'filesystem'` cache type is experimental.
-
-### Multiple config files
-
-The multiple config files are not supported, because in some special use cases the Webpack API works not properly (all previous configurations are overridden by the latest configuration).
-
-Instead of this:
-```
-npx webpack -c app1.config.js app2.config.js
-```
-you can use following:
-```
-npx webpack -c app1.config.js
-npx webpack -c app2.config.js
-```
 
 ---
 
@@ -267,7 +244,7 @@ For example, there is the template _./src/views/home.html_:
 ```
 
 All source filenames should be relative to the entrypoint template, or you can use [Webpack alias](https://webpack.js.org/configuration/resolve/#resolvealias).
-The references are rewritten in the generated HTML so that they link to the correct output files.
+The references are rewritten in the generated HTML so that they point to the correct output files.
 
 The generated HTML contains URLs of the output filenames:
 
@@ -2563,7 +2540,7 @@ or an array to specify multiple hash functions for compatibility with many brows
 > - The [`output.crossOriginLoading`](https://webpack.js.org/configuration/output/#outputcrossoriginloading) Webpack option must be specified as `'use-credentials'` or `'anonymous'`.
 >   The bundler plugin adds the `crossorigin` attribute with the value defined in the `crossOriginLoading`.
 >   The `crossorigin` attribute  tells the browser to request the script with CORS enabled, which is necessary because the integrity check fails without CORS.
-> - The [`optimization.realContentHash`](https://webpack.js.org/configuration/optimization/#optimizationrealcontenthash) Webpack option must be enabled, is enabled by default in production mode only.
+> - The [`optimization.realContentHash`](https://webpack.js.org/configuration/optimization/#optimizationrealcontenthash) Webpack option must be enabled, by default is enabled in production mode only.
 >
 > This requirement is necessary to avoid the case where the browser tries to load a contents of a file from the local cache since the filename has not changed, but the `integrity` value has changed on the server.
 > In this case, the browser will not load the file because the `integrity` of the cached file computed by the browser will not match the `integrity` attribute computed on the server.
@@ -2651,8 +2628,8 @@ Type:
 ```ts
 type WatchFiles = {
   paths?: Array<string>;
-  files?: Array<RegExp>;
-  ignore?: Array<RegExp>;
+  includes?: Array<RegExp>;
+  excludes?: Array<RegExp>;
 };
 ```
 
@@ -2661,13 +2638,13 @@ Default:
 ```js
 watchFiles: {
   paths: ['./src'],
-  files: [/\.(html|ejs|eta)$/],
-  ignore: [
+  includes: [/\.(html|ejs|eta)$/],
+  excludes: [
     /[\\/](node_modules|dist|test)$/, // ignore standard project dirs
     /[\\/]\..+$/, // ignore hidden dirs and files, e.g.: .git, .idea, .gitignore, etc.
-    /package(?:-lock)*\.json$/, // ingnore npm files
+    /package(?:-lock)*\.json$/, // ignore npm files
     /webpack\.(.+)\.js$/, // ignore Webpack config files
-    /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/, // ignore binary assets
+    /\.(je?pg|png|ico|webp|svg|woff2?|ttf|otf|eot)$/, // exclude binary assets
   ],
 }
 ```
@@ -2681,14 +2658,16 @@ Allows to configure paths and files to watch file changes for rebuild in `watch`
 
 #### Properties:
 
-- `paths` - A list of relative or absolute paths to directories where should be watched `files`.\
+- `paths` - A list of relative or absolute paths to directories where should be watched `includes`.\
   The watching path for each template defined in the entry will be autodetect as the first level subdirectory of the template relative to the project's root path.
   E.g., the template `./src/views/index.html` has the watching path of `./src`.
 
-- `files` - Watch the files specified in `paths`, except `ignore`, that match the regular expressions.
+- `includes` - Watch the files specified in `paths`, except `excludes`, that match the regular expressions.
   Defaults, are watched only files that match the [`test`](#option-test) plugin option.
 
-- `ignore` - Ignore the specified paths or files, that match the regular expressions.
+- `excludes` - Exclude the specified paths or files, that match the regular expressions.
+
+This options does not override the default values, but extends them.
 
 For example, all source files are in the `./src` directory,
 while some partials included in a template are in `./vendor/` directory, then add it to the `paths`:
@@ -2700,19 +2679,19 @@ watchFiles: {
 ```
 
 If you want watch changes in some special files used in your template that are only loaded through the template engine,
-add them to the `files` property:
+add them to the `includes` property:
 
 ```js
 watchFiles: {
   paths: ['vendor'],
-  files: [
+  includes: [
     /data\.(js|json)$/,
   ],
 },
 ```
 
-To exclude watching of files defined in `paths` and `files`, you can use the `ignore` property.
-This option has the prio over paths and files.
+To exclude watching of files defined in `paths` and `includes`, you can use the `excludes` option.
+This option has the priority over paths and files.
 
 > **Note**
 >

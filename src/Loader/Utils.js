@@ -177,11 +177,11 @@ const stringifyJSON = (data) => {
     if (typeof value === 'function') {
       value = value.toString().replace(/\n/g, '');
 
-      // transform `{ fn() {} }` to `{ fn: () => {} }`
+      // transform `{ fn() {} }` to `{"fn":()=>{}}`
       const keySize = key.length;
       if (key === value.slice(0, keySize)) {
         const pos = value.indexOf(')', keySize + 1) + 1;
-        value = value.slice(keySize, pos) + '=>' + value.slice(pos);
+        value = value.slice(keySize, pos) + '=>' + value.slice(pos).trimStart();
       }
 
       value = quoteMark + value + quoteMark;

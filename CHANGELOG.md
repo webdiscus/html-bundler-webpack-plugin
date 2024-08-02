@@ -1,5 +1,146 @@
 # Change log
 
+## 4.0.0-beta.0 (2024-08-10)
+
+### BREAKING CHANGES
+
+- Drop supporting for Node.js < `v18`.\
+  The plugin works on the Node.js >= `v14.21.xx`, but we can't test the plugin with outdated Node.js versions,
+  because many actual dev dependencies requires current LTS Node.js >= v18.x.
+  Up-to-date versions of dependencies are very important because they contain `security updates`.
+
+- The plugin `option` property is not static anymore:
+
+  OLD (up to v3.x)
+  ```js
+  class MyPlugin extends HtmlBundlerPlugin {
+    constructor(options = {}) {
+      super({ ...options });
+    }
+    init(compiler) {
+      // MyPlugin.option. ...; <= was as static property
+    }
+  }
+  ```
+  NEW (since v4.0)
+  ```js
+  class MyPlugin extends HtmlBundlerPlugin {
+    constructor(options = {}) {
+      super({ ...options });
+    }
+    init(compiler) {
+      // this.option. ...; <= now is non static property
+    }
+  }
+  ```
+
+- Using the `addProcess()` plugin method is changed:
+
+  OLD (up to v3.x)
+  ```js
+  class MyPlugin extends HtmlBundlerPlugin {
+    constructor(options = {}) {
+      super({ ...options });
+    }
+    init(compiler) {
+      // the method was as property of the static `option`
+      MyPlugin.option.addProcess('postprocess', (content) => {
+        return content;
+      });
+    }
+  }
+  ```
+  NEW (since v4.0)
+  ```js
+  class MyPlugin extends HtmlBundlerPlugin {
+    constructor(options = {}) {
+      super({ ...options });
+    }
+    init(compiler) {
+      // now is the class method
+      this.addProcess('postprocess', (content) => {
+        return content;
+      });
+    }
+  }
+  ```
+
+### DEPRECATIONS
+
+- The `watchFiles.files` option has been renamed to `watchFiles.includes`.
+  The `files` option is still supported but is deprecated.
+  It's recommended to replace the `files` with `includes` in your config.
+
+- The `watchFiles.ignore` option has been renamed to `watchFiles.excludes`.
+  The `ignore` option is still supported but is deprecated.
+  It's recommended to replace the `ignore` with `excludes` in your config.
+
+
+### FEATURES
+
+- feat: add support the multiple webpack configuration:
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
+
+module.exports = [
+  {
+    name: 'first',
+    output: {
+      path: path.join(__dirname, 'dist/web1/'),
+    },
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: {
+          index: './web1/views/home.html',
+        },
+      }),
+    ],
+  },
+
+  {
+    name: 'second',
+    output: {
+      path: path.join(__dirname, 'dist/web2'),
+    },
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: {
+          index: './web2/views/home.html',
+        },
+      }),
+    ],
+  },
+];
+```
+
+- feat: display webpack config name in console output:
+  ```js
+  module.exports = {
+    name: 'client', // <= this name will displayed in console output
+  }
+  ``` 
+  
+### MISC
+
+- refactor: rewrite all static classes to regular, this is needed to support webpack multiple configurations
+- test: add testing for Node.js `v22` on GitHub
+- test: add tests to improve the code coverage to 98%, 2% code can be tested only manual, e.g. in watch/serve mode after changes
+- chore: update dev packages, many packages requires Node.js >= v18
+- docs: update readme
+
+## 3.17.3 (2024-08-09)
+
+- fix: in dev mode imports SCSS in JS when in the same file is inlined another SCSS file via `?inline` query, #102
+
+## 3.17.2 (2024-08-08)
+
+- fix: error when `integrity` option is enabled but no template defined in entry, #107
+
+## 3.17.1 (2024-08-01)
+
+- fix: when using the integrity option, leaves the original attributes in the script tag as is
+
 ## 3.17.0 (2024-07-23)
 
 - feat: add support the `?inline` query for styles imported in JavaScript:
@@ -30,8 +171,18 @@
 
 ## 3.14.0 (2024-05-31)
 
-- feat(Pug): add `watchFiles.includes` and `watchFiles.excludes` options to allow watch specifically external file,
+- feat: add `watchFiles.includes` and `watchFiles.excludes` options to allow watch specifically external file,
   e.g. *.md file included via Pug filter from any location outer project directory
+  ```ts
+  type WatchFiles = {
+    paths?: Array<string>;
+    files?: Array<RegExp>;
+    includes?: Array<RegExp | string>; // <= NEW
+    ignore?: Array<RegExp>;
+    excludes?: Array<RegExp | string>; // <= NEW
+  };
+  ```
+  WARNING: in the 4.0 version the undocumented `includes` and `excludes` properties are removed from code.
 
 ## 3.13.0 (2024-05-26)
 

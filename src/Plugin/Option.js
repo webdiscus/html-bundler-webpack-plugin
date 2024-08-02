@@ -1,22 +1,24 @@
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
-const LoaderOption = require('../Loader/Option');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
+
 const Preprocessor = require('../Loader/Preprocessor');
+const PluginService = require('../Plugin/PluginService');
 
 class Option {
   /** @type {HtmlBundlerPlugin.PluginOptions} */
-  static options = {};
+  options = {};
   /** @type {AssetEntry} */
-  static assetEntry = null;
-  static webpackOptions = {};
-  static productionMode = true;
-  static dynamicEntry = false;
-  static cacheable = false;
-  static context = '';
-  static testEntry = null;
+  assetEntry = null;
+  webpackOptions = {};
+  productionMode = true;
+  dynamicEntry = false;
+  cacheable = false;
+  context = '';
+  testEntry = null;
+  compiler = null;
 
-  static js = {
+  js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
     enabled: true,
     filename: undefined, // used output.filename
@@ -25,7 +27,7 @@ class Option {
     inline: false,
   };
 
-  static css = {
+  css = {
     test: /\.(css|scss|sass|less|styl)$/,
     enabled: true,
     filename: '[name].css',
@@ -34,26 +36,31 @@ class Option {
     inline: false,
   };
 
+  #entryLibrary = {
+    name: 'return',
+    type: 'jsonp', // compiles JS from source into HTML string via Function()
+  };
+
   /**
    * The pipeline of processes.
    * The result of one will be passed into next.
    *
    * @type {Map<string, Array<Function>>}
    */
-  static #process = new Map();
+  #process = new Map();
 
   /**
    * Initialize plugin options.
    *
+   * @param {Object} pluginContext
    * @param {HtmlBundlerPlugin.PluginOptions} options The plugin options.
-   * @param {AssetEntry} assetEntry The instance of the AssetEntry class.
    * @param {string} loaderPath The absolute path of the loader.
    *  Note: this file cannot be imported due to a circular dependency, therefore, this dependency is injected.
    */
-  static init(options, { assetEntry, loaderPath }) {
+  constructor(pluginContext, { options, loaderPath }) {
+    this.pluginContext = pluginContext;
     this.loaderPath = loaderPath;
     this.options = options;
-    this.assetEntry = assetEntry;
     this.testEntry = null;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
@@ -87,11 +94,14 @@ class Option {
   /**
    * Initialize Webpack options.
    *
-   * @param {Object} options The Webpack compiler options.
+   * @param {Object} compiler The Webpack compiler.
    */
-  static initWebpack(options) {
+  initWebpack(compiler) {
+    const options = compiler.options;
     const { entry, js, css } = this.options;
 
+    this.compiler = compiler;
+    this.assetEntry = this.pluginContext.assetEntry;
     this.#initWebpackOutput(options.output);
 
     this.webpackOptions = options;
@@ -220,6 +230,7 @@ class Option {
     this.options.minifyOptions = { ...defaultMinifyOptions, ...this.options.minifyOptions };
 
     this.initEntry(this.loaderPath);
+    this.enableLibraryType();
   }
 
   /**
@@ -227,7 +238,7 @@ class Option {
    *
    * @param {string} loaderPath The absolute path to loader file.
    */
-  static initEntry(loaderPath) {
+  initEntry(loaderPath) {
     const preprocessorTest = Preprocessor.getTest(this.options.preprocessor);
     const loaderTests = new Set();
 
@@ -252,7 +263,7 @@ class Option {
     this.testEntry = loaderTests.size > 0 ? [...loaderTests] : [this.options.test];
   }
 
-  static initWatchMode() {
+  initWatchMode() {
     const { publicPath } = this.webpackOptions.output;
     if (publicPath == null || publicPath === 'auto') {
       // Using watch/serve, browsers not support an automatic publicPath in the 'hot update' script injected into inlined JS,
@@ -264,7 +275,7 @@ class Option {
   /**
    * @param {WebpackOutputOptions} output
    */
-  static #initWebpackOutput(output) {
+  #initWebpackOutput(output) {
     let { publicPath } = output;
     if (!output.path) output.path = path.join(process.cwd(), 'dist');
 
@@ -304,49 +315,49 @@ class Option {
   /**
    * @return {boolean}
    */
-  static isProduction() {
+  isProduction() {
     return this.productionMode;
   }
 
   /**
    * @return {boolean}
    */
-  static isDynamicEntry() {
+  isDynamicEntry() {
     return this.dynamicEntry;
   }
 
   /**
    * @return {boolean}
    */
-  static isEnabled() {
+  isEnabled() {
     return this.options.enabled !== false;
   }
 
   /**
    * @return {boolean}
    */
-  static isMinify() {
+  isMinify() {
     return this.options.minify === true;
   }
 
   /**
    * @return {boolean}
    */
-  static isVerbose() {
+  isVerbose() {
     return this.options.verbose === true;
   }
 
   /**
    * @return {boolean}
    */
-  static isExtractComments() {
+  isExtractComments() {
     return this.options.extractComments === true;
   }
 
   /**
    * @return {boolean}
    */
-  static isIntegrityEnabled() {
+  isIntegrityEnabled() {
     return this.options.integrity.enabled !== false;
   }
 
@@ -356,7 +367,7 @@ class Option {
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isEntry(resource) {
+  isEntry(resource) {
     if (resource == null) return false;
 
     const [file] = resource.split('?', 1);
@@ -368,7 +379,7 @@ class Option {
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isStyle(resource) {
+  isStyle(resource) {
     const [file] = resource.split('?', 1);
     return this.options.css.enabled && this.options.css.test.test(file);
   }
@@ -377,7 +388,7 @@ class Option {
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isScript(resource) {
+  isScript(resource) {
     const [file] = resource.split('?', 1);
     return this.options.js.enabled && this.options.js.test.test(file);
   }
@@ -385,14 +396,14 @@ class Option {
   /**
    * @return {boolean}
    */
-  static isRealContentHash() {
+  isRealContentHash() {
     return this.webpackOptions.optimization.realContentHash === true;
   }
 
   /**
    * @return {boolean}
    */
-  static isCacheable() {
+  isCacheable() {
     return this.cacheable;
   }
 
@@ -403,7 +414,7 @@ class Option {
    * @param {string} chunk The chunk filename.
    * @return {boolean}
    */
-  static isInlineJs(resource, chunk) {
+  isInlineJs(resource, chunk) {
     const [, query] = resource.split('?', 2);
     const urlParams = new URLSearchParams(query);
     const { inline } = this.options.js;
@@ -428,7 +439,7 @@ class Option {
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
-  static isInlineCss(resource) {
+  isInlineCss(resource) {
     const [, query] = resource.split('?', 2);
     const urlParams = new URLSearchParams(query);
     const value = urlParams.get('inline');
@@ -443,27 +454,27 @@ class Option {
    *
    * @return {boolean}
    */
-  static isPreload() {
+  isPreload() {
     return this.options.preload != null && this.options.preload !== false;
   }
 
-  static isAutoPublicPath() {
+  isAutoPublicPath() {
     return this.autoPublicPath === true;
   }
 
-  static isRootPublicPath() {
+  isRootPublicPath() {
     return this.rootPublicPath === true;
   }
 
-  static hasPostprocess() {
+  hasPostprocess() {
     return this.#process.has('postprocess');
   }
 
-  static hasBeforeEmit() {
+  hasBeforeEmit() {
     return this.options.beforeEmit != null;
   }
 
-  static hasAfterEmit() {
+  hasAfterEmit() {
     return this.options.afterEmit != null;
   }
 
@@ -475,7 +486,7 @@ class Option {
    * @param {boolean|string} defaultValue Returns default value when value is undefined.
    * @return {boolean}
    */
-  static toBool(value, autoValue, defaultValue) {
+  toBool(value, autoValue, defaultValue) {
     if (value == null) value = defaultValue;
     // note: if a parameter is defined without a value or value is empty, then the value is true
     if (value === '' || value === 'true') return true;
@@ -488,7 +499,7 @@ class Option {
   /**
    * @return {PluginOptions}
    */
-  static get() {
+  get() {
     return this.options;
   }
 
@@ -497,49 +508,57 @@ class Option {
    *
    * @return {string}
    */
-  static getLF() {
+  getLF() {
     return this.isMinify() ? '' : '\n';
   }
 
   /**
    * @return {Array<RegExp>}
    */
-  static getEntryTest() {
+  getEntryTest() {
     return this.testEntry;
+  }
+
+  /**
+   * Get entry library type.
+   * @return {{name: string, type: string}}
+   */
+  getEntryLibrary() {
+    return this.#entryLibrary;
   }
 
   /**
    * @return {JsOptions}
    */
-  static getJs() {
+  getJs() {
     return this.options.js;
   }
 
   /**
    * @return {CssOptions}
    */
-  static getCss() {
+  getCss() {
     return this.options.css;
   }
 
   /**
    * @return {WatchFiles}
    */
-  static getWatchFiles() {
+  getWatchFiles() {
     return this.options.watchFiles;
   }
 
   /**
    * @return {boolean|Preload}
    */
-  static getPreload() {
+  getPreload() {
     return this.options.preload == null ? false : this.options.preload;
   }
 
   /**
    * @return {"auto" | boolean | IntegrityOptions}
    */
-  static getIntegrity() {
+  getIntegrity() {
     return this.options.integrity;
   }
 
@@ -547,7 +566,7 @@ class Option {
    * @param {string} sourceFile
    * @return {CssOptions|null}
    */
-  static getStyleOptions(sourceFile) {
+  getStyleOptions(sourceFile) {
     if (!this.isStyle(sourceFile)) return null;
 
     return this.options.css;
@@ -557,14 +576,14 @@ class Option {
    * @param {string} sourceFile
    * @return {{filename: FilenameTemplate, outputPath: string, sourcePath: (*|string), verbose: boolean}|null}
    */
-  static getEntryOptions(sourceFile) {
+  getEntryOptions(sourceFile) {
     const isEntry = this.isEntry(sourceFile);
     const isStyle = this.isStyle(sourceFile);
 
     if (!isEntry && !isStyle) return null;
 
     let { filename, sourcePath, outputPath } = this.options;
-    let verbose = Option.isVerbose();
+    let verbose = this.isVerbose();
 
     if (isStyle) {
       const cssOptions = this.options.css;
@@ -579,14 +598,14 @@ class Option {
   /**
    * @return {string}
    */
-  static getWebpackOutputPath() {
+  getWebpackOutputPath() {
     return this.webpackOptions.output.path;
   }
 
   /**
    * @return {string}
    */
-  static getPublicPath() {
+  getPublicPath() {
     return this.webpackPublicPath;
   }
 
@@ -596,7 +615,7 @@ class Option {
    * @param {string | null} assetFile The output asset filename relative by output path.
    * @return {string}
    */
-  static getAssetOutputPath(assetFile = null) {
+  getAssetOutputPath(assetFile = null) {
     const isAutoRelative = assetFile && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(assetFile);
 
     if (this.autoPublicPath || isAutoRelative) {
@@ -619,7 +638,7 @@ class Option {
    * @param {string} issuer The output issuer filename relative by output path.
    * @return {string}
    */
-  static getAssetOutputFile(assetFile, issuer) {
+  getAssetOutputFile(assetFile, issuer) {
     const isAutoRelative = issuer && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(issuer);
 
     // if the public path is relative, then a resource using not in the template file must be auto resolved
@@ -654,8 +673,8 @@ class Option {
    *
    * @return {Array<string>}
    */
-  static getRootSourcePaths() {
-    const watchDirs = LoaderOption.getWatchPaths();
+  getRootSourcePaths() {
+    const watchDirs = PluginService.getLoaderOption(this.compiler).getWatchPaths();
 
     return watchDirs || [];
   }
@@ -665,7 +684,7 @@ class Option {
    *
    * @return {string|null}
    */
-  static getEntryPath() {
+  getEntryPath() {
     return this.dynamicEntry ? this.options.entry : null;
   }
 
@@ -674,7 +693,7 @@ class Option {
    *
    * @param {{test: RegExp, loader: string}} loader
    */
-  static addLoader(loader) {
+  addLoader(loader) {
     const loaderPath = loader.loader;
     const existsLoader = this.webpackOptions.module.rules.find((rule) => {
       let ruleStr = JSON.stringify(rule);
@@ -688,9 +707,14 @@ class Option {
   }
 
   /**
-   * @param {string} type
+   * EnableLibraryPlugin need to be used to enable this type of library.
+   * This usually happens through the "output.enabledLibraryTypes" option.
+   * If you are using a function as entry which sets "library",
+   * you need to add all potential library types to "output.enabledLibraryTypes".
    */
-  static enableLibraryType(type) {
+  enableLibraryType() {
+    const { type } = this.#entryLibrary;
+
     if (this.webpackOptions.output.enabledLibraryTypes.indexOf(type) < 0) {
       this.webpackOptions.output.enabledLibraryTypes.push(type);
     }
@@ -700,9 +724,9 @@ class Option {
    * Add the process to pipeline.
    *
    * @param {string} name The name of process. Currently supported only `postprocess` pipeline.
-   * @param {Function} fn The process function.
+   * @param {Function: (content: string) => string} fn The process function to modify the generated content.
    */
-  static addProcess(name, fn) {
+  addProcess(name, fn) {
     let processes = this.#process.get(name);
 
     if (!processes) {
@@ -718,7 +742,7 @@ class Option {
    * @param {Array<*>} args The arguments of a process.
    * @return {*|null} The result of passed through all processes.
    */
-  static #runProcesses(name, args) {
+  #runProcesses(name, args) {
     let processPipe = this.#process.get(name);
     let i = 0;
     let result;
@@ -745,7 +769,7 @@ class Option {
    * @return {string}
    * @throws
    */
-  static postprocess(content, info, compilation) {
+  postprocess(content, info, compilation) {
     try {
       return this.#runProcesses('postprocess', [content, info, compilation]);
     } catch (error) {
@@ -762,7 +786,7 @@ class Option {
    * @return {string|null}
    * @throws
    */
-  static beforeEmit(content, entry, compilation) {
+  beforeEmit(content, entry, compilation) {
     const { resource } = entry;
     if (!this.options.beforeEmit || !this.isEntry(resource)) return null;
 
@@ -783,7 +807,7 @@ class Option {
    * @return {Promise}
    * @async
    */
-  static afterEmit(entries, compilation) {
+  afterEmit(entries, compilation) {
     return new Promise((resolve) => {
       resolve(this.options.afterEmit(entries, compilation));
     });
@@ -794,7 +818,7 @@ class Option {
    * @param {string | null} outputPath The output path.
    * @return {string}
    */
-  static resolveOutputFilename(filename, outputPath) {
+  resolveOutputFilename(filename, outputPath) {
     if (!outputPath) return filename;
 
     let relativeOutputPath = path.isAbsolute(outputPath)

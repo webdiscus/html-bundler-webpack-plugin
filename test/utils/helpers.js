@@ -179,6 +179,25 @@ export const stdoutContain = (relTestCasePath, containString) => {
   ).resolves.toContain(containString);
 };
 
+export const watchStdoutContain = (relTestCasePath, containString) => {
+  const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
+
+  return expect(
+    watch(PATHS, relTestCasePath, {}, (watching) => {
+      watching.close();
+    }).then(() => {
+      const { calls } = stdout.mock;
+      let output = calls.length > 0 ? calls[0][0] : '';
+      output = ansis.strip(output);
+
+      stdout.mockClear();
+      stdout.mockRestore();
+
+      return Promise.resolve(output);
+    })
+  ).resolves.toContain(containString);
+};
+
 export const watchExceptionContain = function (relTestCasePath, containString) {
   return expect(
     watch(PATHS, relTestCasePath, {}, (watching) => {

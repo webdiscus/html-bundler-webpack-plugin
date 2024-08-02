@@ -132,13 +132,13 @@ const resolveFile = (file, { fs, root = process.cwd(), paths = [], extensions = 
 /**
  * Return the path of the file relative to a directory.
  *
- * Note: this is not a true relative path, this path is for viewing information only.
+ * Note: this is not a true relative path, this path is for verbose only.
  *
  * @param {string} file
  * @param {string} dir
  * @return {string}
  */
-const relativePathForView = (file, dir = process.cwd()) => {
+const relativePathVerbose = (file, dir = process.cwd()) => {
   let relFile = file;
 
   if (!path.isAbsolute(file)) {
@@ -147,11 +147,13 @@ const relativePathForView = (file, dir = process.cwd()) => {
 
   if (file.startsWith(dir)) {
     relFile = path.relative(dir, file);
-  } else if (process.env?.NODE_ENV_TEST === 'true') {
+  } else if ('NODE_ENV_TEST' in process.env) {
     // for test only:
-    // get the relative path to the test directory, because on another machine the absolute path is different
+    // get the relative path to the test directory, because on another machine the absolute path is different,
+    // e.g. test by CI on GitHub,
     const testDirnamePos = file.indexOf(testDirname);
     const srcDirnamePos = file.indexOf(srcDirname);
+
     if (testDirnamePos > 0) {
       return '~' + file.slice(testDirnamePos + testDirname.length);
     } else if (srcDirnamePos > 0) {
@@ -227,7 +229,7 @@ module.exports = {
   isDir,
   readDirRecursiveSync,
   resolveFile,
-  relativePathForView,
+  relativePathVerbose,
   rootSourceDir,
   filterParentPaths,
 };

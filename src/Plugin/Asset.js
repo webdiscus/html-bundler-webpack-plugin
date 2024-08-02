@@ -3,7 +3,7 @@ class Asset {
    * Unique last index for each file with the same name.
    * @type {Object<file: string, index: number>}
    */
-  static index = {};
+  index = {};
 
   /**
    * The cache of resolved output asset filenames.
@@ -12,7 +12,9 @@ class Asset {
    *
    * @type {Map<string, string>}
    */
-  static files = new Map();
+  files = new Map();
+
+  constructor() {}
 
   /**
    * Add resolved module asset.
@@ -21,7 +23,7 @@ class Asset {
    * @param {string} resource The resource file, including a query.
    * @param {string} filename The output filename.
    */
-  static add(resource, filename) {
+  add(resource, filename) {
     this.files.set(resource, filename);
   }
 
@@ -30,7 +32,7 @@ class Asset {
    * @param {string} assetFile The output filename.
    * @return {{isCached: boolean, filename: string}}
    */
-  static getUniqueFilename(sourceFile, assetFile) {
+  getUniqueFilename(sourceFile, assetFile) {
     if (this.files.has(sourceFile)) {
       return {
         isCached: true,
@@ -63,7 +65,7 @@ class Asset {
    * Reset settings.
    * Called before each new compilation after changes, in the serve/watch mode.
    */
-  static reset() {
+  reset() {
     this.index = {};
     this.files.clear();
   }

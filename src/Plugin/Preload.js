@@ -1,5 +1,4 @@
 const path = require('path');
-const Option = require('./Option');
 const { detectIndent, getFileExtension } = require('../Common/Helpers');
 const { optionPreloadAsException } = require('./Messages/Exception');
 
@@ -55,6 +54,12 @@ const contentType = [
 const optionalTypeBy = new Set(['script', 'style']);
 
 class Preload {
+  pluginOption = null;
+
+  constructor(pluginOption) {
+    this.pluginOption = pluginOption;
+  }
+
   /**
    *
    * @param {AssetEntryOptions} entry The entry where is specified the resource.
@@ -62,12 +67,12 @@ class Preload {
    * @param {string} assetFile The asset output filename.
    * @return {string}
    */
-  static getPreloadFile(entry, issuer, assetFile) {
+  getPreloadFile(entry, issuer, assetFile) {
     if (issuer && issuer.resource !== entry.resource) {
       // recovery preload output file of an asset relative by entry point
       const issuerDir = path.dirname(issuer.filename);
       const webRootPath = path.posix.join(issuerDir, assetFile);
-      assetFile = Option.getAssetOutputFile(webRootPath, entry.filename);
+      assetFile = this.pluginOption.getAssetOutputFile(webRootPath, entry.filename);
     }
 
     return assetFile;
@@ -78,14 +83,14 @@ class Preload {
    *
    * @param {string} content The template content.
    * @param {string} entryAsset The output filename of template.
-   * @param {Map} collection The reference to `Collection.data`.
+   * @param {Map} collection The reference to `Collection data`.
    * @throws
    */
-  static insertPreloadAssets(content, entryAsset, collection) {
+  insertPreloadAssets(content, entryAsset, collection) {
     const data = collection.get(entryAsset);
     if (!data) return;
 
-    const options = Option.getPreload();
+    const options = this.pluginOption.getPreload();
     if (!options || !content) return;
 
     const insertPos = this.#findInsertPos(content);
@@ -95,7 +100,7 @@ class Preload {
     }
 
     const preloadAssets = new Map();
-    const LF = Option.getLF();
+    const LF = this.pluginOption.getLF();
     const indent = LF + detectIndent(content, insertPos - 1);
     const groupBy = {};
 
@@ -201,7 +206,7 @@ class Preload {
    * @param {string} content
    * @return {number} Returns the position to insert place or -1 if the head tag not found.
    */
-  static #findInsertPos(content) {
+  #findInsertPos(content) {
     let headStartPos = content.indexOf('<head');
     if (headStartPos < 0) {
       return -1;

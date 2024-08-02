@@ -1,14 +1,15 @@
 const vm = require('vm');
-const Option = require('../Option');
 const { isWin, parseQuery } = require('../../Common/Helpers');
 
 class ResponsiveLoader {
+  pluginOption = null;
   isUsed = false;
   options = null;
   loaderOptions = new Map();
   searchModuleString = '/node_modules/responsive-loader/';
 
-  constructor() {
+  constructor({ pluginOption }) {
+    this.pluginOption = pluginOption;
     // bind this context to the method for using in any context as reference to this method
     this.getAsset = this.getAsset.bind(this);
   }
@@ -88,7 +89,7 @@ class ResponsiveLoader {
 
       if (source) {
         const contextObject = vm.createContext({
-          __webpack_public_path__: Option.getAssetOutputPath(issuer.filename),
+          __webpack_public_path__: this.pluginOption.getAssetOutputPath(issuer.filename),
           module: { exports: {} },
         });
         const script = new vm.Script(source, { filename: sourceFile });
@@ -108,10 +109,12 @@ class ResponsiveLoader {
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];
 
     if (assets.length === 1) {
-      asset = Option.getAssetOutputFile(assets[0], issuer.filename);
+      asset = this.pluginOption.getAssetOutputFile(assets[0], issuer.filename);
     } else if (assets.length > 1 && sizes.length > 1) {
       asset = assets
-        .map((assetFile, index) => Option.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`)
+        .map(
+          (assetFile, index) => this.pluginOption.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`
+        )
         .join(',');
     }
 
@@ -119,4 +122,4 @@ class ResponsiveLoader {
   }
 }
 
-module.exports = new ResponsiveLoader();
+module.exports = ResponsiveLoader;

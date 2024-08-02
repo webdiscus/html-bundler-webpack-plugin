@@ -1,9 +1,14 @@
 const { loadModule } = require('../../../Common/FileUtils');
 const VMScript = require('../../../Common/VMScript');
-const { LoaderResolvers, ResolvePlugin } = require('./ResolvePlugin');
 const Filter = require('./Filter');
+const { LoaderResolvers, ResolvePlugin } = require('./ResolvePlugin');
 
 class PugCompiler {
+  pug = null;
+  pugOptions = null;
+  resolvePlugin = null;
+  vmContext = null;
+
   /**
    *
    * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
@@ -12,6 +17,11 @@ class PugCompiler {
   constructor(loaderContext, loaderOptions) {
     const { rootContext: context } = loaderContext;
     let basedir = loaderOptions.basedir || context;
+
+    const pluginCompiler = loaderContext._compilation.compiler;
+
+    this.resolvePlugin = ResolvePlugin(pluginCompiler);
+    this.vmContext = LoaderResolvers(pluginCompiler);
 
     this.pug = loadModule('pug');
 
@@ -35,7 +45,7 @@ class PugCompiler {
       filterAliases: loaderOptions.filterAliases,
 
       // add the plugin to resolve include, extends, require
-      plugins: [ResolvePlugin, ...(loaderOptions.plugins || [])],
+      plugins: [this.resolvePlugin, ...(loaderOptions.plugins || [])],
 
       // include inline runtime functions must be true
       inlineRuntimeFunctions: true,
@@ -66,7 +76,7 @@ class PugCompiler {
   }
 
   compile(source, { file }) {
-    ResolvePlugin.mode = 'compile';
+    this.resolvePlugin.setMode('compile');
 
     const exportFunctionName = 'templateFn';
     const templateFunctionSource = this._compile(source, file);
@@ -82,13 +92,10 @@ class PugCompiler {
    * @return {string}
    */
   render(source, { file, data, esModule }) {
-    ResolvePlugin.mode = 'render';
+    this.resolvePlugin.setMode('render');
 
     const templateFunctionSource = this._compile(source, file);
-    const name = this.pugOptions.name;
-
-    const vmContext = { require, ...LoaderResolvers };
-    const vmScript = new VMScript(vmContext, name);
+    const vmScript = new VMScript(this.vmContext, this.pugOptions.name);
 
     return vmScript.exec(templateFunctionSource, { filename: file, data });
   }

@@ -1,10 +1,14 @@
 const path = require('path');
-const Preprocessor = require('./Preprocessor');
 const PluginService = require('../Plugin/PluginService');
 const { parseQuery } = require('../Common/Helpers');
 const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
-const { watchPathsException, dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
+const { dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
+const {
+  watchPathsWarning,
+  watchFilesOptionFilesDeprecation,
+  watchIgnoreOptionIgnoreDeprecation,
+} = require('./Messages/Warnings');
 
 /**
  * @typedef OptionSources
@@ -13,41 +17,54 @@ const { watchPathsException, dataFileNotFoundException, dataFileException } = re
  * @property {Function?} filter
  */
 
+/**
+ * Loader Option.
+ */
+
 class Option {
   /** The file system used by Webpack */
-  static fileSystem = null;
-  static #watchFiles = {};
-  static #watch;
-  static #webpackOptions;
-  static #options;
-  static #rootContext;
-  static #resourcePath;
-  static #pluginOption;
+  fileSystem = null;
+  pluginCompiler = null;
+  #watchFiles = {};
+  #watch;
+  #webpackOptions;
+  #options;
+  #rootContext;
+  #resourcePath;
+  #pluginOption;
+  #queryData;
 
   // rule: the first value is default
-  static preprocessorModes = new Set(['render', 'compile']);
+  preprocessorModes = new Set(['render', 'compile']);
+  #preprocessorModule;
 
-  static init(loaderContext) {
+  constructor() {}
+
+  init(loaderContext) {
     const { loaderIndex, rootContext, resourcePath, resourceQuery } = loaderContext;
+    this.pluginCompiler = loaderContext._compilation.compiler;
+
     // note: the loaderContext object has only getter for the `data` property
     const loaderObject = loaderContext.loaders[loaderIndex];
     const loaderId = loaderObject.path + loaderObject.query;
-    const queryData = parseQuery(resourceQuery);
-    let options = PluginService.getLoaderCache(loaderId);
+    this.#queryData = parseQuery(resourceQuery);
+
+    // using the cache avoids double initialisations of the same modules with the same options
+    const loaderCache = PluginService.getLoaderCache(this.pluginCompiler, loaderId);
+    let options;
+    let preprocessorModule;
 
     this.fileSystem = loaderContext.fs.fileSystem;
-    this.#pluginOption = PluginService.getOptions();
-    this.#watch = PluginService.isWatchMode();
+    this.#pluginOption = PluginService.getOptions(this.pluginCompiler);
+    this.#watch = PluginService.isWatchMode(this.pluginCompiler);
     this.#webpackOptions = loaderContext._compiler.options || {};
     this.#rootContext = rootContext;
     this.#resourcePath = resourcePath;
 
-    if (!options) {
-      const loaderOptions = PluginService.getLoaderOptions();
+    if (!loaderCache) {
+      const loaderOptions = PluginService.getLoaderOptions(this.pluginCompiler);
       options = { ...loaderOptions, ...(loaderContext.getOptions() || {}) };
-
-      // save the initial value defined in the webpack config
-      options.originalPreprocessorMode = options.preprocessorMode;
+      preprocessorModule = {};
 
       // basedir option
       const loaderOptionsBasedir = this.#getBaseDirFromOptions(options);
@@ -59,10 +76,17 @@ class Option {
       // whether it should be used ESM export for the rendered/compiled result
       options.esModule = options?.esModule === true;
 
-      PluginService.setLoaderCache(loaderId, options);
+      PluginService.setLoaderCache(this.pluginCompiler, loaderId, {
+        options,
+        preprocessorModule,
+      });
+    } else {
+      options = loaderCache.options;
+      preprocessorModule = loaderCache.preprocessorModule;
     }
 
     this.#options = options;
+    this.#preprocessorModule = preprocessorModule;
 
     // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
     const loaderData = this.#loadData(options.data);
@@ -70,59 +94,37 @@ class Option {
     const contextData = loaderContext.data || {};
 
     // merge plugin and loader data, the plugin data property overrides the same loader data property
-    loaderObject.data = { ...contextData, ...loaderData, ...entryData, ...queryData };
+    loaderObject.data = { ...contextData, ...loaderData, ...entryData, ...this.#queryData };
+
+    this.#initPreprocessor(loaderContext);
 
     // beforePreprocessor
     if (typeof options.beforePreprocessor !== 'function') {
       options.beforePreprocessor = null;
     }
 
-    // preprocessor
-    this.#initPreprocessor(loaderContext, queryData);
-
     // clean loaderContext of artifacts
     if (loaderContext.entryData != null) delete loaderContext.entryData;
 
     // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
     if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
-
-    if (this.#watch) this.#initWatchFiles();
   }
 
-  /**
-   * The root path is used for resolving files specified in attributes (`sources` option).
-   *
-   * Note: the `root` and `basedir` options are synonym, no difference.
-   *
-   * @param {{}} options
-   * @return {string|boolean}
-   */
-  static #getBaseDirFromOptions(options) {
-    if (!options) return false;
-
-    let basedir = options.root || options.basedir || false;
-
-    return basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
-  }
-
-  /**
-   * @param {BundlerPluginLoaderContext} loaderContext The loader context of Webpack.
-   * @param {Object} queryData The parsed parameters from the url query.
-   */
-  static #initPreprocessor(loaderContext, queryData) {
-    const pluginOption = this.#pluginOption;
+  #initPreprocessor(loaderContext) {
+    const queryData = this.#queryData;
     const options = this.#options;
     const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
+
     let [defaultPreprocessorMode] = this.preprocessorModes;
     let isIssuerScript = false;
     let preprocessorMode;
 
     if (issuer) {
-      isIssuerScript = pluginOption.isScript(issuer);
+      isIssuerScript = this.#pluginOption.isScript(issuer);
       if (!isIssuerScript) {
-        const rootIssuer = findRootIssuer(PluginService.compilation, issuer);
+        const rootIssuer = findRootIssuer(loaderContext._compilation, issuer);
         if (rootIssuer) {
-          isIssuerScript = pluginOption.isScript(rootIssuer);
+          isIssuerScript = this.#pluginOption.isScript(rootIssuer);
         }
       }
     }
@@ -141,22 +143,35 @@ class Option {
       }
     }
 
-    // reset the original option value, also no cached state,
-    // because the loader works in different modes depend on the context
-    options.preprocessorMode = options.originalPreprocessorMode;
-
     if (preprocessorMode && this.preprocessorModes.has(preprocessorMode)) {
       options.preprocessorMode = preprocessorMode;
     } else if (!this.preprocessorModes.has(options.preprocessorMode)) {
       options.preprocessorMode = defaultPreprocessorMode;
     }
-
-    if (!Preprocessor.isUsed(options.preprocessor)) {
-      options.preprocessor = Preprocessor.factory(loaderContext, options, this.#watch);
-    }
   }
 
-  static #initWatchFiles() {
+  /**
+   * The root path is used for resolving files specified in attributes (`sources` option).
+   *
+   * Note: the `root` and `basedir` options are synonym, no difference.
+   *
+   * @param {{}} options
+   * @return {string|boolean}
+   */
+  #getBaseDirFromOptions(options) {
+    if (!options) return false;
+
+    let basedir = options.root || options.basedir || false;
+
+    return basedir && basedir.slice(-1) !== path.sep ? basedir + path.sep : basedir;
+  }
+
+  /**
+   * Initialise watch files and directories.
+   *
+   * It must be initialised in main loader function, at finally.
+   */
+  initWatchFiles() {
     const pluginOption = this.#pluginOption;
     const watchFiles = {
       // watch files only in the directories;
@@ -165,28 +180,35 @@ class Option {
 
       // watch only files matched to RegExps,
       // if empty then watch all files, except ignored
-      files: pluginOption.getEntryTest(),
+      includes: pluginOption.getEntryTest(),
 
       // ignore paths and files matched to RegExps
-      ignore: [
+      excludes: [
         /[\\/](node_modules|dist|test)$/, // dirs
         /[\\/]\..+$/, // hidden dirs and files: .git, .idea, .gitignore, etc.
         /package(?:-lock)*\.json$/,
         /webpack\.(.+)\.js$/,
         /\.(je?pg|png|ico|gif|webp|svg|woff2?|ttf|otf|eot)$/,
       ],
-
-      // include custom files
-      includes: null,
-
-      // exclude custom files
-      excludes: null,
     };
+
+    const notFoundDirs = [];
+
+    this.#watchFiles = watchFiles;
 
     const fs = this.fileSystem;
     let { paths, files, ignore, includes, excludes } = pluginOption.getWatchFiles();
     const watchDirs = new Set([rootSourceDir(this.#rootContext, this.#resourcePath)]);
     const rootContext = this.#rootContext;
+
+    if (files) {
+      includes = files;
+      watchFilesOptionFilesDeprecation();
+    }
+    if (ignore) {
+      excludes = ignore;
+      watchIgnoreOptionIgnoreDeprecation();
+    }
 
     // add to watch paths defined in options of a template engine
     let { root, views, partials } = this.#options?.preprocessorOptions || {};
@@ -201,54 +223,50 @@ class Option {
 
     for (let dir of dirs) {
       const watchDir = path.isAbsolute(dir) ? dir : path.join(rootContext, dir);
+
       if (!fs.existsSync(watchDir)) {
-        watchPathsException(watchDir, paths);
+        notFoundDirs.push(watchDir);
+      } else {
+        watchDirs.add(watchDir);
       }
-      watchDirs.add(watchDir);
     }
 
     // parent watch directories, all paths with subdirectories are ignored
     watchFiles.paths = filterParentPaths(Array.from(watchDirs));
 
-    if (files) {
-      const entries = Array.isArray(files) ? files : [files];
+    if (includes) {
+      const entries = Array.isArray(includes) ? includes : [includes];
       for (let item of entries) {
         if (item.constructor.name !== 'RegExp') {
           item = new RegExp(item);
         }
-        watchFiles.files.push(item);
+        watchFiles.includes.push(item);
       }
     }
 
-    if (ignore) {
-      const entries = Array.isArray(ignore) ? ignore : [ignore];
+    if (excludes) {
+      const entries = Array.isArray(excludes) ? excludes : [excludes];
       for (let item of entries) {
         if (item.constructor.name !== 'RegExp') {
           item = new RegExp(item);
         }
-        watchFiles.ignore.push(item);
+        watchFiles.excludes.push(item);
       }
     }
 
-    if (!includes) {
-      watchFiles.includes = watchFiles.files;
-    } else {
-      if (!Array.isArray(includes)) includes = [includes];
-      watchFiles.includes = [...watchFiles.files, ...includes];
+    if (notFoundDirs.length > 0) {
+      watchPathsWarning(notFoundDirs, paths);
     }
-    watchFiles.excludes = excludes && !Array.isArray(excludes) ? [excludes] : excludes;
-
-    this.#watchFiles = watchFiles;
   }
 
   /**
    * @param {Object|string|null} dataValue If string, the relative or absolute filename.
    * @return {Object}
    */
-  static #loadData(dataValue) {
+  #loadData(dataValue) {
     if (typeof dataValue !== 'string') return dataValue || {};
 
-    let dataFile = PluginService.dataFiles.get(dataValue);
+    let dataFile = PluginService.getDataFiles(this.pluginCompiler, dataValue);
 
     if (!dataFile) {
       const fs = this.fileSystem;
@@ -257,7 +275,7 @@ class Option {
       if (!fs.existsSync(dataFile)) {
         dataFileNotFoundException(dataFile);
       }
-      PluginService.dataFiles.set(dataValue, dataFile);
+      PluginService.setDataFiles(this.pluginCompiler, dataValue, dataFile);
     }
 
     let data;
@@ -275,15 +293,76 @@ class Option {
    *
    * @return {{}}
    */
-  static get() {
+  get() {
     return this.#options;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  isWatchMode() {
+    return this.#watch;
+  }
+
+  /**
+   * Whether the preprocessor is not disabled.
+   * Defaults the preprocessor is Eta, enabled.
+   *
+   * @return {boolean}
+   */
+  isPreprocessorEnabled() {
+    return this.#options.preprocessor !== false;
+  }
+
+  /**
+   * Whether the preprocessor function is already created.
+   *
+   * @return {boolean}
+   */
+  hasPreprocessor() {
+    return this.#preprocessorModule._module != null;
+  }
+
+  /**
+   * Returns a preprocessor method to render/compile a template.
+   *
+   * @return {null|(function(string, loaderContext: BundlerPluginLoaderContext): Promise|null)}
+   */
+  getPreprocessor() {
+    if (!this.isPreprocessorEnabled()) return null;
+
+    const { _module: preprocessorModule } = this.#preprocessorModule;
+    const { preprocessorMode } = this.#options;
+
+    // render/compile
+    const module = preprocessorModule[preprocessorMode];
+
+    return typeof module === 'function' ? module : null;
+  }
+
+  /**
+   * Save preprocessor module or function.
+   *
+   * @param {Object} preprocessor
+   */
+  setPreprocessorModule(preprocessor) {
+    // save preprocessor into options, because it will be cached,
+    // that reduce amount of the preprocessor creation by every loader calling
+    this.#preprocessorModule._module = preprocessor;
+  }
+
+  /**
+   * @return {Object}
+   */
+  getPreprocessorModule() {
+    return this.#preprocessorModule._module;
   }
 
   /**
    * Returns the root directory for the paths in template starting with `/`.
    * @return {string|false}
    */
-  static getBasedir() {
+  getBasedir() {
     return this.#options.basedir;
   }
 
@@ -292,7 +371,7 @@ class Option {
    *
    * @return {Array<OptionSources>|false}
    */
-  static getSources = () => {
+  getSources = () => {
     const { sources } = this.#options;
 
     if (sources === false) return false;
@@ -334,29 +413,19 @@ class Option {
     return defaultSources;
   };
 
-  static getCustomWatchFiles() {
-    return Array.from(PluginService.dataFiles.values());
+  getCustomWatchFiles() {
+    return Array.from(PluginService.getValuesOfDataFiles(this.pluginCompiler));
   }
 
-  /**
-   * Returns preprocessor to compile a template.
-   * The default preprocessor uses the Eta templating engine.
-   *
-   * @return {null|(function(string, {data?: {}}): Promise|null)}
-   */
-  static getPreprocessor() {
-    return Preprocessor.getPreprocessor(this.#options);
-  }
-
-  static getWatchFiles() {
+  getWatchFiles() {
     return this.#watchFiles;
   }
 
-  static getWatchPaths() {
+  getWatchPaths() {
     return this.#watchFiles.paths;
   }
 
-  static getWebpackResolve() {
+  getWebpackResolve() {
     return this.#webpackOptions.resolve || {};
   }
 }

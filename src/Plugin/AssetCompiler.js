@@ -15,7 +15,6 @@ const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
 const createPersistentCache = require('./createPersistentCache');
-const PersistentCache = require('./PersistentCache');
 
 const CssExtractModule = require('./Modules/CssExtractModule');
 const Option = require('./Option');
@@ -37,6 +36,8 @@ const { compilationName, verbose } = require('./Messages/Info');
 const { PluginError, afterEmitException } = require('./Messages/Exception');
 
 const loaderPath = require.resolve('../Loader');
+const LoaderFactory = require('../Loader/LoaderFactory');
+
 const { pluginName } = Config.get();
 
 /**
@@ -50,8 +51,6 @@ const cssLoader = {
   options: undefined,
   ident: undefined,
 };
-
-/** @typedef {import("enhanced-resolve/lib/Resolver")} Resolver */
 
 /** @typedef {import('webpack/declarations/WebpackOptions').Output} WebpackOutputOptions */
 /** @typedef {import('webpack').Compiler} Compiler */
@@ -90,10 +89,18 @@ let HotUpdateChunk;
 let RawSource;
 
 class AssetCompiler {
-  entryLibrary = {
-    name: 'return',
-    type: 'jsonp', // compiles JS from source into HTML string via Function()
-  };
+  /**
+   * Use the OptionPluginInterface in custom plugins, e.g.:
+   * const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
+   *
+   * @type {OptionPluginInterface | Option}
+   */
+  //static option = Option;
+
+  static processAssetsPromises = [];
+
+  /** @type {Array<Promise>} */
+  promises = [];
 
   /** @type AssetEntryOptions The current entry point during dependency compilation. */
   currentEntryPoint;
@@ -103,24 +110,40 @@ class AssetCompiler {
 
   isSnapshotInitialized = false;
 
-  /** @type {FileSystem} */
-  fs = null;
-
   /** @type {Compilation} */
   compilation = null;
 
-  /** @type {Array<Promise>} */
-  promises = [];
+  /** @type {Option} The alias to pluginOption for 3rd party plugins */
+  option = null;
+  pluginOption = null;
 
-  static processAssetsPromises = [];
+  pluginContext = {
+    compilation: null,
+    asset: null,
+    assetEntry: null,
+    assetInline: null,
+    assetResource: null,
+    assetTrash: null,
+    collection: null,
+    cssExtractModule: null,
+    resolver: null,
+    /** @type Option */
+    pluginOption: null,
+    urlDependency: null,
+    loaderDependency: null,
+  };
 
-  /**
-   * Use the OptionPluginInterface in custom plugins, e.g.:
-   * const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
-   *
-   * @type {OptionPluginInterface | Option}
-   */
-  static option = Option;
+  // asset = null;
+  // assetEntry = null;
+  // assetResource = null;
+  // assetTrash = null;
+  // collection = null;
+  // cssExtractModule = null;
+  // resolver = null;
+  // urlDependency = null;
+
+  /** @type {FileSystem} */
+  fs = null;
 
   /**
    * @param {Compilation} compilation The compilation.
@@ -156,10 +179,36 @@ class AssetCompiler {
    * @param {PluginOptions|{}} options
    */
   constructor(options = {}) {
-    Option.init(options, { assetEntry: AssetEntry, loaderPath: loaderPath });
+    this.pluginOption = new Option(this.pluginContext, { options, loaderPath: loaderPath });
+    this.option = this.pluginOption;
+    // TODO: refactor replace all usages this.pluginOption > this.pluginContext.pluginOption
+    this.pluginContext.pluginOption = this.pluginOption;
 
-    // let know the loader that the plugin is being used
-    PluginService.init(Option);
+    this.assetTrash = new AssetTrash({ compilation: this.compilation });
+    this.pluginContext.assetTrash = this.assetTrash;
+
+    this.collection = new Collection(this.pluginContext);
+    this.pluginContext.collection = this.collection;
+
+    this.asset = new Asset();
+    this.pluginContext.asset = this.asset;
+    this.assetInline = new AssetInline();
+    this.pluginContext.assetInline = this.assetInline;
+
+    this.assetEntry = new AssetEntry({ ...this.pluginContext, entryLibrary: this.pluginOption.getEntryLibrary() });
+    this.pluginContext.assetEntry = this.assetEntry;
+
+    this.resolver = new Resolver(this.pluginContext);
+    this.pluginContext.resolver = this.resolver;
+
+    this.cssExtractModule = new CssExtractModule(this.pluginContext);
+    this.pluginContext.cssExtractModule = this.cssExtractModule;
+
+    this.assetResource = new AssetResource(this.pluginContext);
+    this.pluginContext.assetResource = this.assetResource;
+
+    this.urlDependency = new UrlDependency(this.pluginContext);
+    this.pluginContext.urlDependency = this.urlDependency;
 
     // bind the instance context for using these methods as references in Webpack hooks
     this.invalidate = this.invalidate.bind(this);
@@ -173,11 +222,14 @@ class AssetCompiler {
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
     this.afterEmit = this.afterEmit.bind(this);
     this.done = this.done.bind(this);
+    this.shutdown = this.shutdown.bind(this);
   }
 
   /**
    * Called when a compiler object is initialized.
-   * Abstract method should be overridden in child class.
+   * Abstract method should be overridden in an extended class.
+   *
+   * @api
    *
    * @param {Compiler} compiler The instance of the webpack compiler.
    * @abstract
@@ -185,18 +237,30 @@ class AssetCompiler {
   init(compiler) {}
 
   /**
+   * Add the process to pipeline.
+   *
+   * @api The public method can be used in an extended plugin.
+   *
+   * @param {string} name The name of process. Currently supported only `postprocess` pipeline.
+   * @param {Function: (content: string) => string} fn The process function to modify the generated content.
+   */
+  addProcess(name, fn) {
+    this.pluginOption.addProcess(name, fn);
+  }
+
+  /**
    * Initialize loader for entry files.
    */
   initLoader() {
     const defaultLoader = {
-      test: Option.get().test,
+      test: this.pluginOption.get().test,
       // ignore 'asset/source' with the '?raw' query
       // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
       resourceQuery: { not: [/raw/] },
       loader: loaderPath,
     };
 
-    Option.addLoader(defaultLoader);
+    this.pluginOption.addLoader(defaultLoader);
   }
 
   /**
@@ -205,7 +269,10 @@ class AssetCompiler {
    * @param {Compiler} compiler
    */
   apply(compiler) {
-    if (!Option.isEnabled()) return;
+    if (!this.pluginOption.isEnabled()) return;
+
+    LoaderFactory.init(compiler);
+    this.pluginContext.loaderDependency = LoaderFactory.createDependency(compiler);
 
     const { webpack } = compiler;
     const { NormalModule, Compilation } = webpack;
@@ -217,26 +284,32 @@ class AssetCompiler {
     RawSource = webpack.sources.RawSource;
 
     PluginError.clear();
-    Option.initWebpack(compiler.options);
-    Option.enableLibraryType(this.entryLibrary.type);
-    AssetResource.init(compiler);
+    this.pluginOption.initWebpack(compiler);
+    this.assetResource.init(compiler);
 
     this.init(compiler);
     this.initLoader();
 
+    // must be called after all initialisations of the pluginOption
+    this.resolver.init({ fs: this.fs });
+
     // initialize integrity plugin
-    this.integrityPlugin = new Integrity(Option);
+    this.integrityPlugin = new Integrity(this.pluginOption);
 
     // clear caches by tests for webpack serve/watch
-    AssetEntry.clear();
-    AssetInline.clear();
-    Collection.clear();
-    Resolver.clear();
+    this.assetEntry.clear();
+    this.assetInline.clear();
+    this.collection.clear();
+    this.resolver.clear();
     Snapshot.clear();
 
-    if (Option.isCacheable()) {
+    // let know the loader that the plugin is being used
+    // TODO: init by PluginIndex, for each instance create own PluginService instance for pluginOption
+    PluginService.init(compiler, this.pluginContext, AssetCompiler);
+
+    if (this.pluginOption.isCacheable()) {
+      const collectionCache = createPersistentCache(this.collection);
       const cache = compiler.getCache(pluginName).getItemCache('PersistentCache', null);
-      const persistentCache = createPersistentCache(PersistentCache);
       let isCached = false;
 
       compiler.hooks.beforeCompile.tap(pluginName, () => {
@@ -250,7 +323,7 @@ class AssetCompiler {
 
       compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
         if (!isCached) {
-          const cacheData = persistentCache.getData();
+          const cacheData = collectionCache.getData();
 
           cache.store(cacheData, (error) => {
             if (error) {
@@ -263,13 +336,18 @@ class AssetCompiler {
 
     // executes by watch/serve only, before the compilation
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
-      Option.initWatchMode();
-      PluginService.setWatchMode(true);
-      PluginService.watchRun();
+      // TODO: avoid double calling by multi-config
+      //console.log('===> hooks.watchRun.tap', { id: compiler.name });
+
+      this.pluginOption.initWatchMode();
+      PluginService.setWatchMode(compiler, true);
+      PluginService.watchRun(compiler);
     });
 
     // entry option
-    AssetEntry.init({ fs: this.fs, entryLibrary: this.entryLibrary, collection: Collection });
+    this.assetEntry.init({
+      fs: this.fs,
+    });
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
     // watch changes for entry-points
@@ -280,23 +358,19 @@ class AssetCompiler {
       const fs = this.fs;
       const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
 
-      this.compilation = compilation;
-
       // TODO: refactor
-      PluginService.plugin = AssetCompiler;
-      PluginService.compilation = compilation;
+      this.compilation = compilation;
+      this.pluginContext.compilation = compilation;
 
-      AssetEntry.initCompilation(compilation);
-      AssetTrash.init(compilation);
-      CssExtractModule.init(compilation);
-      Collection.init({ compilation, assetEntry: AssetEntry, hooks: AssetCompiler.getHooks(compilation) });
+      this.assetEntry.setCompilation(compilation);
+      this.assetTrash.init(compilation);
+      this.cssExtractModule.init(compilation);
 
-      Resolver.init({
-        fs,
-        rootContext: Option.context,
+      this.collection.init({
+        hooks: AssetCompiler.getHooks(compilation),
       });
 
-      UrlDependency.init(fs, compilation);
+      this.urlDependency.init({ compilation, fs });
 
       // resolve modules
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
@@ -316,7 +390,7 @@ class AssetCompiler {
       //
       //   if (isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
       //     const dataUrlOptions = undefined;
-      //     const filename = Option.getCss().filename;
+      //     const filename = this.pluginOption.getCss().filename;
       //     createData.settings.type = 'asset/resource';
       //     createData.type = 'asset/resource';
       //     createData.binary = true;
@@ -343,8 +417,8 @@ class AssetCompiler {
       compilation.hooks.processAssets.tap(
         { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1 },
         (assets) => {
-          if (!Option.isExtractComments()) {
-            AssetTrash.removeComments();
+          if (!this.pluginOption.isExtractComments()) {
+            this.assetTrash.removeComments();
           }
         }
       );
@@ -354,10 +428,10 @@ class AssetCompiler {
       // - only here is possible to modify an asset content via async function
       // - `Infinity` ensures that the process will be run after all optimizations
       // compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) =>
-      //   Collection.render()
+      //   this.collection.render()
       //     .then(() => {
       //       // remove all unused assets from compilation
-      //       AssetTrash.clearCompilation();
+      //       this.assetTrash.clearCompilation();
       //     })
       //     .catch((error) => {
       //       // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
@@ -371,10 +445,11 @@ class AssetCompiler {
           return Promise.resolve();
         }
 
-        return Collection.render()
+        return this.collection
+          .render()
           .then(() => {
             // remove all unused assets from compilation
-            AssetTrash.clearCompilation();
+            this.assetTrash.clearCompilation();
           })
           .catch((error) => {
             // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
@@ -389,7 +464,7 @@ class AssetCompiler {
     compiler.hooks.watchClose.tap(pluginName, this.shutdown);
 
     // run integrity plugin
-    if (Option.isIntegrityEnabled()) this.integrityPlugin.apply(compiler);
+    if (this.pluginOption.isIntegrityEnabled()) this.integrityPlugin.apply(compiler);
   }
 
   /* istanbul ignore next: this method is called in watch mode after changes */
@@ -411,7 +486,7 @@ class AssetCompiler {
    */
   invalidate(fileName, changeTime) {
     const fs = this.fs;
-    const entryDir = Option.getEntryPath();
+    const entryDir = this.pluginOption.getEntryPath();
     const isDirectory = isDir({ fs, file: fileName });
 
     Snapshot.create();
@@ -419,27 +494,30 @@ class AssetCompiler {
     if (isDirectory === true) return;
 
     const { actionType, newFileName, oldFileName } = Snapshot.detectFileChange();
-    const isScript = Option.isScript(fileName);
-    const inCollection = Collection.hasScript(fileName);
-    const isEntryFile = (file) => file && file.startsWith(entryDir) && Option.isEntry(file);
+    const isScript = this.pluginOption.isScript(fileName);
+    const inCollection = this.collection.hasScript(fileName);
+    const isEntryFile = (file) => file && file.startsWith(entryDir) && this.pluginOption.isEntry(file);
 
     // 1. Invalidate an entry template.
 
-    if (Option.isDynamicEntry() && (isEntryFile(fileName) || isEntryFile(oldFileName) || isEntryFile(newFileName))) {
+    if (
+      this.pluginOption.isDynamicEntry() &&
+      (isEntryFile(fileName) || isEntryFile(oldFileName) || isEntryFile(newFileName))
+    ) {
       switch (actionType) {
         case 'modify':
-          Collection.disconnectEntry(fileName);
+          this.collection.disconnectEntry(fileName);
           break;
         case 'add':
-          AssetEntry.addEntry(newFileName);
-          Collection.disconnectEntry(newFileName);
+          this.assetEntry.addEntry(newFileName);
+          this.collection.disconnectEntry(newFileName);
           break;
         case 'rename':
-          AssetEntry.deleteEntry(oldFileName);
-          AssetEntry.addEntry(newFileName);
+          this.assetEntry.deleteEntry(oldFileName);
+          this.assetEntry.addEntry(newFileName);
           break;
         case 'remove':
-          AssetEntry.deleteEntry(oldFileName);
+          this.assetEntry.deleteEntry(oldFileName);
           break;
         default:
           break;
@@ -474,7 +552,7 @@ class AssetCompiler {
                 this.compilation.rebuildModule(module, (err) => {
                   // after rebuild, remove the missing file to avoid double rebuilding by another exception
                   Snapshot.deleteMissingFile(issuer, missingFile);
-                  AssetEntry.deleteMissingFile(missingFile);
+                  this.assetEntry.deleteMissingFile(missingFile);
                 });
               }
             }
@@ -488,7 +566,7 @@ class AssetCompiler {
       }
 
       if (inCollection && (actionType === 'remove' || actionType === 'rename')) {
-        AssetEntry.deleteEntry(oldFileName);
+        this.assetEntry.deleteEntry(oldFileName);
       }
     }
   }
@@ -500,7 +578,7 @@ class AssetCompiler {
    * @param {Object<name:string, entry: Object>} entries The webpack entries.
    */
   afterProcessEntry(context, entries) {
-    AssetEntry.addEntries(entries);
+    this.assetEntry.addEntries(entries);
   }
 
   /**
@@ -520,7 +598,7 @@ class AssetCompiler {
     // see https://webpack.js.org/guides/asset-modules/#replacing-inline-loader-syntax
     if (/\?raw/.test(options.resourceQuery)) return;
 
-    return requests.filter((item) => !Option.isEntry(item.request));
+    return requests.filter((item) => !this.pluginOption.isEntry(item.request));
   }
 
   /**
@@ -532,11 +610,11 @@ class AssetCompiler {
   beforeResolve(resolveData) {
     const { request, dependencyType } = resolveData;
     const [file] = request.split('?', 1);
-    const entryId = AssetEntry.resolveEntryId(resolveData);
+    const entryId = this.assetEntry.resolveEntryId(resolveData);
 
     /** @type PluginModuleMeta */
     const meta = {
-      isTemplate: AssetEntry.isEntryResource(file),
+      isTemplate: this.assetEntry.isEntryResource(file),
       isScript: false,
       isStyle: false,
       isImportedStyle: false,
@@ -549,7 +627,7 @@ class AssetCompiler {
 
     /* istanbul ignore next */
     // prevent compilation of renamed or deleted entry point in serve/watch mode
-    if (Option.isDynamicEntry() && AssetEntry.isDeletedEntryFile(file)) {
+    if (this.pluginOption.isDynamicEntry() && this.assetEntry.isDeletedEntryFile(file)) {
       for (const [entryName, entry] of this.compilation.entries) {
         if (entry.dependencies[0]?.request === request) {
           // delete the entry from compilation to prevent creation unused chunks
@@ -561,7 +639,7 @@ class AssetCompiler {
     }
 
     if (meta.isDependencyUrl) {
-      UrlDependency.resolve(resolveData);
+      this.urlDependency.resolve(resolveData);
     }
   }
 
@@ -579,14 +657,14 @@ class AssetCompiler {
     const { issuer } = contextInfo;
 
     // the filename with an extension is available only after resolve
-    meta.isStyle = Option.isStyle(file);
+    meta.isStyle = this.pluginOption.isStyle(file);
     meta.isCSSStyleSheet = this.isCSSStyleSheet(createData);
 
     // skip: module loaded via importModule, css url, data-URL
     if (meta.isLoaderImport || meta.isCSSStyleSheet || meta.isDependencyUrl || request.startsWith('data:')) return;
 
     if (issuer) {
-      const isIssuerStyle = Option.isStyle(issuer);
+      const isIssuerStyle = this.pluginOption.isStyle(issuer);
       const parentModule = resolveData.dependencies[0]?._parentModule;
       const { isLoaderImport } = parentModule?.resourceResolveData?._bundlerPluginMeta || {};
 
@@ -604,7 +682,7 @@ class AssetCompiler {
         meta.isScript = true;
 
         // return true if the root issuer is a JS (not style and not template), otherwise return false
-        return rootIssuer != null && !Option.isStyle(rootIssuer) && !Option.isEntry(rootIssuer);
+        return rootIssuer != null && !this.pluginOption.isStyle(rootIssuer) && !this.pluginOption.isEntry(rootIssuer);
       }
 
       // style loaded in *.vue file
@@ -619,10 +697,10 @@ class AssetCompiler {
 
       // try to detect imported style as resolved resource file, because a request can be a node module w/o an extension
       // the issuer can be a style if a scss contains like `@import 'main.css'`
-      if (!Option.isStyle(issuer) && !Option.isEntry(issuer) && meta.isStyle) {
+      if (!this.pluginOption.isStyle(issuer) && !this.pluginOption.isEntry(issuer) && meta.isStyle) {
         const rootIssuer = findRootIssuer(this.compilation, issuer);
 
-        Collection.importStyleRootIssuers.add(rootIssuer || issuer);
+        this.collection.importStyleRootIssuers.add(rootIssuer || issuer);
         meta.isImportedStyle = true;
 
         if (!createData.request.includes(cssLoader.loader)) {
@@ -640,7 +718,7 @@ class AssetCompiler {
       }
     }
 
-    meta.isScript = Collection.hasScript(request);
+    meta.isScript = this.collection.hasScript(request);
   }
 
   /**
@@ -709,7 +787,7 @@ class AssetCompiler {
     // TODO: undocumented experimental support for url load a source style file (with `?url` query) in JavaScript
     if (meta.isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
       const dataUrlOptions = undefined;
-      const filename = Option.getCss().filename;
+      const filename = this.pluginOption.getCss().filename;
 
       module.type = 'asset/resource';
       module.binary = true;
@@ -717,7 +795,7 @@ class AssetCompiler {
       module.generator = new AssetGenerator(dataUrlOptions, filename);
     }
 
-    AssetEntry.connectEntryAndModule(module, resolveData);
+    this.assetEntry.connectEntryAndModule(module, resolveData);
 
     // skip the module loaded via importModule
     if (meta.isLoaderImport || meta.isParentLoaderImport) return;
@@ -727,14 +805,20 @@ class AssetCompiler {
 
     // add missed scripts to compilation after deserialization
     if (meta.isTemplate) {
-      Collection.isDeserialized && Collection.addToCompilationDeserializedFiles(resource);
+      if (this.collection.isDeserialized()) {
+        this.collection.addToCompilationDeserializedFiles(resource);
+      }
       return;
     }
 
-    if (!issuer || AssetInline.isDataUrl(rawRequest)) return;
+    if (!issuer || this.assetInline.isDataUrl(rawRequest)) return;
 
-    if (type === 'asset/inline' || type === 'asset' || (type === 'asset/source' && AssetInline.isSvgFile(resource))) {
-      AssetInline.add(resource, issuer, Option.isEntry(issuer));
+    if (
+      type === 'asset/inline' ||
+      type === 'asset' ||
+      (type === 'asset/source' && this.assetInline.isSvgFile(resource))
+    ) {
+      this.assetInline.add(resource, issuer, this.pluginOption.isEntry(issuer));
     }
 
     if (meta.isDependencyUrl && meta.isScript) return;
@@ -744,7 +828,7 @@ class AssetCompiler {
     // - if used import url() in CSS, like `@import url('./styles.css');`
     // - if used webpack context
     if (meta.isDependencyUrl || loaders.length > 0 || type === 'asset/resource') {
-      Resolver.addSourceFile(resource, rawRequest, issuer);
+      this.resolver.addSourceFile(resource, rawRequest, issuer);
     }
   }
 
@@ -784,8 +868,8 @@ class AssetCompiler {
     if (isLoaderImport) return;
 
     if (isTemplate) {
-      const entryId = AssetEntry.getEntryId(module);
-      const entry = AssetEntry.getById(entryId);
+      const entryId = this.assetEntry.getEntryId(module);
+      const entry = this.assetEntry.getById(entryId);
 
       if (entry.isTemplate && entry.resource === module.resource) {
         this.beforeProcessTemplate(entryId);
@@ -793,7 +877,7 @@ class AssetCompiler {
 
       loaderContext.entryId = entryId;
       loaderContext.entryName = entry.originalName;
-      loaderContext.entryData = AssetEntry.getData(entryId);
+      loaderContext.entryData = this.assetEntry.getData(entryId);
     }
   }
 
@@ -816,12 +900,12 @@ class AssetCompiler {
   renderManifest(result, { chunk, chunkGraph, codeGenerationResults }) {
     if (chunk instanceof HotUpdateChunk) return;
 
-    const entry = AssetEntry.getByChunk(chunk);
+    const entry = this.assetEntry.getByChunk(chunk);
 
     // process only entries supported by this plugin
     if (!entry || (!entry.isTemplate && !entry.isStyle)) return;
 
-    Collection.addEntry(entry);
+    this.collection.addEntry(entry);
 
     const assetModules = new Set();
     const chunkModules = chunkGraph.getChunkModulesIterable(chunk);
@@ -837,7 +921,7 @@ class AssetCompiler {
         isCSSStyleSheet ||
         !resource ||
         !resourceResolveData?.context ||
-        AssetInline.isDataUrl(resource)
+        this.assetInline.isDataUrl(resource)
       ) {
         // do nothing for scripts because webpack itself compiles and extracts JS files from scripts
         continue;
@@ -847,7 +931,7 @@ class AssetCompiler {
 
       // note: the contextIssuer may be wrong, as previous entry, because Webpack distinct same modules by first access
       let issuer = contextIssuer === entry.sourceFile ? entry.resource : contextIssuer;
-      if (!issuer || Option.isEntry(issuer)) {
+      if (!issuer || this.pluginOption.isEntry(issuer)) {
         issuer = entry.resource;
       }
 
@@ -867,15 +951,15 @@ class AssetCompiler {
           break;
         case 'asset/resource':
           // resource required in the template or in the CSS via url()
-          AssetResource.saveData(module);
+          this.assetResource.saveData(module);
           break;
         case 'asset/inline':
-          AssetInline.saveData(entry, chunk, module, codeGenerationResults);
+          this.assetInline.saveData(entry, chunk, module, codeGenerationResults);
           break;
         case 'asset/source':
           // support the source type for SVG only
-          if (AssetInline.isSvgFile(resource)) {
-            AssetInline.saveData(entry, chunk, module, codeGenerationResults);
+          if (this.assetInline.isSvgFile(resource)) {
+            this.assetInline.saveData(entry, chunk, module, codeGenerationResults);
           }
           break;
         default:
@@ -898,7 +982,7 @@ class AssetCompiler {
     }
 
     // 2. renders styles imported in JavaScript
-    if (Collection.hasImportedStyle(this.currentEntryPoint?.id)) {
+    if (this.collection.hasImportedStyle(this.currentEntryPoint?.id)) {
       this.renderImportStyles(result, { chunk });
     }
   }
@@ -943,6 +1027,7 @@ class AssetCompiler {
 
     if (sourceFile === entry.sourceFile) {
       const assetFile = entry.filename;
+
       // note: the entry can be not a template file, e.g., a style or script defined directly in entry
       if (entry.isTemplate) {
         this.currentEntryPoint = entry;
@@ -951,8 +1036,8 @@ class AssetCompiler {
         // save the template request with the query, because it can be resolved with different output paths:
         // - 'index':    './index.ext'         => dist/index.html
         // - 'index/de': './index.ext?lang=de' => dist/de/index.html
-        Asset.add(resource, assetFile);
-      } else if (Option.isStyle(sourceFile)) {
+        this.asset.add(resource, assetFile);
+      } else if (this.pluginOption.isStyle(sourceFile)) {
         assetModule.type = Collection.type.style;
       } else {
         // skip an unsupported entry type
@@ -975,13 +1060,13 @@ class AssetCompiler {
     }
 
     // extract CSS
-    const cssOptions = Option.getStyleOptions(sourceFile);
+    const cssOptions = this.pluginOption.getStyleOptions(sourceFile);
     if (cssOptions == null) {
       // ignore file if css option is disabled
       return;
     }
 
-    const inline = Collection.isInlineStyle(resource);
+    const inline = this.collection.isInlineStyle(resource);
     const { name } = path.parse(sourceFile);
     const hash = buildInfo.assetInfo?.contenthash || buildInfo.hash;
     const { isCached, filename } = this.getStyleAsseFile({
@@ -998,8 +1083,8 @@ class AssetCompiler {
       assetFile,
     };
 
-    Collection.setData(this.currentEntryPoint, null, data);
-    Resolver.addAsset({ resource, filename: assetFile });
+    this.collection.setData(this.currentEntryPoint, null, data);
+    this.resolver.addAsset({ resource, filename: assetFile });
 
     // skip already processed styles except inlined
     if (isCached && !inline) {
@@ -1027,13 +1112,13 @@ class AssetCompiler {
    */
   renderImportStyles(result, { chunk }) {
     const { createHash } = this.webpack.util;
-    const isAutoPublicPath = Option.isAutoPublicPath();
-    const publicPath = Option.getPublicPath();
-    const esModule = Collection.isImportStyleEsModule();
+    const isAutoPublicPath = this.pluginOption.isAutoPublicPath();
+    const publicPath = this.pluginOption.getPublicPath();
+    const esModule = this.collection.isImportStyleEsModule();
     const urlRegex = new RegExp(`${esModule ? baseUri : ''}${urlPathPrefix}(.+?)(?=\\))`, 'g');
     const entry = this.currentEntryPoint;
     const entryFilename = entry.filename;
-    const orderedRootIssuers = Collection.orderedResources.get(entry.id);
+    const orderedRootIssuers = this.collection.orderedResources.get(entry.id);
 
     for (const issuer of orderedRootIssuers) {
       // Fix #68: if the same `c.css` file was imported in many js files: `a.js` and `b.js`,
@@ -1042,16 +1127,16 @@ class AssetCompiler {
       // So we can't use the following check for avoid unnecessary searching in js files where no CSS has been imported
       // Side-effect: increases build time for cases when many js files do not import css.
       // TODO: create a cache for js files that don't import CSS.
-      // if (!Collection.importStyleRootIssuers.has(issuer)) {
+      // if (!this.collection.importStyleRootIssuers.has(issuer)) {
       //   console.log('--- importStyleRootIssuers: ', {
       //     entryFilename,
       //     issuer,
-      //     importStyleRootIssuers: Collection.importStyleRootIssuers,
+      //     importStyleRootIssuers: this.collection.importStyleRootIssuers,
       //   });
       //   continue;
       // }
 
-      const issuerEntry = AssetEntry.getByResource(issuer);
+      const issuerEntry = this.assetEntry.getByResource(issuer);
       const sources = [];
       const resources = [];
       const imports = [];
@@ -1061,7 +1146,7 @@ class AssetCompiler {
       let cssHash = '';
 
       // 1. get styles from all nested files imported in the root JS file and sort them
-      const modules = Collection.findImportedModules(entry.id, issuer, chunk);
+      const modules = this.collection.findImportedModules(entry.id, issuer, chunk);
 
       // 2. squash styles from all nested files and group by inline/file type
       const uniqueModuleIds = new Set();
@@ -1072,7 +1157,7 @@ class AssetCompiler {
 
         const urlQuery = module.resourceResolveData?.query || '';
         const isUrl = urlQuery.includes('url');
-        const isInline = Option.isInlineCss(urlQuery);
+        const isInline = this.pluginOption.isInlineCss(urlQuery);
         const importData = {
           resource: module.resource,
           assets: [],
@@ -1102,7 +1187,7 @@ class AssetCompiler {
 
         if (isUrl) {
           // get url of css output filename in js for the lazy load
-          Collection.setData(
+          this.collection.setData(
             entry,
             { resource: issuer },
             {
@@ -1136,7 +1221,7 @@ class AssetCompiler {
       // 3. generate output filename
 
       // mixin importStyleIdx into hash to generate new hash after changes
-      cssHash += Collection.importStyleIdx++;
+      cssHash += this.collection.importStyleIdx++;
 
       const hash = createHash('md4').update(cssHash).digest('hex');
       const { isCached, filename } = this.getStyleAsseFile({
@@ -1152,7 +1237,7 @@ class AssetCompiler {
         const assetFile = this.getInlineStyleAsseFile(filename, entryFilename);
         const outputFilename = assetFile;
 
-        Collection.setData(
+        this.collection.setData(
           entry,
           { resource: issuer },
           {
@@ -1170,9 +1255,11 @@ class AssetCompiler {
         const issuerFilename = entryFilename;
 
         const resolveAssetFile = (match, file) =>
-          isAutoPublicPath ? Option.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
+          isAutoPublicPath
+            ? this.pluginOption.getAssetOutputFile(file, issuerFilename)
+            : path.posix.join(publicPath, file);
 
-        const cssContent = CssExtractModule.apply(inlineSources, (content) =>
+        const cssContent = this.cssExtractModule.apply(inlineSources, (content) =>
           content.replace(urlRegex, resolveAssetFile)
         );
 
@@ -1180,8 +1267,9 @@ class AssetCompiler {
         const fileManifest = {
           render: () => cssContent,
           filename: assetFile,
-          identifier: `${pluginName}.${chunk.id}`,
-          hash,
+          identifier: `${pluginName}.${chunk.id}.inline.css`,
+          // the validity of the hash does not matter because it will be injected in the HTML
+          hash: hash + 'inline',
         };
 
         result.push(fileManifest);
@@ -1190,9 +1278,9 @@ class AssetCompiler {
       // CSS saved into file
       if (sources.length) {
         const assetFile = filename;
-        const outputFilename = Option.getAssetOutputFile(assetFile, entryFilename);
+        const outputFilename = this.pluginOption.getAssetOutputFile(assetFile, entryFilename);
 
-        Collection.setData(
+        this.collection.setData(
           entry,
           { resource: issuer },
           {
@@ -1211,15 +1299,19 @@ class AssetCompiler {
           const issuerFilename = assetFile;
 
           const resolveAssetFile = (match, file) =>
-            isAutoPublicPath ? Option.getAssetOutputFile(file, issuerFilename) : path.posix.join(publicPath, file);
+            isAutoPublicPath
+              ? this.pluginOption.getAssetOutputFile(file, issuerFilename)
+              : path.posix.join(publicPath, file);
 
-          const cssContent = CssExtractModule.apply(sources, (content) => content.replace(urlRegex, resolveAssetFile));
+          const cssContent = this.cssExtractModule.apply(sources, (content) =>
+            content.replace(urlRegex, resolveAssetFile)
+          );
 
           // 5. add extracted CSS file into compilation
           const fileManifest = {
             render: () => cssContent,
             filename: assetFile,
-            identifier: `${pluginName}.${chunk.id}`,
+            identifier: `${pluginName}.${chunk.id}.file.css`,
             hash,
           };
 
@@ -1241,7 +1333,7 @@ class AssetCompiler {
    */
   getStyleAsseFile({ name, chunkId, hash, resource, useChunkFilename = false }) {
     const { compilation } = this;
-    const cssOptions = Option.getCss();
+    const cssOptions = this.pluginOption.getCss();
     const filenameTemplate = useChunkFilename ? cssOptions.chunkFilename : cssOptions.filename;
 
     /** @type {PathData} The data to generate an asset path by the filename template. */
@@ -1256,13 +1348,13 @@ class AssetCompiler {
     };
 
     const assetPath = compilation.getAssetPath(filenameTemplate, pathData);
-    const outputFilename = Option.resolveOutputFilename(assetPath, cssOptions.outputPath);
+    const outputFilename = this.pluginOption.resolveOutputFilename(assetPath, cssOptions.outputPath);
     const [sourceFile] = resource.split('?', 1);
 
     // avoid the conflict: multiple chunks emit assets to the same filename
     // this occurs when filename template not contains a hash subsituation,
     // then the output name of css and its issuer is the same
-    return Asset.getUniqueFilename(sourceFile, outputFilename);
+    return this.asset.getUniqueFilename(sourceFile, outputFilename);
   }
 
   /**
@@ -1291,16 +1383,16 @@ class AssetCompiler {
    * @return {string|null} Return rendered HTML or null to not save the rendered content.
    */
   renderModule({ type, source, sourceFile, resource, assetFile }) {
-    const loaderOptions = PluginService.getLoaderOptions();
+    const loaderOptions = PluginService.getLoaderOptions(this.compilation.compiler);
     /** @type  FileInfo */
     const issuer = {
       resource,
       filename: assetFile,
     };
-    Resolver.setContext(this.currentEntryPoint, issuer);
+    this.resolver.setContext(this.currentEntryPoint, issuer);
 
     const vmScript = new VMScript({
-      require: Resolver.require,
+      require: this.resolver.require,
       // required for `css-loader`
       module: { id: sourceFile },
       // required for ssr
@@ -1313,7 +1405,7 @@ class AssetCompiler {
     let result = vmScript.exec(source.source(), { filename: sourceFile, esModule });
 
     if (type === 'style') {
-      result = CssExtractModule.apply(result);
+      result = this.cssExtractModule.apply(result);
     }
 
     return result;
@@ -1323,7 +1415,7 @@ class AssetCompiler {
    * @param {number} entryId
    */
   beforeProcessTemplate(entryId) {
-    Collection.beforeProcessTemplate(entryId);
+    this.collection.beforeProcessTemplate(entryId);
   }
 
   /**
@@ -1336,7 +1428,7 @@ class AssetCompiler {
     const entries = [];
     const promise = Promise.resolve();
 
-    if (Option.isIntegrityEnabled()) {
+    if (this.pluginOption.isIntegrityEnabled()) {
       promise.then(() => {
         const hashes = Integrity.getAssetHashes(compilation);
         return hooks.integrityHashes.promise(hashes);
@@ -1346,7 +1438,7 @@ class AssetCompiler {
     promise
       .then(() => {
         // prepare the CompileEntries for the hook
-        for (const [, { entry, assets }] of Collection.data) {
+        for (const [, { entry, assets }] of this.collection.data) {
           /** @type {CompileEntry} */
           const compileEntry = {
             name: entry.originalName,
@@ -1362,8 +1454,8 @@ class AssetCompiler {
         return hooks.afterEmit.promise(entries);
       })
       .then(() => {
-        if (Option.hasAfterEmit()) {
-          return Option.afterEmit(entries, compilation).catch((error) => {
+        if (this.pluginOption.hasAfterEmit()) {
+          return this.pluginOption.afterEmit(entries, compilation).catch((error) => {
             this.exceptions.add(afterEmitException(error));
           });
         }
@@ -1387,13 +1479,14 @@ class AssetCompiler {
    */
   done(stats) {
     const { compilation } = this;
+    const pluginCompiler = compilation.compiler;
 
-    if (PluginService.isWatchMode()) {
-      const watchDirs = Option.getRootSourcePaths();
+    if (PluginService.isWatchMode(pluginCompiler)) {
+      const watchDirs = this.pluginOption.getRootSourcePaths();
 
       // initialize snapshot only once, after compilation
       if (!this.isSnapshotInitialized) {
-        const pluginOptions = Option.get();
+        const pluginOptions = this.pluginOption.get();
         Snapshot.init({
           fs: this.fs,
           dir: watchDirs,
@@ -1407,7 +1500,7 @@ class AssetCompiler {
       }
 
       // allow watching for changes (add/remove/rename) of linked/missing scripts for static entry too.
-      if (Option.isDynamicEntry()) {
+      if (this.pluginOption.isDynamicEntry()) {
         watchDirs.forEach((dir) => compilation.contextDependencies.add(dir));
       }
     }
@@ -1423,7 +1516,7 @@ class AssetCompiler {
       .finally(() => {
         const hasError = compilation.errors.length > 0 || this.exceptions.size > 0;
 
-        compilation.name = compilationName(hasError);
+        compilation.name = compilationName(compilation.name, hasError);
 
         if (this.exceptions.size > 0) {
           const messages = Array.from(this.exceptions).join('\n\n');
@@ -1431,14 +1524,13 @@ class AssetCompiler {
           throw new Error(messages);
         }
 
-        if (Option.isVerbose()) verbose();
+        if (this.pluginOption.isVerbose()) verbose(pluginCompiler);
 
-        Asset.reset();
-        AssetEntry.reset();
-        AssetTrash.reset();
-        Collection.reset();
-        PluginService.reset();
-        Resolver.reset();
+        this.asset.reset();
+        this.assetEntry.reset();
+        this.assetTrash.reset();
+        this.collection.reset();
+        this.resolver.reset();
       });
   }
 
@@ -1446,7 +1538,7 @@ class AssetCompiler {
    * Called when the compiler is closing or a watching compilation has stopped.
    */
   shutdown() {
-    PluginService.shutdown();
+    PluginService.shutdown(this.compilation.compiler);
   }
 }
 

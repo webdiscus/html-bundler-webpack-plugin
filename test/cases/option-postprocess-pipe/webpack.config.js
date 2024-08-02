@@ -21,7 +21,7 @@ class MyPlugin extends HtmlBundlerPlugin {
   init(compiler) {
     // add to the postprocess pipeline the additional process
     // note: currently supported only `postprocess` pipeline
-    MyPlugin.option.addProcess('postprocess', (content) => {
+    this.addProcess('postprocess', (content) => {
       // called after postprocess plugin option
       return content.replace('REPLACE ME IN NEXT POSTPROCESS', 'The new replaced content.');
     });

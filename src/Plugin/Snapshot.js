@@ -8,7 +8,7 @@ const { readDirRecursiveSync } = require('../Common/FileUtils');
  *
  * Used in watch mode to compare the file's list before and after changes in a directory.
  */
-
+// TODO: refactor to non static class
 class Snapshot {
   static fs = null;
   static dirs = [];

@@ -30,7 +30,24 @@ module.exports = {
     rules: [
       {
         test: /\.(css|sass|scss)$/,
-        use: ['css-loader', 'sass-loader'],
+        use: ['css-loader', 'sass-loader'], // works up to `sass-loader` v15.0.0
+
+        // since `sass-loader` v16.0.0 must be used `options.sassOptions`
+        // to enable correct generation the sourceMap (including sourcesContent)
+        // use: [
+        //   'css-loader',
+        //   {
+        //     loader: 'sass-loader',
+        //     options: {
+        //       // to generate valid sourceMap use:
+        //       api: 'modern-compiler',
+        //       sassOptions: {
+        //         sourceMap: true,
+        //         sourceMapIncludeSources: true,
+        //       },
+        //     },
+        //   },
+        // ],
       },
       // process images loaded in styles from node module
       {

@@ -1,31 +1,32 @@
-const PluginService = require('../Plugin/PluginService');
-const Option = require('./Option');
-const Resolver = require('./Resolver');
 const Compile = require('./Modes/Compile');
 const Render = require('./Modes/Render');
 
 class Loader {
   /** @type {Render|Compile} */
-  static compiler = null;
+  compiler = null;
+
+  constructor() {}
 
   /**
    * @param {BundlerPluginLoaderContext} loaderContext
+   * @param {Compiler} pluginCompiler
+   * @param {Option} loaderOption The instance of the loader Option object.
+   * @param {Resolver} resolver
+   * @param {Collection} collection
    */
-  static init(loaderContext) {
-    const { rootContext, hot } = loaderContext;
-    const { preprocessor, preprocessorMode, esModule, self: useSelf } = Option.get();
-
-    // prevent double initialization with same options, it occurs when many entry files used in one webpack config
-    if (!PluginService.isCached(rootContext)) {
-      Resolver.init(loaderContext);
-    }
+  init(loaderContext, { pluginCompiler, loaderOption, resolver, collection }) {
+    const { hot } = loaderContext;
+    const { preprocessorMode, esModule, self: useSelf } = loaderOption.get();
 
     this.compiler = this.factory({
-      preprocessor,
+      preprocessor: loaderOption.getPreprocessorModule(),
       preprocessorMode,
       esModule,
       useSelf,
       hot,
+      pluginCompiler,
+      collection,
+      resolver,
     });
   }
 
@@ -39,16 +40,28 @@ class Loader {
    * @param {boolean} esModule
    * @param {boolean} useSelf Whether the `self` option is true.
    * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
+   * @param {Compiler} pluginCompiler
+   * @param {Collection} collection
+   * @param {Resolver} resolver
    * @return {Render|Compile}
    */
-  static factory({ preprocessor, preprocessorMode, esModule, useSelf, hot }) {
+  factory({ preprocessor, preprocessorMode, esModule, useSelf, hot, pluginCompiler, collection, resolver }) {
     switch (preprocessorMode) {
       case 'compile':
-        return new Compile({ preprocessor, esModule, hot });
+        return new Compile({ preprocessor, esModule, hot, pluginCompiler, collection, resolver });
       case 'render':
       default:
-        return new Render({ preprocessor, esModule, hot });
+        return new Render({ preprocessor, esModule, hot, pluginCompiler, collection, resolver });
     }
+  }
+
+  /**
+   * Get loader compiler.
+   *
+   * @return {Render|Compile}
+   */
+  getCompiler() {
+    return this.compiler;
   }
 
   /**
@@ -58,7 +71,7 @@ class Loader {
    * @param {BundlerPluginLoaderContext} loaderContext
    * @return {string}
    */
-  static export(content, loaderContext) {
+  export(content, loaderContext) {
     return this.compiler.export(content, loaderContext);
   }
 
@@ -69,7 +82,8 @@ class Loader {
    * @param {string} issuer The issuer where the error occurred.
    * @return {string}
    */
-  static exportError(error, issuer) {
+  exportError(error, issuer) {
+    // if an error occurs before or in moment the initialisation, then return the error as the unformatted string
     return this.compiler?.exportError(error, issuer) || error.toString();
   }
 }

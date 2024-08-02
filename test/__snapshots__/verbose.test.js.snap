@@ -116,13 +116,36 @@ assets:
 "
 `;
 
-exports[`watch watchFiles.files 1`] = `
+exports[`watch watchFiles pug 1`] = `
+"
+ HTML Bundler Plugin  Entry processing 
+
+watch files:
+  - src/footer.pug
+  - src/index.pug
+  - src/main.js
+
+ ENTRY  index.html 
+source: src/index.pug
+output: dist/
+assets:
+          style: src/style.css
+              -> assets/css/style.bundle.css
+       resource: ~fixtures/images/apple.png
+              -> assets/img/apple.02a7c382.png
+         script: src/main.js
+              -> assets/js/main.bundle.js
+
+"
+`;
+
+exports[`watch watchFiles.excludes 1`] = `
 "
  HTML Bundler Plugin  Entry processing 
 
 watch files:
   - src/index.html
-  - src/style.css
+  - src/main.js
 
  ENTRY  index.html 
 source: src/index.html
@@ -138,13 +161,13 @@ assets:
 "
 `;
 
-exports[`watch watchFiles.ignore 1`] = `
+exports[`watch watchFiles.includes 1`] = `
 "
  HTML Bundler Plugin  Entry processing 
 
 watch files:
   - src/index.html
-  - src/main.js
+  - src/style.css
 
  ENTRY  index.html 
 source: src/index.html

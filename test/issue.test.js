@@ -2,6 +2,7 @@ import { compareFiles } from './utils/helpers';
 
 beforeAll(() => {
   // important: the environment constant is used in code
+  // the value must be type string
   process.env.NODE_ENV_TEST = 'true';
 });
 

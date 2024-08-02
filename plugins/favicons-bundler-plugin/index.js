@@ -1,8 +1,9 @@
 const fs = require('fs/promises');
 const path = require('path');
-const { black, blueBright, yellow } = require('ansis');
-const HtmlBundlerPlugin = require('../../src/');
 const { favicons, config } = require('favicons');
+const { black, blueBright, yellow } = require('ansis');
+const PluginService = require('../../src/Plugin/PluginService');
+const BundlerPlugin = require('../../src/');
 const { outToConsole } = require('../../src/Common/Helpers');
 
 class FaviconsBundlerPlugin {
@@ -33,7 +34,8 @@ class FaviconsBundlerPlugin {
   }
 
   apply(compiler) {
-    const enabled = HtmlBundlerPlugin.option.toBool(this.options?.enabled, true, 'auto');
+    const bundlerPluginOption = PluginService.getPluginContext(compiler).pluginOption;
+    const enabled = bundlerPluginOption.toBool(this.options?.enabled, true, 'auto');
 
     if (!enabled) {
       return;
@@ -48,7 +50,7 @@ class FaviconsBundlerPlugin {
     const { RawSource } = this.webpack.sources;
 
     compiler.hooks.compilation.tap(pluginName, (compilation) => {
-      const hooks = HtmlBundlerPlugin.getHooks(compilation);
+      const hooks = BundlerPlugin.getHooks(compilation);
 
       // get favicon source file
       hooks.resolveSource.tap(pluginName, (source, info) => {
@@ -126,7 +128,7 @@ class FaviconsBundlerPlugin {
         new Promise((resolve, reject) => {
           if (this.faviconResponse?.images.length > 0) {
             const { images } = this.faviconResponse;
-            const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
+            const outputPath = bundlerPluginOption.getWebpackOutputPath();
             const saveDir = path.join(outputPath, this.options.faviconsConfig.path);
 
             return fs

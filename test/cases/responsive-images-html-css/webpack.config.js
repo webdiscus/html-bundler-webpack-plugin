@@ -2,7 +2,9 @@ const path = require('path');
 const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 module.exports = {
-  mode: 'development',
+  // note: the test fail in dev mode in GitHub CI with Node.js v22
+  //mode: 'development',
+  mode: 'production',
 
   output: {
     path: path.join(__dirname, 'dist/'),

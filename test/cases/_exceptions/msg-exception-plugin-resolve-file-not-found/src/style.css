@@ -1,0 +1,3 @@
+h1 {
+  background-image: url('/path/to/images/not-exists.png'); /* test exception for `file not found`  */
+}

@@ -2,8 +2,11 @@ const path = require('path');
 const { eachAsync, makeTemplateId, stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
+// node module name
+const moduleName = 'twig';
+
 const preprocessor = (loaderContext, options) => {
-  const TwigEngine = loadModule('twig', () => require('twig'));
+  const TwigEngine = loadModule(moduleName, () => require(moduleName));
   const Twig = TwigEngine.twig;
   const rootContext = loaderContext.rootContext || process.cwd();
   const async = options?.async === true;
@@ -78,6 +81,11 @@ const preprocessor = (loaderContext, options) => {
   TwigEngine.cache(false);
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.

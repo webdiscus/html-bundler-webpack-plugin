@@ -2,8 +2,11 @@ const path = require('path');
 const { makeTemplateId, stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
 
+// node module name
+const moduleName = 'nunjucks';
+
 const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
-  const nunjucks = loadModule('nunjucks');
+  const nunjucks = loadModule(moduleName);
   const env = new nunjucks.Environment();
   const { rootContext } = loaderContext;
   const viewPaths = (options.views = [...new Set([...(options.views || []), rootContext])]);
@@ -28,6 +31,11 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
   nunjucks.configure(viewPaths, options);
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.

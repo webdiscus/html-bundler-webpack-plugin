@@ -12,6 +12,7 @@ import FugFilter from '../src/Loader/Preprocessors/Pug/Filter';
 
 beforeAll(() => {
   // important: the environment constant is used in code
+  // the value must be type string
   process.env.NODE_ENV_TEST = 'true';
 });
 
@@ -127,10 +128,10 @@ describe('embedded filters tests', () => {
   test(`:markdown`, () => compareFiles('_pug/filter-markdown'));
 });
 
-describe('exception tests', () => {
+describe('exceptions', () => {
   test('exception: filter not found', () => {
     const containString = `The 'embedFilters' option contains unknown filter:`;
-    return exceptionContain('_pug/exception-filter-not-found', containString);
+    return exceptionContain('_pug/msg-exception-filter-not-found', containString);
   });
 
   test('exception: by load a filter', (done) => {
@@ -176,7 +177,7 @@ describe('exception tests', () => {
     filterHighlight.module = null;
 
     const containString = `unsupported highlight module`;
-    return exceptionContain('_pug/exception-filter-highlight-unsupported-module', containString);
+    return exceptionContain('_pug/msg-exception-filter-highlight-unsupported-module', containString);
   });
 
   test('exception: filter :highlight adapter - unsupported module', (done) => {

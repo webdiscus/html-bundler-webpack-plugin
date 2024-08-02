@@ -119,13 +119,15 @@ const parseSvg = (svg) => {
 const comparePos = (a, b) => a.valueStartPos - b.valueStartPos;
 
 class AssetInline {
-  static data = new Map();
+  data = new Map();
+
+  constructor() {}
 
   /**
    * @param {string} request
    * @return {boolean}
    */
-  static isSvgFile(request) {
+  isSvgFile(request) {
     const [file] = request.split('?', 1);
     return file.endsWith('.svg');
   }
@@ -136,7 +138,7 @@ class AssetInline {
    * @param {string} request The request of asset.
    * @returns {boolean}
    */
-  static isDataUrl(request) {
+  isDataUrl(request) {
     return request.startsWith('data:');
   }
 
@@ -145,7 +147,7 @@ class AssetInline {
    * @param {string} issuer
    * @returns {boolean}
    */
-  static isInlineSvg(sourceFile, issuer) {
+  isInlineSvg(sourceFile, issuer) {
     const item = this.data.get(sourceFile);
     return item != null && item.source != null && item.inlineSvg?.issuerResources.has(issuer);
   }
@@ -155,7 +157,7 @@ class AssetInline {
    * @param {string} issuer
    * @returns {string|null}
    */
-  static getDataUrl(sourceFile, issuer) {
+  getDataUrl(sourceFile, issuer) {
     const item = this.data.get(sourceFile);
 
     return item != null && item.source != null && item.dataUrl.issuers.has(issuer) ? item.source.dataUrl : null;
@@ -166,7 +168,7 @@ class AssetInline {
    * @param {string} issuer The source file of the issuer.
    * @param {boolean} isEntry Whether the issuer is an entry file.
    */
-  static add(resource, issuer, isEntry) {
+  add(resource, issuer, isEntry) {
     let item = this.data.get(resource);
 
     if (!item) {
@@ -203,7 +205,7 @@ class AssetInline {
    * @param {Module} module The Webpack module.
    * @param {CodeGenerationResults|Object} codeGenerationResults Code generation results of resource modules.
    */
-  static saveData(entry, chunk, module, codeGenerationResults) {
+  saveData(entry, chunk, module, codeGenerationResults) {
     const sourceFile = module.resource;
     const item = this.data.get(sourceFile);
 
@@ -235,7 +237,7 @@ class AssetInline {
    * @param {string} entryFilename The output filename of template.
    * @return {string}
    */
-  static inlineSvg(content, entryFilename) {
+  inlineSvg(content, entryFilename) {
     const headStartPos = content.indexOf('<head');
     const headEndPos = content.indexOf('</head>', headStartPos);
     const hasHead = headStartPos >= 0 && headEndPos > headStartPos;
@@ -280,7 +282,7 @@ class AssetInline {
    * Clear cache.
    * Called only once when the plugin is applied.
    */
-  static clear() {
+  clear() {
     this.data.clear();
   }
 }

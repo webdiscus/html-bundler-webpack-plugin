@@ -1,12 +1,11 @@
 const path = require('path');
-const { red, green, cyan, cyanBright, magenta, black, yellow, yellowBright, fg, bg } = require('ansis');
-const Collection = require('../Collection');
+const { red, green, cyan, cyanBright, magenta, black, yellow, yellowBright, fg, bg, white } = require('ansis');
 const { outToConsole, isFunction } = require('../../Common/Helpers');
-const { relativePathForView } = require('../../Common/FileUtils');
+const { relativePathVerbose } = require('../../Common/FileUtils');
 const Config = require('../../Common/Config');
 
-const Dependency = require('../../Loader/Dependency');
 const PluginService = require('../PluginService');
+const Collection = require('../Collection');
 
 const { pluginLabel } = Config.get();
 
@@ -21,11 +20,21 @@ const padChunks = padLevel1 + 4;
  *
  * The compilation name is displayed in the console output when compilation is finished.
  *
+ * @param {string|undefined} name
  * @param {boolean} error
  * @return {string}
  */
-const compilationName = (error) =>
-  error ? bg(196).whiteBright` ${pluginLabel} ` + red` ▶▶▶` : bg(118).black` ${pluginLabel} ` + green` ▶▶▶`;
+const compilationName = (name, error) => {
+  let configName = '';
+
+  if (name != null) {
+    configName = white` config ${magenta`[${name}]`}`;
+  }
+
+  return error
+    ? bg(196).whiteBright` ${pluginLabel} ` + red` ${configName} ▶▶▶`
+    : bg(118).black` ${pluginLabel} ` + green` ${configName} ▶▶▶`;
+};
 
 const colorType = (item, pad) => {
   let { type, inline } = item;
@@ -49,7 +58,7 @@ const renderAssets = (item, pad = padLevel2) => {
   if (Array.isArray(assets)) {
     assets.forEach((assetItem) => {
       const { inline, resource, assetFile } = assetItem;
-      const sourceFile = relativePathForView(resource);
+      const sourceFile = relativePathVerbose(resource);
 
       str += colorType(assetItem, pad) + ` ${cyan(sourceFile)}\n`;
 
@@ -86,13 +95,20 @@ const renderAssets = (item, pad = padLevel2) => {
 
 /**
  * Display all processed assets in entry points.
+ * @param {Compiler} pluginCompiler
  */
-const verbose = () => {
+const verbose = (pluginCompiler) => {
+  const pluginContext = PluginService.getPluginContext(pluginCompiler);
+
+  const collection = pluginContext.collection;
+  const dependency = PluginService.getLoaderDependency(pluginCompiler);
+  const collectionData = collection.getData();
+
   let str = '\n' + black.bgGreen` ${pluginLabel} ` + bg(193).black` Entry processing ` + '\n';
 
   // display loader watch dependencies
-  if (PluginService.isWatchMode()) {
-    const watchFiles = Dependency.files;
+  if (PluginService.isWatchMode(pluginCompiler)) {
+    const watchFiles = dependency.getFiles();
 
     if (watchFiles && watchFiles.size > 0) {
       str += '\n';
@@ -101,16 +117,16 @@ const verbose = () => {
       // TODO: correct sort paths
       const files = Array.from(watchFiles).sort();
       for (let file of files) {
-        file = relativePathForView(file);
+        file = relativePathVerbose(file);
         str += `${'-'.padStart(3)} ${fg(147)(file)}` + '\n';
       }
     }
   }
 
   // display assets
-  for (let [entryAsset, { entry, assets, preloads }] of Collection.data) {
-    const entrySource = relativePathForView(entry.resource);
-    const outputPath = relativePathForView(entry.outputPath);
+  for (let [entryAsset, { entry, assets, preloads }] of collectionData) {
+    const entrySource = relativePathVerbose(entry.resource);
+    const outputPath = relativePathVerbose(entry.outputPath);
 
     str += '\n';
     str += bg(27).whiteBright` ENTRY ` + bg(195).black` ${entryAsset} ` + '\n';
@@ -140,7 +156,7 @@ const verbose = () => {
         resourceColor = gray;
       }
 
-      let sourceFile = relativePathForView(resource);
+      let sourceFile = relativePathVerbose(resource);
 
       str += colorType(item, padLevel1) + ` ${resourceColor(sourceFile)}\n`;
 
@@ -153,7 +169,7 @@ const verbose = () => {
         str += `${''.padStart(padLevel1)} ${fg(214)`imports:`}\n`;
         // note: if a style is imported, then resource is an array
         for (let importItem of item.imports) {
-          sourceFile = relativePathForView(importItem.resource);
+          sourceFile = relativePathVerbose(importItem.resource);
           str += `${''.padStart(padChunks)} ${fg(143)(sourceFile)}\n`;
           str += renderAssets(importItem, padLevel3);
         }

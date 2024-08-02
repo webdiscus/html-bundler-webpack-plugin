@@ -1,18 +1,19 @@
 import { compareFiles, compareFilesRuns, watchCompareFiles } from './utils/helpers';
-//import { removeDirsSync } from './utils/file';
 
+//import { removeDirsSync } from './utils/file';
 // Remove all 'dist/' directories from tests, use it only for some local tests.
 //removeDirsSync(__dirname, /dist$/);
 
 beforeAll(() => {
   // important: the environment constant is used in code
+  // the value must be type string
   process.env.NODE_ENV_TEST = 'true';
 });
 
-beforeEach(async () => {
-  // sleep between tests to give time for GC
-  //await new Promise((r) => setTimeout(r, 500));
-});
+// beforeEach(async () => {
+//   // sleep between tests to give time for GC
+//   //await new Promise((r) => setTimeout(r, 500));
+// });
 
 describe('features tests', () => {
   test('Hello World!', () => compareFiles('hello-world'));
@@ -20,17 +21,21 @@ describe('features tests', () => {
   test('use style in html', () => compareFiles('use-style-in-html'));
   test('use script in html', () => compareFiles('use-script-in-html'));
   test('resolve-js-in-many-pages', () => compareFiles('resolve-js-in-many-pages'));
+  test('multi-config', () => compareFiles('multi-config'));
 });
 
-// TODO: test after N runs
-// describe('cache tests', () => {
-//   afterEach(async () => {
-//     // sleep between tests to give time for GC
-//     await new Promise((r) => setTimeout(r, 500));
-//   });
-//
-//   test('cache-filesystem-js3', () => compareFilesRuns('cache-filesystem-js', false, 3));
-// });
+describe('cache tests', () => {
+  // TODO: test after N runs
+  // afterEach(async () => {
+  //   // sleep between tests to give time for GC
+  //   await new Promise((r) => setTimeout(r, 500));
+  // });
+
+  test('cache-filesystem-js-runs_n1', () => compareFilesRuns('cache-filesystem-js', false, 1));
+
+  // TODO: fix DEP_WEBPACK_COMPILATION_ASSETS warning
+  //test('cache-filesystem-js-runs_n2', () => compareFilesRuns('cache-filesystem-js', false, 2));
+});
 
 describe('resolve files', () => {
   test('script style asset', () => compareFiles('resolve-script-style-asset'));
@@ -40,7 +45,7 @@ describe('resolve files', () => {
   test('alias in html', () => compareFiles('resolve-alias-in-html'));
   test('svg with fragment', () => compareFiles('resolve-svg-use-fragment'));
   test('svg with fragment, filename', () => compareFiles('resolve-svg-use-fragment-filename'));
-  test('assets in multi pages', () => compareFiles('multipages'));
+  test('assets in multi pages', () => compareFiles('multi-pages'));
   test('assets/resource filename', () => compareFiles('asset-filename'));
   test('the same asset with different raw request', () => compareFiles('resolve-assets-same-file-in-html-scss'));
   test('resolve js in many entries with the same template', () => compareFiles('resolve-js-same-tmpl'));
@@ -50,6 +55,7 @@ describe('resolve files', () => {
 });
 
 describe('resolve styles', () => {
+  // TODO: sass/sass-loader BUG: doesn't contains the sourcesContent
   test('styles loaded from node_modules', () => compareFiles('resolve-styles-from-module'));
   test('styles with same name', () => compareFiles('resolve-styles-with-same-name'));
   test('styles with same name, hash', () => compareFiles('resolve-styles-with-same-name-hash'));
@@ -85,8 +91,8 @@ describe('plugin options', () => {
   test('js.filename undefined', () => compareFiles('option-js-filename-undefined'));
   test('js.filename notset', () => compareFiles('option-js-filename-notset'));
   test('js.chunkFilename', () => compareFiles('option-js-chunkFilename'));
-  test('js.chunkFilename not set', () => compareFiles('option-js-chunkFilename-notset'));
   test('js.chunkFilename as function', () => compareFiles('option-js-chunkFilename-function'));
+  test('js.chunkFilename not set', () => compareFiles('option-js-chunkFilename-notset'));
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
 
@@ -123,6 +129,9 @@ describe('plugin options', () => {
   test('entry array', () => compareFiles('option-entry-array'));
   test('entry object', () => compareFiles('option-entry-object'));
 
+  // TODO: reproduce the use case: skip an unsupported entry type
+  //test('entry unsupported type', () => compareFiles('entry-unsupported-type'));
+
   // dynamic entry
   test('entry path', () => compareFiles('option-entry-path'));
   test('entry path filter fn', () => compareFiles('option-entry-path-filter-fn'));
@@ -141,8 +150,12 @@ describe('plugin options', () => {
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
-  test('verbose', () => compareFiles('option-verbose'));
+  // output deprecation messages
+  test('watchFiles deprecation', () => watchCompareFiles('option-watchFiles-deprecation'));
 
+  test('hotUpdate', () => watchCompareFiles('option-hotUpdate'));
+
+  test('verbose', () => compareFiles('option-verbose'));
   // for debug only
   test('verbose output', () => compareFiles('option-verbose-output'));
 });
@@ -198,6 +211,7 @@ describe('loader options common', () => {
   test('filter, parsedValues', () => compareFiles('loader-option-sources-filter-parsedValues'));
 
   test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
+  test('preprocessor function', () => compareFiles('loader-option-preprocessor-function'));
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
   test('preprocessor null', () => compareFiles('loader-option-preprocessor-return-null'));
   test('root', () => compareFiles('loader-option-root'));
@@ -258,6 +272,7 @@ describe('usage template in js on client side', () => {
   test('eta: compile to fn with external data', () => compareFiles('js-tmpl-eta-compile-data-external'));
   test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
   test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
+  test('eta: resolve images in imported partial', () => compareFiles('js-tmpl-resolve-img-in-partial'));
 
   // EJS
   test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));
@@ -320,6 +335,9 @@ describe('import styles in JavaScript', () => {
 
   test('inline CSS', () => compareFiles('js-import-css-inline-css'));
   test('inline CSS, source map', () => compareFiles('js-import-css-inline-css-sourceMap'));
+
+  test('import SCSS in JS and inline SCSS, prod', () => compareFiles('js-import-scss-and-inline-scss-prod'));
+  test('import SCSS in JS and inline SCSS, dev', () => compareFiles('js-import-scss-and-inline-scss-dev'));
 
   test('inline images in CSS', () => compareFiles('js-import-css-inline-img-in-css'));
   test('inline images in inlined CSS', () => compareFiles('js-import-css-inline-img-in-inlined-css'));
@@ -469,12 +487,16 @@ describe('integrity, common use cases', () => {
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
 
+  test('script async, prod', () => compareFiles('integrity-script-async-prod'));
+
   test('split chunks', () => compareFiles('integrity-split-chunks'));
   test('import css', () => compareFiles('integrity-import-css-in-js'));
   test('import css, sourceMap', () => compareFiles('integrity-import-css-in-js-source-map'));
 
   test('hook-done', () => compareFiles('integrity-hook-done'));
   test('hook-integrityHashes', () => compareFiles('integrity-hook-integrityHashes'));
+
+  test('integrity enabled w/o using template in entry', () => compareFiles('integrity-enabled-wo-template'));
 });
 
 describe('integrity, dynamic chunks', () => {

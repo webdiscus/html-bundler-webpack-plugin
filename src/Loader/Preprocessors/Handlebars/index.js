@@ -1,13 +1,17 @@
 const path = require('path');
-const Dependency = require('../../Dependency');
 const { stringifyJSON } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
+const LoaderFactory = require('../../LoaderFactory');
+
+// node module name
+const moduleName = 'handlebars';
 
 const preprocessor = (loaderContext, options) => {
-  const Handlebars = loadModule('handlebars');
+  const Handlebars = loadModule(moduleName);
   const fs = loaderContext.fs.fileSystem;
   const { rootContext } = loaderContext;
+  const dependency = LoaderFactory.getDependency(loaderContext._compilation.compiler);
   const extensions = ['.html', '.hbs', '.handlebars'];
   const includeFiles = [/\.(html|hbs|handlebars)$/i];
   const root = options?.root || rootContext;
@@ -44,7 +48,7 @@ const preprocessor = (loaderContext, options) => {
       });
 
       // watch changes in the directory (add/remove a file)
-      Dependency.addDir(dir);
+      dependency.addDir(dir);
     }
 
     return result;
@@ -91,7 +95,7 @@ const preprocessor = (loaderContext, options) => {
 
     // remove deleted/renamed partials
     outdatedPartialsNames.forEach((name) => {
-      Dependency.removeFile(partials[name]);
+      dependency.removeFile(partials[name]);
       Handlebars.unregisterPartial(name);
     });
 
@@ -102,7 +106,7 @@ const preprocessor = (loaderContext, options) => {
       const partialFile = partials[name];
 
       // watch changes in a file (change/rename)
-      Dependency.addFile(partialFile);
+      dependency.addFile(partialFile);
 
       if (!fs.existsSync(partialFile)) {
         throw new Error(`Could not find the partial '${partialFile}'`);
@@ -126,7 +130,7 @@ const preprocessor = (loaderContext, options) => {
 
     // remove deleted/renamed helpers
     outdatedHelperNames.forEach((name) => {
-      Dependency.removeFile(helpers[name]);
+      dependency.removeFile(helpers[name]);
       Handlebars.unregisterHelper(name);
     });
 
@@ -136,7 +140,7 @@ const preprocessor = (loaderContext, options) => {
       const helperFile = helpers[name];
 
       // watch changes in a file (change/rename)
-      Dependency.addFile(helperFile);
+      dependency.addFile(helperFile);
 
       if (!fs.existsSync(helperFile)) {
         throw new Error(`Could not find the helper '${helperFile}'`);
@@ -177,6 +181,11 @@ const preprocessor = (loaderContext, options) => {
   }
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template to HTML.
      * Called in the `render` preprocessor mode.

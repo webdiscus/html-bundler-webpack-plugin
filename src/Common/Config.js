@@ -34,6 +34,7 @@ class Config {
   static #load() {
     if (this.#configFile) {
       let config = require(this.#configFile);
+
       this.#config = Object.assign(this.#config, config);
       this.#loaded = true;
     }

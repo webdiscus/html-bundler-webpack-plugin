@@ -1,5 +1,4 @@
 const path = require('path');
-const AssetTrash = require('../AssetTrash');
 
 /** @typedef {import('webpack').Compilation} Compilation */
 /** @typedef {import('webpack').sources.ConcatSource} ConcatSource */
@@ -13,12 +12,24 @@ const AssetTrash = require('../AssetTrash');
 
 class CssExtractModule {
   /** @type {Compilation} */
-  static compilation;
+  compilation = null;
+
+  assetTrash = null;
+
+  /**
+   *
+   * @param {AssetTrash} assetTrash
+   * @param {Compilation} compilation
+   */
+  constructor({ assetTrash, compilation }) {
+    this.compilation = compilation;
+    this.assetTrash = assetTrash;
+  }
 
   /**
    * @param {Compilation} compilation
    */
-  static init(compilation) {
+  init(compilation) {
     this.compilation = compilation;
   }
 
@@ -43,7 +54,7 @@ class CssExtractModule {
    * @param {Function?} update The callback to replace in url() the raw request with the output filename.
    * @returns {ConcatSource}
    */
-  static apply(data, update) {
+  apply(data, update) {
     const { compiler } = this.compilation;
     const { ConcatSource, SourceMapSource } = compiler.webpack.sources;
     const source = new ConcatSource();
@@ -79,7 +90,7 @@ class CssExtractModule {
    * @param {string} assetFile The asset filename.
    * @returns {string}
    */
-  static getInlineSource(assetFile) {
+  getInlineSource(assetFile) {
     const sources = this.compilation.assets;
     const assetMapFile = assetFile + '.map';
     const mapFilename = path.basename(assetMapFile);
@@ -93,7 +104,7 @@ class CssExtractModule {
     }
 
     // don't generate css file for inlined styles
-    AssetTrash.add(assetFile);
+    this.assetTrash.add(assetFile);
 
     return source;
   }

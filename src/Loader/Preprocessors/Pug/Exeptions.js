@@ -29,6 +29,7 @@ const PugLoaderError = function (message, error = '') {
     throw new Error(lastError);
   }
   lastError = whiteBright(message) + `\n\n${redBright`Original Error:`}\n` + error;
+
   throw new PugLoaderException(lastError);
 };
 

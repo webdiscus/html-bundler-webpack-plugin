@@ -1,32 +1,39 @@
 const path = require('path');
 const { readDirRecursiveSync } = require('../Common/FileUtils');
 const PluginService = require('../Plugin/PluginService');
-const AssetEntry = require('../Plugin/AssetEntry');
-const Option = require('./Option');
 
 /**
  * Dependencies in code for watching a changes.
  */
 class Dependency {
   /** The file system used by Webpack */
-  static fileSystem = null;
-  static files = new Set();
-  static directories = new Set();
-  static watchFiles = {};
-  static entryFiles = new Set();
-  static excludeDirs = [];
-  static loaderContext = null;
+  fileSystem = null;
+  files = new Set();
+  directories = new Set();
+  watchFiles = {};
+  entryFiles = new Set();
+  excludeDirs = [];
+  loaderContext = null;
+  pluginCompiler = null;
 
-  static init(loaderContext) {
-    if (!PluginService.isWatchMode()) return;
+  constructor(compiler) {
+    // create instance only to avoid cycle dependencies by initialisation
+    this.pluginCompiler = compiler;
+  }
 
-    let watchFile = loaderContext.resourcePath;
-
-    PluginService.setDependencyInstance(this);
+  init({ loaderContext, loaderOption }) {
     this.loaderContext = loaderContext;
-    this.fileSystem = loaderContext.fs.fileSystem;
-    this.watchFiles = Option.getWatchFiles();
-    this.entryFiles = AssetEntry.getEntryFiles();
+    this.loaderOption = loaderOption;
+
+    if (!PluginService.isWatchMode(this.pluginCompiler)) return;
+
+    let watchFile = this.loaderContext.resourcePath;
+
+    PluginService.setDependencyInstance(this.pluginCompiler, this);
+
+    this.fileSystem = this.loaderContext.fs.fileSystem;
+    this.watchFiles = this.loaderOption.getWatchFiles();
+    this.entryFiles = PluginService.getPluginContext(this.pluginCompiler).assetEntry.getEntryFiles();
 
     this.excludeDirs = [];
     this.entryFiles.forEach((entryFile) => {
@@ -37,47 +44,30 @@ class Dependency {
     this.addFileToWatch = this.addFileToWatch.bind(this);
 
     const fs = this.fileSystem;
-    const { files: includes, ignore: excludes, paths = [] } = this.watchFiles;
+    const { includes, excludes, paths = [] } = this.watchFiles;
 
     for (const watchDir of paths) {
       const files = readDirRecursiveSync(watchDir, { fs, includes, excludes });
+
       files.forEach(this.addFileToWatch);
     }
 
-    const customWatchFiles = Option.getCustomWatchFiles();
+    const customWatchFiles = this.loaderOption.getCustomWatchFiles();
     if (customWatchFiles.length > 0) customWatchFiles.forEach(this.addFileToWatch);
   }
 
   /**
    * Check whether the adding file is watchable.
    *
-   * TODO: add to documentation the new options: includes (defaults as watchFiles.files), excludes
-   *
    * @param {string} watchFile
    * @return boolean
    */
-  static isFileWatchable(watchFile) {
+  isFileWatchable(watchFile) {
+    if (!PluginService.isWatchMode(this.pluginCompiler)) return false;
+
     let { includes, excludes } = this.watchFiles;
-
-    let isIncluded = includes
-      ? includes.some((item) => {
-          if (item.constructor.name === 'RegExp') {
-            return item.test(watchFile);
-          }
-
-          return item === watchFile;
-        })
-      : true;
-
-    let isExcluded = excludes
-      ? excludes.some((item) => {
-          if (item.constructor.name === 'RegExp') {
-            return item.test(watchFile);
-          }
-
-          return item === watchFile;
-        })
-      : false;
+    let isIncluded = includes ? includes.some((item) => item.test(watchFile)) : true;
+    let isExcluded = excludes ? excludes.some((item) => item.test(watchFile)) : false;
 
     return isIncluded && !isExcluded;
   }
@@ -85,8 +75,15 @@ class Dependency {
   /**
    * @param {string} dir
    */
-  static addDir(dir) {
+  addDir(dir) {
     this.directories.add(dir);
+  }
+
+  /**
+   * @return {Set<any>}
+   */
+  getFiles() {
+    return this.files;
   }
 
   /**
@@ -94,7 +91,7 @@ class Dependency {
    *
    * @param {string} file
    */
-  static addFile(file) {
+  addFile(file) {
     if (this.isFileWatchable(file)) {
       this.addFileToWatch(file);
     }
@@ -103,7 +100,7 @@ class Dependency {
   /**
    * @param {string} file
    */
-  static addFileToWatch(file) {
+  addFileToWatch(file) {
     this.files.add(file);
 
     // delete the file from require.cache to reload cached file after change
@@ -115,15 +112,15 @@ class Dependency {
   /**
    * @param {string} file
    */
-  static removeFile(file) {
+  removeFile(file) {
     this.files.delete(file);
   }
 
   /**
    * Enable Webpack watching for dependencies.
    */
-  static watch() {
-    if (!PluginService.isWatchMode()) return;
+  watch() {
+    if (!PluginService.isWatchMode(this.pluginCompiler)) return;
 
     const { loaderContext, excludeDirs } = this;
 
@@ -143,7 +140,7 @@ class Dependency {
   /**
    * Called when the compiler is closing or a watching compilation has stopped.
    */
-  static shutdown() {
+  shutdown() {
     this.files.clear();
     this.directories.clear();
   }

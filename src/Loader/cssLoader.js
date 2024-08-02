@@ -4,14 +4,16 @@
  * Note: styles specified directly in HTML template are extracted without any loader.
  */
 
-const Collection = require('../Plugin/Collection');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('./Utils');
+const PluginService = require('../Plugin/PluginService');
 
 /**
  * @this {import("webpack").LoaderContext<LoaderOption>}
  * @param {string} content
  */
 const loader = function (content) {
+  //const loaderContext = this;
+
   /* istanbul ignore next */
   if (this._compiler.options?.experiments?.css && this._module?.type === 'css') {
     return content;
@@ -23,6 +25,11 @@ const loader = function (content) {
  * @param {string} remaining
  */
 const pitchLoader = async function (remaining) {
+  const loaderContext = this;
+  const pluginCompiler = loaderContext._compilation.compiler;
+  const pluginContext = PluginService.getPluginContext(pluginCompiler);
+  const collection = pluginContext.collection;
+
   // TODO: find the module from this._compilation, because this._module is deprecated
   const { resource, resourcePath, _module: module } = this;
   const options = this.getOptions() || {};
@@ -58,7 +65,7 @@ const pitchLoader = async function (remaining) {
   }
 
   module._cssSource = esModule ? result.default : result;
-  Collection.setImportStyleEsModule(esModule);
+  collection.setImportStyleEsModule(esModule);
 
   // support for lazy load CSS in JavaScript, see the test js-import-css-lazy-url
   if (isUrl) {

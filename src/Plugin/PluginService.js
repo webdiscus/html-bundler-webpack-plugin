@@ -3,33 +3,16 @@
  * The instance is available both in the plugin and loader.
  */
 
+const WeakMapIterable = require('../Common/WeakMapIterable');
 const Preprocessor = require('../Loader/Preprocessor');
 
 class PluginService {
-  // TODO: add methods to set this properties
-  static plugin;
-  static compilation;
+  /**
+   * @type {AssetCompiler}
+   */
+  static plugin = null;
 
-  /** @type {OptionPluginInterface | {}} Provide to use the plugin option instance in the loader. */
-  static #PluginOption = null;
-
-  // options defined in the plugin but provided to the loader
-  static #loaderOptions = {};
-
-  // cached loader options
-  static #loaderCache = new Map();
-  static #used = false;
-  static #watchMode;
-  static #hotUpdate;
-  static #contextCache = new Set();
-  static dataFiles = new Map();
-
-  // dependency injected instances
-  static Dependency = null;
-
-  // entry files where js file was not resolved,
-  // used to try to rebuild the entry module when a missing js file is added or renamed to the required name
-  static missingFiles = new Set();
+  static #contexts = new WeakMapIterable();
 
   /**
    * Set use state of the plugin.
@@ -38,77 +21,152 @@ class PluginService {
    * to disable some features of the plugin, because never used with the plugin,
    * but require additional compilation time.
    *
-   * @param {OptionPluginInterface} PluginOption The plugin options instance.
+   * @param {Compiler} compiler The webpack compiler.
+   * @param {Object} pluginContext
+   * @param {AssetCompiler} plugin
    */
-  static init(PluginOption) {
-    const pluginOptions = PluginOption.get();
-    const loaderOptions = pluginOptions.loaderOptions || {};
+  static init(compiler, pluginContext, plugin) {
+    let context = this.#contexts.get(compiler);
 
-    // add reference for data to the loader options
-    if (pluginOptions.data && !loaderOptions.data) {
-      loaderOptions.data = pluginOptions.data;
-    }
+    if (!context) {
+      const pluginOptions = pluginContext.pluginOption.get();
 
-    // add reference for beforePreprocessor to the loader options
-    if (pluginOptions.beforePreprocessor != null && loaderOptions.beforePreprocessor == null) {
-      loaderOptions.beforePreprocessor = pluginOptions.beforePreprocessor;
-    }
+      // options defined in the plugin but provided to the loader
+      const loaderOptions = pluginOptions.loaderOptions || {};
 
-    // add reference for the preprocessor option into the loader options
-    if (pluginOptions.preprocessor != null && loaderOptions.preprocessor == null) {
-      loaderOptions.preprocessor = pluginOptions.preprocessor;
-
-      if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
-        loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
+      // add reference for data to the loader options
+      if (pluginOptions.data && !loaderOptions.data) {
+        loaderOptions.data = pluginOptions.data;
       }
+
+      // add reference for beforePreprocessor to the loader options
+      if (pluginOptions.beforePreprocessor != null && loaderOptions.beforePreprocessor == null) {
+        loaderOptions.beforePreprocessor = pluginOptions.beforePreprocessor;
+      }
+
+      // add reference for the preprocessor option into the loader options
+      if (pluginOptions.preprocessor != null && loaderOptions.preprocessor == null) {
+        loaderOptions.preprocessor = pluginOptions.preprocessor;
+
+        if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
+          loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
+        }
+      }
+
+      context = {
+        pluginContext,
+        loaderOptions,
+        loaderOption: null,
+        // cached loader options
+        loaderCache: new Map(),
+        contextCache: new Set(),
+        dataFiles: new Map(),
+        // loader dependency is injected instances
+        dependency: null,
+        hotUpdate: pluginOptions.hotUpdate,
+      };
+
+      this.#contexts.set(compiler, context);
     }
 
-    this.#used = true;
-    this.#watchMode = false;
-    this.#hotUpdate = pluginOptions.hotUpdate;
-    this.#PluginOption = PluginOption;
-    this.#loaderOptions = loaderOptions;
-    this.#loaderCache.clear();
+    context.used = true;
+    context.watchMode = false;
+    context.loaderCache.clear();
+
+    this.plugin = plugin;
+  }
+
+  /**
+   * Get this context by webpack compiler.
+   *
+   * @param {Compiler} compiler The webpack compiler is the context key of the plugin context.
+   */
+  static getContext(compiler) {
+    return this.#contexts.get(compiler);
+  }
+
+  /**
+   * Get plugin context by webpack compiler.
+   *
+   * @param {Compiler} compiler The webpack compiler is the context key of the plugin context.
+   */
+  static getPluginContext(compiler) {
+    return this.getContext(compiler)?.pluginContext;
+  }
+
+  static getLoaderOption(compiler) {
+    return this.getContext(compiler)?.loaderOption;
+  }
+
+  static setLoaderOption(compiler, loaderOption) {
+    this.getContext(compiler).loaderOption = loaderOption;
+  }
+
+  static getLoaderDependency(compiler) {
+    return this.getContext(compiler)?.dependency;
   }
 
   /**
    * Whether the plugin is defined in Webpack configuration.
+   *
+   * @param {Compiler} compiler The webpack compiler.
    * @return {boolean}
    */
-  static isUsed() {
-    return this.#used;
+  static isUsed(compiler) {
+    return this.getContext(compiler)?.used === true;
   }
 
   /**
+   * @param {Compiler} compiler The webpack compiler.
    * @return {boolean}
    */
-  static isWatchMode() {
-    return this.#watchMode;
+  static isWatchMode(compiler) {
+    return this.getContext(compiler).watchMode;
   }
 
-  static isCached(context) {
-    if (this.#contextCache.has(context)) return true;
-    this.#contextCache.add(context);
+  /**
+   * @param {Compiler} compiler The webpack compiler.
+   * @param {string} context
+   * @return {boolean}
+   */
+  static isCached(compiler, context) {
+    if (this.getContext(compiler).contextCache.has(context)) return true;
+    this.getContext(compiler).contextCache.add(context);
 
     return false;
   }
 
   /**
+   * @param {Compiler} compiler The webpack compiler.
    * @return {boolean}
    */
-  static useHotUpdate() {
-    return this.#hotUpdate;
-  }
-
-  static setDependencyInstance(Dependency) {
-    this.Dependency = Dependency;
+  static useHotUpdate(compiler) {
+    return this.getContext(compiler).hotUpdate;
   }
 
   /**
+   * @param {Compiler} compiler The webpack compiler.
+   * @param {Dependency} dependency
+   */
+  static setDependencyInstance(compiler, dependency) {
+    this.getContext(compiler).dependency = dependency;
+  }
+
+  /**
+   * @param {Compiler} compiler The webpack compiler.
    * @returns {HtmlBundlerPlugin.Hooks} The plugin hooks.
    */
-  static getHooks() {
-    return this.plugin.getHooks(this.compilation);
+  static getHooks(compiler) {
+    const compilation = this.getCompilation(compiler);
+    return this.plugin.getHooks(compilation);
+  }
+
+  /**
+   * @param {Compiler} compiler The webpack compiler.
+   * @return {Compilation} The webpack compilation instance of the plugin compiler.
+   */
+  static getCompilation(compiler) {
+    return this.getPluginContext(compiler).compilation;
   }
 
   /**
@@ -116,73 +174,91 @@ class PluginService {
    *
    * TODO: rename to getPluginOptionInstance()
    *
+   * @param {Compiler} compiler The webpack compiler.
    * @return {OptionPluginInterface}
    */
-  static getOptions() {
-    return this.#PluginOption;
+  static getOptions(compiler) {
+    return this.getPluginContext(compiler).pluginOption;
   }
 
   /**
    * Returns options defined in the plugin but provided for the loader.
    *
+   * @param {Compiler} compiler The webpack compiler.
    * @return {Object}
    */
-  static getLoaderOptions() {
-    return this.#loaderOptions;
+  static getLoaderOptions(compiler) {
+    return this.getContext(compiler).loaderOptions;
   }
 
   /**
    * Get cached loader options defined in rules.
    *
+   * @param {Compiler} compiler The webpack compiler.
    * @param {string} id
    * @return {Object}
    */
-  static getLoaderCache(id) {
-    return this.#loaderCache.get(id);
+  static getLoaderCache(compiler, id) {
+    return this.getContext(compiler).loaderCache.get(id);
   }
 
   /**
    * Save initialized loader options in cache to avoid double initialization
    * when many templates loaded with same loader options.
    *
+   * @param {Compiler} compiler The webpack compiler.
    * @param {string} id
    * @param {Object} cache
    */
-  static setLoaderCache(id, cache) {
-    this.#loaderCache.set(id, cache);
+  static setLoaderCache(compiler, id, cache) {
+    this.getContext(compiler).loaderCache.set(id, cache);
+  }
+
+  static getDataFiles(compiler, key) {
+    return this.getContext(compiler).dataFiles.get(key);
+  }
+
+  static getValuesOfDataFiles(compiler) {
+    return this.getContext(compiler).dataFiles.values();
+  }
+
+  static setDataFiles(compiler, key, value) {
+    this.getContext(compiler).dataFiles.set(key, value);
   }
 
   /**
+   * @param {Compiler} compiler The webpack compiler.
    * @param {boolean} mode The mode is true when Webpack run as watch/serve.
    */
-  static setWatchMode(mode) {
-    this.#watchMode = mode;
+  static setWatchMode(compiler, mode) {
+    this.getContext(compiler).watchMode = mode;
   }
 
   /**
    * Called before each new compilation, in the serve/watch mode.
+   * @param {Compiler} compiler The webpack compiler.
    */
-  static watchRun() {
-    for (const [id, options] of this.#loaderCache) {
-      Preprocessor.watchRun(options);
-    }
-  }
+  static watchRun(compiler) {
+    const loaderOption = this.getLoaderOption(compiler);
+    const preprocessorModule = loaderOption?.getPreprocessorModule();
 
-  /**
-   * Reset settings.
-   * Called before each new compilation after changes, in the serve/watch mode.
-   */
-  static reset() {}
+    Preprocessor.watchRun(preprocessorModule);
+  }
 
   /**
    * Called when the compiler is closing.
    * Used for tests to reset data after each test case.
    */
-  static shutdown() {
-    this.#used = false;
-    this.#contextCache.clear();
-    this.dataFiles.clear();
-    this.Dependency && this.Dependency.shutdown();
+  static shutdown(compiler) {
+    const context = this.getContext(compiler);
+
+    context.used = false;
+    context.loaderCache.clear();
+    context.contextCache.clear();
+    context.dataFiles.clear();
+    context.dependency?.shutdown();
+
+    this.#contexts.delete(compiler);
   }
 }
 

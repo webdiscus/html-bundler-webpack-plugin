@@ -1,40 +1,37 @@
 const path = require('path');
-const AssetInline = require('./AssetInline');
 const Collection = require('./Collection');
-const Option = require('./Option');
 const { resolveException } = require('./Messages/Exception');
 const Snapshot = require('./Snapshot');
-const AssetEntry = require('./AssetEntry');
 
 class Resolver {
-  static fs = null;
+  fs = null;
 
   /**
    * @type {string} The issuer filename of required the file.
    */
-  static issuerFile = '';
+  issuerFile = '';
 
   /**
    * @type {FileInfo} The issuer of required the file.
    */
-  static issuer = {};
+  issuer = {};
 
   /**
    * @type {AssetEntryOptions} The current entry point where are resolved all dependencies.
    */
-  static entryPoint = {};
+  entryPoint = {};
 
   /**
    * @type {string} The context directory of required the file.
    */
-  static context = '';
+  context = '';
 
   /**
    * The cache of resolved source files. Defined at one time.
    *
    * @type {Map<string, Map<string, string>>}
    */
-  static sourceFiles = new Map();
+  sourceFiles = new Map();
 
   /**
    * The data of assets to resolving output assets.
@@ -43,15 +40,27 @@ class Resolver {
    *
    * @type {Map<string, {assets:Map, originalFilename?:string, resolve?:(issuer:FileInfo) => string}>}
    */
-  static data = new Map();
+  data = new Map();
+
+  pluginOption = null;
+  collection = null;
+  assetEntry = null;
+  assetInline = null;
+
+  constructor({ pluginOption, assetEntry, assetInline, collection }) {
+    this.pluginOption = pluginOption;
+    this.collection = collection;
+    this.assetEntry = assetEntry;
+    this.assetInline = assetInline;
+  }
 
   /**
    * @param {FileSystem} fs
-   * @param {string} rootContext The Webpack root context path.
    */
-  static init({ fs, rootContext }) {
+  init({ fs }) {
     this.fs = fs;
-    this.rootContext = rootContext;
+    // webpack root context path
+    this.rootContext = this.pluginOption.context;
 
     // bind this context to the method for using in VM context
     this.require = this.require.bind(this);
@@ -63,7 +72,7 @@ class Resolver {
    * @param {Object} entryPoint The current entry point.
    * @param {FileInfo} issuer The issuer.
    */
-  static setContext(entryPoint, issuer) {
+  setContext(entryPoint, issuer) {
     const [file] = issuer.resource.split('?', 1);
     this.context = path.dirname(file);
     this.entryPoint = entryPoint;
@@ -76,7 +85,7 @@ class Resolver {
    *
    * @param {{resource: string, filename: string, resolve?: (FileInfo)=> string}} assetInfo The asset info.
    */
-  static addAsset(assetInfo) {
+  addAsset(assetInfo) {
     let sourceFile = path.resolve(assetInfo.resource);
     let resourceData = this.data.get(sourceFile);
 
@@ -102,7 +111,7 @@ class Resolver {
    * @param {string} issuer The issuer of resource.
    * @return {string|null} The resolved full path of resource.
    */
-  static resolveResource(rawRequest, issuer) {
+  resolveResource(rawRequest, issuer) {
     let resource = this.sourceFiles.get(issuer)?.get(rawRequest);
     if (resource) return resource;
 
@@ -126,7 +135,7 @@ class Resolver {
    * @param {string} rawRequest The rawRequest of resource.
    * @param {string} issuer The issuer of resource.
    */
-  static addSourceFile(sourceFile, rawRequest, issuer) {
+  addSourceFile(sourceFile, rawRequest, issuer) {
     let item = this.sourceFiles.get(issuer);
     if (item == null) {
       this.sourceFiles.set(issuer, new Map([[rawRequest, sourceFile]]));
@@ -144,7 +153,7 @@ class Resolver {
    * @param {string} issuer
    * @param {AssetEntryOptions} entryPoint
    */
-  static getAssetKey(issuer, entryPoint) {
+  getAssetKey(issuer, entryPoint) {
     return issuer === entryPoint?.resource ? entryPoint.filename : issuer;
   }
 
@@ -155,7 +164,7 @@ class Resolver {
    * @param {string} resource The resource file, including a query.
    * @return {string|null}
    */
-  static resolveAsset(resource) {
+  resolveAsset(resource) {
     const resourceData = this.data.get(resource);
 
     if (!resourceData) return null;
@@ -163,7 +172,7 @@ class Resolver {
     const { entryPoint, issuer } = this;
     const assetKey = this.getAssetKey(issuer.resource, entryPoint);
     const assetFile = resourceData.assets.get(assetKey);
-    const isIssuerInlinedStyle = Collection.isInlineStyle(issuer.resource);
+    const isIssuerInlinedStyle = this.collection.isInlineStyle(issuer.resource);
 
     if (assetFile && !isIssuerInlinedStyle) return assetFile;
 
@@ -177,7 +186,7 @@ class Resolver {
     let outputFilename;
 
     if (originalFilename != null) {
-      outputFilename = Option.getAssetOutputFile(originalFilename, realIssuer.filename);
+      outputFilename = this.pluginOption.getAssetOutputFile(originalFilename, realIssuer.filename);
     } else if (resolve != null) {
       // resolve asset filename processed via external loader, e.g. `responsive-loader`
       outputFilename = resolve(realIssuer);
@@ -186,11 +195,11 @@ class Resolver {
     if (outputFilename != null) {
       resourceData.assets.set(assetKey, outputFilename);
 
-      if (Collection.hasStyle(resource)) {
+      if (this.collection.hasStyle(resource)) {
         // set the output filename for already created (in renderManifest) data
-        Collection.setResourceFilename(this.entryPoint, { resource, filename: outputFilename });
+        this.collection.setResourceFilename(this.entryPoint, { resource, filename: outputFilename });
       } else {
-        Collection.setData(this.entryPoint, issuer, {
+        this.collection.setData(this.entryPoint, issuer, {
           type: Collection.type.resource,
           inline: false,
           resource,
@@ -209,30 +218,29 @@ class Resolver {
    * @returns {string} The output asset filename generated by filename template.
    * @throws {Error}
    */
-  static require(rawRequest) {
+  require(rawRequest) {
     const { issuer, issuerFile } = this;
 
     // @import CSS rule is not supported
     if (rawRequest.indexOf('??ruleSet') > 0) {
       resolveException(rawRequest, issuer.resource, this.rootContext);
     }
-
     // bypass the asset contained data-URL
-    if (AssetInline.isDataUrl(rawRequest)) return rawRequest;
+    if (this.assetInline.isDataUrl(rawRequest)) return rawRequest;
 
     // bypass the source script file to replace it after the process
-    if (Collection.hasScript(rawRequest)) return rawRequest;
+    if (this.collection.hasScript(rawRequest)) return rawRequest;
 
     // bypass the inline CSS
-    if (Collection.isInlineStyle(rawRequest)) return rawRequest;
+    if (this.collection.isInlineStyle(rawRequest)) return rawRequest;
 
     const resource = this.resolveResource(rawRequest, issuerFile);
 
     // resolve resource
     if (resource != null) {
       // bypass the asset/inline as inline SVG
-      if (AssetInline.isInlineSvg(resource, issuerFile)) {
-        Collection.setData(this.entryPoint, issuer, {
+      if (this.assetInline.isInlineSvg(resource, issuerFile)) {
+        this.collection.setData(this.entryPoint, issuer, {
           type: Collection.type.inlineSvg,
           inline: true,
           resource,
@@ -244,10 +252,10 @@ class Resolver {
       if (assetFile != null) return assetFile;
 
       // try to resolve inline data url
-      const dataUrl = AssetInline.getDataUrl(resource, issuerFile);
+      const dataUrl = this.assetInline.getDataUrl(resource, issuerFile);
 
       if (dataUrl != null) {
-        Collection.setData(this.entryPoint, issuer, { type: Collection.type.resource, inline: true, resource });
+        this.collection.setData(this.entryPoint, issuer, { type: Collection.type.resource, inline: true, resource });
         return dataUrl;
       }
     }
@@ -255,10 +263,9 @@ class Resolver {
     // if is used the filename like `./main.js`, then the resource is an absolute file
     // if is used the filename like `../js/main.js`, then the resource is null and the rawRequest is an absolute file
     const file = resource || rawRequest;
-    if (Option.js.test.test(file) && AssetEntry.isEntryResource(issuer.resource)) {
+    if (this.pluginOption.js.test.test(file) && this.assetEntry.isEntryResource(issuer.resource)) {
       // occur after rename/delete of a js file when the entry module was already rebuilt
       Snapshot.addMissingFile(issuer.resource, file);
-
       resolveException(file, issuer.resource, this.rootContext);
     }
 
@@ -272,7 +279,7 @@ class Resolver {
    * Clear caches.
    * Called only once when the plugin is applied.
    */
-  static clear() {
+  clear() {
     this.data.clear();
     this.sourceFiles.clear();
   }
@@ -281,7 +288,7 @@ class Resolver {
    * Reset settings.
    * Called before each new compilation after changes, in the serve/watch mode.
    */
-  static reset() {
+  reset() {
     // reset outdated assets after rebuild via webpack dev server
     // note: new filenames are generated on the fly in the this.resolveAsset() method
     this.data.forEach((item) => item.assets.clear());

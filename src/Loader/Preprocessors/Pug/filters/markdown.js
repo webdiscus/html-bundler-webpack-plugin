@@ -26,7 +26,8 @@ const markdown = {
    * @api
    */
   init({ highlight, langPrefix, github }) {
-    if (this.module != null) return;
+    // TODO: cache module by webpack compiler (pro config)
+    //if (this.module != null) return;
 
     const moduleFile = resolveModule(this.moduleName);
 

@@ -6,6 +6,9 @@ const { stringifyJSON } = require('../../Utils');
 // include('./file.html', { name: 'Siri' }) => require('./file.eta')({...locals, ...{name: 'Siri'}})
 const includeRegexp = /include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
 
+// node module name
+const moduleName = 'ejs';
+
 /**
  * Transform the raw template source to a template function or HTML.
  *
@@ -14,10 +17,15 @@ const includeRegexp = /include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
  * @return {{compile: (function(string, {resourcePath: string, data?: {}}): *), render: (function(string, {resourcePath: string, data?: {}}): *), export: (function(string, {data: {}}): string)}}
  */
 const preprocessor = (loaderContext, options) => {
-  const Ejs = loadModule('ejs');
+  const Ejs = loadModule(moduleName);
   const { rootContext } = loaderContext;
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.

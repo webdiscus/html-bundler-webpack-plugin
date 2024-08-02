@@ -1,24 +1,67 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
-module.exports = {
-  mode: 'production',
+module.exports = [
+  {
+    name: 'config_2',
+    mode: 'production',
 
-  output: {
-    path: path.join(__dirname, 'dist/'),
+    output: {
+      path: path.join(__dirname, 'dist/output1'),
+    },
+
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: {
+          index: 'src/index.pug',
+        },
+        preprocessor: 'pug',
+        preprocessorOptions: {
+          // enable `:markdown` filter with additional options
+          embedFilters: {
+            markdown: {
+              // use css classname prefix for highlighting
+              langPrefix: 'lang-',
+              // don't use github syntax styles
+              github: false,
+            },
+          },
+        },
+      }),
+    ],
   },
 
-  plugins: [
-    new HtmlBundlerPlugin({
-      entry: {
-        index: 'src/index.pug',
-      },
-      preprocessor: 'pug',
-      preprocessorOptions: {
-        embedFilters: {
-          markdown: true,
+  {
+    name: 'config_2',
+    mode: 'production',
+
+    output: {
+      path: path.join(__dirname, 'dist/output2'),
+    },
+
+    plugins: [
+      new HtmlBundlerPlugin({
+        entry: {
+          index: 'src/index.pug',
         },
-      },
-    }),
-  ],
-};
+        preprocessor: 'pug',
+        preprocessorOptions: {
+          // enable `:markdown` filter with additional options
+          embedFilters: {
+            markdown: {
+              // use css classname prefix for highlighting
+              langPrefix: 'language-',
+              // enable highlighting in markdown
+              highlight: {
+                verbose: true,
+                use: 'prismjs',
+              },
+              // use github syntax styles
+              github: true,
+            },
+          },
+        },
+      }),
+    ],
+  },
+];

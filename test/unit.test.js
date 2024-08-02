@@ -1,17 +1,34 @@
 import fs from 'fs';
+
 import { findPlugin, getFileExtension, replaceAll } from '../src/Common/Helpers';
-import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
-import AssetEntry from '../src/Plugin/AssetEntry';
-import Asset from '../src/Plugin/Asset';
-import Snapshot from '../src/Plugin/Snapshot';
-import Template from '../src/Loader/Template';
+import WeakMapIterable from '../src/Common/WeakMapIterable';
+import VMScript from '../src/Common/VMScript';
 import { HtmlParser } from '../src/Common/HtmlParser';
-import { injectBeforeEndHead, injectBeforeEndBody, escapeSequences, escapeCodesForJSON } from '../src/Loader/Utils';
+import { isDir, loadModule, resolveFile, filterParentPaths, relativePathVerbose } from '../src/Common/FileUtils';
+import {
+  stringifyJSON,
+  injectBeforeEndHead,
+  injectBeforeEndBody,
+  escapeSequences,
+  escapeCodesForJSON,
+} from '../src/Loader/Utils';
+
+import Asset from '../src/Plugin/Asset';
+import Template from '../src/Loader/Template';
+
+import AssetEntry from '../src/Plugin/AssetEntry';
+import Snapshot from '../src/Plugin/Snapshot';
 import Option from '../src/Plugin/Option';
 import Collection from '../src/Plugin/Collection';
 
+const asset = new Asset();
+const assetEntry = new AssetEntry({});
+const collection = new Collection({});
+const option = new Option({}, { options: {}, loaderPath: '' });
+
 beforeAll(() => {
   // important: the environment constant is used in code
+  // the value must be type string
   process.env.NODE_ENV_TEST = 'true';
 });
 
@@ -63,51 +80,51 @@ describe('misc', () => {
 
 describe('unique filename tests', () => {
   test('js/file.js', () => {
-    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.js');
+    const received = asset.getUniqueFilename('/src/file.js', 'js/file.js');
     const expected = 'js/file.js';
-    Asset.reset();
+    asset.reset();
     return expect(received.filename).toStrictEqual(expected);
   });
 
   test('js/file.1 w/o ext', () => {
-    Asset.index = {
+    asset.index = {
       'js/file': 1,
     };
-    const received = Asset.getUniqueFilename('/src/file.js', 'js/file');
+    const received = asset.getUniqueFilename('/src/file.js', 'js/file');
     const expected = 'js/file.1';
-    Asset.reset();
+    asset.reset();
     return expect(received.filename).toStrictEqual(expected);
   });
 
   test('js/file.1.js', () => {
-    Asset.index = {
+    asset.index = {
       'js/file.js': 1,
     };
-    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.js');
+    const received = asset.getUniqueFilename('/src/file.js', 'js/file.js');
     const expected = 'js/file.1.js';
-    Asset.reset();
+    asset.reset();
     return expect(received.filename).toStrictEqual(expected);
   });
 
   test('file.a1b2c3d4.1.js', () => {
-    Asset.index = {
+    asset.index = {
       'js/file.a1b2c3d4.js': 1,
     };
-    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
+    const received = asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
     const expected = 'js/file.a1b2c3d4.1.js';
-    Asset.reset();
+    asset.reset();
     return expect(received.filename).toStrictEqual(expected);
   });
 
   test('file.1.a1b2c3d4.js cache', () => {
-    Asset.files = new Map([
+    asset.files = new Map([
       ['/src/file.css', 'css/file.a1b2c3d4.css'],
       ['/src/file.js', 'js/file.1.a1b2c3d4.js'], // <= already cached by source filename
     ]);
 
-    const received = Asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
+    const received = asset.getUniqueFilename('/src/file.js', 'js/file.a1b2c3d4.js');
     const expected = 'js/file.1.a1b2c3d4.js';
-    Asset.reset();
+    asset.reset();
     return expect(received.filename).toStrictEqual(expected);
   });
 });
@@ -162,7 +179,14 @@ describe('file extension', () => {
   });
 });
 
-describe('utils unit tests', () => {
+describe('utils', () => {
+  test('stringifyJSON', () => {
+    const json = { fn() {} };
+    const received = stringifyJSON(json);
+    const expected = `{"fn":()=>{}}`;
+    return expect(received).toEqual(expected);
+  });
+
   test('injectBeforeEndHead', () => {
     const html = `<html><head><title>test</title></head><body><p>body</p></body></html>`;
     const received = injectBeforeEndHead(html, `<script src="test.js"></script>`);
@@ -1173,146 +1197,146 @@ describe('Parse Exceptions', () => {
 
 describe('AssetEntry unit tests', () => {
   test('reset', () => {
-    AssetEntry.compilationEntryNames = new Set(['home', 'about']);
-    AssetEntry.reset();
-    const received = AssetEntry.compilationEntryNames;
+    assetEntry.compilationEntryNames = new Set(['home', 'about']);
+    assetEntry.reset();
+    const received = assetEntry.compilationEntryNames;
     return expect(received).toEqual(new Set());
   });
 });
 
 describe('plugin options unit tests', () => {
   test('isTrue: defaultValue', () => {
-    const received = Option.toBool(undefined, false, true);
+    const received = option.toBool(undefined, false, true);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: value false', () => {
-    Option.productionMode = true;
-    const received = Option.toBool(false, true, true);
+    option.productionMode = true;
+    const received = option.toBool(false, true, true);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: value true', () => {
-    Option.productionMode = true;
-    const received = Option.toBool(true, false, false);
+    option.productionMode = true;
+    const received = option.toBool(true, false, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = true, prod mode', () => {
-    Option.productionMode = true;
-    const received = Option.toBool('auto', true, false);
+    option.productionMode = true;
+    const received = option.toBool('auto', true, false);
     return expect(received).toEqual(true);
   });
 
   test('isTrue: "auto", autoValue = false, prod mode', () => {
-    Option.productionMode = true;
-    const received = Option.toBool('auto', false, false);
+    option.productionMode = true;
+    const received = option.toBool('auto', false, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = true, dev mode', () => {
-    Option.productionMode = false;
-    const received = Option.toBool('auto', true, false);
+    option.productionMode = false;
+    const received = option.toBool('auto', true, false);
     return expect(received).toEqual(false);
   });
 
   test('isTrue: "auto", autoValue = false, dev mode', () => {
-    Option.productionMode = false;
-    const received = Option.toBool('auto', false, false);
+    option.productionMode = false;
+    const received = option.toBool('auto', false, false);
     return expect(received).toEqual(true);
   });
 
   test('isProduction true', () => {
-    Option.productionMode = true;
-    const received = Option.isProduction();
+    option.productionMode = true;
+    const received = option.isProduction();
     return expect(received).toEqual(true);
   });
 
   test('isRealContentHash true', () => {
-    Option.webpackOptions.optimization = {
+    option.webpackOptions.optimization = {
       realContentHash: true,
     };
-    const received = Option.isRealContentHash();
+    const received = option.isRealContentHash();
     return expect(received).toEqual(true);
   });
 
   test('isScript true', () => {
-    Option.options = {
+    option.options = {
       js: {
         enabled: true,
-        test: Option.js.test,
+        test: option.js.test,
       },
     };
 
-    const received = Option.isScript('test.js?v=123');
+    const received = option.isScript('test.js?v=123');
     return expect(received).toEqual(true);
   });
 
   test('getEntryPath', () => {
-    Option.dynamicEntry = 'src/views/';
-    Option.options.entry = Option.dynamicEntry;
+    option.dynamicEntry = 'src/views/';
+    option.options.entry = option.dynamicEntry;
 
-    const received = Option.getEntryPath();
-    return expect(received).toEqual(Option.dynamicEntry);
+    const received = option.getEntryPath();
+    return expect(received).toEqual(option.dynamicEntry);
   });
 });
 
 describe('plugin isInlineCss option', () => {
   // css.inline: true
   test('css.inline:true;', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: true };
-    const received = Option.isInlineCss('file.css');
+    option.productionMode = true;
+    option.options.css = { inline: true };
+    const received = option.isInlineCss('file.css');
     return expect(received).toEqual(true);
   });
 
   test('css.inline:true; ?inline', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: true };
-    const received = Option.isInlineCss('file.css?inline');
+    option.productionMode = true;
+    option.options.css = { inline: true };
+    const received = option.isInlineCss('file.css?inline');
     return expect(received).toEqual(true);
   });
 
   test('css.inline:true; ?inline=true', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: true };
-    const received = Option.isInlineCss('file.css?inline=true');
+    option.productionMode = true;
+    option.options.css = { inline: true };
+    const received = option.isInlineCss('file.css?inline=true');
     return expect(received).toEqual(true);
   });
 
   test('css.inline:true; ?inline=false', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: true };
-    const received = Option.isInlineCss('file.css?inline=false');
+    option.productionMode = true;
+    option.options.css = { inline: true };
+    const received = option.isInlineCss('file.css?inline=false');
     return expect(received).toEqual(false);
   });
 
   // css.inline: false
   test('css.inline:false;', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: false };
-    const received = Option.isInlineCss('file.css');
+    option.productionMode = true;
+    option.options.css = { inline: false };
+    const received = option.isInlineCss('file.css');
     return expect(received).toEqual(false);
   });
 
   test('css.inline:false; ?inline', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: false };
-    const received = Option.isInlineCss('file.css?inline');
+    option.productionMode = true;
+    option.options.css = { inline: false };
+    const received = option.isInlineCss('file.css?inline');
     return expect(received).toEqual(true);
   });
 
   test('css.inline:false; ?inline=true', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: false };
-    const received = Option.isInlineCss('file.css?inline=true');
+    option.productionMode = true;
+    option.options.css = { inline: false };
+    const received = option.isInlineCss('file.css?inline=true');
     return expect(received).toEqual(true);
   });
 
   test('css.inline:false; ?inline=false', () => {
-    Option.productionMode = true;
-    Option.options.css = { inline: false };
-    const received = Option.isInlineCss('file.css?inline=false');
+    option.productionMode = true;
+    option.options.css = { inline: false };
+    const received = option.isInlineCss('file.css?inline=false');
     return expect(received).toEqual(false);
   });
 });
@@ -1355,6 +1379,66 @@ describe('FileUtils', () => {
     const expected = ['/root/src/', '/root/libs/a/', '/root/templates/'];
     const received = filterParentPaths(paths);
 
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose absolute file', () => {
+    const received = relativePathVerbose('/root/src/view/index.html', '/root/src/');
+    const expected = 'view/index.html';
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose absolute file test', () => {
+    const received = relativePathVerbose('/bar/src/webpack-plugin/test/view/index.html', '/foo/src/');
+    const expected = '~view/index.html';
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose absolute file src', () => {
+    const received = relativePathVerbose('/bar/src/webpack-plugin/src/view/index.html', '/foo/src/');
+    const expected = '~webpack-plugin/src/view/index.html';
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose relative file', () => {
+    const received = relativePathVerbose('./view/index.html', '/root/src/');
+    const expected = 'view/index.html';
+
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose alias', () => {
+    const received = relativePathVerbose('@alias/styles.css', '/root/src/');
+    const expected = '@alias/styles.css';
+
+    return expect(received).toEqual(expected);
+  });
+
+  test('relativePathVerbose alias2', () => {
+    const received = relativePathVerbose('/root/app/node_modules/@package/dist/styles.css', '/root/app/src');
+    const expected = '@package/dist/styles.css';
+
+    return expect(received).toEqual(expected);
+  });
+});
+
+describe('VMScript', () => {
+  test('code string', () => {
+    const vm = new VMScript();
+    const code = ` 1 + 2;`;
+
+    const received = vm.exec(code, { filename: __filename });
+    const expected = 3;
+    return expect(received).toEqual(expected);
+  });
+
+  test('code buffer', () => {
+    const vm = new VMScript();
+    const code = ` 1 + 2;`;
+    const codeBuffer = Buffer.from(code);
+
+    const received = vm.exec(codeBuffer, { filename: __filename });
+    const expected = 3;
     return expect(received).toEqual(expected);
   });
 });
@@ -1489,6 +1573,72 @@ describe('Snapshot', () => {
   });
 });
 
+describe('WeakMapIterable', () => {
+  test('getter setter', () => {
+    const wakeMap = new WeakMapIterable();
+    const obj1 = { a: 1 };
+    const obj2 = { b: 2 };
+
+    wakeMap.set(obj1, 'bar');
+    wakeMap.set(obj2, 'foo');
+
+    const received = wakeMap.get(obj1);
+    const expected = 'bar';
+    return expect(received).toEqual(expected);
+  });
+
+  test('has', () => {
+    const wakeMap = new WeakMapIterable();
+    const obj1 = { a: 1 };
+
+    wakeMap.set(obj1, 'bar');
+
+    const received = wakeMap.has(obj1);
+    const expected = true;
+    return expect(received).toEqual(expected);
+  });
+
+  test('delete', () => {
+    const wakeMap = new WeakMapIterable();
+    const obj1 = { a: 1 };
+
+    wakeMap.set(obj1, 'bar');
+    wakeMap.delete(obj1);
+
+    const received = wakeMap.has(obj1);
+    const expected = false;
+    return expect(received).toEqual(expected);
+  });
+
+  test('clear', () => {
+    const wakeMap = new WeakMapIterable();
+    const obj1 = { a: 1 };
+
+    wakeMap.set(obj1, 'bar');
+    wakeMap.clear();
+
+    const received = wakeMap.has(obj1);
+    const expected = false;
+    return expect(received).toEqual(expected);
+  });
+
+  test('iterator', () => {
+    const wakeMap = new WeakMapIterable([
+      [{ a: 1 }, 'bar'],
+      [{ b: 2 }, 'foo'],
+    ]);
+
+    const values = [];
+    for (let val of wakeMap) {
+      values.push(val);
+    }
+
+    const received = values;
+    const expected = ['bar', 'foo'];
+    return expect(received).toEqual(expected);
+  });
+});
+
 describe('misc tests', () => {
   test('ordered array', () => {
     const data = [];
@@ -1521,28 +1671,28 @@ describe('misc tests', () => {
 
   test('Collection.findStyleInsertPos OK', () => {
     const content = `<html><head></head><body></body></html>`;
-    const received = Collection.findStyleInsertPos(content);
+    const received = collection.findStyleInsertPos(content);
     const expected = 12;
     return expect(received).toEqual(expected);
   });
 
   test('Collection.findStyleInsertPos OK before script', () => {
     const content = `<html><head><link><script></script></head><body></body></html>`;
-    const received = Collection.findStyleInsertPos(content);
+    const received = collection.findStyleInsertPos(content);
     const expected = 18;
     return expect(received).toEqual(expected);
   });
 
   test('Collection.findStyleInsertPos no open head', () => {
     const content = `<html></head><body></body></html>`;
-    const received = Collection.findStyleInsertPos(content);
+    const received = collection.findStyleInsertPos(content);
     const expected = -1;
     return expect(received).toEqual(expected);
   });
 
   test('Collection.findStyleInsertPos no close head', () => {
     const content = `<html><head><body></body></html>`;
-    const received = Collection.findStyleInsertPos(content);
+    const received = collection.findStyleInsertPos(content);
     const expected = -1;
     return expect(received).toEqual(expected);
   });

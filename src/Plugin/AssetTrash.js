@@ -9,15 +9,22 @@ const path = require('path');
 /** @typedef {import('webpack-sources').ConcatSource} ConcatSource */
 
 class AssetTrash {
-  static compilation;
-  static trash = new Set();
-  static commentRegexp = /^\/\*!.+\.LICENSE\.txt\s*\*\//;
-  static commentFileSuffix = '.LICENSE.txt';
+  compilation = null;
+  trash = new Set();
+  commentRegexp = /^\/\*!.+\.LICENSE\.txt\s*\*\//;
+  commentFileSuffix = '.LICENSE.txt';
 
   /**
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
-  static init(compilation) {
+  constructor({ compilation }) {
+    this.compilation = compilation;
+  }
+
+  /**
+   * @param {Compilation} compilation The instance of the webpack compilation.
+   */
+  init(compilation) {
     this.compilation = compilation;
   }
 
@@ -26,14 +33,14 @@ class AssetTrash {
    *
    * @param {string} file
    */
-  static add(file) {
+  add(file) {
     this.trash.add(file);
   }
 
   /**
    * Remove all deleted files from the compilation.
    */
-  static clearCompilation() {
+  clearCompilation() {
     this.trash.forEach((file) => {
       this.compilation.deleteAsset(file);
     });
@@ -44,7 +51,7 @@ class AssetTrash {
   /**
    * Remove files containing extracted license.
    */
-  static removeComments() {
+  removeComments() {
     const { compilation, commentFileSuffix: suffix } = this;
 
     if (!compilation.assets) return;
@@ -84,7 +91,7 @@ class AssetTrash {
    * Reset settings.
    * Called before each new compilation after changes, in the serve/watch mode.
    */
-  static reset() {
+  reset() {
     this.trash.clear();
   }
 }

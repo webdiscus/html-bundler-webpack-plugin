@@ -1,5 +1,3 @@
-const Loader = require('./Loader');
-const Option = require('./Option');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
 
 class Template {
@@ -9,11 +7,13 @@ class Template {
    * @param {string} content The HTML string.
    * @param {string} issuer The template file.
    * @param {string|number} entryId The entry id where is loaded the resource.
-   * @param { HtmlBundlerPlugin.Hooks} hooks The plugin hooks.
+   * @param {HtmlBundlerPlugin.Hooks} hooks The plugin hooks.
+   * @param {Loader|null} loader
+   * @param {Option} loaderOption
    * @return {string}
    */
-  static resolve(content, issuer, entryId, hooks) {
-    const sources = Option.getSources();
+  static resolve({ content, issuer, entryId, hooks, loader, loaderOption }) {
+    const sources = loaderOption.getSources();
 
     if (sources === false) {
       return content;
@@ -28,7 +28,7 @@ class Template {
     parsedTags = parsedTags.sort(comparePos);
 
     // resolve resources in html
-    const isBasedir = Option.getBasedir() !== false;
+    const isBasedir = loaderOption.getBasedir() !== false;
     let output = '';
     let pos = 0;
 
@@ -37,6 +37,7 @@ class Template {
         if (!value) continue;
 
         const result = this.resolveFile({
+          loader,
           isBasedir,
           type,
           value,
@@ -96,6 +97,7 @@ class Template {
    *  - C:\path\to\file.ext
    *  - image.png?{size:600}
    *
+   * @param {Loader} loader
    * @param {boolean} isBasedir Whether is used the `root` option.
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} value The attribute value to resolve as an absolute file path.
@@ -104,7 +106,7 @@ class Template {
    * @param {boolean} inEscapedDoubleQuotes Whether the resolving value is enclosed with escaped double quotes.
    * @return {{requireExpression: string, resolvedFile: string}|boolean} Return a resolved full path of source file or false.
    */
-  static resolveFile({ isBasedir, type, value, issuer, entryId, inEscapedDoubleQuotes }) {
+  static resolveFile({ loader, isBasedir, type, value, issuer, entryId, inEscapedDoubleQuotes }) {
     value = value.trim();
 
     if (
@@ -117,17 +119,18 @@ class Template {
       return false;
     }
 
+    const loaderCompiler = loader.getCompiler();
     const enclosingQuotes = inEscapedDoubleQuotes ? '"' : "'";
-    Loader.compiler.setEnclosingQuotes(enclosingQuotes);
+    loaderCompiler.setEnclosingQuotes(enclosingQuotes);
 
     switch (type) {
       case 'style':
-        return Loader.compiler.requireStyle(value, issuer, entryId);
+        return loaderCompiler.requireStyle(value, issuer, entryId);
       case 'script':
-        return Loader.compiler.requireScript(value, issuer, entryId);
+        return loaderCompiler.requireScript(value, issuer, entryId);
     }
 
-    return Loader.compiler.requireFile(value, issuer, entryId);
+    return loaderCompiler.requireFile(value, issuer, entryId);
   }
 }
 

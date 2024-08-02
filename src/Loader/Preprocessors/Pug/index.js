@@ -1,6 +1,9 @@
 const { stringifyJSON } = require('../../Utils');
 const PugCompiler = require('./PugCompiler');
 
+// node module name
+const moduleName = 'pug';
+
 /**
  * Transform the raw template source to a template function or HTML.
  *
@@ -15,6 +18,11 @@ const preprocessor = (loaderContext, options, { esModule, watch }) => {
   const Pug = new PugCompiler(loaderContext, options);
 
   return {
+    /**
+     * Unique preprocessor ID as the module name.
+     */
+    id: moduleName,
+
     /**
      * Render template into HTML.
      * Called for rendering of template defined as entry point.

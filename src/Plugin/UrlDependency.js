@@ -1,15 +1,22 @@
 const path = require('path');
-const Resolver = require('./Resolver');
 
 class UrlDependency {
-  static fs;
-  static moduleGraph;
+  fs = null;
+  moduleGraph = null;
+  resolver = null;
 
   /**
-   * @param {fs: FileSystem} fs
-   * @param {compilation: Compilation} compilation
+   * @param {Resolver} resolver
    */
-  static init(fs, compilation) {
+  constructor({ resolver }) {
+    this.resolver = resolver;
+  }
+
+  /**
+   * @param {Compilation} compilation
+   * @param {FileSystem} fs
+   */
+  init({ compilation, fs }) {
     this.fs = fs;
     this.moduleGraph = compilation.moduleGraph;
   }
@@ -19,7 +26,7 @@ class UrlDependency {
    *
    * @param {{}} resolveData The callback parameter for the hooks beforeResolve of NormalModuleFactory.
    */
-  static resolve(resolveData) {
+  resolve(resolveData) {
     const fs = this.fs;
     const rawRequest = resolveData.request;
     const [file, query] = rawRequest.split('?');
@@ -34,7 +41,7 @@ class UrlDependency {
         const issuer = resolveData.contextInfo.issuer;
 
         resolveData.request = query ? sourceFile + '?' + query : sourceFile;
-        Resolver.addSourceFile(resolveData.request, rawRequest, issuer);
+        this.resolver.addSourceFile(resolveData.request, rawRequest, issuer);
       }
     }
   }
@@ -44,7 +51,7 @@ class UrlDependency {
    * @param {string} resource The resource file, including a query, to be resolved.
    * @return {null|{file: string, context: string}}
    */
-  static resolveInSnapshot(snapshot, resource) {
+  resolveInSnapshot(snapshot, resource) {
     const fs = this.fs;
     const cache = new Set();
     let files = [];
