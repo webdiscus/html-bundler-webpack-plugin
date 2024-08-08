@@ -299,9 +299,11 @@ class Integrity {
       this.assetHashes.set(compilation, assetHashes);
       const hashes = this.hashes.get(compilation);
 
-      for (const [hash, value] of hashes) {
-        const assetFile = value.next().value;
-        assetHashes.set(assetFile, hash);
+      if (hashes) {
+        for (const [hash, value] of hashes) {
+          const assetFile = value.next().value;
+          assetHashes.set(assetFile, hash);
+        }
       }
     }
 

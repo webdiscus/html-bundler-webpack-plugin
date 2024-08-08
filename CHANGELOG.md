@@ -1,5 +1,9 @@
 # Change log
 
+## 3.17.2 (2024-08-08)
+
+- fix: error when `integrity` option is enabled but no template defined in entry, #107
+
 ## 3.17.1 (2024-08-01)
 
 - fix: when using the integrity option, leaves the original attributes in the script tag as is
