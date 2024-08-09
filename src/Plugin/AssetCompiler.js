@@ -1180,8 +1180,9 @@ class AssetCompiler {
         const fileManifest = {
           render: () => cssContent,
           filename: assetFile,
-          identifier: `${pluginName}.${chunk.id}`,
-          hash,
+          identifier: `${pluginName}.${chunk.id}.inline.css`,
+          // the validity of the hash does not matter because it will be injected in the HTML
+          hash: hash + 'inline',
         };
 
         result.push(fileManifest);
@@ -1219,7 +1220,7 @@ class AssetCompiler {
           const fileManifest = {
             render: () => cssContent,
             filename: assetFile,
-            identifier: `${pluginName}.${chunk.id}`,
+            identifier: `${pluginName}.${chunk.id}.file.css`,
             hash,
           };
 

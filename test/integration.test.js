@@ -320,6 +320,9 @@ describe('import styles in JavaScript', () => {
 
   test('inline CSS', () => compareFiles('js-import-css-inline-css'));
   test('inline CSS, source map', () => compareFiles('js-import-css-inline-css-sourceMap'));
+  
+  test('import SCSS in JS and inline SCSS, prod', () => compareFiles('js-import-scss-and-inline-scss-prod'));
+  test('import SCSS in JS and inline SCSS, dev', () => compareFiles('js-import-scss-and-inline-scss-dev'));
 
   test('inline images in CSS', () => compareFiles('js-import-css-inline-img-in-css'));
   test('inline images in inlined CSS', () => compareFiles('js-import-css-inline-img-in-inlined-css'));

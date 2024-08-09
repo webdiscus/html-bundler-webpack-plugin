@@ -1,5 +1,9 @@
 # Change log
 
+## 3.17.3 (2024-08-09)
+
+- fix: in dev mode imports SCSS in JS when in the same file is inlined another SCSS file via `?inline` query, #102
+
 ## 3.17.2 (2024-08-08)
 
 - fix: error when `integrity` option is enabled but no template defined in entry, #107
