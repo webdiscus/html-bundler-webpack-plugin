@@ -1,5 +1,9 @@
 # Change log
 
+## 4.0.0-beta.1 (2024-08-13)
+
+- fix: when using integrity occurs ERROR in RealContentHashPlugin in serv/watch mode after changes by using dynamic import
+
 ## 4.0.0-beta.0 (2024-08-10)
 
 ### BREAKING CHANGES

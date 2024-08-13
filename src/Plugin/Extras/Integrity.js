@@ -27,9 +27,9 @@ class Integrity {
 
     this.options = options;
     this.chunkChildChunksMap = new WeakMap();
-    this.referencePlaceholders = new Map();
-    this.placeholderByChunkId = new Map();
     this.chunkByChunkId = new Map();
+    this.templateByChunkId = new Map();
+    this.placeholderByChunkId = new Map();
   }
 
   apply(compiler) {
@@ -69,12 +69,12 @@ class Integrity {
     this.isRealContentHash = this.options.isRealContentHash();
 
     // dynamically import a JS file
-    mainTemplate.hooks.jsonpScript.tap(pluginName, (source) => this.addReference('script', source));
-    mainTemplate.hooks.linkPreload.tap(pluginName, (source) => this.addReference('link', source));
-    mainTemplate.hooks.localVars.tap(pluginName, this.setReferencePlaceholder.bind(this));
+    mainTemplate.hooks.jsonpScript.tap(pluginName, (source) => this.getTemplateByTag('script', source));
+    mainTemplate.hooks.linkPreload.tap(pluginName, (source) => this.getTemplateByTag('link', source));
+    mainTemplate.hooks.localVars.tap(pluginName, this.getTemplateByChunk.bind(this));
 
     compilation.hooks.beforeRuntimeRequirements.tap(pluginName, () => {
-      this.placeholderByChunkId.clear();
+      // note: don't clear the cached placeholderByChunkId
     });
 
     compilation.hooks.processAssets.tap(
@@ -134,6 +134,7 @@ class Integrity {
         }
 
         // TODO: find the use case when childChunk.files.size > 1
+        // the size of childChunk.files is always 1
         const childChunkFile = [...childChunk.files][0];
         const placeholder = this.placeholderByChunkId.get(childChunk.id);
 
@@ -143,16 +144,22 @@ class Integrity {
             childChunkFile,
             (source) => source,
             (assetInfo) => {
-              return assetInfo
-                ? {
-                    ...assetInfo,
-                    contenthash: Array.isArray(assetInfo.contenthash)
-                      ? [...new Set([...assetInfo.contenthash, placeholder])]
-                      : assetInfo.contenthash
-                        ? [...new Set([assetInfo.contenthash, placeholder])]
-                        : placeholder,
-                  }
-                : undefined;
+              if (!assetInfo) {
+                return undefined;
+              }
+
+              let contenthash = placeholder;
+
+              if (Array.isArray(assetInfo.contenthash)) {
+                contenthash = [...new Set([...assetInfo.contenthash, placeholder])];
+              } else if (assetInfo.contenthash) {
+                contenthash = [...new Set([assetInfo.contenthash, placeholder])];
+              }
+
+              return {
+                ...assetInfo,
+                contenthash,
+              };
             }
           );
         } else {
@@ -172,13 +179,13 @@ class Integrity {
   }
 
   /**
-   * Add the reference of integrity hashes into a tag object.
+   * Create the integrity template by the tag.
    *
    * @param {string} tagName
    * @param {string} source
    * @return {string}
    */
-  addReference = (tagName, source) => {
+  getTemplateByTag = (tagName, source) => {
     const { compilation, pluginName } = this;
     const { Template } = compilation.compiler.webpack;
     const { crossOriginLoading } = compilation.outputOptions;
@@ -191,7 +198,9 @@ class Integrity {
   };
 
   /**
-   * Set the placeholder in the hash reference using the hash of a chunk file.
+   * Create the integrity template by the chunk.
+   *
+   * Saves the placeholder in the hash reference using the hash of a chunk file.
    * When the asset is processed, the placeholder will be replaced
    * with real integrity hash of the processed asset.
    *
@@ -199,11 +208,11 @@ class Integrity {
    * @param {Chunk} chunk
    * @return {string}
    */
-  setReferencePlaceholder(source, chunk) {
+  getTemplateByChunk(source, chunk) {
     const { Template } = this.compilation.compiler.webpack;
 
-    if (this.referencePlaceholders.has(chunk.id)) {
-      return this.referencePlaceholders.get(chunk.id);
+    if (this.templateByChunkId.has(chunk.id)) {
+      return this.templateByChunkId.get(chunk.id);
     }
 
     const childChunks = chunk.getAllAsyncChunks();
@@ -218,10 +227,10 @@ class Integrity {
     }
 
     if (Object.keys(placeholders).length > 0) {
-      const refTemplate = Template.asString([source, `${hashesReference} = ${JSON.stringify(placeholders)};`]);
-      this.referencePlaceholders.set(chunk.id, refTemplate);
+      const template = Template.asString([source, `${hashesReference} = ${JSON.stringify(placeholders)};`]);
+      this.templateByChunkId.set(chunk.id, template);
 
-      return refTemplate;
+      return template;
     }
 
     return source;
@@ -320,10 +329,10 @@ class Integrity {
  */
 const getPlaceholder = (chunkId) => {
   // the prefix must be exact 7 chars, the same length as a hash function name, e.g. 'sha256-'
-  const placeholderPrefix = '___TMP-';
+  const prefix = 'xxxxxx-';
   const hash = Integrity.computeIntegrity(chunkId);
 
-  return placeholderPrefix + hash.slice(placeholderPrefix.length);
+  return prefix + hash.slice(prefix.length);
 };
 
 module.exports = Integrity;
