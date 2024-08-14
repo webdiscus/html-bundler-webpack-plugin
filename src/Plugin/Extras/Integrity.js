@@ -30,10 +30,14 @@ class Integrity {
     this.chunkByChunkId = new Map();
     this.templateByChunkId = new Map();
     this.placeholderByChunkId = new Map();
+    this.Template = null;
   }
 
   apply(compiler) {
     const { pluginName } = this;
+    const { Template } = compiler.webpack;
+
+    this.Template = Template;
 
     compiler.hooks.afterPlugins.tap(pluginName, (compiler) => {
       compiler.hooks.thisCompilation.tap({ name: pluginName, stage: -10000 }, (compilation) => {
@@ -74,7 +78,7 @@ class Integrity {
     mainTemplate.hooks.localVars.tap(pluginName, this.getTemplateByChunk.bind(this));
 
     compilation.hooks.beforeRuntimeRequirements.tap(pluginName, () => {
-      // note: don't clear the cached placeholderByChunkId
+      this.templateByChunkId.clear();
     });
 
     compilation.hooks.processAssets.tap(
@@ -111,6 +115,9 @@ class Integrity {
     return chunk ? Integrity.getIntegrity(this.compilation, content[0], chunk) : undefined;
   }
 
+  /**
+   * @param {Object} assets
+   */
   processAssets(assets) {
     const { compilation, isRealContentHash } = this;
     const { compiler } = compilation;
@@ -122,11 +129,7 @@ class Integrity {
         continue;
       }
 
-      let childChunks = this.chunkChildChunksMap.get(chunk);
-      if (!childChunks) {
-        childChunks = chunk.getAllAsyncChunks();
-        this.chunkChildChunksMap.set(chunk, childChunks);
-      }
+      const childChunks = this.getChildChunks(chunk);
 
       for (const childChunk of childChunks) {
         if (childChunk.id == null) {
@@ -179,6 +182,21 @@ class Integrity {
   }
 
   /**
+   * @param {Chunk} chunk The webpack chunk.
+   * @return {Set<Chunk>} The child chunks.
+   */
+  getChildChunks(chunk) {
+    let childChunks = this.chunkChildChunksMap.get(chunk);
+
+    if (!childChunks) {
+      childChunks = chunk.getAllAsyncChunks();
+      this.chunkChildChunksMap.set(chunk, childChunks);
+    }
+
+    return childChunks;
+  }
+
+  /**
    * Create the integrity template by the tag.
    *
    * @param {string} tagName
@@ -209,31 +227,31 @@ class Integrity {
    * @return {string}
    */
   getTemplateByChunk(source, chunk) {
-    const { Template } = this.compilation.compiler.webpack;
-
     if (this.templateByChunkId.has(chunk.id)) {
       return this.templateByChunkId.get(chunk.id);
     }
 
-    const childChunks = chunk.getAllAsyncChunks();
-    this.chunkChildChunksMap.set(chunk, childChunks);
+    const childChunks = this.getChildChunks(chunk);
+
+    if (childChunks.size < 1) {
+      return source;
+    }
 
     const placeholders = {};
     for (const childChunk of childChunks) {
-      const placeholder = getPlaceholder(childChunk.id);
+      let placeholder = this.placeholderByChunkId.get(childChunk.id);
+      if (!placeholder) {
+        placeholder = getPlaceholder(childChunk.id);
+        this.placeholderByChunkId.set(childChunk.id, placeholder);
+      }
       placeholders[childChunk.id] = placeholder;
-      this.placeholderByChunkId.set(childChunk.id, placeholder);
       this.chunkByChunkId.set(childChunk.id, childChunk);
     }
 
-    if (Object.keys(placeholders).length > 0) {
-      const template = Template.asString([source, `${hashesReference} = ${JSON.stringify(placeholders)};`]);
-      this.templateByChunkId.set(chunk.id, template);
+    const template = this.Template.asString([source, `${hashesReference} = ${JSON.stringify(placeholders)};`]);
+    this.templateByChunkId.set(chunk.id, template);
 
-      return template;
-    }
-
-    return source;
+    return template;
   }
 
   /**
