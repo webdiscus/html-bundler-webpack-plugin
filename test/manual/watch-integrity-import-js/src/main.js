@@ -1,7 +1,31 @@
-import str from './module';
+const scriptsWithIntegrity = [];
+const observer = new MutationObserver((mutations) => {
+  for (const { addedNodes: nodes = [] } of mutations) {
+    for (const node of nodes) {
+      if (node.nodeName === 'SCRIPT' && !!node.getAttribute('integrity')) {
+        scriptsWithIntegrity.push(node);
+      }
+    }
+  }
+});
 
-// test in serv mode: add new import JS file
-// import str2 from './module-new'; // <= uncomment
-// console.log('>> main', { str2 }); // <= uncomment
+observer.observe(document.querySelector('head'), { childList: true });
 
-console.log('>> main', { str });
+// dynamic load module
+import('./module')
+  .then(() => {
+    scriptsWithIntegrity.forEach((script) => {
+      const { src, integrity, crossOrigin } = script;
+      let file = src.split('/').pop();
+      const elm = document.createElement('p');
+      const msg = `Dynamic chunk "${file}" is loaded!`;
+      elm.innerHTML = `<h2>${msg}</h2><div><b>integrity:</b> ${integrity}</div><div><b>crossOrigin</b>: ${crossOrigin}</div>`;
+      document.body.append(elm);
+      console.log(`--> ${msg}`, script);
+    });
+  })
+  .catch((e) => {
+    console.log('import chunk error: ', e);
+  });
+
+console.log('>> main: test 123');

@@ -22,6 +22,13 @@ module.exports = {
     }),
   ],
 
+  optimization: {
+    runtimeChunk: {
+      // add webpack runtime code as a file into html
+      name: 'runtime',
+    },
+  },
+
   // enable live reload
   devServer: {
     static: {

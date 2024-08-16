@@ -1,5 +1,9 @@
 # Change log
 
+## 3.17.4 (2024-08-16)
+
+- fix: when using integrity occurs ERROR in RealContentHashPlugin in serv/watch mode after changes in dynamic imported JS files or after adding new import file 
+
 ## 3.17.3 (2024-08-09)
 
 - fix: in dev mode imports SCSS in JS when in the same file is inlined another SCSS file via `?inline` query, #102
