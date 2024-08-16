@@ -2,8 +2,8 @@ const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-  //mode: 'production', // 1. test in production mode
-  mode: 'development', // 2. test in development mode
+  mode: 'production', // 1. test in production mode
+  //mode: 'development', // 2. test in development mode
   stats: 'minimal',
 
   output: {

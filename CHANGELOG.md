@@ -1,5 +1,9 @@
 # Change log
 
+## 4.0.0-beta.3 (2024-08-16)
+
+- chore: code refactoring, invisible improvements, test this version with your projects
+
 ## 4.0.0-beta.2 (2024-08-15)
 
 - fix: ERROR in RealContentHashPlugin in serv/watch mode after adding new import file
@@ -12,10 +16,12 @@
 
 ### BREAKING CHANGES
 
-- Drop supporting for Node.js < `v18`.\
-  The plugin works on the Node.js >= `v14.21.xx`, but we can't test the plugin with outdated Node.js versions,
-  because many actual dev dependencies requires current LTS Node.js >= v18.x.
-  Up-to-date versions of dependencies are very important because they contain `security updates`.
+- Minimum supported Node.js version `18+`.\
+  The plugin may works on the Node.js >= `16.20.0`, but we can't test the plugin with outdated Node.js versions.
+  GitHub CI test works only on Node.js >= 18.
+  Many actual dev dependencies requires Node.js >= 18.
+
+- Minimum supported Webpack version `5.81+`.
 
 - The plugin `option` property is not static anymore:
 

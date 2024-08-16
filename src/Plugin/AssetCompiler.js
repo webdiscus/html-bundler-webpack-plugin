@@ -9,6 +9,13 @@ const AssetParser = require('webpack/lib/asset/AssetParser');
 const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
 //const JavascriptParser = require('webpack/lib/javascript/JavascriptParser');
 //const JavascriptGenerator = require('webpack/lib/javascript/JavascriptGenerator');
+const {
+  JAVASCRIPT_MODULE_TYPE_AUTO,
+  ASSET_MODULE_TYPE,
+  ASSET_MODULE_TYPE_INLINE,
+  ASSET_MODULE_TYPE_RESOURCE,
+  ASSET_MODULE_TYPE_SOURCE,
+} = require('webpack/lib//ModuleTypeConstants');
 
 const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
@@ -215,10 +222,13 @@ class AssetCompiler {
     this.afterProcessEntry = this.afterProcessEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
     this.afterResolve = this.afterResolve.bind(this);
+    this.beforeModule = this.beforeModule.bind(this);
     this.afterCreateModule = this.afterCreateModule.bind(this);
     this.beforeLoader = this.beforeLoader.bind(this);
     this.afterBuildModule = this.afterBuildModule.bind(this);
     this.renderManifest = this.renderManifest.bind(this);
+    this.processAssetsOptimizeSize = this.processAssetsOptimizeSize.bind(this);
+    this.processAssetsFinalAsync = this.processAssetsFinalAsync.bind(this);
     this.filterAlternativeRequests = this.filterAlternativeRequests.bind(this);
     this.afterEmit = this.afterEmit.bind(this);
     this.done = this.done.bind(this);
@@ -338,7 +348,6 @@ class AssetCompiler {
     compiler.hooks.watchRun.tap(pluginName, (compiler) => {
       // TODO: avoid double calling by multi-config
       //console.log('===> hooks.watchRun.tap', { id: compiler.name });
-
       this.pluginOption.initWatchMode();
       PluginService.setWatchMode(compiler, true);
       PluginService.watchRun(compiler);
@@ -348,6 +357,7 @@ class AssetCompiler {
     this.assetEntry.init({
       fs: this.fs,
     });
+
     compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
 
     // watch changes for entry-points
@@ -361,45 +371,23 @@ class AssetCompiler {
       // TODO: refactor
       this.compilation = compilation;
       this.pluginContext.compilation = compilation;
-
       this.assetEntry.setCompilation(compilation);
       this.assetTrash.init(compilation);
       this.cssExtractModule.init(compilation);
+      this.urlDependency.init({ compilation, fs });
 
       this.collection.init({
         hooks: AssetCompiler.getHooks(compilation),
       });
-
-      this.urlDependency.init({ compilation, fs });
 
       // resolve modules
       normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
       normalModuleFactory.hooks.afterResolve.tap(pluginName, this.afterResolve);
       contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
 
-      // TODO: reserved for next major version supported Webpack 5.81+
-      //  - add support for lazy load CSS in JavaScript, see js-import-css-lazy-url
-      //  - move the code from afterCreateModule to here
-      //  - replace the 'javascript/auto' with constant from webpack
-      // normalModuleFactory.hooks.createModuleClass.for('javascript/auto').tap(pluginName, (createData, resolveData) => {
-      //   const {
-      //     _bundlerPluginMeta: { isImportedStyle },
-      //   } = resolveData;
-      //   const query = createData.resourceResolveData?.query || '';
-      //   const isUrl = query.includes('url');
-      //
-      //   if (isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
-      //     const dataUrlOptions = undefined;
-      //     const filename = this.pluginOption.getCss().filename;
-      //     createData.settings.type = 'asset/resource';
-      //     createData.type = 'asset/resource';
-      //     createData.binary = true;
-      //     createData.parser = new AssetParser(false);
-      //     createData.generator = new AssetGenerator(dataUrlOptions, filename);
-      //   }
-      // });
-
       // build modules
+      // createModuleClass requires v5.81+
+      normalModuleFactory.hooks.createModuleClass.for(JAVASCRIPT_MODULE_TYPE_AUTO).tap(pluginName, this.beforeModule);
       normalModuleFactory.hooks.module.tap(pluginName, this.afterCreateModule);
       compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
       compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
@@ -416,46 +404,17 @@ class AssetCompiler {
       //   the license file and the license banner must be removed before PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE
       compilation.hooks.processAssets.tap(
         { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1 },
-        (assets) => {
-          if (!this.pluginOption.isExtractComments()) {
-            this.assetTrash.removeComments();
-          }
-        }
+        this.processAssetsOptimizeSize
       );
 
       // after render module's sources
       // Notes:
-      // - only here is possible to modify an asset content via async function
-      // - `Infinity` ensures that the process will be run after all optimizations
-      // compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) =>
-      //   this.collection.render()
-      //     .then(() => {
-      //       // remove all unused assets from compilation
-      //       this.assetTrash.clearCompilation();
-      //     })
-      //     .catch((error) => {
-      //       // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
-      //       this.exceptions.add(error);
-      //     })
-      // );
-
-      compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity }, (assets) => {
-        if (PluginError.size > 0) {
-          // when the previous compilation hook has an error, then skip this hook
-          return Promise.resolve();
-        }
-
-        return this.collection
-          .render()
-          .then(() => {
-            // remove all unused assets from compilation
-            this.assetTrash.clearCompilation();
-          })
-          .catch((error) => {
-            // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
-            this.exceptions.add(error);
-          });
-      });
+      // - only in the processAssets hook is possible to modify an asset content via async function
+      // - the stage`Infinity` ensures that the process will be run after all optimizations
+      compilation.hooks.processAssets.tapPromise(
+        { name: pluginName, stage: Infinity + 1 },
+        this.processAssetsFinalAsync
+      );
     });
 
     compiler.hooks.afterEmit.tapPromise(pluginName, this.afterEmit);
@@ -772,6 +731,28 @@ class AssetCompiler {
   }
 
   /**
+   * Called after the `createModule` hook and before the `module` hook.
+   *
+   * @param {Object} createData
+   * @param {Object} resolveData
+   */
+  beforeModule(createData, resolveData) {
+    const { _bundlerPluginMeta: meta } = resolveData;
+    const query = createData.resourceResolveData?.query || '';
+    const isUrl = query.includes('url');
+
+    // lazy load CSS in JS using `?url` query, see js-import-css-lazy-url
+    if (meta.isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
+      const dataUrlOptions = undefined;
+      const filename = this.pluginOption.getCss().filename;
+
+      createData.parser = new AssetParser(false);
+      createData.generator = new AssetGenerator(dataUrlOptions, filename);
+      createData.type = ASSET_MODULE_TYPE_RESOURCE;
+    }
+  }
+
+  /**
    * Called after a module instance is created.
    *
    * @param {Module} module The Webpack module.
@@ -781,19 +762,6 @@ class AssetCompiler {
   afterCreateModule(module, createData, resolveData) {
     const { _bundlerPluginMeta: meta } = resolveData;
     const { rawRequest, resource } = createData;
-    const query = module.resourceResolveData?.query || '';
-    const isUrl = query.includes('url');
-
-    // TODO: undocumented experimental support for url load a source style file (with `?url` query) in JavaScript
-    if (meta.isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
-      const dataUrlOptions = undefined;
-      const filename = this.pluginOption.getCss().filename;
-
-      module.type = 'asset/resource';
-      module.binary = true;
-      module.parser = new AssetParser(false);
-      module.generator = new AssetGenerator(dataUrlOptions, filename);
-    }
 
     this.assetEntry.connectEntryAndModule(module, resolveData);
 
@@ -814,9 +782,9 @@ class AssetCompiler {
     if (!issuer || this.assetInline.isDataUrl(rawRequest)) return;
 
     if (
-      type === 'asset/inline' ||
-      type === 'asset' ||
-      (type === 'asset/source' && this.assetInline.isSvgFile(resource))
+      type === ASSET_MODULE_TYPE ||
+      type === ASSET_MODULE_TYPE_INLINE ||
+      (type === ASSET_MODULE_TYPE_SOURCE && this.assetInline.isSvgFile(resource))
     ) {
       this.assetInline.add(resource, issuer, this.pluginOption.isEntry(issuer));
     }
@@ -827,7 +795,7 @@ class AssetCompiler {
     // - if used url() in SCSS for source assets
     // - if used import url() in CSS, like `@import url('./styles.css');`
     // - if used webpack context
-    if (meta.isDependencyUrl || loaders.length > 0 || type === 'asset/resource') {
+    if (meta.isDependencyUrl || loaders.length > 0 || type === ASSET_MODULE_TYPE_RESOURCE) {
       this.resolver.addSourceFile(resource, rawRequest, issuer);
     }
   }
@@ -839,27 +807,14 @@ class AssetCompiler {
    * @param {{}} module The extended Webpack module.
    */
   beforeBuildModule(module) {
-    //const { isScript, isStyle, isLoaderImport, isDependencyUrl } = module.resourceResolveData._bundlerPluginMeta;
-    // reserved code for future
-    // skip the module loaded via importModule
-    // if (isLoaderImport) return;
-    // if (
-    //   module.type === 'asset/resource' &&
-    //   (isScript || (isStyle && isDependencyUrl))
-    // ) {
-    //   // set correct module type for scripts and styles when used the `html` mode of a loader
-    //   module.type = 'javascript/auto';
-    //   module.binary = false;
-    //   module.parser = new JavascriptParser('auto');
-    //   module.generator = new JavascriptGenerator();
-    // }
+    // do nothing, reserved for debugging
   }
 
   /**
    * Called after the build module but right before the execution of a loader.
    *
    * @param {Object} loaderContext The Webpack loader context.
-   * @param {{}} module The extended Webpack module.
+   * @param {Object} module The extended Webpack module.
    */
   beforeLoader(loaderContext, module) {
     const { isTemplate, isLoaderImport } = module.resourceResolveData._bundlerPluginMeta;
@@ -905,15 +860,14 @@ class AssetCompiler {
     // process only entries supported by this plugin
     if (!entry || (!entry.isTemplate && !entry.isStyle)) return;
 
-    this.collection.addEntry(entry);
-
-    const assetModules = new Set();
     const chunkModules = chunkGraph.getChunkModulesIterable(chunk);
+    const assetModules = new Set();
+
+    this.collection.addEntry(entry);
 
     for (const module of chunkModules) {
       const { buildInfo, resource, resourceResolveData } = module;
       const { isScript, isImportedStyle, isCSSStyleSheet } = resourceResolveData?._bundlerPluginMeta || {};
-      let moduleType = module.type;
 
       if (
         isScript ||
@@ -935,13 +889,14 @@ class AssetCompiler {
         issuer = entry.resource;
       }
 
+      let moduleType = module.type;
       // decide an asset type by webpack option parser.dataUrlCondition.maxSize
-      if (moduleType === 'asset') {
-        moduleType = buildInfo.dataUrl === true ? 'asset/inline' : 'asset/resource';
+      if (moduleType === ASSET_MODULE_TYPE) {
+        moduleType = buildInfo.dataUrl === true ? ASSET_MODULE_TYPE_INLINE : ASSET_MODULE_TYPE_RESOURCE;
       }
 
       switch (moduleType) {
-        case 'javascript/auto':
+        case JAVASCRIPT_MODULE_TYPE_AUTO:
           const assetModule = this.createAssetModule(entry, chunk, module);
 
           if (assetModule == null) continue;
@@ -949,14 +904,14 @@ class AssetCompiler {
 
           assetModules.add(assetModule);
           break;
-        case 'asset/resource':
+        case ASSET_MODULE_TYPE_RESOURCE:
           // resource required in the template or in the CSS via url()
           this.assetResource.saveData(module);
           break;
-        case 'asset/inline':
+        case ASSET_MODULE_TYPE_INLINE:
           this.assetInline.saveData(entry, chunk, module, codeGenerationResults);
           break;
-        case 'asset/source':
+        case ASSET_MODULE_TYPE_SOURCE:
           // support the source type for SVG only
           if (this.assetInline.isSvgFile(resource)) {
             this.assetInline.saveData(entry, chunk, module, codeGenerationResults);
@@ -985,6 +940,40 @@ class AssetCompiler {
     if (this.collection.hasImportedStyle(this.currentEntryPoint?.id)) {
       this.renderImportStyles(result, { chunk });
     }
+  }
+
+  /**
+   * Called in PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage.
+   *
+   * @param {CompilationAssets} assets
+   */
+  processAssetsOptimizeSize(assets) {
+    if (!this.pluginOption.isExtractComments()) {
+      this.assetTrash.removeComments();
+    }
+  }
+
+  /**
+   * Called after render module's sources, after all optimizations.
+   *
+   * @param {CompilationAssets} assets
+   */
+  processAssetsFinalAsync(assets) {
+    if (PluginError.size > 0) {
+      // when the previous compilation hook has an error, then skip this hook
+      return Promise.resolve();
+    }
+
+    return this.collection
+      .render()
+      .then(() => {
+        // remove all unused assets from compilation
+        this.assetTrash.clearCompilation();
+      })
+      .catch((error) => {
+        // this hook doesn't provide testable exceptions, therefore, save an exception to throw it in the done hook
+        this.exceptions.add(error);
+      });
   }
 
   /**

@@ -113,7 +113,7 @@ All source file paths in dependencies will be resolved and auto-replaced with co
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
 - You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
-- Over 550 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
+- Over 600 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
 
 See the [full list of features](#features).
 
@@ -146,9 +146,9 @@ See [how the plugin works under the hood](#plugin-hooks-and-callbacks).
 
 - **Simplify Webpack config** using one powerful plugin instead of many [different plugins and loaders](#list-of-plugins).
 
-- **Start from HTML**, not from JS. Define an **HTML** template file as an **entry point**.
+- **Start from HTML**, not from JS. Define an HTML template file as an **entry point**.
 
-- Specify script and style **source files** directly in an **HTML** template,
+- Specify script and style **source files** directly in a template,
 and you no longer need to define them in Webpack entry or import styles in JavaScript.
 
 - Use **any template engine** without additional plugins and loaders.
@@ -169,7 +169,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
-- **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations)
+- **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
 
 ## 🔆 What's New in v3
 
@@ -186,7 +186,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 - **NEW** added importing style files in JavaScript.
 - **NEW** added support the [integrity](#option-integrity).
-- **NEW** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack
+- **NEW** you can add/delete/rename a template file in the [entry path](#option-entry-path) without restarting Webpack.
 
 For full release notes see the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md).
 
