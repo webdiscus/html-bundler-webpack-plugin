@@ -405,9 +405,11 @@ describe('split chunks', () => {
   test('resolve assets, production', () => compareFiles('split-chunk-resolve-assets-prod'));
   test('load vendor scripts from node module', () => compareFiles('split-chunk-vendor'));
 
+  test('order css using split chunks ', () => compareFiles('split-chunk-css-order'));
+
   // ATTENTION: this test doesn't work and never will be works.
   // This is just to demonstrate how a split of CSS files cannot be used. CSS files cannot be split.
-  // test('extract css from split chunks ', () => compareFiles('split-chunk-css');
+  // test('extract css from split chunks ', () => compareFiles('split-chunk-css'));
 });
 
 describe('real content hash', () => {
