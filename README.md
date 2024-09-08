@@ -1,7 +1,6 @@
 <div align="center">
+    <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
     <h1 align="center">
-        <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
-        <br>
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
 </div>
@@ -13,23 +12,64 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
+Generates output HTML, JS and CSS from templates containing source files of scripts, styles and other assets.\
+Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and modern replacement of many [plugins and loaders](#list-of-plugins).
+
+---
+
+<div align="center">
+📋 <a href="#contents">Table of Contents</a> 🚀 <a href="#install">Install and Quick Start</a> 🖼 <a href="#usage-examples">Usage examples</a> 🔆 <a href="#whats-new">What's New</a>
+</div>
+
+<!--
+#### 📋 [Table of Contents](#contents) 🚀 [Install and Quick Start](#install) 🖼 [Usage examples](#usage-examples)
+-->
+
+---
+
+## 💡 Highlights
+
+- **Start from HTML**, not from JS. An [entry point](#option-entry) is any HTML template.
+- **Auto processing** multiple HTML templates in the [entry path](#option-entry-path).
+- **Renders** the most popular [template engines](#template-engine) "**out of the box**", without additional plugins and loaders:\
+  [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
+- **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
+  - `<link href="./style.scss" rel="stylesheet">`\
+  No longer need to define source style files in Webpack entry or import styles in JavaScript.
+  - `<script src="./app.tsx" defer="defer"></script>`\
+  No longer need to define source JavaScript files in Webpack entry.
+- **Resolves** [source files](#loader-option-sources) in [default attributes](#loader-option-sources-default) `href` `src` `srcset` using **relative path** or **alias**:
+  - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
+  - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
+  Source files will be resolved, processed and auto-replaced with correct URLs in the bundled output.
+- **Inlines** [JS](#recipe-inline-js), [CSS](#recipe-inline-css) and [Images](#recipe-inline-image) into HTML. See [how to inline all resources](#recipe-inline-all-assets-to-html) into single HTML file.
+- Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles.
+- Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
+- Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
+- You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
+- Over 600 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test) for various use cases.
+
+See [full list of features](#features).
+
 ## HTML template as entry point
 
-The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
-This plugin looks at the template files in [entry](#option-entry) to start building the bundle.
-The source files of dependencies (scripts, styles, etc.) can be defined directly in the template.
+<center>
+  <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
+</center>
 
-The plugin resolves source files of assets in templates and replaces them with correct output URLs in the generated HTML.
+The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
+This plugin looks at the template files in [entry option](#option-entry) to start building the bundle.
+The [source files](#loader-option-sources) of dependencies (scripts, styles, etc.) can be defined directly in the template.
+
+The plugin **resolves source files** of assets in templates and replaces them with correct output URLs in the generated HTML.
 The resolved assets will be processed via Webpack plugins/loaders and placed into the output directory. 
 You can use a relative path or Webpack alias to a source file.
 
 A template imported in JS will be compiled into [template function](#template-in-js). You can use the **template function** in JS to render the template with variables in runtime on the client-side in the browser.
 
-This plugin is an **advanced replacement**  of `html-webpack-plugin` and many other [plugins and loaders](#list-of-plugins).
-
-<center>
-  <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
-</center>
+<!--
+This plugin is an advanced replacement of [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and many other [plugins and loaders](#list-of-plugins).
+-->
 
 For example, using source asset files is HTML template _./src/views/index.html_:
 
@@ -50,8 +90,6 @@ For example, using source asset files is HTML template _./src/views/index.html_:
   </body>
 </html>
 ```
-
-[Open an example in StackBlitz](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js)
 
 The folder structure of the example:
 ```
@@ -78,13 +116,48 @@ src/
 -->
 
 
-All source file paths in dependencies will be resolved and auto-replaced with correct URLs in the bundled output.
+Simple and clear Webpack configuration:
+```js
+const path = require('path');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
----
+module.exports = {
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+  },
 
-### 📋 [Table of Contents](#contents)
-### 🚀 [Install and Quick Start](#install)
-### 🖼 [Usage examples](#usage-examples)
+  plugins: [
+    new HtmlBundlerPlugin({
+     // all the necessary options are in one place
+      entry: {
+        index: 'src/views/index.html', // save generated HTML into dist/index.html
+      },
+      js: {
+        filename: 'js/[name].[contenthash:8].js', // JS output filename
+      },
+      css: {
+        filename: 'css/[name].[contenthash:8].css', // CSS output filename
+      },
+    }),
+  ],
+  
+  module: {
+      rules: [
+        {
+          test: /\.s?css$/,
+          use: ['css-loader', 'sass-loader'],
+        },
+        {
+          test: /\.(ico|png|jp?g|svg)/,
+          type: 'asset/resource',
+        },
+      ],
+    },
+};
+```
+See full list of all [plugin options](#toc-plugin-options).
+
+[Open an example in StackBlitz](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js)
 
 ---
 > 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.
@@ -92,30 +165,6 @@ All source file paths in dependencies will be resolved and auto-replaced with co
 > The plugin has been actively developed for more than 2 years, and since 2023 it is open source.\
 > Please support this project by giving it a star ⭐.
 ---
-
-
-## 💡 Highlights
-
-- An [entry point](#option-entry) is any HTML template.
-- **Auto processing** multiple HTML templates in the [entry path](#option-entry-path).
-- Allows to specify [`script`](#option-js) and [`style`](#option-css) **source files** directly in **HTML**:
-  - `<link href="./style.scss" rel="stylesheet">`
-  - `<script src="./app.tsx" defer="defer"></script>`
-- **Resolves** [source files](#loader-option-sources) in [default attributes](#loader-option-sources-default) `href` `src` `srcset` etc. using **relative path** or **alias**:
-  - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
-  - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`
-- **Inlines** [JS](#recipe-inline-js) and [CSS](#recipe-inline-css) into HTML.
-- **Inlines** [images](#recipe-inline-image) into HTML and CSS.
-- Supports **styles** used in `*.vue` files.
-- **Renders** the [template engines](#template-engine) such as [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
-- **Compile** a template into [template function](#template-in-js) for usage in JS on the client-side.
-- Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles, etc.
-- Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
-- Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
-- You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
-- Over 600 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test).
-
-See the [full list of features](#features).
 
 
 ## ❤️ Sponsors & Patrons
@@ -142,19 +191,6 @@ See [how the plugin works under the hood](#plugin-hooks-and-callbacks).
 
 <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
 
-## ✅ Profit
-
-- **Simplify Webpack config** using one powerful plugin instead of many [different plugins and loaders](#list-of-plugins).
-
-- **Start from HTML**, not from JS. Define an HTML template file as an **entry point**.
-
-- Specify script and style **source files** directly in a template,
-and you no longer need to define them in Webpack entry or import styles in JavaScript.
-
-- Use **any template engine** without additional plugins and loaders.
-Most popular [template engines](#template-engine) supported "**out of the box**".
-
-
 ## ❓Question / Feature Request / Bug
 
 If you have discovered a bug or have a feature suggestion, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues) on GitHub.
@@ -167,9 +203,14 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 - [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
 - [Comparison and Benchmarks of Node.js libraries to colorize text in terminal](https://dev.to/webdiscus/comparison-of-nodejs-libraries-to-colorize-text-in-terminal-4j3a) (_offtopic_)
 
+<a id="whats-new" name="whats-new"></a>
+
 ## 🔆 What's New in v4
 
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
+- **SUPPORTS** Node.js version `18+`
+- **SUPPORTS** Webpack version `5.81+`
+- **BREAKING CHANGES** see in the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md#v4-0-0).
 
 ## 🔆 What's New in v3
 
@@ -412,6 +453,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [beforeEmit](#hook-beforeEmit)
    - [afterEmit](#hook-afterEmit)
    - [integrityHashes](#hook-integrity-hashes)
+<a id="toc-plugin-options" name="toc-plugin-options"></a>
 1. [Plugin options](#plugin-options)
    - [test](#option-test) (RegEx to handle matching templates)
    - [entry](#option-entry) (template as entry point)
@@ -440,6 +482,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [hotUpdate](#option-hot-update)
    - [verbose](#option-verbose)
    - [loaderOptions](#option-loader-options) (reference to loader options)
+<a id="toc-loader-options" name="toc-loader-options"></a>
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
    - [root](#loader-option-root) (allow to resolve root path in attributes)
@@ -2904,9 +2947,9 @@ By default, resolves source files in the following tags and attributes:
 >
 > - `src="https://example.com/img/image.png"`
 > - `src="//example.com/img/image.png"`
-> - `src="/img/image.png"`
+> - `src="/img/image.png"` (not processed only if not defined the [root option](#loader-option-root))
 >
-> Others not file values are ignored, e.g.:
+> Others not filename values are ignored, e.g.:
 >
 > - `src="data:image/png; ..."`
 > - `src="javascript: ..."`

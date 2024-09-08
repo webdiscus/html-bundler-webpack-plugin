@@ -1,18 +1,7 @@
 # Change log
 
-## 4.0.0-beta.3 (2024-08-16)
-
-- chore: code refactoring, invisible improvements, test this version with your projects
-
-## 4.0.0-beta.2 (2024-08-15)
-
-- fix: ERROR in RealContentHashPlugin in serv/watch mode after adding new import file
-
-## 4.0.0-beta.1 (2024-08-13)
-
-- fix: when using integrity occurs ERROR in RealContentHashPlugin in serv/watch mode after changes by using dynamic import
-
-## 4.0.0-beta.0 (2024-08-10)
+<a id="v4-0-0" name="v4-0-0"></a>
+## 4.0.0 Release (24-09-08)
 
 ### BREAKING CHANGES
 
@@ -81,11 +70,11 @@
 
 ### DEPRECATIONS
 
-- The `watchFiles.files` option has been renamed to `watchFiles.includes`.
+- The `watchFiles.files` option has been renamed to `watchFiles.includes`.\
   The `files` option is still supported but is deprecated.
   It's recommended to replace the `files` with `includes` in your config.
 
-- The `watchFiles.ignore` option has been renamed to `watchFiles.excludes`.
+- The `watchFiles.ignore` option has been renamed to `watchFiles.excludes`.\
   The `ignore` option is still supported but is deprecated.
   It's recommended to replace the `ignore` with `excludes` in your config.
 
@@ -133,15 +122,33 @@ module.exports = [
   module.exports = {
     name: 'client', // <= this name will displayed in console output
   }
-  ``` 
+  ```
+
+### BUGFIX
+
+- fix: ERROR in RealContentHashPlugin in serv/watch mode after adding new import file
+- fix: when using integrity occurs ERROR in RealContentHashPlugin in serv/watch mode after changes by using dynamic import
   
 ### MISC
 
 - refactor: rewrite all static classes to regular, this is needed to support webpack multiple configurations
+- refactor: code refactoring, invisible improvements
 - test: add testing for Node.js `v22` on GitHub
 - test: add tests to improve the code coverage to 98%, 2% code can be tested only manual, e.g. in watch/serve mode after changes
 - chore: update dev packages, many packages requires Node.js >= v18
 - docs: update readme
+
+## 4.0.0-beta.3 (2024-08-16)
+See release 4.0.0
+
+## 4.0.0-beta.2 (2024-08-15)
+See release 4.0.0
+
+## 4.0.0-beta.1 (2024-08-13)
+See release 4.0.0
+
+## 4.0.0-beta.0 (2024-08-10)
+See release 4.0.0
 
 ## 3.17.3 (2024-08-09)
 
