@@ -190,7 +190,6 @@ describe('plugin callbacks', () => {
   test('beforePreprocessor, return template', () => compareFiles('option-beforePreprocessor'));
   test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
 
-  test('preprocessor', () => compareFiles('option-preprocessor'));
   test('preprocessor data', () => compareFiles('option-preprocessor-data'));
 
   test('postprocess default', () => compareFiles('option-postprocess'));
@@ -211,9 +210,8 @@ describe('loader options common', () => {
   test('filter, parsedValues', () => compareFiles('loader-option-sources-filter-parsedValues'));
 
   test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
-  test('preprocessor function', () => compareFiles('loader-option-preprocessor-function'));
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
-  test('preprocessor null', () => compareFiles('loader-option-preprocessor-return-null'));
+
   test('root', () => compareFiles('loader-option-root'));
 });
 
@@ -227,64 +225,6 @@ describe('resole entry name', () => {
 describe('loader preprocessor options', () => {
   test('loader data', () => compareFiles('loader-option-preprocessor-data'));
   test('loader data file', () => compareFiles('loader-option-preprocessor-data-file'));
-
-  test('Eta', () => compareFiles('loader-option-preprocessor-eta'));
-  test('Eta async', () => compareFiles('loader-option-preprocessor-eta-async'));
-  test('EJS', () => compareFiles('loader-option-preprocessor-ejs'));
-  test('EJS async', () => compareFiles('loader-option-preprocessor-ejs-async'));
-  test('EJS as string', () => compareFiles('loader-option-preprocessor-ejs-string'));
-
-  test('handlebars', () => compareFiles('loader-option-preprocessor-handlebars'));
-  test('handlebars helper', () => compareFiles('loader-option-preprocessor-handlebars-helpers'));
-  test('handlebars helper path', () => compareFiles('loader-option-preprocessor-handlebars-helpers-path'));
-  test('handlebars partials', () => compareFiles('loader-option-preprocessor-handlebars-partials'));
-  test('handlebars partials path', () => compareFiles('loader-option-preprocessor-handlebars-partials-path'));
-  test('handlebars access @root', () => compareFiles('hbs-access-root-variable'));
-  test('handlebars runtime', () => compareFiles('loader-option-preprocessor-handlebars-runtime'));
-
-  test('liquid', () => compareFiles('loader-option-preprocessor-liquid'));
-  test('liquid async', () => compareFiles('loader-option-preprocessor-liquid-async'));
-  test('mustache', () => compareFiles('loader-option-preprocessor-mustache'));
-  test('nunjucks sync', () => compareFiles('loader-option-preprocessor-nunjucks'));
-  test('nunjucks async', () => compareFiles('loader-option-preprocessor-nunjucks-async'));
-
-  test('twig', () => compareFiles('loader-option-preprocessor-twig'));
-
-  // TODO: add support for jsx/tsx as entrypoint, currently works only simplest example, w/o imports
-  //test('jsx', () => compareFiles('loader-option-preprocessor-jsx'));
-
-  test('simple multiple pages', () => compareFiles('loader-option-preprocessor-multipage'));
-  test('multiple templating engines', () => compareFiles('loader-option-preprocessor-many-ejs-hbs'));
-});
-
-describe('handlebars', () => {
-  // test helpers
-  test('build-in `block` helper', () => compareFiles('preprocessor-handlebars-helper-block-buildIn'));
-  test('user `block` helper overrides build-in', () => compareFiles('preprocessor-handlebars-helper-block'));
-  test('handlebars-layouts helpers', () => compareFiles('preprocessor-handlebars-helper-layouts'));
-});
-
-describe('usage template in js on client side', () => {
-  // Eta
-  test('default template', () => compareFiles('js-tmpl-default'));
-  test('eta: compile to fn', () => compareFiles('js-tmpl-eta-compile'));
-  test('eta: compile to fn with local data in js', () => compareFiles('js-tmpl-eta-compile-data-local'));
-  test('eta: compile to fn with external data', () => compareFiles('js-tmpl-eta-compile-data-external'));
-  test('eta: render to html', () => compareFiles('js-tmpl-eta-render'));
-  test('eta: render to html, many pages', () => compareFiles('js-tmpl-eta-render-many-pages'));
-  test('eta: resolve images in imported partial', () => compareFiles('js-tmpl-resolve-img-in-partial'));
-
-  // EJS
-  test('ejs: compile to fn', () => compareFiles('js-tmpl-ejs-compile'));
-
-  // Handlebars
-  test('hbs: compile to fn', () => compareFiles('js-tmpl-hbs-compile'));
-
-  // Nunjucks
-  test('njk: compile to fn', () => compareFiles('js-tmpl-njk-compile'));
-
-  // Twig
-  test('twig: compile to fn', () => compareFiles('js-tmpl-twig-compile'));
 });
 
 describe('inline images', () => {
@@ -453,11 +393,8 @@ describe('special cases', () => {
   test('resolve assets without extension', () => compareFiles('resolve-assets-without-ext'));
   test('resolve assets in entries with a query', () => compareFiles('resolve-in-entry-with-query'));
   test('resolve manifest.json', () => compareFiles('resolve-manifest.json'));
-  test('Template with CRLF line separator', () => compareFiles('template-clrf'));
   test('encode / decode reserved HTML chars', () => compareFiles('decode-chars'));
-  test('preprocessor hbs load partials', () => compareFiles('preprocessor-hbs-partials'));
-  test('preprocessor for output php template', () => compareFiles('preprocessor-disabled-php'));
-  test('preprocessor for output ftl template', () => compareFiles('preprocessor-disabled-ftl'));
+
   test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
   test('preload, no head', () => compareFiles('preload-no-head'));
   test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));

@@ -11,14 +11,6 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: 'src/views/pages/',
-      // entryFilter: (file) => {
-      //   if (!file.endsWith('index.hbs')) return false;
-      // },
-      //entryFilter: /(?!:content\.hbs)$/,
-      //entryFilter: [/(?!:content\.hbs)$/],
-      // entryFilter: {
-      //   includes: [/index\.hbs$/],
-      // },
       entryFilter: {
         excludes: [/content\.hbs$/],
       },

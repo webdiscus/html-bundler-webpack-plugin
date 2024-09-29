@@ -14,14 +14,6 @@ module.exports = {
       entryFilter: (file) => {
         if (!file.endsWith('index.hbs')) return false;
       },
-      //entryFilter: /index\.hbs$/,
-      //entryFilter: [/index\.hbs$/],
-      // entryFilter: {
-      //   includes: [/index\.hbs$/],
-      // },
-      // entryFilter: {
-      //   excludes: [/content\.hbs$/],
-      // },
       preprocessor: 'handlebars',
       preprocessorOptions: {
         partials: ['src/views/partials/', 'src/views/pages/'],

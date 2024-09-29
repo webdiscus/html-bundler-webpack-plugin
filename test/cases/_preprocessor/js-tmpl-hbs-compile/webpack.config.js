@@ -8,19 +8,23 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
-      entry: 'src/views/pages/',
-      entryFilter: [/index\.hbs$/],
+      entry: {
+        index: './src/index.hbs',
+      },
       preprocessor: 'handlebars',
       preprocessorOptions: {
-        partials: ['src/views/partials/', 'src/views/pages/'],
+        views: ['src/partials'],
       },
-      js: {
-        filename: 'js/[name].js',
-      },
-      css: {
-        filename: 'css/[name].css',
+      data: {
+        title: 'My Title',
       },
     }),
   ],
@@ -28,8 +32,11 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.s?css/i,
-        use: ['css-loader'],
+        test: /\.(ico|png|jp?g|svg)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'img/[name].[hash:8][ext][query]',
+        },
       },
     ],
   },
