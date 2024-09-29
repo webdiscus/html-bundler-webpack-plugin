@@ -1,3 +1,5 @@
+const { readFileSync } = require('fs');
+const path = require('path');
 const { loadModule } = require('../../../Common/FileUtils');
 const { stringifyJSON } = require('../../Utils');
 
@@ -8,6 +10,19 @@ const includeRegexp = /include\((.+?)(?:\)|,\s*{(.+?)}\))/g;
 
 // node module name
 const moduleName = 'ejs';
+
+/**
+ * Require CommonJS or JSON file in EJS template.
+ *
+ * @param {string} file
+ * @param {string} dir
+ * @return {*}
+ */
+const requireFile = (file, dir) => {
+  const fullFilePath = path.join(dir, file);
+
+  return file.endsWith('.json') ? JSON.parse(readFileSync(fullFilePath, 'utf-8')) : require(fullFilePath);
+};
 
 /**
  * Transform the raw template source to a template function or HTML.
@@ -36,6 +51,10 @@ const preprocessor = (loaderContext, options) => {
      * @return {string}
      */
     render(source, { resourcePath, data = {} }) {
+      const contextPath = path.dirname(resourcePath);
+
+      data.require = (file) => requireFile(file, contextPath);
+
       return Ejs.render(source, data, {
         async: false,
         root: rootContext, // root path for includes with an absolute path (e.g., /file.html)

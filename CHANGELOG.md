@@ -1,7 +1,24 @@
 # Change log
 
+## 4.1.0 (2024-09-29)
+
+- feat: add supports the `require` of CommonJS and JSON files in EJS templates:
+  ```html
+  <% const data = require('./data.js') %>
+  <div>Film: <%= data.title %></div>
+  <div>Genre: <%= data.genre %></div>
+  ```
+  or
+  ```html
+  <% const data = require('./data.json') %>
+  <div>Film: <%= data.title %></div>
+  <div>Genre: <%= data.genre %></div>
+  ```
+- chore: update peerDependencies
+- test: refactor test cases for preprocessor
+
 <a id="v4-0-0" name="v4-0-0"></a>
-## 4.0.0 Release (24-09-08)
+## 4.0.0 Release (2024-09-08)
 
 ### BREAKING CHANGES
 

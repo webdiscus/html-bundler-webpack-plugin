@@ -1,0 +1,17 @@
+<% const data = require('./data.js') %>
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= data.title %></title>
+</head>
+<body>
+  <h1><%= data.headline %></h1>
+  <ul class="people">
+    <% for (let i = 0; i < data.people.length; i++) {%>
+    <li><%= data.people[i] %></li>
+    <% } %>
+  </ul>
+  <img src="@images/apple.png" alt="apple" />
+  <%- include('partials/footer.html'); %>
+</body>
+</html>

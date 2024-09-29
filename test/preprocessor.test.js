@@ -16,6 +16,8 @@ describe('EJS', () => {
   test('option async', () => compareFiles('_preprocessor/ejs-option-async'));
   test('option views', () => compareFiles('_preprocessor/ejs-option-views'));
   test('custom render', () => compareFiles('_preprocessor/ejs-custom-render'));
+  test('require js', () => compareFiles('_preprocessor/ejs-require-js'));
+  test('require json', () => compareFiles('_preprocessor/ejs-require-json'));
 
   // special cases
   test('Template with CRLF line separator', () => compareFiles('_preprocessor/ejs-template-clrf'));

@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "HTML Bundler Plugin for Webpack renders HTML templates containing source files of scripts, styles, images. Supports template engines: Eta, EJS, Handlebars, Nunjucks, Pug, TwigJS. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -92,16 +92,16 @@
     "node": ">=16.20.0"
   },
   "peerDependencies": {
-    "ejs": ">=3.1.9",
-    "favicons": ">=7.1.4",
-    "handlebars": ">=4.7.7",
-    "liquidjs": ">=10.7.0",
+    "ejs": ">=3.1.10",
+    "favicons": ">=7.2.0",
+    "handlebars": ">=4.7.8",
+    "liquidjs": ">=10.17.0",
     "markdown-it": ">=12",
     "mustache": ">=4.2.0",
     "nunjucks": ">=3.2.3",
     "parse5": ">=7.1.2",
     "prismjs": ">=1.29.0",
-    "pug": ">=3.0.2",
+    "pug": ">=3.0.3",
     "twig": ">=1.17.1",
     "webpack": ">=5.81.0"
   },
@@ -170,7 +170,7 @@
     "handlebars": "^4.7.8",
     "handlebars-layouts": "^3.1.4",
     "jest": "^29.7.0",
-    "liquidjs": "^10.16.7",
+    "liquidjs": "^10.17.0",
     "markdown-it": "^14.1.0",
     "mustache": "^4.2.0",
     "normalize.css": "^8.0.1",
