@@ -12,7 +12,7 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-Generates output HTML, JS and CSS from templates containing source files of scripts, styles and other assets.\
+Generates HTML with JS and CSS from templates containing source files of scripts, styles and other assets.\
 Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and modern replacement of many [plugins and loaders](#list-of-plugins).
 
 ---
@@ -29,16 +29,16 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 
 ## 💡 Highlights
 
-- **Start from HTML**, not from JS. An [entry point](#option-entry) is any HTML template.
-- **Auto processing** multiple HTML templates in the [entry path](#option-entry-path).
-- **Renders** the most popular [template engines](#template-engine) "**out of the box**", without additional plugins and loaders:\
+- An [entry point](#option-entry) is any HTML template. **Start from HTML**, not from JS.
+- **Find** and automatic processing of templates in the [entry directory](#option-entry-path).
+- **Renders** the [template engines](#template-engine) "out of the box":
   [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
 - **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
   - `<link href="./style.scss" rel="stylesheet">`\
   No longer need to define source style files in Webpack entry or import styles in JavaScript.
-  - `<script src="./app.tsx" defer="defer"></script>`\
+  - `<script src="./app.ts" defer="defer"></script>`\
   No longer need to define source JavaScript files in Webpack entry.
-- **Resolves** [source files](#loader-option-sources) in [default attributes](#loader-option-sources-default) `href` `src` `srcset` using **relative path** or **alias**:
+- **Resolves** [source files](#loader-option-sources) of assets in [attributes](#loader-option-sources-default) such as `href` `src` `srcset` using **relative path** or **alias**:
   - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
   Source files will be resolved, processed and auto-replaced with correct URLs in the bundled output.
@@ -114,7 +114,6 @@ src/
            └── picture2.png
 ```
 -->
-
 
 Simple and clear Webpack configuration:
 ```js
