@@ -270,11 +270,12 @@ class Option {
 
     if (!dataFile) {
       const fs = this.fileSystem;
-      dataFile = path.isAbsolute(dataValue) ? dataValue : path.join(process.cwd(), dataValue);
+      dataFile = this.resolveFile(dataValue);
 
       if (!fs.existsSync(dataFile)) {
         dataFileNotFoundException(dataFile);
       }
+
       PluginService.setDataFiles(this.pluginCompiler, dataValue, dataFile);
     }
 
@@ -286,6 +287,17 @@ class Option {
     }
 
     return data || {};
+  }
+
+  /**
+   * Resolve relative file path.
+   *
+   * @param {string} file
+   * @return {string}
+   */
+  resolveFile(file) {
+    const context = this.pluginCompiler.options.context;
+    return path.isAbsolute(file) ? file : path.join(context, file);
   }
 
   /**

@@ -3,6 +3,7 @@
  * The instance is available both in the plugin and loader.
  */
 
+const path = require('path');
 const WeakMapIterable = require('../Common/WeakMapIterable');
 const Preprocessor = require('../Loader/Preprocessor');
 
@@ -145,6 +146,19 @@ class PluginService {
   }
 
   /**
+   * Resolve relative file path.
+   *
+   * @param {Compiler} compiler
+   * @param {string} file
+   * @return {string}
+   */
+  static resolveFile(compiler, file) {
+    const context = compiler.options.context;
+
+    return path.isAbsolute(file) ? file : path.join(context, file);
+  }
+
+  /**
    * @param {Compiler} compiler The webpack compiler.
    * @param {Dependency} dependency
    */
@@ -236,6 +250,7 @@ class PluginService {
 
   /**
    * Called before each new compilation, in the serve/watch mode.
+   *
    * @param {Compiler} compiler The webpack compiler.
    */
   static watchRun(compiler) {
@@ -248,8 +263,15 @@ class PluginService {
   /**
    * Called when the compiler is closing.
    * Used for tests to reset data after each test case.
+   *
+   * @param {Compiler|null} compiler
    */
   static shutdown(compiler) {
+    if (!compiler) {
+      // if there was an error in the code earlier, then compiler is undefined
+      return;
+    }
+
     const context = this.getContext(compiler);
 
     context.used = false;

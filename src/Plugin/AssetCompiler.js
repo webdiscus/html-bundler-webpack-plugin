@@ -96,14 +96,6 @@ let HotUpdateChunk;
 let RawSource;
 
 class AssetCompiler {
-  /**
-   * Use the OptionPluginInterface in custom plugins, e.g.:
-   * const outputPath = HtmlBundlerPlugin.option.getWebpackOutputPath();
-   *
-   * @type {OptionPluginInterface | Option}
-   */
-  //static option = Option;
-
   static processAssetsPromises = [];
 
   /** @type {Array<Promise>} */
@@ -140,14 +132,8 @@ class AssetCompiler {
     loaderDependency: null,
   };
 
-  // asset = null;
-  // assetEntry = null;
-  // assetResource = null;
-  // assetTrash = null;
-  // collection = null;
-  // cssExtractModule = null;
-  // resolver = null;
-  // urlDependency = null;
+  // data file => entry files, uses for watching changes in data file, then recompile entries where it used
+  dataFileEntryMap = new Map();
 
   /** @type {FileSystem} */
   fs = null;
@@ -218,8 +204,9 @@ class AssetCompiler {
     this.pluginContext.urlDependency = this.urlDependency;
 
     // bind the instance context for using these methods as references in Webpack hooks
+    this.compile = this.compile.bind(this);
     this.invalidate = this.invalidate.bind(this);
-    this.afterProcessEntry = this.afterProcessEntry.bind(this);
+    this.afterEntry = this.afterEntry.bind(this);
     this.beforeResolve = this.beforeResolve.bind(this);
     this.afterResolve = this.afterResolve.bind(this);
     this.beforeModule = this.beforeModule.bind(this);
@@ -233,6 +220,7 @@ class AssetCompiler {
     this.afterEmit = this.afterEmit.bind(this);
     this.done = this.done.bind(this);
     this.shutdown = this.shutdown.bind(this);
+    this.watch = this.watch.bind(this);
   }
 
   /**
@@ -247,21 +235,9 @@ class AssetCompiler {
   init(compiler) {}
 
   /**
-   * Add the process to pipeline.
-   *
-   * @api The public method can be used in an extended plugin.
-   *
-   * @param {string} name The name of process. Currently supported only `postprocess` pipeline.
-   * @param {Function: (content: string) => string} fn The process function to modify the generated content.
+   * Add default loader for entry files.
    */
-  addProcess(name, fn) {
-    this.pluginOption.addProcess(name, fn);
-  }
-
-  /**
-   * Initialize loader for entry files.
-   */
-  initLoader() {
+  addLoader() {
     const defaultLoader = {
       test: this.pluginOption.get().test,
       // ignore 'asset/source' with the '?raw' query
@@ -274,6 +250,18 @@ class AssetCompiler {
   }
 
   /**
+   * Add the process to pipeline.
+   *
+   * @api The public method can be used in an extended plugin.
+   *
+   * @param {string} name The name of process. Currently supported only `postprocess` pipeline.
+   * @param {Function: (content: string) => string} fn The process function to modify the generated content.
+   */
+  addProcess(name, fn) {
+    this.pluginOption.addProcess(name, fn);
+  }
+
+  /**
    * Apply plugin.
    *
    * @param {Compiler} compiler
@@ -281,24 +269,22 @@ class AssetCompiler {
   apply(compiler) {
     if (!this.pluginOption.isEnabled()) return;
 
-    LoaderFactory.init(compiler);
-    this.pluginContext.loaderDependency = LoaderFactory.createDependency(compiler);
-
     const { webpack } = compiler;
-    const { NormalModule, Compilation } = webpack;
+    HotUpdateChunk = webpack.HotUpdateChunk;
+    RawSource = webpack.sources.RawSource;
 
     this.promises = [];
     this.fs = compiler.inputFileSystem.fileSystem;
     this.webpack = webpack;
-    HotUpdateChunk = webpack.HotUpdateChunk;
-    RawSource = webpack.sources.RawSource;
 
-    PluginError.clear();
+    LoaderFactory.init(compiler);
+    this.pluginContext.loaderDependency = LoaderFactory.createDependency(compiler);
+
+    this.assetEntry.setCompiler(compiler);
     this.pluginOption.initWebpack(compiler);
     this.assetResource.init(compiler);
-
     this.init(compiler);
-    this.initLoader();
+    this.addLoader();
 
     // must be called after all initialisations of the pluginOption
     this.resolver.init({ fs: this.fs });
@@ -306,12 +292,14 @@ class AssetCompiler {
     // initialize integrity plugin
     this.integrityPlugin = new Integrity(this.pluginOption);
 
-    // clear caches by tests for webpack serve/watch
+    // clear caches for tests in serve/watch mode
     this.assetEntry.clear();
     this.assetInline.clear();
     this.collection.clear();
     this.resolver.clear();
+    this.dataFileEntryMap.clear();
     Snapshot.clear();
+    PluginError.clear();
 
     // let know the loader that the plugin is being used
     // TODO: init by PluginIndex, for each instance create own PluginService instance for pluginOption
@@ -344,79 +332,15 @@ class AssetCompiler {
       });
     }
 
-    // executes by watch/serve only, before the compilation
-    compiler.hooks.watchRun.tap(pluginName, (compiler) => {
-      // TODO: avoid double calling by multi-config
-      //console.log('===> hooks.watchRun.tap', { id: compiler.name });
-      this.pluginOption.initWatchMode();
-      PluginService.setWatchMode(compiler, true);
-      PluginService.watchRun(compiler);
-    });
-
     // entry option
     this.assetEntry.init({
       fs: this.fs,
     });
 
-    compiler.hooks.entryOption.tap(pluginName, this.afterProcessEntry);
-
-    // watch changes for entry-points
+    compiler.hooks.watchRun.tap(pluginName, this.watch);
+    compiler.hooks.entryOption.tap(pluginName, this.afterEntry);
     compiler.hooks.invalid.tap(pluginName, this.invalidate);
-
-    // this compilation
-    compiler.hooks.thisCompilation.tap(pluginName, (compilation, { normalModuleFactory, contextModuleFactory }) => {
-      const fs = this.fs;
-      const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
-
-      // TODO: refactor
-      this.compilation = compilation;
-      this.pluginContext.compilation = compilation;
-      this.assetEntry.setCompilation(compilation);
-      this.assetTrash.init(compilation);
-      this.cssExtractModule.init(compilation);
-      this.urlDependency.init({ compilation, fs });
-
-      this.collection.init({
-        hooks: AssetCompiler.getHooks(compilation),
-      });
-
-      // resolve modules
-      normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
-      normalModuleFactory.hooks.afterResolve.tap(pluginName, this.afterResolve);
-      contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
-
-      // build modules
-      // createModuleClass requires v5.81+
-      normalModuleFactory.hooks.createModuleClass.for(JAVASCRIPT_MODULE_TYPE_AUTO).tap(pluginName, this.beforeModule);
-      normalModuleFactory.hooks.module.tap(pluginName, this.afterCreateModule);
-      compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
-      compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
-
-      // called after the succeedModule hook but right before the execution of a loader
-      normalModuleHooks.loader.tap(pluginName, this.beforeLoader);
-
-      // render source code of modules
-      compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
-
-      // Notes:
-      // - the TerserPlugin creates a `.LICENSE.txt` file at the PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage
-      // - the integrity hash will be created at the next stage, therefore,
-      //   the license file and the license banner must be removed before PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE
-      compilation.hooks.processAssets.tap(
-        { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1 },
-        this.processAssetsOptimizeSize
-      );
-
-      // after render module's sources
-      // Notes:
-      // - only in the processAssets hook is possible to modify an asset content via async function
-      // - the stage`Infinity` ensures that the process will be run after all optimizations
-      compilation.hooks.processAssets.tapPromise(
-        { name: pluginName, stage: Infinity + 1 },
-        this.processAssetsFinalAsync
-      );
-    });
-
+    compiler.hooks.thisCompilation.tap(pluginName, this.compile);
     compiler.hooks.afterEmit.tapPromise(pluginName, this.afterEmit);
     compiler.hooks.done.tapPromise(pluginName, this.done);
     compiler.hooks.shutdown.tap(pluginName, this.shutdown);
@@ -426,10 +350,98 @@ class AssetCompiler {
     if (this.pluginOption.isIntegrityEnabled()) this.integrityPlugin.apply(compiler);
   }
 
+  /**
+   * Called in watch mode after a new compilation is triggered
+   * but before the compilation is actually started.
+   *
+   * @param {Compiler} compiler
+   */
+  watch(compiler) {
+    // create dependencies map of the entry templates by data file
+    if (this.dataFileEntryMap.size === 0) {
+      const pluginOption = this.pluginOption.get();
+      const globalData = pluginOption.data;
+
+      this.assetEntry.entriesById.forEach((item) => {
+        if (item.dataFile) {
+          this.dataFileEntryMap.set(item.dataFile, [item.sourceFile]);
+        }
+      });
+
+      if (typeof globalData === 'string') {
+        const revolvedDataFile = PluginService.resolveFile(compiler, globalData);
+        const entryFiles = Array.from(this.assetEntry.getEntryFiles());
+        this.dataFileEntryMap.set(revolvedDataFile, entryFiles);
+      }
+    }
+
+    // TODO: avoid double calling by multi-config
+    //console.log('===> hooks.watchRun.tap', { id: compiler.name });
+    this.pluginOption.initWatchMode();
+    PluginService.setWatchMode(compiler, true);
+    PluginService.watchRun(compiler);
+  }
+
+  /**
+   * Compile modules.
+   *
+   * @param {Compilation} compilation
+   * @param {NormalModuleFactory} normalModuleFactory
+   * @param {ContextModuleFactory} contextModuleFactory
+   */
+  compile(compilation, { normalModuleFactory, contextModuleFactory }) {
+    const fs = this.fs;
+    const { NormalModule, Compilation } = compilation.compiler.webpack;
+    const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
+
+    this.compilation = compilation;
+    this.pluginContext.compilation = compilation;
+    this.assetEntry.setCompilation(compilation);
+    this.assetTrash.init(compilation);
+    this.cssExtractModule.init(compilation);
+    this.urlDependency.init({ compilation, fs });
+
+    this.collection.init({
+      hooks: AssetCompiler.getHooks(compilation),
+    });
+
+    // resolve modules
+    normalModuleFactory.hooks.beforeResolve.tap(pluginName, this.beforeResolve);
+    normalModuleFactory.hooks.afterResolve.tap(pluginName, this.afterResolve);
+    contextModuleFactory.hooks.alternativeRequests.tap(pluginName, this.filterAlternativeRequests);
+
+    // build modules
+    // createModuleClass requires v5.81+
+    normalModuleFactory.hooks.createModuleClass.for(JAVASCRIPT_MODULE_TYPE_AUTO).tap(pluginName, this.beforeModule);
+    normalModuleFactory.hooks.module.tap(pluginName, this.afterCreateModule);
+    compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
+    compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
+
+    // called after the succeedModule hook but right before the execution of a loader
+    normalModuleHooks.loader.tap(pluginName, this.beforeLoader);
+
+    // render source code of modules
+    compilation.hooks.renderManifest.tap(pluginName, this.renderManifest);
+
+    // Notes:
+    // - the TerserPlugin creates a `.LICENSE.txt` file at the PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage
+    // - the integrity hash will be created at the next stage, therefore,
+    //   the license file and the license banner must be removed before PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE
+    compilation.hooks.processAssets.tap(
+      { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1 },
+      this.processAssetsOptimizeSize
+    );
+
+    // after render module's sources
+    // Notes:
+    // - only in the processAssets hook is possible to modify an asset content via async function
+    // - the stage`Infinity` ensures that the process will be run after all optimizations
+    compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity + 1 }, this.processAssetsFinalAsync);
+  }
+
   /* istanbul ignore next: this method is called in watch mode after changes */
   /**
    * Invalidate changed file.
-   *
    * Called in serve/watch mode.
    *
    * Limitation: currently supports for change only a single file.
@@ -449,6 +461,25 @@ class AssetCompiler {
     const isDirectory = isDir({ fs, file: fileName });
 
     Snapshot.create();
+
+    if (this.dataFileEntryMap.has(fileName)) {
+      const entryFiles = this.dataFileEntryMap.get(fileName);
+
+      for (const module of this.compilation.modules) {
+        const moduleResource = module.resource || '';
+
+        if (moduleResource && entryFiles.find((file) => file === moduleResource)) {
+          this.compilation.rebuildModule(module, (err) => {
+            if (this.pluginOption.isVerbose()) {
+              // TODO: prettify the logging
+              console.log(
+                `>>> The data file is changed: ${fileName}${'\n'}   -> Rebuild the dependency: ${moduleResource}`
+              );
+            }
+          });
+        }
+      }
+    }
 
     if (isDirectory === true) return;
 
@@ -536,7 +567,7 @@ class AssetCompiler {
    * @param {string} context The base directory, an absolute path, for resolving entry points and loaders from the configuration.
    * @param {Object<name:string, entry: Object>} entries The webpack entries.
    */
-  afterProcessEntry(context, entries) {
+  afterEntry(context, entries) {
     this.assetEntry.addEntries(entries);
   }
 
@@ -1527,7 +1558,7 @@ class AssetCompiler {
    * Called when the compiler is closing or a watching compilation has stopped.
    */
   shutdown() {
-    PluginService.shutdown(this.compilation.compiler);
+    PluginService.shutdown(this.compilation?.compiler);
   }
 }
 

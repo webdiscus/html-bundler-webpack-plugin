@@ -1,5 +1,10 @@
 # Change log
 
+## 4.1.1 (2024-10-17)
+
+- fix: after 2-3 changes of the data file (global or entry), the dependent entry template is not recompiled.
+- test: add test for Eta preprocessor with default options
+
 ## 4.1.0 (2024-09-29)
 
 - feat: add supports the `require` of CommonJS and JSON files in EJS templates:

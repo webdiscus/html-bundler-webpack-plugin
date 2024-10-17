@@ -43,6 +43,7 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
   Source files will be resolved, processed and auto-replaced with correct URLs in the bundled output.
 - **Inlines** [JS](#recipe-inline-js), [CSS](#recipe-inline-css) and [Images](#recipe-inline-image) into HTML. See [how to inline all resources](#recipe-inline-all-assets-to-html) into single HTML file.
+- Recompiles the template after changes in the [data file](#option-entry-data) assigned to the entry page as a JSON or JS filename.
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.

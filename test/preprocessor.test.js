@@ -7,6 +7,7 @@ beforeAll(() => {
 });
 
 describe('Eta', () => {
+  test('default', () => compareFiles('_preprocessor/eta-default'));
   test('option views', () => compareFiles('_preprocessor/eta-option-views'));
   test('option async', () => compareFiles('_preprocessor/eta-option-async'));
 });

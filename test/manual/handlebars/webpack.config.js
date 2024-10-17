@@ -19,25 +19,26 @@ module.exports = {
     new HtmlBundlerPlugin({
       verbose: true,
 
-      entry: {
-        index: {
+      entry: [
+        {
           import: 'src/views/pages/home.hbs',
+          filename: 'index.html',
           data: 'src/views/pages/home-data.json',
         },
-
-        about: {
+        {
           import: 'src/views/pages/about.hbs',
+          filename: 'about.html',
           data: 'src/views/pages/about-data.json',
         },
-      },
+      ],
 
-      loaderOptions: {
-        data: 'data-global.json',
-        preprocessor: 'handlebars',
-        preprocessorOptions: {
-          helpers: ['src/views/helpers'],
-          partials: ['src/views/includes', 'src/views/partials'],
-        },
+      // test: issue after 2-3 changes of the `data-global.json` or `home-data.json`, the index.html is not recompiled
+      data: 'data-global.json',
+
+      preprocessor: 'handlebars',
+      preprocessorOptions: {
+        helpers: ['src/views/helpers'],
+        partials: ['src/views/includes', 'src/views/partials'],
       },
 
       hotUpdate: true, // test this option

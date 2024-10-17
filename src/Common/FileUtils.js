@@ -224,6 +224,44 @@ const filterParentPaths = (paths) =>
           return result;
         }, []);
 
+/**
+ * Touch the file.
+ *
+ * @param {string} file
+ * @param {FileSystem} fs The file system. Should be used the improved Webpack FileSystem.
+ * @return {Promise<unknown>}
+ */
+const touchAsync = (file, { fs }) => {
+  return new Promise((resolve, reject) => {
+    const time = new Date();
+    fs.utimes(file, time, time, (err) => {
+      if (err) {
+        return fs.open(file, 'w', (err, fd) => {
+          if (err) return reject(err);
+          fs.close(fd, (err) => (err ? reject(err) : resolve(fd)));
+        });
+      }
+      resolve();
+    });
+  });
+};
+
+/**
+ * Touch the file.
+ *
+ * @param {string} file
+ * @param {FileSystem} fs The file system. Should be used the improved Webpack FileSystem.
+ * @return void
+ */
+const touch = (file, { fs }) => {
+  const time = new Date();
+  try {
+    fs.utimesSync(file, time, time);
+  } catch (err) {
+    fs.closeSync(fs.openSync(file, 'w'));
+  }
+};
+
 module.exports = {
   loadModule,
   isDir,
@@ -232,4 +270,6 @@ module.exports = {
   relativePathVerbose,
   rootSourceDir,
   filterParentPaths,
+  touchAsync,
+  touch,
 };

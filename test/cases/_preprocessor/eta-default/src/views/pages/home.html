@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= title %></title>
+</head>
+<body>
+  <!-- path to partials directory -->
+  <%~ include('src/views/partials/header.html') %>
+  <%~ include('src/views/pages/includes/nav.html') %>
+  <h1><%= headline %></h1>
+  <ul class="people">
+    <% for (let i = 0; i < people.length; i++) {%>
+    <li><%= people[i] %></li>
+    <% } %>
+  </ul>
+  <img src="@images/apple.png" alt="apple" />
+  <!-- path to partials directory -->
+  <%~ include('src/views/partials/footer.html') %>
+</body>
+</html>

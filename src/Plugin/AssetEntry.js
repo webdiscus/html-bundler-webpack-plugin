@@ -31,6 +31,7 @@ const loader = require.resolve('../Loader');
  * @property {string} resource The absolute import file with a query.
  * @property {string} importFile The original import entry file.
  * @property {string} sourceFile The absolute import file only w/o a query.
+ * @property {string|undefined} dataFile The absolute file containing variables passed into the entry template.
  * @property {string} sourcePath The path where are source files.
  * @property {string} outputPath The absolute output path.
  * @property {string} publicPath The public path relative to outputPath.
@@ -56,6 +57,9 @@ class AssetEntry {
 
   /** @type {FileSystem} */
   fs = null;
+
+  /** @type {Compiler} */
+  compiler = null;
 
   /** @type {Compilation} */
   compilation = null;
@@ -301,7 +305,7 @@ class AssetEntry {
     if (entry == null) return null;
 
     if (
-      PluginService.isWatchMode(this.compilation.compiler) &&
+      PluginService.isWatchMode(this.compiler) &&
       this.pluginOption.isDynamicEntry() &&
       this.isDeletedEntryFile(entry.sourceFile)
     ) {
@@ -448,6 +452,13 @@ class AssetEntry {
   }
 
   /**
+   * @param {Compiler} compiler The instance of the webpack compiler.
+   */
+  setCompiler(compiler) {
+    this.compiler = compiler;
+  }
+
+  /**
    * @param {Compilation} compilation The instance of the webpack compilation.
    */
   setCompilation(compilation) {
@@ -496,6 +507,11 @@ class AssetEntry {
         entry.import[0] = path.join(sourcePath, entry.import[0]);
       }
 
+      let dataFile = undefined;
+      if (typeof entry.data === 'string') {
+        dataFile = PluginService.resolveFile(this.compiler, entry.data);
+      }
+
       /** @type {AssetEntryOptions} */
       const assetEntryOptions = {
         id,
@@ -506,6 +522,7 @@ class AssetEntry {
         resource,
         importFile,
         sourceFile,
+        dataFile,
         sourcePath,
         outputPath,
         publicPath: '',
@@ -565,8 +582,7 @@ class AssetEntry {
       library: undefined,
     };
 
-    const compilation = this.compilation;
-    const compiler = compilation.compiler;
+    const compiler = this.compiler;
     const { EntryPlugin } = compiler.webpack;
 
     // the entry request is generated as the `entrypoint.import` property after call the addEntries()
@@ -642,8 +658,8 @@ class AssetEntry {
     this.#add(entryOptions, assetEntryOptions);
     this.compilationEntryNames.add(name);
 
+    const compiler = this.compiler;
     const compilation = this.compilation;
-    const compiler = compilation.compiler;
     const { EntryPlugin } = compiler.webpack;
     const entryDependency = EntryPlugin.createDependency(importFile, { name });
 
@@ -652,7 +668,7 @@ class AssetEntry {
     });
 
     // add missing dependencies after rebuild
-    if (PluginService.isWatchMode(this.compilation.compiler)) {
+    if (PluginService.isWatchMode(compiler)) {
       new EntryPlugin(context, importFile, { name }).apply(compiler);
     }
 
