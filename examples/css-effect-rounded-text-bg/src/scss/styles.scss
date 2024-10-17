@@ -1,0 +1,74 @@
+/** CSS effect styles */
+
+:root {
+  --conner-radius: 16px;
+  --bg-color: rgba(255, 255, 255, 0.99);
+}
+
+.text-bg-round {
+  position: relative;
+  width: fit-content;
+  padding: 5px 40px 5px 5px;
+  border-top-right-radius: var(--conner-radius);
+  background-color: var(--bg-color);
+}
+
+.text-bg-round::after {
+  content: ' ';
+  position: absolute;
+  width: calc(var(--conner-radius) * 2);
+  height: calc(var(--conner-radius) * 2);
+  bottom: calc(var(--conner-radius) * -1);
+  right: calc(var(--conner-radius) * -1);
+  background: radial-gradient(circle var(--conner-radius) at top right, #0000 95%, var(--bg-color)) no-repeat top right;
+  background-size: 50% 50%;
+}
+
+.text-bg-round:first-of-type {
+  padding: 0;
+}
+
+/** Misc styles */
+
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 20px;
+}
+
+h1 {
+  color: orangered;
+}
+
+.container {
+  background-image: url(../images/bg-image.webp);
+  background-repeat: no-repeat;
+  background-size: contain;
+  width: 647px;
+  height: 421px;
+  border-radius: var(--conner-radius);
+
+  display: flex;
+  align-items: flex-end;
+}
+
+.container .title {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 50px;
+  line-height: 50px;
+}
+
+.btn-round {
+  font-family: 'Arial', sans-serif;
+  font-size: 11px;
+  line-height: 11px;
+  background: #fff;
+  border: 2px solid #666;
+  border-radius: 20px;
+  padding: 6px 15px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.text-bg-round.has-button {
+  padding-right: 20px;
+}

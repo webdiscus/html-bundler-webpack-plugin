@@ -2,16 +2,17 @@ const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
+  //mode: 'd',
+
   output: {
     path: path.resolve(__dirname, 'dist'),
-    clean: true,
   },
 
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
         // define templates here
-        index: 'src/index.pug',
+        index: 'src/index.html',
       },
       js: {
         // output filename of compiled JavaScript
@@ -21,19 +22,17 @@ module.exports = {
         // output filename of extracted CSS
         filename: 'css/[name].[contenthash:8].css',
       },
-      // define the preprocessor for compile Pug templates
-      preprocessor: 'pug',
     }),
   ],
 
   module: {
     rules: [
       {
-        test: /\.(scss)$/,
+        test: /\.(s?css)$/,
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(ico|png|jp?g|svg)/,
+        test: /\.(ico|png|jp?g|webp|svg)/,
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext]',

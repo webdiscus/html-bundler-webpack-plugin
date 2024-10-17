@@ -3,8 +3,6 @@ const autoprefixer = require('autoprefixer');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-  mode: 'development',
-
   output: {
     path: path.resolve(__dirname, 'dist'),
     clean: true,
