@@ -3,9 +3,9 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
   //mode: 'production',
-  mode: 'development',
+  //mode: 'development',
   //stats: 'normal',
-  stats: 'errors-warnings',
+  //stats: 'errors-warnings',
   //devtool: false,
 
   output: {

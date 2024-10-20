@@ -1,12 +1,12 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 
-;// CONCATENATED MODULE: ./src/component.js
+;// ./src/component.js
 
 
 console.log('>> component');
 
-;// CONCATENATED MODULE: ./src/main.js
+;// ./src/main.js
 
 
 

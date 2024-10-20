@@ -261,7 +261,7 @@ class PluginService {
   }
 
   /**
-   * Called when the compiler is closing.
+   * Called after by shutdown and watchClose.
    * Used for tests to reset data after each test case.
    *
    * @param {Compiler|null} compiler
@@ -273,6 +273,11 @@ class PluginService {
     }
 
     const context = this.getContext(compiler);
+
+    if (!context) {
+      // when was already called the context was removed
+      return;
+    }
 
     context.used = false;
     context.loaderCache.clear();

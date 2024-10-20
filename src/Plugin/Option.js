@@ -674,9 +674,9 @@ class Option {
    * @return {Array<string>}
    */
   getRootSourcePaths() {
-    const watchDirs = PluginService.getLoaderOption(this.compiler).getWatchPaths();
+    const loaderOption = PluginService.getLoaderOption(this.compiler);
 
-    return watchDirs || [];
+    return loaderOption ? loaderOption.getWatchPaths() : [];
   }
 
   /**

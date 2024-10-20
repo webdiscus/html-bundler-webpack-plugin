@@ -319,7 +319,7 @@ class AssetCompiler {
         });
       });
 
-      compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
+      compiler.cache.hooks.shutdown.tapAsync({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
         if (!isCached) {
           const cacheData = collectionCache.getData();
 
@@ -1558,6 +1558,7 @@ class AssetCompiler {
    * Called when the compiler is closing or a watching compilation has stopped.
    */
   shutdown() {
+    //console.log('xxxx shutdown: ', {});
     PluginService.shutdown(this.compilation?.compiler);
   }
 }

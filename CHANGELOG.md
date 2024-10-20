@@ -1,5 +1,10 @@
 # Change log
 
+## 4.1.2 (2024-10-21)
+
+- fix: issue `file is not resolved` after start->stop->start in serve/watch mode when used cache filesystem, #114
+- chore: update dev packages
+
 ## 4.1.1 (2024-10-17)
 
 - fix: after 2-3 changes of the data file (global or entry), the dependent entry template is not recompiled.

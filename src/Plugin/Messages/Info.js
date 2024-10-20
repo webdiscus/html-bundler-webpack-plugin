@@ -101,13 +101,13 @@ const verbose = (pluginCompiler) => {
   const pluginContext = PluginService.getPluginContext(pluginCompiler);
 
   const collection = pluginContext.collection;
-  const dependency = PluginService.getLoaderDependency(pluginCompiler);
   const collectionData = collection.getData();
-
+  const dependency = PluginService.getLoaderDependency(pluginCompiler);
   let str = '\n' + black.bgGreen` ${pluginLabel} ` + bg(193).black` Entry processing ` + '\n';
 
   // display loader watch dependencies
-  if (PluginService.isWatchMode(pluginCompiler)) {
+  // TODO: fix verbose of dependency after start/stop in serve/watch mode when used cache filesystem
+  if (dependency && PluginService.isWatchMode(pluginCompiler)) {
     const watchFiles = dependency.getFiles();
 
     if (watchFiles && watchFiles.size > 0) {
