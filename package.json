@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.1.2",
+  "version": "4.1.3",
   "description": "HTML Bundler Plugin for Webpack renders HTML templates containing source files of scripts, styles, images. Supports template engines: Eta, EJS, Handlebars, Nunjucks, Pug, TwigJS. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -54,6 +54,7 @@
     "test:coverage": "jest --collectCoverage --config ./test/jest.config.js",
     "test:index": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/index.test.js",
     "test:issue": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/issue.test.js",
+    "test:messages": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/messages.test.js",
     "test:unit": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.test.js",
     "test:unitQueryParser": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.queryParser.test.js",
     "test:verbose": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",

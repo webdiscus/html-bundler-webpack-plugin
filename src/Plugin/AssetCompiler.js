@@ -21,6 +21,7 @@ const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
+const { outToConsole } = require('../Common/Helpers');
 const createPersistentCache = require('./createPersistentCache');
 
 const CssExtractModule = require('./Modules/CssExtractModule');
@@ -319,7 +320,10 @@ class AssetCompiler {
         });
       });
 
-      compiler.cache.hooks.shutdown.tapAsync({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
+      // note: if used `tapAsync` then no webpack statistics or errors will be displayed
+      // then use in the `done` hook the output of `stats.compilation.options.stats` in Promise.finally
+      //compiler.cache.hooks.shutdown.tapAsync({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
+      compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
         if (!isCached) {
           const cacheData = collectionCache.getData();
 
@@ -1538,6 +1542,12 @@ class AssetCompiler {
 
         compilation.name = compilationName(compilation.name, hasError);
 
+        // reserved for using `compiler.cache.hooks.shutdown.tapAsync` if used `filesystem` cache
+        // let statsOutput = stats.toString(stats.compilation.options.stats);
+        // if (statsOutput) {
+        //   outToConsole(statsOutput);
+        // }
+
         if (this.exceptions.size > 0) {
           const messages = Array.from(this.exceptions).join('\n\n');
           this.exceptions.clear();
@@ -1558,7 +1568,6 @@ class AssetCompiler {
    * Called when the compiler is closing or a watching compilation has stopped.
    */
   shutdown() {
-    //console.log('xxxx shutdown: ', {});
     PluginService.shutdown(this.compilation?.compiler);
   }
 }

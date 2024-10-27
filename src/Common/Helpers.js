@@ -27,6 +27,12 @@ const isFunction = (value) => typeof value === 'function';
  */
 const findPlugin = (plugins, name) => plugins.find((item) => item.constructor.name === name);
 
+/**
+ * Output to console.
+ *
+ * @param {*} args
+ * @return {boolean}
+ */
 const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 /**

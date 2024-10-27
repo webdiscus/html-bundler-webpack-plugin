@@ -3,7 +3,7 @@ const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 module.exports = [
   {
-    name: 'config_2',
+    name: 'config_1',
     mode: 'production',
 
     output: {

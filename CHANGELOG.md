@@ -1,5 +1,10 @@
 # Change log
 
+## 4.1.3 (2024-10-28)
+
+- fix: if `filesystem` cache is used, webpack stats or errors are not displayed, #115
+- test: allow set the `stats.preset` webpack option to display stats info by testing 
+
 ## 4.1.2 (2024-10-21)
 
 - fix: issue `file is not resolved` after start->stop->start in serve/watch mode when used cache filesystem, #114

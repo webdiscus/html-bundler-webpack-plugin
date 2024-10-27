@@ -3,11 +3,8 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'production',
-  //mode: 'development',
-  // stats: {
-  //   preset: 'normal',
-  //   children: true,
-  // },
+
+  stats: 'normal',
 
   output: {
     path: path.join(__dirname, 'dist/'),
@@ -37,6 +34,7 @@ module.exports = {
           return '[name].[contenthash:8].js';
         },
       },
+      //verbose: true,
     }),
   ],
 

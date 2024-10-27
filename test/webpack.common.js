@@ -1,7 +1,10 @@
 module.exports = {
   devtool: false,
-  // avoid double error output in console
-  stats: 'errors-warnings',
+
+  // note: use the stats as an object to take an effect for stats info in output
+  stats: {
+    preset: 'none',
+  },
 
   output: {
     // clean the output directory before emitting

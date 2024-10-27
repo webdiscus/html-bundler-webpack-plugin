@@ -1,4 +1,4 @@
-import { compareFiles, compareFilesRuns, watchCompareFiles } from './utils/helpers';
+import { compareFiles, compareFilesRuns, stdoutContain, watchCompareFiles } from './utils/helpers';
 
 //import { removeDirsSync } from './utils/file';
 // Remove all 'dist/' directories from tests, use it only for some local tests.
@@ -31,10 +31,13 @@ describe('cache tests', () => {
   //   await new Promise((r) => setTimeout(r, 500));
   // });
 
-  test('cache-filesystem-js-runs_n1', () => compareFilesRuns('cache-filesystem-js', false, 1));
+  // NOTE: use only single test with filesystem cache to avoid the error: 'PersistentCache is already registered'
+  //test('filesystem display stats', () => stdoutContain('cache-filesystem-display-stats', 'compiled successfully'));
+
+  test('filesystem-js-runs_n1', () => compareFilesRuns('cache-filesystem-js', false, 1));
 
   // TODO: fix DEP_WEBPACK_COMPILATION_ASSETS warning
-  //test('cache-filesystem-js-runs_n2', () => compareFilesRuns('cache-filesystem-js', false, 2));
+  //test('filesystem-js-runs_n2', () => compareFilesRuns('cache-filesystem-js', false, 2));
 });
 
 describe('resolve files', () => {

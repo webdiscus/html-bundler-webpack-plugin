@@ -4,6 +4,8 @@ const process = require('process');
 const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 
+const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
+
 const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
   const testPath = path.join(PATHS.testSource, relTestCasePath);
   const configFile = path.join(testPath, 'webpack.config.js');
@@ -67,6 +69,21 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
     const compiler = webpack(config);
 
     compiler.run((error, stats) => {
+      if (typeof config.stats === 'string') {
+        let preset = config.stats;
+        config.stats = {
+          preset,
+        };
+      }
+
+      if (!error) {
+        // display stats info in the output,
+        // because if webpack API is used, nothing is displayed
+        const statsOutput = stats.toString(config.stats);
+        if (statsOutput) {
+          outToConsole(statsOutput);
+        }
+      }
       compiler.close((closeErr) => {
         if (error) {
           reject('[webpack compiler]\n' + error.stack);

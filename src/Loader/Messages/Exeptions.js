@@ -36,7 +36,7 @@ class LoaderException extends WebpackError {
   /**
    * @param {ObjectSerializerContext} context context
    */
-  static serialize(context) {
+  serialize(context) {
     const { write } = context;
 
     write(this.error);
@@ -48,7 +48,7 @@ class LoaderException extends WebpackError {
   /**
    * @param {ObjectDeserializerContext} context context
    */
-  static deserialize(context) {
+  deserialize(context) {
     const { read } = context;
 
     this.error = read();
