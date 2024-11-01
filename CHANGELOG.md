@@ -1,5 +1,9 @@
 # Change log
 
+## 4.1.4 (2024-11-01)
+
+- chore: update dependencies
+
 ## 4.1.3 (2024-10-28)
 
 - fix: if `filesystem` cache is used, webpack stats or errors are not displayed, #115

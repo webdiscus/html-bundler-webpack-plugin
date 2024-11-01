@@ -4,7 +4,7 @@ const Config = require('../../Common/Config');
 
 const { pluginLabel } = Config.get();
 
-const header = `\n${black.bgYellow` ${pluginLabel} `}${black.bgAnsi(227)` DEPRECATE `} `;
+const header = `\n${black.bgYellow` ${pluginLabel} `}${black.bg(227)` DEPRECATE `} `;
 
 // Example for deprecations
 

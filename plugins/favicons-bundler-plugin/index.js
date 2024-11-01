@@ -147,7 +147,7 @@ class FaviconsBundlerPlugin {
   }
 
   warningFaviconNotFound() {
-    const header = `\n${black.bgYellow` ${this.pluginName} `}${black.bgAnsi(227)` WARNING `} `;
+    const header = `\n${black.bgYellow` ${this.pluginName} `}${black.bg(227)` WARNING `} `;
 
     let warning = `Favicon file is not found!
 If the ${blueBright(

@@ -4,7 +4,7 @@ const Config = require('../../Common/Config');
 
 const { pluginLabel } = Config.get();
 const headerWarning = `\n${reset.black.bgYellow` ${pluginLabel} `}\n`;
-const headerDeprecation = `\n${reset.black.bgYellow` ${pluginLabel} `}${black.bgAnsi(227)` DEPRECATION `} `;
+const headerDeprecation = `\n${reset.black.bgYellow` ${pluginLabel} `}${black.bg(227)` DEPRECATION `} `;
 
 /**
  * @param {Array<string>} dirs Not founded directories.
