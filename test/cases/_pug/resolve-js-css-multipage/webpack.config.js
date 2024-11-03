@@ -24,9 +24,7 @@ module.exports = {
         index: './src/views/pages/index.pug',
       },
       js: {
-        // the problem: randomize contenthash after every test
-        //filename: 'js/[name].[contenthash:8].js',
-        filename: 'js/[name].bundle.js',
+        filename: 'js/[name].[contenthash:8].js',
       },
       css: {
         filename: 'css/[name].[contenthash:8].css',

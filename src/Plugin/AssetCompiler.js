@@ -21,7 +21,7 @@ const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
-const { outToConsole } = require('../Common/Helpers');
+const { parseVersion, compareVersions } = require('../Common/Helpers');
 const createPersistentCache = require('./createPersistentCache');
 
 const CssExtractModule = require('./Modules/CssExtractModule');
@@ -98,6 +98,9 @@ let RawSource;
 
 class AssetCompiler {
   static processAssetsPromises = [];
+
+  /** Whether the installed Webpack version < 5.96.0 */
+  IS_WEBPACK_VERSION_LOWER_5_96_0 = true;
 
   /** @type {Array<Promise>} */
   promises = [];
@@ -397,6 +400,8 @@ class AssetCompiler {
     const fs = this.fs;
     const { NormalModule, Compilation } = compilation.compiler.webpack;
     const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
+
+    this.IS_WEBPACK_VERSION_LOWER_5_96_0 = compareVersions(compilation.compiler.webpack.version, '<', '5.96.0');
 
     this.compilation = compilation;
     this.pluginContext.compilation = compilation;
@@ -778,11 +783,22 @@ class AssetCompiler {
 
     // lazy load CSS in JS using `?url` query, see js-import-css-lazy-url
     if (meta.isImportedStyle && isUrl && !query.includes(cssLoaderName)) {
-      const dataUrlOptions = undefined;
       const filename = this.pluginOption.getCss().filename;
 
+      if (this.IS_WEBPACK_VERSION_LOWER_5_96_0) {
+        // Webpack <= 5.95
+        createData.generator = new AssetGenerator(undefined, filename);
+      } else {
+        // Webpack >= 5.96
+        const moduleGraph = this.compilation.moduleGraph;
+        const dataUrl = undefined;
+        const publicPath = undefined;
+        const outputPath = undefined;
+        const emit = true;
+        createData.generator = new AssetGenerator(moduleGraph, dataUrl, filename, publicPath, outputPath, emit);
+      }
+
       createData.parser = new AssetParser(false);
-      createData.generator = new AssetGenerator(dataUrlOptions, filename);
       createData.type = ASSET_MODULE_TYPE_RESOURCE;
     }
   }

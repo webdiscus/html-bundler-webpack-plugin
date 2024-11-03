@@ -224,7 +224,28 @@ class AssetInline {
       }
     } else if (item.source == null) {
       // data URL for binary resource
-      const dataUrl = codeGenerationResults.getData(module, chunk.runtime, 'url').toString();
+      const data = codeGenerationResults.getData(module, chunk.runtime, 'url');
+      let dataUrl;
+
+      // note: webpack has introduced a braking change by 5.95.0 -> 5.96.0
+      if (!data?.javascript) {
+        // webpack <= 5.95.x: data is Buffer
+        dataUrl = data.toString();
+      } else if (data?.javascript) {
+        // webpack => 5.96.0: data contains `javascript` key
+        dataUrl = data?.javascript;
+
+        // remove quotes in value like "data:image/..."
+        if (dataUrl.at(0) === '"') {
+          dataUrl = dataUrl.slice(1, -1);
+        }
+      } else {
+        // warning as svg
+        const warning1 = 'Downgrade your webpack.';
+        const warning2 = 'This version is not compatible.';
+        dataUrl = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='40' viewBox='0 0 200 40'><text y='15'>${warning1}</text><text dy='30'>${warning2}</text></svg>`;
+      }
+
       item.source = { dataUrl };
     }
   }

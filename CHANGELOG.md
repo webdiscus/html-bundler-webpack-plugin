@@ -1,5 +1,14 @@
 # Change log
 
+## 4.2.0 (2024-11-03)
+
+- feat: add support for Webpack `>= 5.96` to correct inline images into CSS and HTML
+  WARNING: Webpack version `5.96.0` introduces the BREAKING CHANGE in the `CodeGenerationResults` class!
+- feat: add support for Webpack `>= 5.96` to correct CSS lazy loading
+  WARNING: Webpack version `5.96.0` introduces the BREAKING CHANGE in the `AssetGenerator` class!
+- chore: update package and devel dependencies
+- test: update tests
+
 ## 4.1.4 (2024-11-01)
 
 - chore: update dependencies

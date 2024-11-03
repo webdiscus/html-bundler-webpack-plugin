@@ -130,6 +130,67 @@ const replaceAll = (str, search, replace) => {
   return str.replace(new RegExp(search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
 };
 
+/**
+ * Parse version string including leading compare chars.
+ * For example: '=5.96.1', '>5.96.1', '< 5.96.1', '<= 5.96.1', >= 5.96.1'
+ *
+ * @param version
+ * @return {[compare: string, version: string]}
+ */
+const parseVersion = (version) => {
+  let i;
+  for (i = 0; i < version.length; i++) {
+    let char = version.codePointAt(i);
+    if (char >= 48 && char <= 57) {
+      break;
+    }
+  }
+  let compare = version.slice(0, i);
+  compare = compare.trim();
+
+  return [compare, version.slice(i)];
+};
+
+/**
+ * Compare two semantic versions.
+ *
+ * @param {string} version1
+ * @param {string} compare One of: `=`, `<`, `>`, `<=`, `>=`
+ * @param {string} version2
+ * @return {boolean}
+ */
+const compareVersions = (version1, compare, version2) => {
+  const sortVersions = (x, v = (s) => s.match(/[a-z]|\d+/g).map((c) => (c == ~~c ? String.fromCharCode(97 + c) : c))) =>
+    x.sort((a, b) => ((a + b).match(/[a-z]/) ? (v(b) < v(a) ? 1 : -1) : a.localeCompare(b, 0, { numeric: true })));
+
+  const versions = [version1, version2];
+  const sorted = sortVersions(versions);
+  let result;
+
+  if (version1 === version2) {
+    result = 0;
+  } else if (sorted[0] === version1) {
+    result = -1;
+  } else {
+    result = 1;
+  }
+
+  switch (compare) {
+    case '=':
+      return result === 0;
+    case '<':
+      return result === -1;
+    case '>':
+      return result === 1;
+    case '<=':
+      return result === 0 || result === -1;
+    case '>=':
+      return result === 0 || result === 1;
+  }
+
+  return false;
+};
+
 module.exports = {
   isWin,
   isFunction,
@@ -143,4 +204,6 @@ module.exports = {
   detectIndent,
   replaceAll,
   outToConsole,
+  parseVersion,
+  compareVersions,
 };

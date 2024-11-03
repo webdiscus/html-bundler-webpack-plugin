@@ -208,8 +208,9 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 ## 🔆 What's New in v4
 
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
-- **SUPPORTS** Node.js version `18+`
-- **SUPPORTS** Webpack version `5.81+`
+- **SUPPORTS** Webpack version `5.96+` (since `v4.2.0`).
+- **SUPPORTS** Webpack version `5.81+` (since `v4.0.0`).
+- **SUPPORTS** Node.js version `18+`.
 - **BREAKING CHANGES** see in the [changelog](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/CHANGELOG.md#v4-0-0).
 
 ## 🔆 What's New in v3
@@ -235,8 +236,11 @@ For full release notes see the [changelog](https://github.com/webdiscus/html-bun
 
 ### Cache type
 
-The current version works stable with `cache.type` as `'memory'` (Webpack's default setting).\
-Support for the `'filesystem'` cache type is experimental.
+The current version works stably with `cache.type` as `'memory'` (Webpack's default setting).
+
+Support for the `'filesystem'` cache type is in beta.
+It works stably in standard use cases, but it cannot be guaranteed to work in all use cases.
+If you have any problems, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues).
 
 ---
 

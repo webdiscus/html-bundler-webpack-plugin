@@ -41,7 +41,7 @@ describe('cache tests', () => {
 });
 
 describe('resolve files', () => {
-  test('script style asset', () => compareFiles('resolve-script-style-asset'));
+  test('script style asset', () => compareFiles('resolve-js-css-assets'));
   test('many pages from same tmpl', () => compareFiles('resolve-in-many-pages-from-same-tmpl'));
   test('many pages from one html', () => compareFiles('resolve-in-many-pages-from-one-html'));
   test('relative paths', () => compareFiles('resolve-relative-paths'));
@@ -54,11 +54,12 @@ describe('resolve files', () => {
   test('resolve js in many entries with the same template', () => compareFiles('resolve-js-same-tmpl'));
   test('use the same js file in many html', () => compareFiles('resolve-js-diff-tmpl'));
 
+  test('js, css with same name', () => compareFiles('resolve-js-css-with-same-name'));
+
   test('not resolve in template comment', () => compareFiles('comment-not-resolve'));
 });
 
 describe('resolve styles', () => {
-  // TODO: sass/sass-loader BUG: doesn't contains the sourcesContent
   test('styles loaded from node_modules', () => compareFiles('resolve-styles-from-module'));
   test('styles with same name', () => compareFiles('resolve-styles-with-same-name'));
   test('styles with same name, hash', () => compareFiles('resolve-styles-with-same-name-hash'));

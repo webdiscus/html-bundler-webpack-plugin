@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { findPlugin, getFileExtension, replaceAll } from '../src/Common/Helpers';
+import { findPlugin, getFileExtension, replaceAll, parseVersion, compareVersions } from '../src/Common/Helpers';
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
 import { HtmlParser } from '../src/Common/HtmlParser';
@@ -75,6 +75,62 @@ describe('misc', () => {
     const received = source.sort(compareArrays);
     // console.log('==> RES: ', received);
     return expect(received).toEqual(expected);
+  });
+});
+
+describe('compareVersions', () => {
+  test('1.2.99 < 1.2.100', () => {
+    const expected = compareVersions('1.2.99', '<', '1.2.100');
+    const received = true;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('5.95.0 < 5.96.1', () => {
+    const expected = compareVersions('5.95.0', '<', '5.96.1');
+    const received = true;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('5.95.0 <= 5.96.1', () => {
+    const expected = compareVersions('5.95.0', '<=', '5.96.1');
+    const received = true;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('5.96.10 >= 5.96.1', () => {
+    const expected = compareVersions('5.96.10', '>=', '5.96.1');
+    const received = true;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('5.95.0 > 5.96.1', () => {
+    const expected = compareVersions('5.95.0', '>', '5.96.1');
+    const received = false;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('5.96.1 = 5.96.1', () => {
+    const expected = compareVersions('5.96.1', '=', '5.96.1');
+    const received = true;
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('parseVersion: =5.96.1', () => {
+    const received = parseVersion('= 5.96.1');
+    const expected = ['=', '5.96.1'];
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('parseVersion: >5.96.1', () => {
+    const received = parseVersion('>5.96.1');
+    const expected = ['>', '5.96.1'];
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('parseVersion: >= 5.96.1', () => {
+    const received = parseVersion('>= 5.96.1');
+    const expected = ['>=', '5.96.1'];
+    return expect(received).toStrictEqual(expected);
   });
 });
 
