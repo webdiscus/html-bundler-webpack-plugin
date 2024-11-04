@@ -7,12 +7,13 @@ class Preprocessor {
   static dir = 'Preprocessors';
 
   static moduleDirs = {
-    eta: 'Eta',
     ejs: 'Ejs',
+    eta: 'Eta',
     handlebars: 'Handlebars',
     nunjucks: 'Nunjucks',
-    twig: 'Twig',
     pug: 'Pug',
+    tempura: 'Tempura',
+    twig: 'Twig',
   };
 
   /**

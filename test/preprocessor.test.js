@@ -64,6 +64,11 @@ describe('other preprocessors', () => {
   //test('jsx', () => compareFiles('_preprocessor/preprocessor-jsx'));
 });
 
+describe('tempura', () => {
+  test('default', () => compareFiles('_preprocessor/tempura-default'));
+  test('render', () => compareFiles('_preprocessor/tempura-render'));
+});
+
 describe('special use cases', () => {
   test('preprocessor function', () => compareFiles('_preprocessor/preprocessor-function'));
   test('preprocessor null', () => compareFiles('_preprocessor/preprocessor-return-null'));
@@ -95,4 +100,8 @@ describe('usage template in js on client side', () => {
 
   // Twig
   test('twig: compile to fn', () => compareFiles('_preprocessor/js-tmpl-twig-compile'));
+
+  // Tempura
+  // TODO: locally passes the test, but on GitHub fail because the generated JS code contains other char for minimized function name
+  //test('tempura: compile to fn', () => compareFiles('_preprocessor/js-tmpl-tmpr-compile'));
 });

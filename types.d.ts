@@ -268,6 +268,7 @@ type Preprocessor =
   | 'handlebars'
   | 'nunjucks'
   | 'pug'
+  | 'tempura'
   | 'twig'
   | ((content: string, loaderContext: BundlerPluginLoaderContext) => string | Promise<any> | undefined);
 

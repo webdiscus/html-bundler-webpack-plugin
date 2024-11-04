@@ -1,5 +1,13 @@
 # Change log
 
+## 4.3.0 (2024-11-04)
+
+- feat: add preprocessor for [Tempura](https://github.com/lukeed/tempura) template engine.
+  Supports the static render and template function.
+- test: add test for the `tempura` preprocessor
+- docs: add documentation for Tempura
+- chore: add usage example
+
 ## 4.2.0 (2024-11-03)
 
 - feat: add support for Webpack `>= 5.96` to correct inline images into CSS and HTML

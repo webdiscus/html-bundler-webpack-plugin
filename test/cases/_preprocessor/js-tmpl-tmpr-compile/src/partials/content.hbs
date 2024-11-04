@@ -1,0 +1,18 @@
+{{! expected props to receive }}
+{{#expect title, name, lang, people }}
+
+<h1>Hello {{ name }}!</h1>
+<div>Global data: title = "{{ title }}"</div>
+<div>Query param: lang = "{{ lang }}"</div>
+
+<ul>
+    {{#each people as item}}
+    <li>{{item}}</li>
+    {{/each}}
+</ul>
+
+<p>{{#bar name='Alice' }}</p>
+
+<img src="@images/fig.png" srcset="@images/kiwi.png 300w, @images/pear.png 400w">
+{{!-- TODO: add supports for include helper in template function --}}
+{{!#include src='src/partials/star.hbs' }}

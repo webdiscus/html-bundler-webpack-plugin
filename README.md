@@ -32,7 +32,8 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 - An [entry point](#option-entry) is any HTML template. **Start from HTML**, not from JS.
 - **Find** and automatic processing of templates in the [entry directory](#option-entry-path).
 - **Renders** the [template engines](#template-engine) "out of the box":
-  [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
+  [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Tempura](#using-template-tempura), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
+  It is very easy to add support for any template engine.
 - **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
   - `<link href="./style.scss" rel="stylesheet">`\
   No longer need to define source style files in Webpack entry or import styles in JavaScript.
@@ -495,6 +496,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [eta](#loader-option-preprocessor-options-eta)
      - [ejs](#loader-option-preprocessor-options-ejs)
      - [handlebars](#loader-option-preprocessor-options-handlebars)
+     - [tempura](#loader-option-preprocessor-options-tempura)
      - [nunjucks](#loader-option-preprocessor-options-nunjucks)
      - [pug](#loader-option-preprocessor-options-pug)
      - [twig](#loader-option-preprocessor-options-twig)
@@ -508,6 +510,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [Mustache](#using-template-mustache)
    - [Nunjucks](#using-template-nunjucks)
    - [Pug](#using-template-pug)
+   - [Tempura](#using-template-tempura)
    - [TwigJS](#using-template-twig)
 1. [Using template in JavaScript](#template-in-js)
 1. [Setup Live Reload](#setup-live-reload)
@@ -3657,6 +3660,60 @@ For the complete list of Handlebars `compile` options see [here](https://handleb
 
 #### [↑ back to contents](#contents)
 
+
+<a id="loader-option-preprocessor-options-tempura" name="loader-option-preprocessor-options-tempura"></a>
+
+#### Options for `preprocessor: 'tempura'`
+
+[Tempura](https://github.com/lukeed/tempura) is a light and fast template engine with Handlebars-like syntax.
+
+The preprocessor has built-in `include` helper, to load a partial file.
+
+```js
+{
+  preprocessor: 'tempura',
+  preprocessorOptions: {
+    // defaults process.cwd(), root path for includes with an absolute path (e.g., /file.html)
+    root: path.join(__dirname, 'src/views/'), // defaults process.cwd()
+    // defaults [], an array of paths to use when resolving includes with relative paths
+    views: [
+      'src/views/includes', // relative path
+      path.join(__dirname, 'src/views/partials'), // absolute path
+    ],
+    blocks: {
+      // define here custom helpers
+      bar: ({ value }) => `<bar>${value}</bar>`,
+    },
+  },
+},
+```
+
+For all available options, see the [Tempura API options](https://github.com/lukeed/tempura/blob/master/docs/api.md#options-2).
+
+**Using build-in `include` helper.**
+
+The `src` attribute contains a path to the partial file.
+
+The path relative to current working directory (defaults webpack config directory):
+
+```hbs
+{{#include src='src/views/partials/header.hbs' }}
+```
+
+The path relative to directory defined in `root` option, e.g. `root: 'src/view'`:
+```hbs
+{{#include src='partials/header.hbs' }}
+```
+
+The path relative to one of directories defined in `views` option, e.g. `views: ['src/views/partials']`:
+```hbs
+{{#include src='header.hbs' }}
+```
+
+---
+
+#### [↑ back to contents](#contents)
+
 <a id="loader-option-preprocessor-options-nunjucks" name="loader-option-preprocessor-options-nunjucks"></a>
 
 #### Options for `preprocessor: 'nunjucks'`
@@ -3917,6 +3974,7 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 - [Mustache](https://github.com/janl/mustache.js)
 - [Nunjucks](https://mozilla.github.io/nunjucks/)
 - [Pug](https://pugjs.org)
+- [Tempura](https://github.com/lukeed/tempura)
 - [TwigJS](https://github.com/twigjs/twig.js)
 
 <!--
@@ -4121,9 +4179,82 @@ module.exports = {
 
 See the [`handlebars` preprocessor options](#loader-option-preprocessor-options-handlebars).
 
-[Source code](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
+[Source code of the example](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/handlebars/)
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/webpack-webpack-js-org-mxbx4t?file=webpack.config.js)
+
+#### [↑ back to contents](#contents)
+
+<a id="using-template-tempura" name="using-template-tempura"></a>
+
+### Using the Tempura
+
+You need to install the `tempura` package:
+
+```
+npm i -D tempura
+```
+
+For example, there is the template _src/views/page/home.hbs_
+
+```hbs
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ title }}</title>
+</head>
+<body>
+  {{#include src='header.hbs' }}
+  <div class="container">
+    <h1>Tempura</h1>
+    <div>{{ persons.length }} persons:</div>
+    <ul class="person">
+      {{#each persons as person}}
+        <li>{{person.name}} is {{person.age}} years old.</li>
+      {{/each}}
+    </ul>
+  </div>
+  {{#include src='footer.hbs' }}
+</body>
+</html>
+```
+
+Define the `preprocessor` as `tempura`:
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        // define templates here
+        index: {
+          import: 'src/views/pages/home.hbs', // => dist/index.html
+          // pass data to template as an object
+          data: { 
+            title: 'Tempura',
+             persons: [
+                { name: 'Robert', age: 30 },
+                ...
+             ], 
+          },
+        },
+      },
+      // use tempura templating engine
+      preprocessor: 'tempura',
+      // define options
+      preprocessorOptions: {
+        views: ['src/views/partials'],
+      },
+    }),
+  ],
+};
+```
+
+See the [`tempura` preprocessor options](#loader-option-preprocessor-options-tempura).
+
+[Source code of the example](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/tempura/)
 
 #### [↑ back to contents](#contents)
 

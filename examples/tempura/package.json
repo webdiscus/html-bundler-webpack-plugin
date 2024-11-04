@@ -1,0 +1,25 @@
+{
+  "name": "tempura",
+  "description": "Tempura / Sass / JavaScript / Webpack",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm start"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production",
+    "test": "npm run build"
+  },
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "tempura": "^0.4.1",
+    "html-bundler-webpack-plugin": "^4.3.0",
+    "sass": "^1.80.6",
+    "sass-loader": "^16.0.3",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
+  }
+}
