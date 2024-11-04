@@ -1,5 +1,17 @@
 # Change log
 
+## 4.4.0 (2024-11-04)
+
+- feat: add `context` loader option to resolve assets w/o leading `/` in a directory outer your project:
+  ```js
+  new HtmlBundlerPlugin({
+    loaderOptions: {
+      context: path.resolve(__dirname, '../other/'),
+    },
+  }),
+  ```
+- docs: update readme
+
 ## 4.3.0 (2024-11-04)
 
 - feat: add preprocessor for [Tempura](https://github.com/lukeed/tempura) template engine.

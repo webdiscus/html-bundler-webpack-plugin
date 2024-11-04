@@ -13,6 +13,7 @@
   <script src="../../js/main.js" defer="defer"></script>
 </head>
 <body>
+  {{! using build-in 'include' helper, the 'src' is the path to partial is relative to the 'views' plugin option }}
   {{#include src='header.hbs' }}
 
   <div class="container">
@@ -27,9 +28,9 @@
       {{#var str_person = 'persons' }}
     {{/if}}
 
+    {{! using of the custom 'bar' helper }}
     {{#bar value="Custom helper! 🎉"}}
 
-    {{! using of the arraySize helper }}
     <p>{{ count }} {{ str_person }}:</p>
 
     <ul class="person">

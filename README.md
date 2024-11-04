@@ -490,7 +490,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 <a id="toc-loader-options" name="toc-loader-options"></a>
 1. [Loader options](#loader-options)
    - [sources](#loader-option-sources) (processing of custom tag attributes)
-   - [root](#loader-option-root) (allow to resolve root path in attributes)
+   - [root](#loader-option-root) (allow to resolve a path with leading `/`)
+   - [context](#loader-option-context) (allow to resolve a path w/o leading `/`)
    - [beforePreprocessor](#loader-option-before-preprocessor) (callback)
    - [preprocessor](#loader-option-preprocessor) (callback or string) and [preprocessorOptions](#loader-option-preprocessorOptions) (templating)
      - [eta](#loader-option-preprocessor-options-eta)
@@ -3108,7 +3109,7 @@ Type: `string|boolean` Default: `false`
 
 The `root` option allow to resolve an asset file with leading `/` root path.
 
-Defaults is disabled because the file with leading `/` is a valide URL in the public path, e.g. `dist/`.
+Defaults is disabled because the file with leading `/` is a valid URL in the public path, e.g. `dist/`.
 The files with leading `/` are not processed.
 
 Define the `root` option as the absolute path to the source directory to enable the processing.
@@ -3146,6 +3147,55 @@ Now you can use the `/` root path for the source assets:
   <body>
     <h1>Hello World!</h1>
     <img src="/images/apple.png" />
+  </body>
+</html>
+```
+
+#### [↑ back to contents](#contents)
+
+<a id="loader-option-context" name="loader-option-context"></a>
+
+### `context`
+
+Type: `string` Default: `undefined`
+
+The `context` option allow to resolve an asset file without leading `/` path.
+
+For example, there are project files:
+
+```
+project/src/views/index.html
+project/src/styles/style.scss
+project/src/images/logo.png
+otherDir/stock-photos/cologne.png // <= file outer your project directory
+```
+
+You can use the [root](loader-option-root) option to use assets in your project directory
+and define the `context` option to use assets outer your project directory:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: 'src/views/index.html',
+  },
+  loaderOptions: {
+    root: path.resolve(__dirname, 'src'),
+    context: path.resolve(__dirname, '../otherDir'),
+  },
+});
+```
+
+Now you can use the leading `/` for the assets in your project and w/o `/` for assets from outer directory:
+
+```html
+<html>
+  <head>
+    <link href="/styles/style.scss" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <img src="/images/logo.png" />
+    <img src="stock-photos/cologne.png" />
   </body>
 </html>
 ```

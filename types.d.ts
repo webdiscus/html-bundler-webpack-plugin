@@ -109,6 +109,7 @@ declare namespace HtmlBundlerPlugin {
 
   export interface LoaderOptions {
     root?: string | boolean;
+    context?: string;
     beforePreprocessor?: BeforePreprocessor;
     preprocessor?: Preprocessor;
     preprocessorOptions?: Object;

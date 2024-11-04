@@ -26,28 +26,24 @@ module.exports = {
         index: {
           import: 'src/views/pages/home.hbs', // => dist/index.html
           // pass data to template as an object
-          // data: homeData,
+          data: homeData,
           // OR define the data file
-          data: 'src/views/pages/homeData.js',
+          //data: 'src/views/pages/homeData.js',
         },
       },
-      // specify the `tempura` template engine
-      preprocessor: 'tempura',
-      // define tempura options
+      preprocessor: 'tempura', // use the `tempura` template engine
       preprocessorOptions: {
-        views: ['src/views/partials'],
+        views: ['src/views/partials'], // find including partials in these directories
         blocks: {
           // define custom helpers
           bar: ({ value }) => `<bar>${value}</bar>`,
         },
       },
       js: {
-        // output filename of compiled JavaScript
-        filename: 'js/[name].[contenthash:8].js',
+        filename: 'js/[name].[contenthash:8].js', // JS output filename
       },
       css: {
-        // output filename of extracted CSS
-        filename: 'css/[name].[contenthash:8].css',
+        filename: 'css/[name].[contenthash:8].css', // CSS output filename
       },
     }),
   ],

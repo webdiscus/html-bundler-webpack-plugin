@@ -217,6 +217,7 @@ describe('loader options common', () => {
   test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
 
   test('root', () => compareFiles('loader-option-root'));
+  test('context', () => compareFiles('loader-option-context'));
 });
 
 describe('resole entry name', () => {

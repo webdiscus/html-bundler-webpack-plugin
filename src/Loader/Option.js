@@ -73,6 +73,10 @@ class Option {
       // rule: the loader root/basedir option override the preprocessor root/basedir option
       options.basedir = loaderOptionsBasedir || preprocessorOptionsBasedir || false;
 
+      // rule: the absolute path to all assets,
+      // it works like the `root` option, but for assets w/o leading `/` slash, e.g. "images/logo.png"
+      options.contextDir = loaderOptions.context || '';
+
       // whether it should be used ESM export for the rendered/compiled result
       options.esModule = options?.esModule === true;
 
@@ -371,11 +375,19 @@ class Option {
   }
 
   /**
-   * Returns the root directory for the paths in template starting with `/`.
+   * Returns the root directory for the paths in template starting with leading `/`.
    * @return {string|false}
    */
   getBasedir() {
     return this.#options.basedir;
+  }
+
+  /**
+   * Returns the context directory for the paths in template starting w/o leading `/`.
+   * @return {string|false}
+   */
+  getContextDir() {
+    return this.#options.contextDir;
   }
 
   /**

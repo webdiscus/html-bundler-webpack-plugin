@@ -39,6 +39,7 @@ class Resolver {
     const options = loaderOption.getWebpackResolve();
 
     this.basedir = loaderOption.getBasedir();
+    this.contextdir = loaderOption.getContextDir();
     this.aliases = options.alias || {};
     this.hasAlias = Object.keys(this.aliases).length > 0;
 
@@ -118,7 +119,7 @@ class Resolver {
    */
   resolve(request, issuer, type = Resolver.types.default) {
     const [issuerFile] = issuer.split('?', 1);
-    const context = path.dirname(issuerFile);
+    const context = this.contextdir || path.dirname(issuerFile);
     const isScript = type === Resolver.types.script;
     const isStyle = type === Resolver.types.style;
     let isAliasArray = false;
@@ -212,7 +213,7 @@ class Resolver {
     let valueFile = file;
 
     // the argument begin with a string quote
-    const context = path.dirname(templateFile) + '/';
+    const context = (this.contextdir || path.dirname(templateFile)) + '/';
 
     if (!file) {
       // fix webpack require issue `Cannot find module` for the case:
