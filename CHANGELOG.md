@@ -1,5 +1,10 @@
 # Change log
 
+## 4.4.1 (2024-11-05)
+
+- fix: if used multiple config and cache `filesystem`, occurs the error 'PersistentCache is already registered'
+- test: add test for multiple config when used cache `filesystem`
+
 ## 4.4.0 (2024-11-04)
 
 - feat: add `context` loader option to resolve assets w/o leading `/` in a directory outer your project:

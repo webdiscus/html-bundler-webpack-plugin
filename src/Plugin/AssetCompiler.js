@@ -22,7 +22,7 @@ const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { isDir } = require('../Common/FileUtils');
 const { parseVersion, compareVersions } = require('../Common/Helpers');
-const createPersistentCache = require('./createPersistentCache');
+const createPersistentCache = require('./createPersistentCache')();
 
 const CssExtractModule = require('./Modules/CssExtractModule');
 const Option = require('./Option');

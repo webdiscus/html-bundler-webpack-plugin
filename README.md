@@ -1,5 +1,5 @@
 <div align="center">
-    <img height="200" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/plugin-logo.png">
+    <img height="200" src="images/plugin-logo.png">
     <h1 align="center">
         <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
     </h1>
@@ -56,7 +56,7 @@ See [full list of features](#features).
 ## HTML template as entry point
 
 <center>
-  <img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/assets-graph.png" alt="assets graph">
+  <img width="830" style="max-width: 100%;" src="images/assets-graph.png" alt="assets graph">
 </center>
 
 The **HTML Bundler** generates static HTML or [template function](#template-in-js) from [various templates](#template-engine) containing source files of scripts, styles, images, fonts and other resources, similar to how it works in [Vite](https://vitejs.dev/guide/#index-html-and-project-root).
@@ -190,7 +190,7 @@ The plugin resolves references in the HTML template and adds them to the Webpack
 Webpack will automatically process the source files, and the plugin replaces the references with their output filenames in the generated HTML.
 See [how the plugin works under the hood](#plugin-hooks-and-callbacks).
 
-<img width="830" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/workflow.png">
+<img width="830" style="max-width: 100%;" src="images/workflow.png">
 
 ## ❓Question / Feature Request / Bug
 
@@ -911,7 +911,7 @@ Using hooks you can create your own plugin.
 
 _How the plugin works under the hood._
 <center>
-  <img width="765" style="max-width: 100%;" src="https://raw.githubusercontent.com/webdiscus/html-bundler-webpack-plugin/master/images/hooks.png" alt="HTMLBundlerPlugin hooks & callbacks">
+  <img width="765" style="max-width: 100%;" src="images/hooks.png" alt="HTMLBundlerPlugin hooks & callbacks">
 </center>
 
 ### How to use hooks

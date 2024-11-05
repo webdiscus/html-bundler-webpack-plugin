@@ -1,35 +1,39 @@
 const makeSerializable = require('webpack/lib/util/makeSerializable');
 
-const classCache = new WeakMap();
+const createPersistentCache = () => {
+  const memorizedCache = new WeakMap();
+  let cacheIndex = 0;
 
-/* istanbul ignore next: test it manual using `cache.type` as `filesystem` after 2nd run the same project */
-const createPersistentCache = (instance) => {
-  if (classCache.has(instance)) {
-    return classCache.get(instance);
-  }
-
-  class PersistentCache {
-    instance = instance;
-
-    static getData(instance = {}) {
-      return new PersistentCache(instance);
+  return (instance) => {
+    if (memorizedCache.has(instance)) {
+      return memorizedCache.get(instance);
     }
 
-    constructor() {}
+    class PersistentCache {
+      instance = instance;
 
-    serialize(context) {
-      this.instance.serialize(context);
+      static getData(instance = {}) {
+        return new PersistentCache(instance);
+      }
+
+      constructor() {}
+
+      serialize(context) {
+        this.instance.serialize(context);
+      }
+
+      deserialize(context) {
+        this.instance.deserialize(context);
+      }
     }
 
-    deserialize(context) {
-      this.instance.deserialize(context);
-    }
-  }
+    // the cache index is needed for multiple configuration
+    makeSerializable(PersistentCache, __filename, `PersistentCache_${cacheIndex}`);
+    memorizedCache.set(instance, PersistentCache);
+    cacheIndex++;
 
-  makeSerializable(PersistentCache, __filename, 'PersistentCache');
-  classCache.set(instance, PersistentCache);
-
-  return PersistentCache;
+    return PersistentCache;
+  };
 };
 
 module.exports = createPersistentCache;
