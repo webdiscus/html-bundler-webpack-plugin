@@ -130,6 +130,11 @@ describe('plugin exceptions', () => {
     const containString = "The imported style can't be injected in HTML";
     return exceptionContain('_exceptions/msg-exception-import-css-wo-head', containString);
   });
+
+  test('splitChunks CSS file not found', () => {
+    const containString = "Add the 'splitChunks.cacheGroups.{cacheGroup}.test' option";
+    return exceptionContain('_exceptions/msg-exception-split-chunk-css', containString);
+  });
 });
 
 describe('plugin option exceptions', () => {

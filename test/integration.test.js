@@ -130,6 +130,7 @@ describe('plugin options', () => {
   // test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
 
   test('entry data file', () => compareFiles('option-entry-data-file'));
+  test('entry data json', () => compareFiles('option-entry-data-json-for-script'));
   test('entry array', () => compareFiles('option-entry-array'));
   test('entry object', () => compareFiles('option-entry-object'));
 
@@ -351,6 +352,8 @@ describe('split chunks', () => {
   test('load vendor scripts from node module', () => compareFiles('split-chunk-vendor'));
 
   test('order css using split chunks ', () => compareFiles('split-chunk-css-order'));
+
+  test('resolve css in templates', () => compareFiles('split-chunk-resolve-css'));
 
   // ATTENTION: this test doesn't work and never will be works.
   // This is just to demonstrate how a split of CSS files cannot be used. CSS files cannot be split.

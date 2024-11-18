@@ -7,6 +7,7 @@ module.exports = [
     mode: 'production',
     output: {
       path: path.join(__dirname, 'dist'),
+      crossOriginLoading: 'anonymous',
     },
     cache: {
       type: 'filesystem',
@@ -17,6 +18,7 @@ module.exports = [
         entry: {
           index: './src/index.html',
         },
+        integrity: true,
         //verbose: true,
       }),
     ],
@@ -35,6 +37,7 @@ module.exports = [
     mode: 'production',
     output: {
       path: path.join(__dirname, 'dist'),
+      crossOriginLoading: 'anonymous',
     },
     cache: {
       type: 'filesystem',
@@ -45,6 +48,7 @@ module.exports = [
         entry: {
           about: './src/about.html',
         },
+        integrity: true,
         //verbose: true,
       }),
     ],

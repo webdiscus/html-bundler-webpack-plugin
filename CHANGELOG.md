@@ -1,5 +1,10 @@
 # Change log
 
+## 4.4.2 (2024-11-18)
+
+- fix: add Exception when used `splitChunks` and occurs the error: Can't resolve a CSS file in template.
+- fix: correct Exception message when a source CSS file is not found 
+
 ## 4.4.1 (2024-11-05)
 
 - fix: if used multiple config and cache `filesystem`, occurs the error 'PersistentCache is already registered'

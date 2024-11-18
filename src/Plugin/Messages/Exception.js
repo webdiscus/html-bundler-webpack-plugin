@@ -74,9 +74,10 @@ const optionPreloadAsException = (config, type, availableTypes) => {
  * @param {string} file The unresolved file can be absolute or relative.
  * @param {string} issuer The absolute issuer file of unresolved file.
  * @param {string} rootContext The absolute path to project files.
+ * @param {object} pluginOptions The instance of the pluginOptions.
  * @throws {Error}
  */
-const resolveException = (file, issuer, rootContext) => {
+const resolveException = (file, issuer, rootContext, pluginOptions) => {
   let isExistsFile = true;
   issuer = path.relative(rootContext, issuer);
 
@@ -88,7 +89,7 @@ const resolveException = (file, issuer, rootContext) => {
 
   if (!isExistsFile) {
     message = `File ${yellow(file)} not found in ${cyan(issuer)}`;
-  } else if (/\.css$/.test(file) && file.indexOf('??ruleSet')) {
+  } else if (/\.css$/.test(file) && file.includes('??ruleSet')) {
     message +=
       `\nThe handling of ${yellow`@import at-rules in CSS`} is not supported. Disable the 'import' option in 'css-loader':\n` +
       white`
@@ -98,14 +99,48 @@ const resolveException = (file, issuer, rootContext) => {
     {
       loader: 'css-loader',
       options: {
-        import: false, // disable @import at-rules handling
+        import: false, ${white`// disable @import at-rules handling`}
       },
     },
   ],
 },`;
+  } else if (pluginOptions.isStyle(file) && hasSplitChunksCacheGroups(pluginOptions.webpackOptions)) {
+    message += `\n
+${whiteBright.bgGreen` Tip `} 
+Add the ${white`'splitChunks.cacheGroups.{cacheGroup}.test'`} option as a RegExp to each cache group to split only script files, excluding styles.
+For example:
+
+optimization: {
+  splitChunks: {
+    minSize: 1000,
+    cacheGroups: {
+      default: {
+        test: /.+\.(js|ts)$/, ${white`// split only scripts, excluding style files`}
+        name: 'common',
+        chunks: 'all',
+      },
+      vendors: {
+        test: /[\\/]node_modules[\\/].+\.(js|ts)$/, ${white`// split only scripts, excluding style files`}
+        name: 'vendor',
+        chunks: 'all',
+      },
+    },
+  },
+},
+`;
   }
 
   throw new PluginException(message);
+};
+
+/**
+ * Detect whether Webpack config contains `splitChunks.cacheGroups` option.
+ *
+ * @param webpackOptions
+ * @return {boolean}
+ */
+const hasSplitChunksCacheGroups = (webpackOptions) => {
+  return webpackOptions?.optimization?.splitChunks?.cacheGroups != null;
 };
 
 /**

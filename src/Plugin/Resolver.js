@@ -222,8 +222,8 @@ class Resolver {
     const { issuer, issuerFile } = this;
 
     // @import CSS rule is not supported
-    if (rawRequest.indexOf('??ruleSet') > 0) {
-      resolveException(rawRequest, issuer.resource, this.rootContext);
+    if (rawRequest.includes('??ruleSet')) {
+      resolveException(rawRequest, issuer.resource, this.rootContext, this.pluginOption);
     }
     // bypass the asset contained data-URL
     if (this.assetInline.isDataUrl(rawRequest)) return rawRequest;
@@ -249,6 +249,7 @@ class Resolver {
       }
 
       const assetFile = this.resolveAsset(resource);
+
       if (assetFile != null) return assetFile;
 
       // try to resolve inline data url
@@ -266,13 +267,13 @@ class Resolver {
     if (this.pluginOption.js.test.test(file) && this.assetEntry.isEntryResource(issuer.resource)) {
       // occur after rename/delete of a js file when the entry module was already rebuilt
       Snapshot.addMissingFile(issuer.resource, file);
-      resolveException(file, issuer.resource, this.rootContext);
+      resolveException(file, issuer.resource, this.rootContext, this.pluginOption);
     }
 
     // require a native JavaScript, JSON or css-loader API file
     if (/\.js[a-z0-9]*$/i.test(resource)) return require(resource);
 
-    resolveException(rawRequest, issuer.resource, this.rootContext);
+    resolveException(rawRequest, issuer.resource, this.rootContext, this.pluginOption);
   }
 
   /**

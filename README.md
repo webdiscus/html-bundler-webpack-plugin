@@ -1933,7 +1933,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         scripts: {
-          test: /\.(js|ts)$/, // <= IMPORTANT: split only JS files
+          test: /\.(js|ts)$/, // <= IMPORTANT: split only script files
           chunks: 'all',
         },
       },
@@ -6217,7 +6217,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         scripts: {
-          test: /\.(js|ts)$/,
+          test: /\.(js|ts)$/, // <= IMPORTANT: split only script files
           chunks: 'all',
         },
       },
@@ -6262,7 +6262,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         vendor: {
-          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // use exactly this Regexp
+          test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // <= IMPORTANT: split only script files
           name: 'vendor',
           chunks: 'all',
         },
@@ -6334,8 +6334,8 @@ module.exports = {
       maxSize: 1000000, // split chunks bigger than 100KB, defaults is 20KB
       cacheGroups: {
         app: {
-          test: /\.(js|ts)$/, // split only JS files
-          chunks: 'all', // <- use it only in cache groups
+          test: /\.(js|ts)$/, // <= IMPORTANT: split only script files
+          chunks: 'all', // <= use it only in cache groups
           name({ context }, chunks, groupName) {
             // save split chunks of the node module under package name
             if (/[\\/]node_modules[\\/]/.test(context)) {
