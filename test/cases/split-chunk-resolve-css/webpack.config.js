@@ -42,16 +42,14 @@ module.exports = {
       cacheGroups: {
         default: {
           test: /.+\.(js|ts)$/, // split only scripts, excluding style files
-          name: 'commons',
+          name: 'common',
           chunks: 'all',
           minChunks: 2,
-          priority: -20,
         },
         vendors: {
           test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // split only scripts, excluding style files
           name: 'vendor',
           chunks: 'all',
-          priority: -10,
         },
       },
     },
