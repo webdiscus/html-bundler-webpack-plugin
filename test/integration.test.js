@@ -248,6 +248,8 @@ describe('inline styles & scripts', () => {
   test('inline all assets into one HTML', () => compareFiles('inline-all-asset-to-html'));
 
   test('inline CSS via `?inline` and resolve url()', () => compareFiles('inline-style-query'));
+  test('inline many CSS via `?inline`', () => compareFiles('inline-style-query2'));
+
   test('inline CSS, source map, via `?inline`', () => compareFiles('inline-style-query-with-source-map'));
   test('inline minimized CSS', () => compareFiles('inline-style-cssnano'));
   test('inline js via `?inline`', () => compareFiles('inline-script-query'));
