@@ -73,7 +73,7 @@ describe('misc', () => {
       { order: '3' },
     ];
     const received = source.sort(compareArrays);
-    // console.log('==> RES: ', received);
+
     return expect(received).toEqual(expected);
   });
 });
@@ -1234,6 +1234,106 @@ describe('parseTagAttributes', () => {
     const source = `<script  defer data-text="text with spaces"  enabled=true empty="" src='file.js'  />`;
     const { attrs: received } = HtmlParser.parseTagAttributes(source, 'script', 0, 8);
     const expected = { defer: undefined, 'data-text': 'text with spaces', enabled: 'true', empty: '', src: 'file.js' };
+    return expect(received).toStrictEqual(expected);
+  });
+});
+
+describe('detect style tag', () => {
+  test('rel stylesheet', () => {
+    const tag = `<link href="style.css" rel="stylesheet" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'style';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel alternate stylesheet', () => {
+    const tag = `<link href="style.css" rel="alternate stylesheet" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'style';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel icon', () => {
+    const tag = `<link href="style.css" rel="icon" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'asset';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('preload as style', () => {
+    const tag = `<link href="style.css" rel="preload" as="style" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'style';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('preload as stylesheet', () => {
+    const tag = `<link href="style.css" rel="preload" as="stylesheet" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'style';
+    return expect(received).toStrictEqual(expected);
+  });
+});
+
+describe('detect script tag', () => {
+  test('rel prefetch as script', () => {
+    const tag = `<link href="script.js" rel="prefetch" as="script" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel preload as script', () => {
+    const tag = `<link href="script.js" rel="preload" as="script" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel modulepreload', () => {
+    const tag = `<link href="script.js" rel="modulepreload" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel modulepreload as script', () => {
+    const tag = `<link href="script.js" rel="modulepreload" as="script" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel modulepreload as worker', () => {
+    const tag = `<link href="script.js" rel="modulepreload" as="worker" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel modulepreload as serviceworker', () => {
+    const tag = `<link href="script.js" rel="modulepreload" as="serviceworker" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test('rel modulepreload as sharedworker', () => {
+    const tag = `<link href="script.js" rel="modulepreload" as="sharedworker" />`;
+    const res = HtmlParser.parseTag(tag, { tag: 'link', attributes: [] });
+    const received = res[0].type;
+    const expected = 'script';
     return expect(received).toStrictEqual(expected);
   });
 });

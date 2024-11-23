@@ -13,6 +13,9 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+      js: {
+        filename: '[name].[contenthash:8].js',
+      },
       css: {
         filename: '[name].[contenthash:8].css',
       },

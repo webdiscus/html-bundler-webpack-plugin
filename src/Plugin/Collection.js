@@ -878,6 +878,7 @@ class Collection {
 
     // TODO: update this.data.assets[].asset.resource after change the filename in a template
     //  - e.g. src="./main.js?v=1" => ./main.js?v=123 => WRONG filename is replaced
+
     for (const [entryFilename, { entry, assets }] of this.data) {
       const rawSource = compilation.assets[entryFilename];
 

@@ -1,5 +1,9 @@
 # Change log
 
+## 4.4.3 (2024-11-23)
+
+- fix: issue by inline a style when in the tag used single quotes for attribute
+
 ## 4.4.2 (2024-11-18)
 
 - fix: add Exception when used `splitChunks` and occurs the error: Can't resolve a CSS file in template.

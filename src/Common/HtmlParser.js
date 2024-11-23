@@ -96,14 +96,21 @@ const indexOfNonSpaceOrTagEnd = (content, tagName, startPos, pos = 0) => {
  * Whether the link tag load a style or other assets.
  *
  * <link href="style.css" type="text/css" />
+ * <link href="style.css" rel="stylesheet" />
  * <link href="style.css" rel="alternate stylesheet" />
  * <link href="style.css" rel="preload" as="style" />
  * <link href="style.css" rel="preload" as="stylesheet" />
  *
- * @param {string} tag The tag with attributes.
+ * @param {{}} attrs The tag attributes.
  * @return {boolean}
  */
-const isLinkStyle = (tag) => /(?:rel|as)=".*style.*"/.test(tag) || /type="text\/css"/.test(tag);
+const isLinkStyle = (attrs) => {
+  if (attrs?.type === 'text/css') return true;
+  if (attrs?.as?.indexOf('style') > -1) return true;
+  if (attrs?.rel?.indexOf('style') > -1) return true;
+
+  return false;
+};
 
 /**
  * Whether the link tag load a script.
@@ -116,14 +123,13 @@ const isLinkStyle = (tag) => /(?:rel|as)=".*style.*"/.test(tag) || /type="text\/
  * <link href="script.js" rel="modulepreload" as="serviceworker" />
  * <link href="script.js" rel="modulepreload" as="sharedworker" />
  *
- * @param {string} tag The tag with attributes.
+ * @param {{}} attrs The tag attributes.
  * @return {boolean}
  */
-const isLinkScript = (tag) => {
-  if (tag.indexOf('as="script"') > 0) return true;
-  if (tag.indexOf('rel="modulepreload"') > 0) {
-    if (tag.indexOf('as="') < 0) return true;
-    return /as="(worker|serviceworker|sharedworker)"/.test(tag);
+const isLinkScript = (attrs) => {
+  if (attrs?.as === 'script') return true;
+  if (attrs?.rel === 'modulepreload') {
+    return !attrs?.as || /(worker|serviceworker|sharedworker)/.test(attrs.as);
   }
 
   return false;
@@ -157,8 +163,8 @@ class HtmlParser {
       if (tag === 'script') {
         type = 'script';
       } else if (tag === 'link') {
-        if (isLinkStyle(raw)) type = 'style';
-        else if (isLinkScript(raw)) type = 'script';
+        if (isLinkStyle(attrs)) type = 'style';
+        else if (isLinkScript(attrs)) type = 'script';
       }
 
       for (let attrName of attrList) {
