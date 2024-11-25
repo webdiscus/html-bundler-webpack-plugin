@@ -17,6 +17,7 @@ class Option {
   context = '';
   testEntry = null;
   compiler = null;
+  devServerHot = false;
 
   js = {
     test: /\.(js|ts|jsx|tsx|mjs|cjs|mts|cts)$/,
@@ -34,6 +35,7 @@ class Option {
     chunkFilename: undefined,
     outputPath: undefined,
     inline: false,
+    hot: false,
   };
 
   #entryLibrary = {
@@ -128,6 +130,7 @@ class Option {
 
     css.enabled = this.toBool(css.enabled, true, this.css.enabled);
     css.inline = this.toBool(css.inline, false, this.css.inline);
+
     if (!css.outputPath) css.outputPath = options.output.path;
 
     if (!css.chunkFilename) {
@@ -231,6 +234,13 @@ class Option {
 
     this.initEntry(this.loaderPath);
     this.enableLibraryType();
+
+    if (options.devServer) {
+      // default value of the `hot` is `true`
+      // https://webpack.js.org/configuration/dev-server/#devserverhot
+      const hot = options.devServer?.hot;
+      this.devServerHot = (hot == null || hot === true || hot === 'only') && !this.isProduction();
+    }
   }
 
   /**
@@ -317,6 +327,24 @@ class Option {
    */
   isProduction() {
     return this.productionMode;
+  }
+
+  /**
+   * Returns the value of the `devServer.hot` webpack option.
+   * @return {boolean}
+   */
+  isDevServerHot() {
+    return this.devServerHot;
+  }
+
+  /**
+   * Whether HMR for CSS is available.
+   *
+   * @return {boolean}
+   */
+
+  isCssHot() {
+    return this.options.css.hot && this.devServerHot;
   }
 
   /**

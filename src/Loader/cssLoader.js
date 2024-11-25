@@ -29,6 +29,7 @@ const pitchLoader = async function (remaining) {
   const pluginCompiler = loaderContext._compilation.compiler;
   const pluginContext = PluginService.getPluginContext(pluginCompiler);
   const collection = pluginContext.collection;
+  const isHmr = pluginContext.pluginOption.isCssHot();
 
   // TODO: find the module from this._compilation, because this._module is deprecated
   const { resource, resourcePath, _module: module } = this;
@@ -49,7 +50,10 @@ const pitchLoader = async function (remaining) {
 
   // defaults, the css-loader option `esModule` is `true`
   const esModule = result.default != null;
+  const cssSource = esModule ? result.default : result;
   let styles;
+
+  collection.setImportStyleEsModule(esModule);
 
   if (esModule) {
     const exports = Object.keys(result).filter((key) => key !== 'default');
@@ -64,15 +68,62 @@ const pitchLoader = async function (remaining) {
     styles = result.locals;
   }
 
-  module._cssSource = esModule ? result.default : result;
-  collection.setImportStyleEsModule(esModule);
+  if (!isHmr) {
+    module._cssSource = cssSource;
+  }
 
   // support for lazy load CSS in JavaScript, see the test js-import-css-lazy-url
   if (isUrl) {
-    return exportComment + module._cssSource;
+    return exportComment + cssSource;
   }
 
-  return styles ? (esModule ? 'export default' : 'module.exports = ') + JSON.stringify(styles) : exportComment;
+  let hmrCode = '';
+
+  if (isHmr) {
+    const css = result.default.toString().replaceAll('\n', '');
+
+    hmrCode = `
+const css = \`${css}\`;
+const isDocument = typeof document !== 'undefined';
+
+if (!isDocument) {
+  console.log('CSS HMR does not work!');
+}
+
+if (isDocument && module.hot) {
+  module.hot.accept(undefined, function () {
+    // required to avoid full reload
+  });
+  
+  const key = '__bundlerCssHmr';
+  
+  document[key] = document[key] || { idx: 1, styleIds: new Map() };
+  const hmr = document[key];
+  const moduleId = module.id;
+
+  let styleId = hmr.styleIds.get(moduleId);
+  let styleElm;
+
+  if (styleId) {
+    styleElm = document.getElementById(styleId);
+  } else {
+    styleId = 'hot-update-style-' + hmr.idx++;
+    styleElm = document.createElement('style');
+    styleElm.setAttribute('id', styleId);
+    document.head.appendChild(styleElm);
+    hmr.styleIds.set(moduleId, styleId);
+  }
+
+  if (styleElm) {
+     styleElm.innerText = css;
+  }
+}
+`;
+  }
+
+  return styles
+    ? (esModule ? 'export default' : 'module.exports = ') + JSON.stringify(styles)
+    : exportComment + hmrCode;
 };
 
 module.exports = loader;

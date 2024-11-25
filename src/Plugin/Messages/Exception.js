@@ -74,10 +74,10 @@ const optionPreloadAsException = (config, type, availableTypes) => {
  * @param {string} file The unresolved file can be absolute or relative.
  * @param {string} issuer The absolute issuer file of unresolved file.
  * @param {string} rootContext The absolute path to project files.
- * @param {object} pluginOptions The instance of the pluginOptions.
+ * @param {object} pluginOption The instance of the plugin Option.
  * @throws {Error}
  */
-const resolveException = (file, issuer, rootContext, pluginOptions) => {
+const resolveException = (file, issuer, rootContext, pluginOption) => {
   let isExistsFile = true;
   issuer = path.relative(rootContext, issuer);
 
@@ -104,7 +104,7 @@ const resolveException = (file, issuer, rootContext, pluginOptions) => {
     },
   ],
 },`;
-  } else if (pluginOptions.isStyle(file) && hasSplitChunksCacheGroups(pluginOptions.webpackOptions)) {
+  } else if (pluginOption.isStyle(file) && hasSplitChunksCacheGroups(pluginOption.webpackOptions)) {
     message += `\n
 ${whiteBright.bgGreen` Tip `} 
 Add the ${white`'splitChunks.cacheGroups.{cacheGroup}.test'`} option as a RegExp to each cache group to split only script files, excluding styles.

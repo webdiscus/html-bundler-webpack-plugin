@@ -1,5 +1,10 @@
 # Change log
 
+## 4.5.0 (2024-11-25)
+
+- feat: add limited support the HMR for styles imported in JavaScript files
+- feat: add new `css.hot` option to enable HMR for styles
+
 ## 4.4.3 (2024-11-23)
 
 - fix: issue by inline a style when in the tag used single quotes for attribute

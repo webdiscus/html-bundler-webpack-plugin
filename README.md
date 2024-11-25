@@ -17,9 +17,9 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 
 ---
 
-<div align="center">
+<h4 align="center">
 📋 <a href="#contents">Table of Contents</a> 🚀 <a href="#install">Install and Quick Start</a> 🖼 <a href="#usage-examples">Usage examples</a> 🔆 <a href="#whats-new">What's New</a>
-</div>
+</h4>
 
 <!--
 #### 📋 [Table of Contents](#contents) 🚀 [Install and Quick Start](#install) 🖼 [Usage examples](#usage-examples)
@@ -44,6 +44,7 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
   Source files will be resolved, processed and auto-replaced with correct URLs in the bundled output.
 - **Inlines** [JS](#recipe-inline-js), [CSS](#recipe-inline-css) and [Images](#recipe-inline-image) into HTML. See [how to inline all resources](#recipe-inline-all-assets-to-html) into single HTML file.
+- [HMR for CSS](#option-css-hot) - update CSS in browser without a full reload.
 - Recompiles the template after changes in the [data file](#option-entry-data) assigned to the entry page as a JSON or JS filename.
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
@@ -208,6 +209,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
+- **NEW** added supports the [HMR for CSS](#option-css-hot) (since `v4.5.0`).
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
 - **SUPPORTS** Webpack version `5.96+` (since `v4.2.0`).
 - **SUPPORTS** Webpack version `5.81+` (since `v4.0.0`).
@@ -1964,6 +1966,7 @@ type CssOptions = {
   chunkFilename?: FilenameTemplate;
   outputPath?: string;
   inline?: 'auto' | boolean;
+  hot?: boolean;
 };
 ```
 
@@ -1976,6 +1979,7 @@ Default properties:
   chunkFilename: '[name].css',
   outputPath: null,
   inline: false,
+  hot: false,
 }
 ```
 
@@ -1983,12 +1987,14 @@ Default properties:
 - `filename` - an output filename of extracted CSS. Details see by [filename option](#option-filename).
 - `chunkFilename` - an output filename of non-initial chunk files, e.g., a style file imported in JavaScript.
 - `outputPath` - an output path of extracted CSS. Details see by [outputPath option](#option-outputpath).
-- `inline` - inlines extracted CSS into HTML, available values:
+- `inline` - inject CSS into into HTML at render time, available values:
   - `false` - stores CSS in an output file (**defaults**)
   - `true` - adds CSS to the DOM by injecting a `<style>` tag
   - `'auto'` - in `development` mode - adds to DOM, in `production` mode - stores as a file
+- `hot` - inject CSS into the DOM at runtime and enable HMR (hot update CSS without a full reload),\
+  similar to how it works in [style-loader](https://github.com/webpack-contrib/style-loader).
 
-All source style files specified in `<link href="..." rel="stylesheet">` are automatically resolved,  
+All source style files specified in `<link href="..." rel="stylesheet">` are automatically resolved,
 and CSS will be extracted to output file. The source filename will be replaced with the output filename.
 
 For example:
@@ -2022,13 +2028,53 @@ The `[name]` is the base filename of a loaded style.
 For example, if source file is `style.scss`, then output filename will be `css/style.1234abcd.css`.\
 If you want to have a different output filename, you can use the `filename` options as the [function](https://webpack.js.org/configuration/output/#outputfilename).
 
+<a id="option-css-hot" name="option-css-hot"></a>
+
+#### `css.hot` option
+
+> ⚠️ Limitation
+> 
+> - HMR works only for styles imported in JavaScript files. Doesn't works for styles defined directly in HTML via `link` tag.
+> - Hot update without a full reload works only for styles imported in a last JavaScript file.\
+>   If you have many JS files defined in HTML, where are imported styles, and change a style file imported in the first JS file,
+>   then changes will not be detected in HMR module. You should reload the browser manually.
+>   This behaviour is a BUG in Webpack. The [style-loader](https://github.com/webpack-contrib/style-loader) has exactly same limitation. 
+>
+
+If you use the [Live Reload](#setup-live-reload) configuration, then be sure to exclude the style files (CSS/SCSS) from watching,
+otherwise after changes a style file, a page will be full reloaded.
+
+> ℹ️ Note
+> 
+> If `devServer` is configured for HRM with styles, then after changing the styles defined in HTML, `Live Reload` will not work for them.
+> You should then reload the browser self.
+
+Configuration of `devServer` to enable HMR:
+
+```js
+devServer: {
+  static: {
+    directory: path.join(__dirname, 'dist'),
+  },
+  watchFiles: {
+    paths: ['src/**/*.(html|eta)'], // <= exclude *.s?css from watching
+    options: {
+      usePolling: true,
+    },
+  },
+},
+``` 
+
+**💡 Tip**: to enable HMR for all style files without a full reload, import all those styles in one JS file.
+
+
 > ⚠️ **Warning**
 >
 > Don't use `mini-css-extract-plugin` because the bundler plugin extracts CSS much faster than other plugins.
 >
 > Don't use `resolve-url-loader` because the bundler plugin resolves all URLs in CSS, including assets from node modules.
 >
-> Don't use `style-loader` because the bundler plugin can auto inline CSS.
+> Don't use `style-loader` because the bundler plugin can auto inline CSS and HMR.
 
 #### [↑ back to contents](#contents)
 

@@ -988,7 +988,7 @@ class AssetCompiler {
     }
 
     // 2. renders styles imported in JavaScript
-    if (this.collection.hasImportedStyle(this.currentEntryPoint?.id)) {
+    if (!this.option.isCssHot() && this.collection.hasImportedStyle(this.currentEntryPoint?.id)) {
       this.renderImportStyles(result, { chunk });
     }
   }
@@ -1429,6 +1429,8 @@ class AssetCompiler {
       resource,
       filename: assetFile,
     };
+    const isStyle = type === 'style';
+
     this.resolver.setContext(this.currentEntryPoint, issuer);
 
     const vmScript = new VMScript({
@@ -1441,11 +1443,11 @@ class AssetCompiler {
 
     // the css-loader defaults generate ESM code, which must be transformed into CommonJS to compile the code
     // the template loader generates CommonJS code, no need to transform
-    const esModule = type === 'style' || loaderOptions.esModule === true;
+    const esModule = isStyle || loaderOptions.esModule === true;
     let result = vmScript.exec(source.source(), { filename: sourceFile, esModule });
 
-    if (type === 'style') {
-      result = this.cssExtractModule.apply(result);
+    if (isStyle) {
+      return this.cssExtractModule.apply(result);
     }
 
     return result;

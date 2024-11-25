@@ -245,6 +245,11 @@ type CssOptions = {
   outputPath?: string;
   // Whether the compiled JavaScript should be inlined. Defaults, `false`.
   inline?: 'auto' | boolean;
+  // Inject CSS into the DOM and enable HMR. Works only for styles imported in JavaScript files.
+  // Note:
+  // - `devServer.hot` option must be enabled (defaults)
+  // - `devServer.watchFiles.paths` option must contains files excluding CSS/SCSS, e.g. `['src/**/*.(html)']`
+  hot?: boolean;
 };
 
 type IntegrityOptions = {

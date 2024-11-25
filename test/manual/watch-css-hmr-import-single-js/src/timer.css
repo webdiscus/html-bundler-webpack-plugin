@@ -1,0 +1,15 @@
+#timer {
+  display: inline-block;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  border: 1px solid #efefef;
+  box-shadow: #ccc 0 3px 10px;
+  background-color: #fff;
+}
+
+.app-container {
+  border: 1px solid #efefef;
+  background-color: #fffede;
+  padding: 15px 20px;
+}
