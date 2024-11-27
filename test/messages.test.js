@@ -215,6 +215,11 @@ describe('warnings', () => {
     const containString = `not-exists-dir`;
     return watchStdoutContain('_warnings/msg-warning-plugin-option-watchFiles-paths', containString);
   });
+
+  test('splitChunks.chunks', () => {
+    const containString = `The splitChunks.chunks option is automatically deleted`;
+    return watchStdoutContain('_warnings/msg-warning-splitChunks', containString);
+  });
 });
 
 describe('deprecations', () => {

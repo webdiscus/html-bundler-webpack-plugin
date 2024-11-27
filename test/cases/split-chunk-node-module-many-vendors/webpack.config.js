@@ -35,7 +35,7 @@ module.exports = {
   optimization: {
     runtimeChunk: 'single', // extract runtime script from all modules
     splitChunks: {
-      chunks: 'all',
+      //chunks: 'all',  // <= DO NOT use this here
       minSize: 10000, // extract modules bigger than 10KB, defaults is 30KB
       cacheGroups: {
         vendor: {
@@ -46,6 +46,7 @@ module.exports = {
             return `${groupName}.${moduleName}`;
           },
           enforce: true,
+          chunks: 'all', // <= DEFINE it here only
         },
       },
     },

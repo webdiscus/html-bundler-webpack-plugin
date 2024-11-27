@@ -1,5 +1,11 @@
 # Change log
 
+## 4.5.1 (2024-11-28)
+
+- fix: if used `splitChunks.chunks` option then this options will be removed and will be displayed a warning
+  This option make no sense, because we will split only scripts.
+- docs: update readme
+
 ## 4.5.0 (2024-11-25)
 
 - feat: add limited support the HMR for styles imported in JavaScript files

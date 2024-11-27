@@ -1,6 +1,7 @@
 const path = require('path');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
+const { optionSplitChunksChunksAllWarning } = require('./Messages/Warnings');
 
 const Preprocessor = require('../Loader/Preprocessor');
 const PluginService = require('../Plugin/PluginService');
@@ -99,8 +100,16 @@ class Option {
    * @param {Object} compiler The Webpack compiler.
    */
   initWebpack(compiler) {
-    const options = compiler.options;
     const { entry, js, css } = this.options;
+    const options = compiler.options;
+    const splitChunks = options?.optimization?.splitChunks?.chunks;
+
+    if (splitChunks && splitChunks === 'all') {
+      //
+      delete options.optimization.splitChunks.chunks;
+      optionSplitChunksChunksAllWarning();
+      //console.log('*** options: ', options.optimization.splitChunks);
+    }
 
     this.compiler = compiler;
     this.assetEntry = this.pluginContext.assetEntry;

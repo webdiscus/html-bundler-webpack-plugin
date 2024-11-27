@@ -398,6 +398,8 @@ module.exports = {
 > Don't use Webpack's `output.filename`, hold all relevant settings in one place - in plugin options.\
 > Both places have the same effect, but `js.filename` has priority over `output.filename`.
 
+For `splitChunks` see [How to configure splitChunks](#recipe-split-chunks).
+
 No additional template loader is required. The plugin handles templates with base `EJS`-like syntax automatically.
 The default templating engine is [Eta](https://eta.js.org).
 
@@ -537,7 +539,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to process a PHP template](#recipe-preprocessor-php)
    - [How to pass data into multiple templates](#recipe-pass-data-to-templates)
    - [How to use some different template engines](#recipe-diff-templates)
-   - [How to config `splitChunks`](#recipe-split-chunks)
+   - [How to configure `splitChunks`](#recipe-split-chunks)
    - [How to keep package name for **split chunks** from **node_modules**](#recipe-split-chunks-keep-module-name)
    - [How to split CSS files](#recipe-split-css)
 2. [Problems & Solutions](#solutions)
@@ -6251,20 +6253,21 @@ module.exports = {
 
 <a id="recipe-split-chunks" name="recipe-split-chunks"></a>
 
-### How to config `splitChunks`
+### How to configure `splitChunks`
 
 Webpack tries to split every entry file, include template files, which completely breaks the compilation process in the plugin.
 
 To avoid this issue, you must specify which scripts should be split, using `optimization.splitChunks.cacheGroups`:
 
-```js
+```diff
 module.exports = {
   optimization: {
     splitChunks: {
+-     chunks: 'all', // <= DO NOT use this here
       cacheGroups: {
         scripts: {
           test: /\.(js|ts)$/, // <= IMPORTANT: split only script files
-          chunks: 'all',
++         chunks: 'all', // <= DEFINE it here only
         },
       },
     },
@@ -6275,6 +6278,17 @@ module.exports = {
 > ℹ️ **Note**
 >
 > In the `test` option must be specified all extensions of scripts which should be split.
+
+> ⚠️ **Warning**
+> 
+> DO NOT use the `chunks: 'all'` option globally!
+> 
+> The `splitChunks.chunks: 'all'` option splits all types of chunks, but it make no sense, because we need split only scripts.
+> Templates, CSS, images and other assets can't be split.
+> 
+> Define `chunks: 'all'` only in a cache group where is specified the `test` option for your scripts.
+> 
+> ‼️ The `splitChunks.chunks` option will be automatically removed, because some assets can't be resolved or output files may be corrupted!
 
 See details by [splitChunks.cacheGroups](https://webpack.js.org/plugins/split-chunks-plugin/#splitchunkscachegroups).
 
@@ -6299,7 +6313,7 @@ For example, in a template are used the scripts and styles from `node_modules`:
 > In the generated HTML, all script tags remain in their original places, and the split chunks will be added there
 > in the order in which Webpack generated them.
 
-In this use case the `optimization.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
+In this use case the `optimization.splitChunks.cacheGroups.{cacheGroup}.test` option must match exactly only JS files from `node_modules`:
 
 ```js
 module.exports = {
@@ -6309,8 +6323,7 @@ module.exports = {
       cacheGroups: {
         vendor: {
           test: /[\\/]node_modules[\\/].+\.(js|ts)$/, // <= IMPORTANT: split only script files
-          name: 'vendor',
-          chunks: 'all',
+          chunks: 'all', // <= DEFINE it here only
         },
       },
     },
@@ -6332,7 +6345,7 @@ module.exports = {
 
 ### How to keep package name for split chunks from node_modules
 
-To save split chunks under a custom name use `optimization.cacheGroups.{cacheGroup}.name` as function.
+To save split chunks under a custom name use `optimization.splitChunks.cacheGroups.{cacheGroup}.name` as function.
 
 For example, many node modules are imported in the `main.js`:
 
@@ -6376,12 +6389,11 @@ module.exports = {
   optimization: {
     runtimeChunk: true,
     splitChunks: {
-      // chunks: 'all', // DO NOT use it here, otherwise the compiled pages will be corrupted
       maxSize: 1000000, // split chunks bigger than 100KB, defaults is 20KB
       cacheGroups: {
         app: {
           test: /\.(js|ts)$/, // <= IMPORTANT: split only script files
-          chunks: 'all', // <= use it only in cache groups
+          chunks: 'all', // <= define it only in a cache group
           name({ context }, chunks, groupName) {
             // save split chunks of the node module under package name
             if (/[\\/]node_modules[\\/]/.test(context)) {

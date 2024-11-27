@@ -426,6 +426,8 @@ describe('special cases', () => {
   test('resolve-attr-formatted', () => compareFiles('resolve-attr-formatted'));
   test('resolve-images-in-attrs-all-variants', () => compareFiles('resolve-images-in-attrs-all-variants'));
 
+  test('resolve same image in multipages, splitChunks', () => compareFiles('resolve-image-in-multipages-splitChunks'));
+
   // for debugging
   // test('resolve hmr file', () => watchCompareFiles('resolve-hmr-file'));
 });

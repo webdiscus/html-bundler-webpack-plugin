@@ -916,6 +916,16 @@ class AssetCompiler {
 
     this.collection.addEntry(entry);
 
+    // reserved solution
+    // problem: if used `splitChunks.chunks` then, some assets may not found in chunkModules
+    // solution: the `chunks` option must be defined in `splitChunks.cacheGroups.{cacheGroup}.chunks` only
+    // see the test `resolve-image-in-multipages-splitChunks`
+    // for (const [key, module] of this.compilation._modules.entries()) {
+    //   if (key.startsWith(ASSET_MODULE_TYPE_RESOURCE)) {
+    //     this.assetResource.saveData(module);
+    //   }
+    // }
+
     for (const module of chunkModules) {
       const { buildInfo, resource, resourceResolveData } = module;
       const { isScript, isImportedStyle, isCSSStyleSheet } = resourceResolveData?._bundlerPluginMeta || {};

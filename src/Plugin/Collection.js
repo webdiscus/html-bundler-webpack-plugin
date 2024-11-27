@@ -288,17 +288,24 @@ class Collection {
     const splitChunkIds = new Set();
     const chunkCache = new Map();
 
+    //console.log('### chunks: ', chunks);
+    //console.log('### assets: ', assets); //  'img/apple.02a7c382.png': CachedSource
+    //console.log('### namedChunkGroups: ', namedChunkGroups);
+    //console.log('### chunkGraph: ', chunkGraph.moduleGraph._moduleMap);
+
     for (let [resource, { type, name, entries }] of this.assets) {
       if (type !== Collection.type.script) continue;
 
       const entrypoint = namedChunkGroups.get(name);
+
+      //console.log('### auxiliaryFiles: ', { name, entrypoint });
 
       // prevent error when in watch mode after removing a script in the template
       if (!entrypoint) continue;
 
       const chunkFiles = new Set();
 
-      for (const { id, files } of entrypoint.chunks) {
+      for (const { id, files, auxiliaryFiles } of entrypoint.chunks) {
         for (const file of files) {
           const info = assetsInfo.get(file);
 
@@ -311,6 +318,8 @@ class Collection {
           if (isJavascript && info.hotModuleReplacement !== true) chunkFiles.add(file);
         }
         splitChunkIds.add(id);
+
+        //console.log('### auxiliaryFiles: ', { id, files, auxiliaryFiles });
       }
 
       const hasSplitChunks = chunkFiles.size > 1;
