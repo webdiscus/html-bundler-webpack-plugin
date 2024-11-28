@@ -1,6 +1,5 @@
 const path = require('path');
 const { minify } = require('html-minifier-terser');
-const { replaceAll } = require('../Common/Helpers');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
 const Integrity = require('./Extras/Integrity');
 const Preload = require('./Preload');
@@ -226,10 +225,7 @@ class Collection {
 
     if (chunks.length === 1 && chunks[0].inline !== true) {
       // replace the single chunk file for preload in the `link` tag and in the `script` tag
-      // TODO: remove polyfill when support for node.js 14 is dropped
-      return String.prototype.replaceAll
-        ? content.replaceAll(resource, chunks[0].assetFile)
-        : replaceAll(content, resource, chunks[0].assetFile);
+      return content.replaceAll(resource, chunks[0].assetFile);
     }
 
     // find the starting position of the tag to the left of the `src` attribute

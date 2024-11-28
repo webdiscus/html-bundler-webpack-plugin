@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-import { findPlugin, getFileExtension, replaceAll, parseVersion, compareVersions } from '../src/Common/Helpers';
+import { findPlugin, getFileExtension, parseVersion, compareVersions } from '../src/Common/Helpers';
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
 import { HtmlParser } from '../src/Common/HtmlParser';
@@ -1806,12 +1806,6 @@ describe('misc tests', () => {
     //const received = [...data]; // empty slots
     const expected = ['a', 'b', 'c'];
     return expect(received).toStrictEqual(expected);
-  });
-
-  test('replaceAll', () => {
-    const received = replaceAll('begin replace_me and replace_me and', 'replace_me', 'A');
-    const expected = 'begin A and A and';
-    return expect(received).toEqual(expected);
   });
 
   test('findPlugin', () => {

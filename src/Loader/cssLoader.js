@@ -80,27 +80,25 @@ const pitchLoader = async function (remaining) {
   let hmrCode = '';
 
   if (isHmr) {
-    const css = result.default.toString().replaceAll('\n', '');
+    let css = result.default.toString();
+    const search = /\n|`/g;
+    const replacements = {
+      '\n': '',
+      '`': '\\`',
+    };
+
+    css = css.replace(search, (str) => replacements[str]);
 
     hmrCode = `
 const css = \`${css}\`;
 const isDocument = typeof document !== 'undefined';
 
-if (!isDocument) {
-  console.log('CSS HMR does not work!');
-}
-
-if (isDocument && module.hot) {
-  module.hot.accept(undefined, function () {
-    // required to avoid full reload
-  });
-  
+function hotUpdateCSS(css) {
   const key = '__bundlerCssHmr';
   
   document[key] = document[key] || { idx: 1, styleIds: new Map() };
   const hmr = document[key];
   const moduleId = module.id;
-
   let styleId = hmr.styleIds.get(moduleId);
   let styleElm;
 
@@ -117,6 +115,14 @@ if (isDocument && module.hot) {
   if (styleElm) {
      styleElm.innerText = css;
   }
+}
+
+if (isDocument) {
+  // required to avoid full reload
+  module.hot && module.hot.accept(undefined, function () {});
+  hotUpdateCSS(css);
+} else {
+  console.log('CSS HMR does not work!');
 }
 `;
   }

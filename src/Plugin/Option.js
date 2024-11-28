@@ -105,10 +105,8 @@ class Option {
     const splitChunks = options?.optimization?.splitChunks?.chunks;
 
     if (splitChunks && splitChunks === 'all') {
-      //
       delete options.optimization.splitChunks.chunks;
       optionSplitChunksChunksAllWarning();
-      //console.log('*** options: ', options.optimization.splitChunks);
     }
 
     this.compiler = compiler;

@@ -1,5 +1,9 @@
 # Change log
 
+## 4.5.2 (2024-11-28)
+
+- fix: issue by HMR when CSS contains a comment with `back-tick` quotes
+
 ## 4.5.1 (2024-11-28)
 
 - fix: if used `splitChunks.chunks` option then this options will be removed and will be displayed a warning

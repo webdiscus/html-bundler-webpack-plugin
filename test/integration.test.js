@@ -108,6 +108,9 @@ describe('plugin options', () => {
   test('css.inline auto, dev', () => compareFiles('option-css-inline-auto-dev'));
   test('css.inline auto, prod', () => compareFiles('option-css-inline-auto-prod'));
 
+  test('css.hot, dev', () => watchCompareFiles('option-css-hot-dev'));
+  test('css.hot css with tailwind, dev', () => watchCompareFiles('option-css-hot-tailwind-dev'));
+
   // TODO: implement the feature if anybody need it
   //test('css.inline keep additional attrs in style tag', () => compareFiles('option-css-inline-keep-attrs'));
 

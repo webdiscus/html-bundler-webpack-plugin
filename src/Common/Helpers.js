@@ -119,18 +119,6 @@ const detectIndent = (content, startPos) => {
 };
 
 /**
- * The polyfill for node < 15.
- *
- * @param {string} str
- * @param {string} search
- * @param {string} replace
- * @returns {string}
- */
-const replaceAll = (str, search, replace) => {
-  return str.replace(new RegExp(search.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
-};
-
-/**
  * Parse version string including leading compare chars.
  * For example: '=5.96.1', '>5.96.1', '< 5.96.1', '<= 5.96.1', >= 5.96.1'
  *
@@ -202,7 +190,6 @@ module.exports = {
   addQueryParam,
   deleteQueryParam,
   detectIndent,
-  replaceAll,
   outToConsole,
   parseVersion,
   compareVersions,

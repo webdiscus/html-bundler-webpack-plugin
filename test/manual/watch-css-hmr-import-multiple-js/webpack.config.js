@@ -21,6 +21,7 @@ module.exports = {
 
       css: {
         filename: 'css/[name].[contenthash:8].css',
+        hot: true,
       },
 
       //verbose: true,
