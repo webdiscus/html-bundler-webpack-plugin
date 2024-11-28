@@ -9,7 +9,7 @@
 
 /* module decorator */ module = __webpack_require__.nmd(module);
 /* extracted by HTMLBundler CSSLoader */
-const css = `/* Comment with \`back-tick\` quotes */h1 {  color: violet;}`;
+const css = `/* Comment with \`back-tick\` quotes */h1 {  color: violet;  text-align: center;  border: 2px solid coral;}/* Test ERROR: Module parse failed: Bad escape sequence in untagged template literal. The problem is with Tailwind-like style names: \`.\\32xl\\:w-96\`. */.\\32 xl\\:w-96 {  width: 10rem;}.lg\\:ml-4 {  margin-left: 1rem;}`;
 const isDocument = typeof document !== 'undefined';
 
 function hotUpdateCSS(css) {
@@ -138,6 +138,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./style.css */ "./src/style.css");
 /* harmony import */ var _style_css__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_style_css__WEBPACK_IMPORTED_MODULE_0__);
 
+//import './tailwind.css';
 
 console.log('>> main.js');
 

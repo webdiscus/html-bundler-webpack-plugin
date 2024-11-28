@@ -1,5 +1,10 @@
 # Change log
 
+## 4.5.3 (2024-11-28)
+
+- fix: issue by HMR when CSS contains Tailwind-like style names with backslashes
+  E.g.: `.\32xl\:w-96`, `.lg\:ml-4`
+
 ## 4.5.2 (2024-11-28)
 
 - fix: issue by HMR when CSS contains a comment with `back-tick` quotes

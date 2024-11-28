@@ -81,9 +81,10 @@ const pitchLoader = async function (remaining) {
 
   if (isHmr) {
     let css = result.default.toString();
-    const search = /\n|`/g;
+    const search = /\n|\\|`/g;
     const replacements = {
       '\n': '',
+      '\\': '\\\\',
       '`': '\\`',
     };
 
