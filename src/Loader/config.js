@@ -1,4 +1,4 @@
-const loaderName = 'html-bundler-webpack-loader';
+const loaderName = 'html-bundler:preprocessor';
 
 module.exports = {
   loaderName,

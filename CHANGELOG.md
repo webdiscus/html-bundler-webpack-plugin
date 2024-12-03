@@ -1,5 +1,23 @@
 # Change log
 
+## 4.6.0 (2024-12-03)
+
+- feat: add support the Markdown `*.md` files in the template engines: `eta`, `ejs`, `handlebars`, `pug`.
+  The markdown file can be included in the HTML template, e.g. `Eta`:
+  ```html
+  <html>
+  <head>
+    <!-- Load Markdown and Highlighting styles -->
+    <link href="github-markdown-css/github-markdown-light.css" rel="stylesheet" />
+    <link href="prismjs/themes/prism.min.css" rel="stylesheet" />
+  </head>
+  <body class="markdown-body">
+    <!-- Load Markdown file -->
+    <%~ include('readme.md') %>
+  </body>
+  </html>
+  ```
+
 ## 4.5.3 (2024-11-28)
 
 - fix: issue by HMR when CSS contains Tailwind-like style names with backslashes
@@ -12,12 +30,12 @@
 ## 4.5.1 (2024-11-28)
 
 - fix: if used `splitChunks.chunks` option then this options will be removed and will be displayed a warning
-  This option make no sense, because we will split only scripts.
+  This option makes no sense, because we will split only scripts.
 - docs: update readme
 
 ## 4.5.0 (2024-11-25)
 
-- feat: add limited support the HMR for styles imported in JavaScript files
+- feat: add support the HMR for styles imported in JavaScript files
 - feat: add new `css.hot` option to enable HMR for styles
 
 ## 4.4.3 (2024-11-23)
@@ -26,7 +44,7 @@
 
 ## 4.4.2 (2024-11-18)
 
-- fix: add Exception when used `splitChunks` and occurs the error: Can't resolve a CSS file in template.
+- fix: add Exception when used `splitChunks` and occurs the error: Can't resolve a CSS file in template
 - fix: correct Exception message when a source CSS file is not found 
 
 ## 4.4.1 (2024-11-05)

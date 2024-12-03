@@ -20,10 +20,9 @@ module.exports = [
           // enable `:markdown` filter with additional options
           embedFilters: {
             markdown: {
-              // use css classname prefix for highlighting
-              langPrefix: 'lang-',
-              // don't use github syntax styles
-              github: false,
+              highlight: {
+                use: null,
+              },
             },
           },
         },
@@ -49,15 +48,15 @@ module.exports = [
           // enable `:markdown` filter with additional options
           embedFilters: {
             markdown: {
-              // use css classname prefix for highlighting
-              langPrefix: 'language-',
-              // enable highlighting in markdown
+              // TODO: change options in readme
               highlight: {
-                verbose: true,
-                use: 'prismjs',
+                use: {
+                  module: 'prismjs',
+                  options: {
+                    verbose: true,
+                  },
+                },
               },
-              // use github syntax styles
-              github: true,
             },
           },
         },

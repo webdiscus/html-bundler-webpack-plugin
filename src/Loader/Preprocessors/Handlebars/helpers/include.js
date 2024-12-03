@@ -1,5 +1,7 @@
 const { resolveFile } = require('../../../../Common/FileUtils');
 
+const MarkdownFilter = require('../filters/markdown/index');
+
 /** @typedef {import('handlebars')} Handlebars */
 /** @typedef {import('handlebars').HelperOptions} HelperOptions */
 
@@ -14,6 +16,19 @@ const { resolveFile } = require('../../../../Common/FileUtils');
  * @return {function(filename: string, options: Object, args: Object): Handlebars.SafeString}
  */
 module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
+  const filterOption = {
+    highlight: {
+      use: {
+        module: 'prismjs',
+        options: {
+          verbose: true, // display loaded dependencies
+        },
+      },
+    },
+  };
+
+  MarkdownFilter.init(filterOption);
+
   /**
    * Include the partial file in a template.
    *
@@ -30,11 +45,17 @@ module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
     }
 
     const template = fs.readFileSync(file, 'utf8');
+    let html;
 
-    // pass the original data into sub-sub partials
-    const data =
-      options.name === 'include' ? { ...options?.hash, ...options.data?.root } : { ...options, ...args?.data?.root };
-    const html = Handlebars.compile(template)(data);
+    if (filename.toLocaleLowerCase().endsWith('.md')) {
+      html = MarkdownFilter.apply(template);
+    } else {
+      // pass the original data into sub-sub partials
+      const data =
+        options.name === 'include' ? { ...options?.hash, ...options.data?.root } : { ...options, ...args?.data?.root };
+
+      html = Handlebars.compile(template)(data);
+    }
 
     return new Handlebars.SafeString(html);
   };

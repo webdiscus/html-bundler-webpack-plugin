@@ -19,7 +19,15 @@ module.exports = {
       preprocessorOptions: {
         embedFilters: {
           highlight: {
-            use: 'unsupported-module',
+            //use: 'unsupported-module',
+            use: {
+              // the name of a using highlight npm module.
+              module: 'unsupported-module',
+              options: {
+                // display in console warnings and loaded dependencies
+                verbose: true,
+              },
+            },
           },
         },
       },

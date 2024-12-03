@@ -109,6 +109,10 @@ const resolveFile = (file, { fs, root = process.cwd(), paths = [], extensions = 
 
   let isRoot = false;
 
+  // absolute file path
+  if (path.isAbsolute(file) && fs.existsSync(file)) return file;
+
+  // root file path, relative to the project directory
   if (file.startsWith('/')) {
     isRoot = true;
     file = path.join(root, file);

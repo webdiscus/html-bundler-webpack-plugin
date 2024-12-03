@@ -10,6 +10,7 @@ describe('Eta', () => {
   test('default', () => compareFiles('_preprocessor/eta-default'));
   test('option views', () => compareFiles('_preprocessor/eta-option-views'));
   test('option async', () => compareFiles('_preprocessor/eta-option-async'));
+  test('include md', () => compareFiles('_preprocessor/eta-include-md'));
 });
 
 describe('EJS', () => {
@@ -19,6 +20,7 @@ describe('EJS', () => {
   test('custom render', () => compareFiles('_preprocessor/ejs-custom-render'));
   test('require js', () => compareFiles('_preprocessor/ejs-require-js'));
   test('require json', () => compareFiles('_preprocessor/ejs-require-json'));
+  test('include md', () => compareFiles('_preprocessor/ejs-include-md'));
 
   // special cases
   test('Template with CRLF line separator', () => compareFiles('_preprocessor/ejs-template-clrf'));
@@ -41,6 +43,8 @@ describe('handlebars', () => {
   test('build-in `block` helper', () => compareFiles('_preprocessor/handlebars-helper-block-buildIn'));
   test('override build-in helper', () => compareFiles('_preprocessor/handlebars-helper-block-user'));
   test('handlebars-layouts', () => compareFiles('_preprocessor/handlebars-helper-layouts'));
+
+  test('include markdown', () => compareFiles('_preprocessor/handlebars-include-md'));
 });
 
 describe('nunjucks', () => {

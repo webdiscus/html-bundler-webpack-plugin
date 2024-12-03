@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>{{title}}</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1' />
+    <link href='@images/favicon.ico' rel='icon' />
+
+    <!-- Load PrismJS styles of Highlighting from installed `prismjs` package -->
+    <link href='prismjs/themes/{{highlightingTheme}}.min.css' rel='stylesheet' />
+
+    <!-- Load GitHub styles of Markdown from installed `github-markdown-css` package -->
+    <link href='github-markdown-css/github-markdown-{{markdownTheme}}.css' rel='stylesheet' />
+
+    <!-- Load your custom styles. -->
+    <link href='../styles/style.css' rel='stylesheet' />
+  </head>
+  <body class='markdown-body'>
+    <!-- Load Markdown file defined in the HTML bundler plugin option -->
+    {{include file}}
+  </body>
+</html>

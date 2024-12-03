@@ -103,6 +103,23 @@ const deleteQueryParam = (request, name) => {
 };
 
 /**
+ * Merge two objects.
+ * @param {Object} a
+ * @param {Object} b
+ * @return {{}}
+ */
+const deepMerge = (a, b) => {
+  const result = {};
+  for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    result[key] =
+      a[key]?.constructor === Object && b[key]?.constructor === Object
+        ? deepMerge(a[key], b[key])
+        : structuredClone(b[key] !== undefined ? b[key] : a[key]);
+  }
+  return result;
+};
+
+/**
  * Returns an indent detected in the content.
  *
  * @param {string} content The template content.
@@ -189,6 +206,7 @@ module.exports = {
   getQueryParam,
   addQueryParam,
   deleteQueryParam,
+  deepMerge,
   detectIndent,
   outToConsole,
   parseVersion,

@@ -1,7 +1,5 @@
 import { compareFiles, exceptionContain, watchCompareFiles } from './utils/helpers';
 import { filterLoadException } from '../src/Loader/Preprocessors/Pug/Exeptions';
-import adapterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight/adapter';
-import filterHighlight from '../src/Loader/Preprocessors/Pug/filters/highlight';
 
 import FugFilter from '../src/Loader/Preprocessors/Pug/Filter';
 
@@ -115,16 +113,6 @@ describe('embedded filters tests', () => {
   test(`:code`, () => compareFiles('_pug/filter-code'));
   test(`:code include files`, () => compareFiles('_pug/filter-code-include-files'));
   test(`:highlight`, () => compareFiles('_pug/filter-highlight'));
-  test(':highlight prismjs - isInitialized', (done) => {
-    const prismjs = require('../src/Loader/Preprocessors/Pug/filters/highlight/prismjs');
-    // reset cached module
-    prismjs.module = null;
-    prismjs.init({});
-
-    const result = prismjs.isInitialized();
-    expect(result).toBeTruthy();
-    done();
-  });
   test(`:markdown`, () => compareFiles('_pug/filter-markdown'));
 });
 
@@ -170,18 +158,18 @@ describe('exceptions', () => {
   });
 
   test('exception: filter :highlight - unsupported module', () => {
-    const filterHighlight = require('../src/Loader/Preprocessors/Pug/filters/highlight');
-    const adapterHighlight = require('../src/Loader/Preprocessors/Pug/filters/highlight/adapter');
+    const filterHighlight = require('../src/Loader/PreprocessorFilters/highlight');
+    const adapterHighlight = require('../src/Loader/PreprocessorFilters/highlight/adapter');
     // reset cached module
     adapterHighlight.module = null;
     filterHighlight.module = null;
 
-    const containString = `unsupported highlight module`;
+    const containString = `Used unsupported module`;
     return exceptionContain('_pug/msg-exception-filter-highlight-unsupported-module', containString);
   });
 
   test('exception: filter :highlight adapter - unsupported module', (done) => {
-    const adapterHighlight = require('../src/Loader/Preprocessors/Pug/filters/highlight/adapter');
+    const adapterHighlight = require('../src/Loader/PreprocessorFilters/highlight/adapter');
     // reset cached module
     adapterHighlight.module = null;
 

@@ -1,11 +1,11 @@
 const path = require('path');
 const { red, cyan } = require('ansis');
-const { outToConsole } = require('../../../../../Common/Helpers');
-const { loadNodeModuleException } = require('../../Exeptions');
+const { outToConsole } = require('../../../Common/Helpers');
+const { loadNodeModuleException } = require('../Exeptions');
 const { labelInfo, labelWarn } = require('../../Utils');
-const { resolveModule } = require('../../../../Utils');
+const { resolveModule } = require('../../Utils');
 
-const label = `prismjs`;
+const label = `html-bundler:filter:highlight:prismjs`;
 
 const prismjs = {
   name: 'prismjs',

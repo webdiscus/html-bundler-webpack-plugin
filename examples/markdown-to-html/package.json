@@ -1,0 +1,28 @@
+{
+  "name": "markdown-to-html",
+  "description": "Markdown to HTML with Webpack",
+  "version": "0.0.1",
+  "repository": "webdiscus/html-bundler-webpack-plugin",
+  "license": "ISC",
+  "stackblitz": {
+    "startCommand": "npm run view"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack build --mode=production",
+    "view": "npm run build && http-server dist -og"
+  },
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "handlebars": "^4.7.8",
+    "http-server": "^14.1.1",
+    "html-bundler-webpack-plugin": "file:../../",
+    "github-markdown-css": "^5.8.1",
+    "markdown-it": "^14.1.0",
+    "parse5": "^7.2.1",
+    "prismjs": "^1.29.0",
+    "sass": "^1.81.0",
+    "sass-loader": "^16.0.3",
+    "webpack-dev-server": "5.1.0"
+  }
+}

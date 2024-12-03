@@ -1,6 +1,8 @@
 const path = require('path');
 const { stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
+const { readFileSync } = require('fs');
+const MarkdownFilter = require('../../PreprocessorFilters/markdown');
 
 // replace the partial file and data to load nested included template via the Webpack loader
 // include("./file.html")                   => require("./file.eta")({...it, ...{}})
@@ -22,6 +24,10 @@ const preprocessor = (loaderContext, options) => {
   const { rootContext } = loaderContext;
   let views = options.views;
 
+  // since eta v3 the `async` option is removed, but for compatibility, it is still used in this plugin
+  // defaults is false, when is true then must be used `await includeAsync()`
+  const async = options?.async === true;
+
   if (!views) {
     views = rootContext;
   } else if (!path.isAbsolute(views)) {
@@ -34,9 +40,28 @@ const preprocessor = (loaderContext, options) => {
     views, // directory that contains templates
   });
 
-  // since eta v3 the `async` option is removed, but for compatibility, it is still used in this plugin
-  // defaults is false, when is true then must be used `await includeAsync()`
-  const async = options?.async === true;
+  const filterOption = {
+    highlight: {
+      use: {
+        module: 'prismjs',
+        options: {
+          verbose: true, // display loaded dependencies
+        },
+      },
+    },
+  };
+
+  MarkdownFilter.init(filterOption);
+
+  eta.readFile = (file) => {
+    const source = readFileSync(file, 'utf-8');
+
+    if (file.toLocaleLowerCase().endsWith('.md')) {
+      return MarkdownFilter.apply(source);
+    }
+
+    return source;
+  };
 
   return {
     /**

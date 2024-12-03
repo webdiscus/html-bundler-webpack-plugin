@@ -1,12 +1,17 @@
-:markdown
-  # Hello World!
-  **bold**
-  _italic_
+html
+  head
+    link(href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" rel="stylesheet")
+    link(href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.8.1/github-markdown.min.css" rel="stylesheet")
+  body.markdown-body(style = "padding: 24pt")
+    :markdown
+      # Hello World!
+      **bold**
+      _italic_
 
-  * one _thing_ has *em*phasis
-  * two __things__ are **bold**
-  * [link][1]
+      * one _thing_ has *em*phasis
+      * two __things__ are **bold**
+      * [link][1]
 
-  [1]: http://example.com
+      [1]: http://example.com
 
-include:markdown readme.md
+    include:markdown readme.md

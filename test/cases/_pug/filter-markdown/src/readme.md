@@ -17,8 +17,37 @@ _JavaScript_
 ```js
 const arr = [1, 2, 'banana'];
 ```
+
+_Ruby_
+```ruby
+require 'redcarpet'
+markdown = Redcarpet.new("Hello World!")
+puts markdown.to_html
+```
+
+## Blockquote
+
 > **Note**
-> GitHub Note
+>
+> Useful information that users should know, even when skimming content.
 
 > **Warning**
-> GitHub Warning
+>
+> Urgent info that needs immediate user attention to avoid problems.
+
+## GitHub Alerts
+
+> [!NOTE]
+> Useful information that users should know, even when skimming content.
+
+> [!TIP]
+> Helpful advice for doing things better or more easily.
+
+> [!IMPORTANT]
+> Key information users need to know to achieve their goal.
+
+> [!WARNING]
+> Urgent info that needs immediate user attention to avoid problems.
+
+> [!CAUTION]
+> Advises about risks or negative outcomes of certain actions.

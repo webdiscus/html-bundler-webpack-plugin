@@ -1,13 +1,10 @@
-const { red, green, yellow } = require('ansis');
+const { labelInfo, labelWarn, labelError } = require('../../Utils');
 
-const loaderName = 'pug-loader';
-const labelInfo = (label) => `\n${green`[${loaderName}${label ? ':' + label : ''}]`}`;
-const labelWarn = (label) => `\n${yellow`[${loaderName}${label ? ':' + label : ''}]`}`;
-const labelError = (label) => `\n${red`[${loaderName}${label ? ':' + label : ''}]`}`;
+const loaderName = 'html-bundler:preprocessor:pug';
 
 module.exports = {
   loaderName,
-  labelInfo,
-  labelWarn,
-  labelError,
+  labelInfo: (label) => labelInfo(loaderName, label),
+  labelWarn: (label) => labelWarn(loaderName, label),
+  labelError: (label) => labelError(loaderName, label),
 };

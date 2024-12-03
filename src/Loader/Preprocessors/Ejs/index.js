@@ -3,6 +3,8 @@ const path = require('path');
 const { loadModule } = require('../../../Common/FileUtils');
 const { stringifyJSON } = require('../../Utils');
 
+const MarkdownFilter = require('../../PreprocessorFilters/markdown');
+
 // replace the partial file and data to load nested included template via the Webpack loader
 // include("./file.html")                   => require("./file.eta")({...locals, ...{}})
 // include('./file.html', { name: 'Siri' }) => require('./file.eta')({...locals, ...{name: 'Siri'}})
@@ -34,6 +36,29 @@ const requireFile = (file, dir) => {
 const preprocessor = (loaderContext, options) => {
   const Ejs = loadModule(moduleName);
   const { rootContext } = loaderContext;
+
+  const filterOption = {
+    highlight: {
+      use: {
+        module: 'prismjs',
+        options: {
+          verbose: true, // display loaded dependencies
+        },
+      },
+    },
+  };
+
+  MarkdownFilter.init(filterOption);
+
+  Ejs.fileLoader = (file) => {
+    const source = readFileSync(file, 'utf-8');
+
+    if (file.toLocaleLowerCase().endsWith('.md')) {
+      return MarkdownFilter.apply(source);
+    }
+
+    return source;
+  };
 
   return {
     /**

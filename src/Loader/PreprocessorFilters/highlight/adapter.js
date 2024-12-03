@@ -18,20 +18,30 @@ const adapter = {
   ]),
 
   /**
-   * @param {boolean} [verbose=false] Enable output info in console.
-   * @param {string} moduleName The name of npm module.
+   * @param {Object | string} use The used npm module of highlighting.
    * @public
    * @api
    */
-  init({ verbose = false, use: moduleName }) {
+  init(use) {
     if (this.module != null) return;
-    this.verbose = verbose === true;
+
+    let moduleName;
+    let moduleOptions = {};
+
+    if (typeof use === 'string') {
+      moduleName = use;
+    } else {
+      moduleName = use.module;
+      if (use.options) moduleOptions = use.options;
+    }
+
+    this.verbose = moduleOptions.verbose === true;
 
     const label = `highlight adapter`;
 
     if (!moduleName || !this.supportedModules.has(moduleName)) {
       const error =
-        `\n${labelError(label)} Used unsupported module ${cyan(moduleName)}.\n` +
+        `\n${labelError(label)} Used unsupported module ${cyan('"' + moduleName + '"')}.\n` +
         `Supported modules: ` +
         green(this.getNamesOfSupportedModules().join(', ')) +
         '.';
@@ -40,7 +50,7 @@ const adapter = {
 
     const modulePath = `./${moduleName.replace(/\./g, '')}.js`;
     this.module = require(modulePath);
-    this.module.init({ verbose: this.verbose });
+    this.module.init(moduleOptions);
 
     parser.init({
       langPrefix: this.getLangPrefix(),

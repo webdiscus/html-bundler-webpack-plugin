@@ -1,9 +1,14 @@
 const path = require('path');
+const { green, yellow, red } = require('ansis');
 
 // constants used for imported styles in JavaScript
 const baseUri = 'webpack://';
 const urlPathPrefix = '/__HTML_BUNDLER_PLUGIN__/';
 const cssLoaderName = 'HTMLBundlerCSSLoader';
+
+const labelInfo = (loaderName, label) => `\n${green`[${loaderName}${label ? ':' + label : ''}]`}`;
+const labelWarn = (loaderName, label) => `\n${yellow`[${loaderName}${label ? ':' + label : ''}]`}`;
+const labelError = (loaderName, label) => `\n${red`[${loaderName}${label ? ':' + label : ''}]`}`;
 
 /**
  * Resolve absolute path to node module main file what can be dynamically required anywhere in code.
@@ -201,6 +206,9 @@ module.exports = {
   baseUri,
   urlPathPrefix,
   cssLoaderName,
+  labelInfo,
+  labelWarn,
+  labelError,
   hotUpdateFile: path.join(__dirname, 'Hmr/hot-update.js'),
   resolveModule,
   eachAsync,

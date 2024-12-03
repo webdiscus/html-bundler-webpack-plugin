@@ -18,8 +18,15 @@ module.exports = {
       preprocessorOptions: {
         embedFilters: {
           highlight: {
-            verbose: true,
-            use: 'prismjs',
+            //use: 'prismjs',
+            use: {
+              // the name of a using highlight npm module.
+              module: 'prismjs',
+              options: {
+                // display in console warnings and loaded dependencies
+                verbose: true,
+              },
+            },
           },
         },
       },

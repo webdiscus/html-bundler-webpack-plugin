@@ -34,6 +34,7 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 - **Renders** the [template engines](#template-engine) "out of the box":
   [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Tempura](#using-template-tempura), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
   It is very easy to add support for any template engine.
+- Supports including of Markdown `*.md` files in the template.
 - **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
   - `<link href="./style.scss" rel="stylesheet">`\
   No longer need to define source style files in Webpack entry or import styles in JavaScript.
@@ -209,6 +210,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
+- **NEW** including of Markdown `*.md` files in the template. (since `v4.6.0`).
 - **NEW** added supports the [HMR for CSS](#option-css-hot) (since `v4.5.0`).
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
 - **SUPPORTS** Webpack version `5.96+` (since `v4.2.0`).

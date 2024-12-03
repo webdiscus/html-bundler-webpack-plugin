@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Load PrismJS styles of Highlighting from CDN, see https://cdnjs.com/libraries/prism -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/9000.0.1/themes/prism.min.css" rel="stylesheet" />
+  <!-- Load GitHub styles of Markdown from CDN, see https://cdnjs.com/libraries/github-markdown-css -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.8.1/github-markdown.min.css" rel="stylesheet" />
+  <!-- Load your custom styles. -->
+  <link href="style.css" rel="stylesheet" />
+</head>
+<body class="markdown-body">
+  <h1>Highlighting code blocks</h1>
+<p>Highlight <code>Ruby</code> code:</p>
+<pre class="language-"><code>```ruby
+require 'redcarpet'
+markdown = Redcarpet.new("Hello World!")
+puts markdown.to_html
+```
+</code></pre>
+<p>This will display the code block with syntax highlighting:</p>
+<pre class="language-ruby"><code><span class="token keyword">require</span> <span class="token string-literal"><span class="token string">'redcarpet'</span></span>
+markdown <span class="token operator">=</span> <span class="token class-name">Redcarpet</span><span class="token punctuation">.</span><span class="token keyword">new</span><span class="token punctuation">(</span><span class="token string-literal"><span class="token string">"Hello World!"</span></span><span class="token punctuation">)</span>
+puts markdown<span class="token punctuation">.</span>to_html
+</code></pre>
+  <div>-= FOOTER =-</div></body>
+</html>
