@@ -20,13 +20,12 @@ class Snapshot {
   static missingFiles = new Map();
 
   /**
-   *
    * @param {FileSystem} fs
    * @param {string|Array<string>} dir The directory for snapshot.
    * @param {Array<RegExp>} includes The filter to read only matched files.
    * @param {Array<RegExp>} excludes The filter to ignore matched files.
    */
-  static init({ fs, dir, includes = [], excludes = [/[\\/]nod_modules[\\/]/] }) {
+  static init({ fs, dir, includes = [], excludes = [/[\\/]node_modules[\\/]/] }) {
     this.fs = fs;
     this.dirs = Array.isArray(dir) ? dir : [dir];
     this.includes = includes;

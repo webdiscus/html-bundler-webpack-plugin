@@ -1,9 +1,8 @@
 const path = require('path');
 const { red, cyan } = require('ansis');
 const { outToConsole } = require('../../../Common/Helpers');
-const { loadNodeModuleException } = require('../Exeptions');
+const { loadModule } = require('../../../Common/FileUtils');
 const { labelInfo, labelWarn } = require('../../Utils');
-const { resolveModule } = require('../../Utils');
 
 const label = `html-bundler:filter:highlight:prismjs`;
 
@@ -25,17 +24,12 @@ const prismjs = {
   init({ verbose = false }) {
     if (this.module != null) return;
 
-    const moduleFile = resolveModule(this.moduleName);
+    this.module = loadModule(this.moduleName);
 
-    if (!moduleFile) {
-      loadNodeModuleException(this.moduleName);
-    }
-
-    // lazy load Prism module
-    this.module = require(moduleFile);
-    this.modulePath = path.dirname(moduleFile);
+    const moduleFile = require.resolve(this.moduleName);
 
     // init language loader
+    this.modulePath = path.dirname(moduleFile);
     this.components = require(path.join(this.modulePath, 'components.js'));
     this.getLoader = require(path.join(this.modulePath, 'dependencies.js'));
 

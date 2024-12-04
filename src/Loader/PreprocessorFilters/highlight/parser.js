@@ -1,4 +1,5 @@
-const parse5 = require('parse5');
+const { loadModule } = require('../../../Common/FileUtils');
+const parse5 = loadModule('parse5');
 
 const parser = {
   entries: {},

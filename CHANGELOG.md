@@ -1,6 +1,11 @@
 # Change log
 
-## 4.6.0 (2024-12-03)
+## 4.6.1 (2024-12-04)
+
+- fix: missing optional dependencies
+- fix: watching changes in files outer the project directory
+
+## 4.6.0 (2024-12-03) DEPRECATED
 
 - feat: add support the Markdown `*.md` files in the template engines: `eta`, `ejs`, `handlebars`, `pug`.
   The markdown file can be included in the HTML template, e.g. `Eta`:

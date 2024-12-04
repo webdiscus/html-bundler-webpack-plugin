@@ -210,7 +210,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
-- **NEW** including of Markdown `*.md` files in the template. (since `v4.6.0`).
+- **NEW** you can include Markdown `*.md` files in your HTML template (since `v4.6.0`).
 - **NEW** added supports the [HMR for CSS](#option-css-hot) (since `v4.5.0`).
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
 - **SUPPORTS** Webpack version `5.96+` (since `v4.2.0`).

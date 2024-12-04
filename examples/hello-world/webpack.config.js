@@ -21,6 +21,9 @@ module.exports = {
         // output filename of extracted CSS
         filename: 'css/[name].[contenthash:8].css',
       },
+      watchFiles: {
+        includes: /\.md/, // watch changes in *.md files, needed for live reload
+      },
     }),
   ],
 

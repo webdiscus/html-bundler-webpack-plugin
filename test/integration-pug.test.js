@@ -1,7 +1,7 @@
 import { compareFiles, exceptionContain, watchCompareFiles } from './utils/helpers';
 import { filterLoadException } from '../src/Loader/Preprocessors/Pug/Exeptions';
 
-import FugFilter from '../src/Loader/Preprocessors/Pug/Filter';
+import PugFilter from '../src/Loader/Preprocessors/Pug/Filter';
 
 // TODO: add in docs
 // BRAKING CHANGE (to compare with pug-loader)
@@ -135,7 +135,7 @@ describe('exceptions', () => {
     const expected = /The required (.+?) module not found/;
 
     const result = () => {
-      FugFilter.loadModuleException({
+      PugFilter.loadModuleException({
         error: new Error(`Cannot find module 'parse5'\n`),
         filterName: 'highlight',
       });
@@ -148,7 +148,7 @@ describe('exceptions', () => {
     const expected = /Error by load the (.+?) filter/;
 
     const result = () => {
-      FugFilter.loadModuleException({
+      PugFilter.loadModuleException({
         error: new Error(`Other exception`),
         filterName: 'highlight',
       });

@@ -1,6 +1,7 @@
 // noinspection DuplicatedCode
 
 const path = require('path');
+const { red, redBright, cyan, whiteBright } = require('ansis');
 const { isWin, pathToPosix } = require('./Helpers');
 const Config = require('../Common/Config');
 
@@ -14,18 +15,30 @@ const srcDirname = path.sep + path.join(pluginName, 'src') + path.sep;
 /**
  * Load node module.
  *
- * @param {string} name The name of node module.
+ * @param {string} moduleName The name of node module.
  * @param {function=} callback The function to load a module.
+ * @param {string} context The current working directory where is the node_modules folder.
  * @return {*}
  * @throws
  */
-const loadModule = (name, callback) => {
+const loadModule = (moduleName, callback = null, context = process.cwd()) => {
+  let moduleFile;
   let module;
+
   try {
-    module = typeof callback === 'function' ? callback() : require(name);
+    moduleFile = require.resolve(moduleName, { paths: [context] });
   } catch (error) {
-    const message = `Cannot find module '${name}'. Please install missing module:\nnpm i -D ${name}\n`;
-    throw new Error(message);
+    if (error.code === 'MODULE_NOT_FOUND') {
+      const message = whiteBright`Cannot find module '${red(moduleName)}'. Please install the missing module: ${cyan`npm i -D ${moduleName}`}` + "\n";
+      throw new Error(message);
+    }
+    throw error;
+  }
+
+  try {
+    module = typeof callback === 'function' ? callback() : require(moduleFile);
+  } catch (error) {
+    throw error;
   }
 
   return module;

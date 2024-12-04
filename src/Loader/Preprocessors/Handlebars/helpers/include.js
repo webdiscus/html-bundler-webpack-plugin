@@ -1,6 +1,5 @@
 const { resolveFile } = require('../../../../Common/FileUtils');
-
-const MarkdownFilter = require('../filters/markdown/index');
+const MarkdownFilter = require('../../../PreprocessorFilters/markdown');
 
 /** @typedef {import('handlebars')} Handlebars */
 /** @typedef {import('handlebars').HelperOptions} HelperOptions */
@@ -16,7 +15,7 @@ const MarkdownFilter = require('../filters/markdown/index');
  * @return {function(filename: string, options: Object, args: Object): Handlebars.SafeString}
  */
 module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
-  const filterOption = {
+  const markdownFilterOptions = {
     highlight: {
       use: {
         module: 'prismjs',
@@ -26,8 +25,6 @@ module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
       },
     },
   };
-
-  MarkdownFilter.init(filterOption);
 
   /**
    * Include the partial file in a template.
@@ -48,7 +45,7 @@ module.exports = ({ Handlebars, fs, root, views = [], extensions = [] }) => {
     let html;
 
     if (filename.toLocaleLowerCase().endsWith('.md')) {
-      html = MarkdownFilter.apply(template);
+      html = MarkdownFilter.getInstance(markdownFilterOptions).apply(template);
     } else {
       // pass the original data into sub-sub partials
       const data =

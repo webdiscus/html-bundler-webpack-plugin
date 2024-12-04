@@ -184,7 +184,8 @@ class Option {
 
       // watch only files matched to RegExps,
       // if empty then watch all files, except ignored
-      includes: pluginOption.getEntryTest(),
+      // note: avoids modification of original array
+      includes: [...pluginOption.getEntryTest()],
 
       // ignore paths and files matched to RegExps
       excludes: [

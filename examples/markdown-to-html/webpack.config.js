@@ -73,6 +73,7 @@ module.exports = {
       watchFiles: {
         includes: /\.md/, // watch changes in *.md files, needed for live reload
       },
+      verbose: true,
     }),
   ],
 

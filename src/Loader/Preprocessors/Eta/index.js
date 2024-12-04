@@ -1,7 +1,7 @@
+const { readFileSync } = require('fs');
 const path = require('path');
 const { stringifyJSON } = require('../../Utils');
 const { loadModule } = require('../../../Common/FileUtils');
-const { readFileSync } = require('fs');
 const MarkdownFilter = require('../../PreprocessorFilters/markdown');
 
 // replace the partial file and data to load nested included template via the Webpack loader
@@ -40,7 +40,7 @@ const preprocessor = (loaderContext, options) => {
     views, // directory that contains templates
   });
 
-  const filterOption = {
+  const markdownFilterOptions = {
     highlight: {
       use: {
         module: 'prismjs',
@@ -51,13 +51,11 @@ const preprocessor = (loaderContext, options) => {
     },
   };
 
-  MarkdownFilter.init(filterOption);
-
   eta.readFile = (file) => {
     const source = readFileSync(file, 'utf-8');
 
     if (file.toLocaleLowerCase().endsWith('.md')) {
-      return MarkdownFilter.apply(source);
+      return MarkdownFilter.getInstance(markdownFilterOptions).apply(source);
     }
 
     return source;
