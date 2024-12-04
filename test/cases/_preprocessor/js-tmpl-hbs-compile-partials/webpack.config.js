@@ -21,8 +21,7 @@ module.exports = {
       },
       preprocessor: 'handlebars',
       preprocessorOptions: {
-        //runtime: 'handlebars/runtime', // default runtime
-        runtime: 'handlebars/dist/handlebars.runtime.min', // test custom runtime file
+        partials: ['src/partials'],
       },
       data: {
         title: 'My Title',

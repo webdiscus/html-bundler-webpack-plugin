@@ -1,4 +1,4 @@
-import tmpl from './partials/content.hbs?lang=en';
+import tmpl from './app.hbs?lang=en';
 
 const locals = {
   name: 'World',

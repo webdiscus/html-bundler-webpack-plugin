@@ -2,7 +2,8 @@ const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-  mode: 'production',
+  //mode: 'production',
+  mode: 'development',
   stats: 'minimal',
 
   resolve: {
@@ -19,6 +20,10 @@ module.exports = {
     new HtmlBundlerPlugin({
       verbose: true,
 
+      // TODO: fix watch changes in partials
+      //   - in production mode all changes works fine
+      //   - in development mode changes works only in entry template and in a partial only after 1st change
+      //   - changes anywhere works only for last entry
       entry: [
         {
           import: 'src/views/pages/home.hbs',

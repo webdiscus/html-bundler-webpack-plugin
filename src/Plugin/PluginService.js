@@ -285,6 +285,10 @@ class PluginService {
     context.dataFiles.clear();
     context.dependency?.shutdown();
 
+    const loaderOption = this.getLoaderOption(compiler);
+    const preprocessorModule = loaderOption?.getPreprocessorModule();
+    Preprocessor.shutdown(preprocessorModule);
+
     this.#contexts.delete(compiler);
   }
 }

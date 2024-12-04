@@ -13,13 +13,13 @@
     "test": "npm run build"
   },
   "devDependencies": {
-    "css-loader": "^6.8.1",
+    "css-loader": "^7.1.2",
     "handlebars": "^4.7.8",
-    "html-bundler-webpack-plugin": "^2.14.2",
-    "sass": "^1.64.2",
-    "sass-loader": "^13.3.2",
-    "webpack": "^5.88.2",
+    "html-bundler-webpack-plugin": "^4.6.1",
+    "sass": "^1.82.0",
+    "sass-loader": "^16.0.4",
+    "webpack": "^5.97.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1"
+    "webpack-dev-server": "^5.1.0"
   }
 }

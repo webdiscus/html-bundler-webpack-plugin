@@ -15,7 +15,6 @@ const preprocessor = (loaderContext, options) => {
   const extensions = ['.html', '.hbs', '.handlebars'];
   const includeFiles = [/\.(html|hbs|handlebars)$/i];
   const root = options?.root || rootContext;
-  //const runtime = options?.runtime || 'handlebars/dist/handlebars.runtime.min';
   const runtime = options?.runtime || 'handlebars/runtime';
   // fix windows-like path
   const runtimeFile = require.resolve(runtime).replace(/\\/g, '/');
@@ -206,14 +205,38 @@ const preprocessor = (loaderContext, options) => {
      * Compile template into template function.
      * Called when a template is loaded in JS in `compile` mode.
      *
-     * TODO: add support for the `include`
+     * TODO: add support for custom helpers used file system, e.g. `include`
      *
      * @param {string} source The template source code.
-     * @param {BundlerPluginLoaderContext} loaderContext
+     * @param {string} resourcePath The request of template.
      * @return {string}
      */
-    compile(source, loaderContext) {
-      return Handlebars.precompile(source);
+    compile(source, { resourcePath }) {
+      let precompiledPartials = '';
+
+      for (const name in Handlebars.partials) {
+        let source = Handlebars.partials[name];
+        let compiled;
+
+        try {
+          compiled = Handlebars.precompile(source, options);
+        } catch (error) {
+          let message = `Could not compile partial '${name}', in the template: ${resourcePath}`;
+          throw new Error(message + '\n' + error.toString());
+        }
+
+        precompiledPartials += `
+        var partial_${name} = ${compiled};
+        Handlebars.partials['${name}'] = Handlebars.template(partial_${name});
+        `;
+      }
+
+      let precompiledTemplate = Handlebars.precompile(source, options);
+
+      return `
+        ${precompiledPartials}
+        var precompiledTemplate = ${precompiledTemplate};
+        `;
     },
 
     /**
@@ -231,7 +254,7 @@ const preprocessor = (loaderContext, options) => {
       return `
         var Handlebars = require('${runtimeFile}');
         var data = ${stringifyJSON(data)};
-        var precompiledTemplate = ${precompiledTemplate};
+        ${precompiledTemplate};
         var ${exportFunctionName} = (context) => {
           var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
           return template(Object.assign(data, context));
@@ -242,9 +265,17 @@ const preprocessor = (loaderContext, options) => {
     /**
      * Called before each new compilation after changes, in the serve/watch mode.
      */
-    watch: () => {
+    watch() {
       updateHelpers();
       updatePartials();
+    },
+
+    /**
+     * CCalled when the webpack compiler is closing.
+     * Reset cached states, needed for tests.
+     */
+    shutdown() {
+      Handlebars.partials = {};
     },
   };
 };

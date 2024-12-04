@@ -1,5 +1,9 @@
 # Change log
 
+## 4.7.0 (2024-12-04)
+
+- feat: precompile Handlebars templates with sub partials
+
 ## 4.6.1 (2024-12-04)
 
 - fix: missing optional dependencies

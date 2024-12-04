@@ -1,6 +1,6 @@
 const path = require('path');
-//const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
-const HtmlBundlerPlugin = require('../../');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+//const HtmlBundlerPlugin = require('../../');
 
 module.exports = {
   //mode: 'development',

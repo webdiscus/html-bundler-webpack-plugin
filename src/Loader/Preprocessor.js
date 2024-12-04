@@ -118,6 +118,19 @@ class Preprocessor {
       preprocessorModule.watch();
     }
   }
+
+  /**
+   * Called by compiler shutdown.
+   *
+   * TODO: add type of the preprocessorModule
+   *
+   * @param {Object} preprocessorModule
+   */
+  static shutdown(preprocessorModule) {
+    if (typeof preprocessorModule?.shutdown === 'function') {
+      preprocessorModule.shutdown();
+    }
+  }
 }
 
 module.exports = Preprocessor;
