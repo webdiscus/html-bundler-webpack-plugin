@@ -1,6 +1,6 @@
 # Markdown to HTML
 
-Use the [HTML Builder Plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) for Webpack to render Markdown files `*.md` to HTML.
+Use the [HTML Builder Plugin](https://github.com/webdiscus/html-bundler-webpack-plugin) for Webpack to render Markdown `*.md` files to HTML.
 
 Required to install additional dependencies:
 
@@ -17,7 +17,7 @@ Required to install additional dependencies:
 
 ## View and edit in browser
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/markdown-to-html?file=webpack.config.js)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js)
 
 ## How to use
 
