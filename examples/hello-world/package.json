@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "css-loader": "^7.1.2",
-    "html-bundler-webpack-plugin": "4.6.0",
+    "html-bundler-webpack-plugin": "^4.6.1",
     "sass": "^1.81.1",
     "sass-loader": "^16.0.3",
     "webpack": "^5.97.0",
