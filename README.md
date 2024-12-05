@@ -471,7 +471,10 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
      - [entry as an array](#option-entry-array) (array notation)
      - [entry as an object](#option-entry-object) (object notation)
      - [entry as a path](#option-entry-path) (find templates in a directory recursively)
-     - [entry data](#option-entry-data) (pass data in the single template as an object or a file)
+     - [entry data](#option-entry-data) (pass data in the template)
+       - [data as object](#option-entry-data-object) (pass data in the template as an object)
+       - [data as `JSON` file](#option-entry-data-json) (load data from JSON file)
+       - [data as `JS` file](#option-entry-data-js) (dynamically load data from JS where can be used DB)
    - [entry dynamic](#option-entry-path) (entry as a path to template files)
    - [entryFilter](#option-entry-filter) (filter for entry dynamic)
    - [outputPath](#option-outputpath) (output path of HTML file)
@@ -698,6 +701,9 @@ module.exports = {
   ],
 };
 ```
+
+#### [↑ back to contents](#contents)
+
 
 <a id="webpack-option-entry" name="webpack-options-entry"></a>
 
@@ -1286,7 +1292,15 @@ Type: `EntryObject | Array<EntryDescription> | string`.
 The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property to pass custom variables into the HTML template.
 
-Specify template files as entry points in the `entry` option.
+> ℹ️ **Note**
+>
+> You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
+> But the `data` property can only be used in the `entry` option of the plugin.
+
+
+> 💡 **Tip**
+> 
+> Specify template files as entry points in the `entry` plugin option.
 
 An HTML template is a starting point for collecting all the dependencies used in your web application.
 Specify source scripts (JS, TS) and styles (CSS, SCSS, LESS, etc.) directly in HTML.
@@ -1396,6 +1410,9 @@ The example above is equivalent to the simple syntax:
 
 The `data` is passed into [`preprocessor`](#loader-option-preprocessor) to render the template with variables.
 
+<a id="option-entry-data-object" name="option-entry-data-object"></a>
+**data as `object`**
+
 When the `data` is an `object`, it will be loaded once with Webpack start.
 After changing the data, you **need to restart Webpack**.
 
@@ -1414,12 +1431,15 @@ For example:
 }
 ```
 
+<a id="option-entry-data-json" name="option-entry-data-json"></a>
+**data as `JSON` file**
+
 When the `data` is a `string`, it must be an absolute or relative path to a file.
 The file can be a `JSON` file or a `JS` file that exports the data as an object.
 Use the `data` as a file if you want to get dynamic data in a template.
 The data file will be reloaded after changes, **without restarting Webpack**.
 
-For example:
+For example, using `*.json` data file:
 
 ```js
 {
@@ -1441,12 +1461,41 @@ The data file _src/data/home.json_:
 }
 ```
 
-To pass global variables in all templates use the [data](#loader-option-data) loader option.
+<a id="option-entry-data-js" name="option-entry-data-js"></a>
+**data as `JS` file**
 
-> ℹ️ **Note**
->
-> You can define templates both in Webpack `entry` and in the `entry` option of the plugin. The syntax is identical.
-> But the `data` property can only be used in the `entry` option of the plugin.
+To load data into a template dynamically you can use `JS` file.
+In JS file you can load data from a database.
+
+For example, using `*.js` data file:
+
+```js
+{
+  entry: {
+    index: {
+      import: 'src/views/index.html',
+      // load data from JS file
+      data: 'src/data/home.js',
+    },
+  },
+}
+```
+
+The data file _src/data/home.js_:
+
+```js
+// here you can load data from a database
+const data = {
+  title: 'Home',
+};
+
+module.exports = data;
+```
+
+> 💡 **Tip**
+> 
+> To pass global variables in all templates use the [data](#loader-option-data) plugin option.
+
 
 <a id="option-entry-array" name="option-entry-array"></a>
 #### Entry as an array
@@ -2209,7 +2258,7 @@ new HtmlBundlerPlugin({
 }),
 ```
 
-Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) loader options.
+Please see the details below under the [preprocessor](#loader-option-preprocessor) and the [preprocessorOptions](#loader-option-preprocessorOptions) options.
 
 #### [↑ back to contents](#contents)
 
@@ -3987,7 +4036,7 @@ The data file will be reloaded after changes.
 >
 > The [entry.{name}.data](#option-entry-data) property overrides the same property defined in the loader `data`.
 
-For example, there are variables defined in both the `entry` property and the loader option:
+For example, there are variables defined in both the `entry` property and the plugin option:
 
 ```js
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
