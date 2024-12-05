@@ -446,6 +446,21 @@ class AssetCompiler {
     // - only in the processAssets hook is possible to modify an asset content via async function
     // - the stage`Infinity` ensures that the process will be run after all optimizations
     compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity + 1 }, this.processAssetsFinalAsync);
+
+    // output asset info tags in console statistics
+    compilation.hooks.statsPrinter.tap(pluginName, (stats) => {
+      stats.hooks.print.for('asset.info.minimized').tap(pluginName, (minimized, { green, formatFlag }) => {
+        if (!minimized) {
+          return '';
+        }
+
+        if (!green || !formatFlag) {
+          return 'minimized';
+        }
+
+        return green(formatFlag('minimized'));
+      });
+    });
   }
 
   /* istanbul ignore next: this method is called in watch mode after changes */
@@ -1026,7 +1041,7 @@ class AssetCompiler {
     }
 
     return this.collection
-      .render()
+      .render(assets)
       .then(() => {
         // remove all unused assets from compilation
         this.assetTrash.clearCompilation();

@@ -192,6 +192,10 @@ describe('plugin hooks', () => {
 
   // TODO: add an argument as flat map of assets, w/o tree, to create a manifest
   test('afterEmit', () => compareFiles('hook-afterEmit'));
+
+  test('display stats with tags', () => compareFiles('hook-statsPrinter-add-minimized'));
+  test('stats, tag minimized', () =>
+    stdoutContain('hook-statsPrinter-add-minimized', 'asset index.html 180 bytes [compared for emit] [minimized]'));
 });
 
 describe('plugin callbacks', () => {

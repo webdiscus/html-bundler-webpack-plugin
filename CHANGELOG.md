@@ -1,5 +1,9 @@
 # Change log
 
+## 4.8.0 (2024-12-05)
+
+- feat: add `minimized` tag in stats output for minimized HTML assets
+
 ## 4.7.0 (2024-12-04)
 
 - feat: precompile Handlebars templates with sub partials

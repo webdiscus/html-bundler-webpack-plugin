@@ -4,7 +4,7 @@ const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 module.exports = {
   //mode: 'production',
   mode: 'development',
-  stats: 'minimal',
+  //stats: 'minimal',
 
   resolve: {
     alias: {
@@ -47,6 +47,7 @@ module.exports = {
       },
 
       hotUpdate: true, // test this option
+      minify: true,
     }),
   ],
 

@@ -867,13 +867,16 @@ class Collection {
    * Render all resolved assets in contents.
    * Inline JS, CSS, substitute output JS filenames.
    *
+   * @param {Object} assets
+   *
    * @return {Promise<Awaited<unknown>[]>|Promise<unknown>}
    */
-  render() {
+  render(assets) {
     const compilation = this.compilation;
     const { RawSource } = compilation.compiler.webpack.sources;
     const LF = this.pluginOption.getLF();
     const isIntegrity = this.pluginOption.isIntegrityEnabled();
+    const isHtmlMinify = this.pluginOption.isMinify();
 
     const hooks = this.hooks;
     const promises = [];
@@ -933,7 +936,7 @@ class Collection {
       // 3. minify HTML before inlining JS and CSS to avoid:
       //    - needles minification already minified assets in production mode
       //    - issues by parsing the inlined JS/CSS code with the html minification module
-      if (this.pluginOption.isMinify()) {
+      if (isHtmlMinify) {
         promise = promise.then((value) => minify(value, this.pluginOption.get().minifyOptions));
       }
 
@@ -1095,7 +1098,12 @@ class Collection {
       // update HTML content
       promise = promise.then((content) => {
         if (typeof content === 'string') {
-          compilation.updateAsset(entryFilename, new RawSource(content));
+          compilation.updateAsset(entryFilename, new RawSource(content), (assetInfo) => {
+            // update assetInfo for stats tags
+            assetInfo.minimized = isHtmlMinify;
+
+            return assetInfo;
+          });
         }
       });
 
