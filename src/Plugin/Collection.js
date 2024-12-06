@@ -874,10 +874,10 @@ class Collection {
   render(assets) {
     const compilation = this.compilation;
     const { RawSource } = compilation.compiler.webpack.sources;
-    const LF = this.pluginOption.getLF();
-    const isIntegrity = this.pluginOption.isIntegrityEnabled();
+    const hasIntegrity = this.pluginOption.isIntegrityEnabled();
     const isHtmlMinify = this.pluginOption.isMinify();
-
+    const { minifyOptions } = this.pluginOption.get();
+    const LF = this.pluginOption.getLF();
     const hooks = this.hooks;
     const promises = [];
 
@@ -928,16 +928,14 @@ class Collection {
       // 2. postprocess callback
       if (this.pluginOption.hasPostprocess()) {
         // TODO:  update readme for postprocess
-        promise = promise.then(
-          (value) => this.pluginOption.postprocess(value, templateInfo, this.compilation) || value
-        );
+        promise = promise.then((value) => this.pluginOption.postprocess(value, templateInfo, compilation) || value);
       }
 
       // 3. minify HTML before inlining JS and CSS to avoid:
       //    - needles minification already minified assets in production mode
       //    - issues by parsing the inlined JS/CSS code with the html minification module
       if (isHtmlMinify) {
-        promise = promise.then((value) => minify(value, this.pluginOption.get().minifyOptions));
+        promise = promise.then((value) => minify(value, minifyOptions));
       }
 
       // 4. inline JS and CSS
@@ -974,7 +972,7 @@ class Collection {
               }
 
               // 1.1 compute CSS integrity
-              if (isIntegrity && !inline) {
+              if (hasIntegrity && !inline) {
                 // path to asset relative by output.path
                 let pathname = asset.assetFile;
                 if (this.pluginOption.isAutoPublicPath()) {
@@ -1001,7 +999,7 @@ class Collection {
               break;
             case Collection.type.script:
               // 1.2 compute JS integrity
-              if (isIntegrity) {
+              if (hasIntegrity) {
                 for (const chunk of asset.chunks) {
                   if (!chunk.inline) {
                     const assetContent = compilation.assets[chunk.chunkFile].source();
@@ -1046,7 +1044,7 @@ class Collection {
       }
 
       // 8. inject integrity
-      if (isIntegrity) {
+      if (hasIntegrity) {
         promise = promise.then((content) => {
           // 2. parse generated html for `link` and `script` tags
           const parsedResults = [];

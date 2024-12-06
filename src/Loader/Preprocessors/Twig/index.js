@@ -170,7 +170,7 @@ const preprocessor = (loaderContext, options) => {
         ${hot === true ? `Twig.cache(false);` : ''}
         var data = ${stringifyJSON(data)};
         var template = Twig.twig(${precompiledTemplate});
-        var ${exportFunctionName} = (context) => template.render(Object.assign(data, context));
+        var ${exportFunctionName} = (context) => template.render(Object.assign({}, data, context));
         ${exportCode}${exportFunctionName};`;
     },
   };

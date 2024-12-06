@@ -8,12 +8,6 @@ module.exports = {
     path: path.join(__dirname, 'dist/'),
   },
 
-  resolve: {
-    alias: {
-      '@images': path.join(__dirname, '../../../fixtures/images'),
-    },
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
@@ -21,7 +15,7 @@ module.exports = {
       },
       preprocessor: 'handlebars',
       preprocessorOptions: {
-        strict: true, // test the option in the precompiled template function
+        //strict: true, // check whether the variable used in template is defined
         partials: ['src/partials'],
       },
       data: {
@@ -29,16 +23,4 @@ module.exports = {
       },
     }),
   ],
-
-  module: {
-    rules: [
-      {
-        test: /\.(ico|png|jp?g|svg)$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'img/[name].[hash:8][ext][query]',
-        },
-      },
-    ],
-  },
 };

@@ -99,6 +99,7 @@ describe('usage template in js on client side', () => {
   // Handlebars
   test('hbs: compile to fn', () => compareFiles('_preprocessor/js-tmpl-hbs-compile'));
   test('hbs: compile to fn with partials', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-partials'));
+  test('hbs: compile to fn with variables', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-variables'));
 
   // Nunjucks
   test('njk: compile to fn', () => compareFiles('_preprocessor/js-tmpl-njk-compile'));

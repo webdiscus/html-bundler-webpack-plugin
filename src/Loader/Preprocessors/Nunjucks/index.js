@@ -131,7 +131,7 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
         var nunjucks = require('${runtimeFile}');
         ${precompiledTemplate};
         var data = ${stringifyJSON(data)};
-        var ${exportFunctionName} = (context) => nunjucks.render(templateId, Object.assign(data, context));
+        var ${exportFunctionName} = (context) => nunjucks.render(templateId, Object.assign({}, data, context));
         ${exportCode}${exportFunctionName};`;
     },
   };

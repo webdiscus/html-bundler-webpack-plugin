@@ -257,7 +257,7 @@ const preprocessor = (loaderContext, options) => {
         ${precompiledTemplate};
         var ${exportFunctionName} = (context) => {
           var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
-          return template(Object.assign(data, context));
+          return template(Object.assign({}, data, context));
         };
         ${exportCode}${exportFunctionName};`;
     },
@@ -271,7 +271,7 @@ const preprocessor = (loaderContext, options) => {
     },
 
     /**
-     * CCalled when the webpack compiler is closing.
+     * Called when the webpack compiler is closing.
      * Reset cached states, needed for tests.
      */
     shutdown() {

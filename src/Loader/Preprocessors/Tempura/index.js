@@ -129,7 +129,7 @@ const preprocessor = (loaderContext, options) => {
       return `${templateFunction};
         var data = ${stringifyJSON(data)};
         var helpers = ${helpersString};
-        ${exportCode} (context) => ${exportFunctionName}(Object.assign(data, context), helpers);`;
+        ${exportCode} (context) => ${exportFunctionName}(Object.assign({}, data, context), helpers);`;
     },
   };
 };

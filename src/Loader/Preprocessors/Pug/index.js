@@ -67,7 +67,7 @@ const preprocessor = (loaderContext, options, { esModule, watch }) => {
 
       return `${templateFunction};
         var data = ${stringifyJSON(data)};
-        var ${exportFunctionName} = (context) => ${functionName}(Object.assign(data, context));
+        var ${exportFunctionName} = (context) => ${functionName}(Object.assign({}, data, context));
         ${exportCode}${exportFunctionName};`;
     },
   };

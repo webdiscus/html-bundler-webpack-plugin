@@ -123,7 +123,7 @@ const preprocessor = (loaderContext, options) => {
 
       return `${templateFunction};
         var data = ${stringifyJSON(data)};
-        var template = (context) => ${exportFunctionName}(Object.assign(data, context));
+        var template = (context) => ${exportFunctionName}(Object.assign({}, data, context));
         ${exportCode}template;`;
     },
   };

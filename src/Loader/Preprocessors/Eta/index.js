@@ -125,7 +125,7 @@ const preprocessor = (loaderContext, options) => {
         var eta = new Eta(${stringifyJSON(options)});
         var data = ${stringifyJSON(data)};
         var etaFn = ${templateFunction};
-        var ${exportFunctionName} = (context) => etaFn.bind(eta)(Object.assign(data, context));
+        var ${exportFunctionName} = (context) => etaFn.bind(eta)(Object.assign({}, data, context));
         ${exportCode}${exportFunctionName};`;
     },
   };

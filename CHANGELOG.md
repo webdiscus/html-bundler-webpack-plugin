@@ -1,5 +1,11 @@
 # Change log
 
+## 4.8.1 (2024-12-06)
+
+- fix: if template is imported in JS in compile mode and the same template function called with different variables set
+       then variables from previous definition must not be cached.
+       This fix is for all template engines. #128
+
 ## 4.8.0 (2024-12-05)
 
 - feat: add `minimized` tag in stats output for minimized HTML assets
