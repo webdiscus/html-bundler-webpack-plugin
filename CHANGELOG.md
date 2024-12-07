@@ -1,5 +1,10 @@
 # Change log
 
+## 4.9.1 (2024-12-07)
+
+- fix: rebuild all entrypoints after changes in partials matching to the `watchFiles` plugin option,
+       this fix extends the feature of `v4.9.0`
+
 ## 4.9.0 (2024-12-07)
 
 - feat: using serve/watch, after a partial file is modified all entry point templates will be rebuilt, #127.\

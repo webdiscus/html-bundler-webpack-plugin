@@ -160,6 +160,14 @@ class PluginService {
 
   /**
    * @param {Compiler} compiler The webpack compiler.
+   * @return {Dependency}
+   */
+  static getDependencyInstance(compiler) {
+    return this.getContext(compiler).dependency;
+  }
+
+  /**
+   * @param {Compiler} compiler The webpack compiler.
    * @param {Dependency} dependency
    */
   static setDependencyInstance(compiler, dependency) {

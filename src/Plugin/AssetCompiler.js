@@ -46,6 +46,7 @@ const { PluginError, afterEmitException } = require('./Messages/Exception');
 const loaderPath = require.resolve('../Loader');
 const LoaderFactory = require('../Loader/LoaderFactory');
 const { yellowBright, cyanBright, green, greenBright } = require('ansis');
+const { compiler } = require('nunjucks');
 
 const { pluginName } = Config.get();
 
@@ -593,9 +594,11 @@ class AssetCompiler {
     const isEntry = this.assetEntry.isEntryResource(fileName);
 
     if (!isEntry) {
+      const dependency = PluginService.getDependencyInstance(this.compilation.compiler);
+      const isFileWatchable = dependency.isFileWatchable(fileName);
       const isTemplate = this.pluginOption.isEntry(fileName);
 
-      if (isTemplate) {
+      if (isTemplate || isFileWatchable) {
         if (this.pluginOption.isVerbose()) {
           console.log(yellowBright`Modified partial: ${cyanBright(fileName)}`);
         }

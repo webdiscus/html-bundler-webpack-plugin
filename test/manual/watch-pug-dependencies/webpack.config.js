@@ -11,7 +11,9 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
+        // test: rebuild all main templates after changes a partial (in deps/ directory)
         index: './src/index.pug',
+        index2: './src/index2.pug',
       },
       preprocessor: 'pug',
       preprocessorOptions: {
@@ -50,6 +52,8 @@ module.exports = {
           /\.(s?css)$/i,
         ],
       },
+
+      verbose: true,
     }),
   ],
 
