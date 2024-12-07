@@ -17,6 +17,8 @@ const {
   ASSET_MODULE_TYPE_SOURCE,
 } = require('webpack/lib//ModuleTypeConstants');
 
+const { yellowBright, cyanBright, green, greenBright } = require('ansis');
+
 const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
@@ -45,8 +47,6 @@ const { PluginError, afterEmitException } = require('./Messages/Exception');
 
 const loaderPath = require.resolve('../Loader');
 const LoaderFactory = require('../Loader/LoaderFactory');
-const { yellowBright, cyanBright, green, greenBright } = require('ansis');
-const { compiler } = require('nunjucks');
 
 const { pluginName } = Config.get();
 

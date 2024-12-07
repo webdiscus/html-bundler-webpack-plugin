@@ -1,6 +1,10 @@
 # Change log
 
-## 4.9.1 (2024-12-07)
+## 4.9.2 (2024-12-07)
+
+- fix: Error Cannot find module 'nunjucks', introduced in `4.9.1`
+
+## 4.9.1 (2024-12-07) DEPRECATED
 
 - fix: rebuild all entrypoints after changes in partials matching to the `watchFiles` plugin option,
        this fix extends the feature of `v4.9.0`
