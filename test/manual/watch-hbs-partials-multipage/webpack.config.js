@@ -6,12 +6,6 @@ module.exports = {
   mode: 'development',
   //stats: 'minimal',
 
-  resolve: {
-    alias: {
-      '@images': path.join(__dirname, '../../fixtures/images'),
-    },
-  },
-
   output: {
     path: path.join(__dirname, 'dist/'),
   },
@@ -20,52 +14,46 @@ module.exports = {
     new HtmlBundlerPlugin({
       verbose: true,
 
+      // TODO: test separate with filesystem cache
+      // cache: {
+      //   type: 'filesystem',
+      // },
+
+      // issue: https://github.com/webdiscus/html-bundler-webpack-plugin/issues/127
       // TODO: fix watch changes in partials
       //   - in production mode all changes works fine
       //   - in development mode changes works only in entry template and in a partial only after 1st change
       //   - changes anywhere works only for last entry
       entry: [
         {
-          import: 'src/views/pages/home.hbs',
+          import: 'src/views/home.hbs',
           filename: 'index.html',
-          data: 'src/views/pages/home-data.json',
         },
         {
-          import: 'src/views/pages/about.hbs',
+          import: 'src/views/about.hbs',
           filename: 'about.html',
-          data: 'src/views/pages/about-data.json',
+        },
+        {
+          import: 'src/views/contact.hbs',
+          filename: 'contact.html',
         },
       ],
 
-      // test: issue after 2-3 changes of the `data-global.json` or `home-data.json`, the index.html is not recompiled
-      data: 'data-global.json',
+      js: {
+        filename: 'js/[name].[contenthash:8].js',
+      },
 
       preprocessor: 'handlebars',
       preprocessorOptions: {
-        helpers: ['src/views/helpers'],
-        partials: ['src/views/includes', 'src/views/partials'],
+        partials: ['src/views/partials'],
       },
 
-      hotUpdate: true, // test this option
-      //minify: true,
+      hotUpdate: true,
     }),
   ],
 
-  module: {
-    rules: [
-      {
-        test: /\.(png|svg|jpe?g|webp)$/i,
-        type: 'asset/resource',
-        generator: {
-          filename: 'assets/img/[name].[hash:8][ext]',
-        },
-      },
-    ],
-  },
-
   // enable live reload
   devServer: {
-    //hot: false,
     static: {
       directory: path.join(__dirname, 'dist'),
     },

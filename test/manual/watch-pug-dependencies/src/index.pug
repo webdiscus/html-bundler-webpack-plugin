@@ -8,6 +8,7 @@ html
     link(rel='stylesheet' href=require('./styles.scss'))
     script(src=require('./main.js'))
   body
+    include ./header
     //- Manual simulate errors:
     //-div= undefined.variable
     //-img(src=require('NoFound/image.jpeg2'))
@@ -17,7 +18,7 @@ html
       var colors = require(`@data/${cat}/color.js`)
 
     .content
-      h1 Watch of dependencies
+      h2 Watch of dependencies
       +code: :highlight(pug)
         p Pug code
       +code: include:highlight(pug) deps/file.pug

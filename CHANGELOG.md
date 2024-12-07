@@ -1,5 +1,11 @@
 # Change log
 
+## 4.9.0 (2024-12-07)
+
+- feat: using serve/watch, after a partial file is modified all entry point templates will be rebuilt, #127.\
+  **The problem:**
+  Webpack doesn't know which partials are used in which templates, so Webpack can't rebuild the main template (entrypoint) where a partial has changed. 
+
 ## 4.8.1 (2024-12-06)
 
 - fix: if template is imported in JS in compile mode and the same template function called with different variables set

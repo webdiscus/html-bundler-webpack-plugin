@@ -1,6 +1,7 @@
 const path = require('path');
 const { minify } = require('html-minifier-terser');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
+const { getFixedUrlWithParams } = require('../Common/Helpers');
 const Integrity = require('./Extras/Integrity');
 const Preload = require('./Preload');
 const { noHeadException } = require('./Messages/Exception');
@@ -284,17 +285,10 @@ class Collection {
     const splitChunkIds = new Set();
     const chunkCache = new Map();
 
-    //console.log('### chunks: ', chunks);
-    //console.log('### assets: ', assets); //  'img/apple.02a7c382.png': CachedSource
-    //console.log('### namedChunkGroups: ', namedChunkGroups);
-    //console.log('### chunkGraph: ', chunkGraph.moduleGraph._moduleMap);
-
     for (let [resource, { type, name, entries }] of this.assets) {
       if (type !== Collection.type.script) continue;
 
       const entrypoint = namedChunkGroups.get(name);
-
-      //console.log('### auxiliaryFiles: ', { name, entrypoint });
 
       // prevent error when in watch mode after removing a script in the template
       if (!entrypoint) continue;
@@ -314,8 +308,6 @@ class Collection {
           if (isJavascript && info.hotModuleReplacement !== true) chunkFiles.add(file);
         }
         splitChunkIds.add(id);
-
-        //console.log('### auxiliaryFiles: ', { id, files, auxiliaryFiles });
       }
 
       const hasSplitChunks = chunkFiles.size > 1;
@@ -640,6 +632,7 @@ class Collection {
     // set entry dependencies
     for (const item of this.assets.values()) {
       const entryFilenames = item.entries.get(resource);
+
       if (entryFilenames) {
         entryFilenames.add(filename);
       }
@@ -662,6 +655,8 @@ class Collection {
     let item = this.assets.get(resource);
     let inline = false;
     let name;
+
+    issuer = getFixedUrlWithParams(issuer);
 
     switch (type) {
       case Collection.type.script:
@@ -710,6 +705,7 @@ class Collection {
       };
       this.assets.set(resource, item);
     }
+
     item.entries.set(issuer, new Set());
   }
 

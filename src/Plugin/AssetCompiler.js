@@ -45,6 +45,7 @@ const { PluginError, afterEmitException } = require('./Messages/Exception');
 
 const loaderPath = require.resolve('../Loader');
 const LoaderFactory = require('../Loader/LoaderFactory');
+const { yellowBright, cyanBright, green, greenBright } = require('ansis');
 
 const { pluginName } = Config.get();
 
@@ -489,16 +490,17 @@ class AssetCompiler {
     if (this.dataFileEntryMap.has(fileName)) {
       const entryFiles = this.dataFileEntryMap.get(fileName);
 
+      if (this.pluginOption.isVerbose()) {
+        console.log(yellowBright`Modified data file: ${cyanBright(fileName)}`);
+      }
+
       for (const module of this.compilation.modules) {
         const moduleResource = module.resource || '';
 
         if (moduleResource && entryFiles.find((file) => file === moduleResource)) {
-          this.compilation.rebuildModule(module, (err) => {
+          this.compilation.rebuildModule(module, (error) => {
             if (this.pluginOption.isVerbose()) {
-              // TODO: prettify the logging
-              console.log(
-                `>>> The data file is changed: ${fileName}${'\n'}   -> Rebuild the dependency: ${moduleResource}`
-              );
+              console.log(greenBright`   -> Rebuild dependency: ${cyanBright(moduleResource)}`);
             }
           });
         }
@@ -563,7 +565,7 @@ class AssetCompiler {
                 module._errors = [];
 
                 // after rename a js file, try to rebuild the module of the entry file where the js file was linked
-                this.compilation.rebuildModule(module, (err) => {
+                this.compilation.rebuildModule(module, (error) => {
                   // after rebuild, remove the missing file to avoid double rebuilding by another exception
                   Snapshot.deleteMissingFile(issuer, missingFile);
                   this.assetEntry.deleteMissingFile(missingFile);
@@ -581,6 +583,39 @@ class AssetCompiler {
 
       if (inCollection && (actionType === 'remove' || actionType === 'rename')) {
         this.assetEntry.deleteEntry(oldFileName);
+      }
+
+      return;
+    }
+
+    // 3. if a partial is changed then rebuild all entry templates,
+    // because we don't have the dependency graph of the partial on the main template
+    const isEntry = this.assetEntry.isEntryResource(fileName);
+
+    if (!isEntry) {
+      const isTemplate = this.pluginOption.isEntry(fileName);
+
+      if (isTemplate) {
+        if (this.pluginOption.isVerbose()) {
+          console.log(yellowBright`Modified partial: ${cyanBright(fileName)}`);
+        }
+
+        for (const module of this.compilation.modules) {
+          const moduleResource = module.resource || '';
+
+          if (moduleResource && this.assetEntry.isEntryResource(moduleResource)) {
+            this.compilation.rebuildModule(module, (error) => {
+              if (error) {
+                // TODO: research the strange error - "Cannot read properties of undefined (reading 'state')"
+                //       in node_modules/webpack/lib/util/AsyncQueue.js:196
+              }
+
+              if (this.pluginOption.isVerbose()) {
+                console.log(greenBright`   -> Rebuild entrypoint: ${cyanBright(moduleResource)}`);
+              }
+            });
+          }
+        }
       }
     }
   }

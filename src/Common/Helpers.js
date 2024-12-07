@@ -103,6 +103,24 @@ const deleteQueryParam = (request, name) => {
 };
 
 /**
+ * Get valid url with parameters.
+ *
+ * If request has the query w/o value, e.g. `?param`,
+ * then Webpack generates the `resource` path with `=` at the end, e.g. `?param=`,
+ * that brake the workflow the plugin!
+ *
+ * @param {string} request
+ * @return {string}
+ */
+const getFixedUrlWithParams = (request) => {
+  if (request.endsWith('=')) {
+    request = request.slice(0, -1);
+  }
+
+  return request;
+};
+
+/**
  * Merge two objects.
  * @param {Object} a
  * @param {Object} b
@@ -206,6 +224,7 @@ module.exports = {
   getQueryParam,
   addQueryParam,
   deleteQueryParam,
+  getFixedUrlWithParams,
   deepMerge,
   detectIndent,
   outToConsole,

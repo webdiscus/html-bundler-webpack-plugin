@@ -1,0 +1,17 @@
+{
+  "articleTitle": "Fruits #: 123",
+  "articles": [
+    {
+      "name": "apple",
+      "price": "0.99 €"
+    },
+    {
+      "name": "kiwi",
+      "price": "1.09 €"
+    },
+    {
+      "name": "cocos",
+      "price": "3.29 €"
+    }
+  ]
+}

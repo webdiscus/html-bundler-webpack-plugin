@@ -11,9 +11,9 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/index.html',
+        index: './src/index.html?query', // test: resolve `hot-update.js` in the output html, if used a query w/o value
       },
-      hotUpdate: true,
+      hotUpdate: true, // test: when a entrypoint containing a query w/o value
     }),
   ],
 };

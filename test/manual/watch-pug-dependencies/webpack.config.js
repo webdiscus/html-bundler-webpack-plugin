@@ -8,12 +8,11 @@ module.exports = {
     path: path.join(__dirname, 'dist'),
   },
 
-  entry: {
-    index: './src/index.pug',
-  },
-
   plugins: [
     new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.pug',
+      },
       preprocessor: 'pug',
       preprocessorOptions: {
         embedFilters: {
@@ -30,10 +29,12 @@ module.exports = {
           },
           // :markdown
           markdown: {
-            github: true, // test: rendering markdown template with GitHub styles
             highlight: {
-              verbose: true,
-              use: 'prismjs', // name of highlighting npm package, must be installed
+              //use: 'prismjs', // name of highlighting npm package, must be installed
+              use: {
+                module: 'prismjs', // name of highlighting npm package, must be installed
+                verbose: true,
+              },
             },
           },
         },
@@ -42,7 +43,7 @@ module.exports = {
       // TODO: add the new syntax of the watchFiles option in pug-loader v3.x
       // test: watching for changes in specific files like *.c, *.md, etc
       watchFiles: {
-        files: [
+        includes: [
           // add to watch all source samples from the `/deps` folder
           /\/deps\/.+$/,
           // add to watch styles included in pug
