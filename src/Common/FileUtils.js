@@ -1,6 +1,7 @@
 // noinspection DuplicatedCode
 
 const path = require('path');
+const fs = require('fs');
 const { red, redBright, cyan, whiteBright } = require('ansis');
 const { isWin, pathToPosix } = require('./Helpers');
 const Config = require('../Common/Config');
@@ -11,6 +12,40 @@ const { pluginName } = Config.get();
 const nodeModuleDirname = path.sep + 'node_modules' + path.sep;
 const testDirname = path.sep + path.join(pluginName, 'test') + path.sep;
 const srcDirname = path.sep + path.join(pluginName, 'src') + path.sep;
+
+/**
+ * Dynamically load a CommonJS or ESM module.
+ *
+ * @param {string} filePath The path to the module file.
+ * @returns {Promise<any>} The loaded module.
+ * @throws
+ */
+async function asyncLoadModule(filePath) {
+  const absolutePath = path.resolve(filePath);
+  const ext = path.extname(absolutePath).toLowerCase();
+
+  if (!fs.existsSync(absolutePath)) {
+    throw new Error(`File not found: ${cyan(absolutePath)}`);
+  }
+
+  if (ext === '.mjs') {
+    // ESM file
+    return import(absolutePath);
+  } else if (ext === '.cjs' || ext === '.js') {
+    // CommonJS file
+    try {
+      return require(absolutePath);
+    } catch (error) {
+      if (error.code === 'ERR_REQUIRE_ESM') {
+        // fallback to ESM
+        return import(absolutePath);
+      }
+      throw error;
+    }
+  } else {
+    throw new Error(`Unsupported file type: ${cyan(`.${ext}`)}`);
+  }
+}
 
 /**
  * Load node module.
@@ -29,7 +64,9 @@ const loadModule = (moduleName, callback = null, context = process.cwd()) => {
     moduleFile = require.resolve(moduleName, { paths: [context] });
   } catch (error) {
     if (error.code === 'MODULE_NOT_FOUND') {
-      const message = whiteBright`Cannot find module '${red(moduleName)}'. Please install the missing module: ${cyan`npm i -D ${moduleName}`}` + "\n";
+      const message =
+        whiteBright`Cannot find module '${red(moduleName)}'. Please install the missing module: ${cyan`npm i -D ${moduleName}`}` +
+        '\n';
       throw new Error(message);
     }
     throw error;
@@ -280,6 +317,7 @@ const touch = (file, { fs }) => {
 };
 
 module.exports = {
+  asyncLoadModule,
   loadModule,
   isDir,
   readDirRecursiveSync,

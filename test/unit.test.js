@@ -1,10 +1,18 @@
+import path from 'path';
 import fs from 'fs';
 
 import { findPlugin, getFileExtension, parseVersion, compareVersions } from '../src/Common/Helpers';
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
 import { HtmlParser } from '../src/Common/HtmlParser';
-import { isDir, loadModule, resolveFile, filterParentPaths, relativePathVerbose } from '../src/Common/FileUtils';
+import {
+  isDir,
+  asyncLoadModule,
+  loadModule,
+  resolveFile,
+  filterParentPaths,
+  relativePathVerbose,
+} from '../src/Common/FileUtils';
 import {
   stringifyJSON,
   stringifyFn,
@@ -1544,7 +1552,49 @@ describe('plugin isInlineCss option', () => {
   });
 });
 
-describe('FileUtils', () => {
+describe('asyncLoadModule', () => {
+  test('example.cjs', async () => {
+    // usage example
+    // (async () => {
+    //   // dynamically load CommonJS module
+    //   const commonJSModule = await asyncLoadModule('./fixtures/modules/example.cjs');
+    //   console.log('Loaded CommonJS Module:', commonJSModule);
+    // })();
+
+    const commonJSModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example.cjs'));
+    const received = commonJSModule.message;
+    const expected = 'Hello from CommonJS';
+
+    expect(expected).toEqual(received);
+  });
+
+  test('example-cjs.js', async () => {
+    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example-cjs.js'));
+    const received = esmModule.message;
+    const expected = 'Hello from .js file';
+
+    expect(received).toEqual(expected);
+  });
+
+  // Jest doesn't support ESM without --experimental-vm-modules
+  test('example.mjs', async () => {
+    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example.mjs'));
+    const received = esmModule.message;
+    const expected = 'Hello from ESM';
+
+    expect(received).toEqual(expected);
+  });
+
+  test('example-esm.js', async () => {
+    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example-esm.js'));
+    const received = esmModule.message;
+    const expected = 'Hello from .js file';
+
+    expect(received).toEqual(expected);
+  });
+});
+
+describe('FileUtils Sync', () => {
   test('load module', (done) => {
     try {
       const ansis = loadModule('ansis');
