@@ -12,14 +12,24 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-Generates HTML with JS and CSS from templates containing source files of scripts, styles and other assets.\
-Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and modern replacement of many [plugins and loaders](#list-of-plugins).
+The plugin automates the processing of source files such as JS/TS, SCSS, images and other assets referenced in an HTML or template file.
+This plugin will generate an HTML file containing all the necessary links to JS, CSS, images and other resources.
+
+## Why use the HTML Bundler Plugin?
+ 
+This plugin is an advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and replacement of many [plugins and loaders](#list-of-plugins).
+
+The HTML Bundler Plugin works a bit differently than `html-webpack-plugin`. 
+It doesn't just inject JavaScript and CSS into an HTML.
+Instead, it resolves all the source files of the assets referenced directly in the template 
+and ensures the generated HTML contains the correct output URLs of resources after Webpack processes them.
+Additionally, CSS extracted from styles imported in JS can be injected into HTML as a `<link>` tag or as an inlined CSS.
 
 ---
 
-<h4 align="center">
+<h3 align="center">
 📋 <a href="#contents">Table of Contents</a> 🚀 <a href="#install">Install and Quick Start</a> 🖼 <a href="#usage-examples">Usage examples</a> 🔆 <a href="#whats-new">What's New</a>
-</h4>
+</h3>
 
 <!--
 #### 📋 [Table of Contents](#contents) 🚀 [Install and Quick Start](#install) 🖼 [Usage examples](#usage-examples)
@@ -30,11 +40,9 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 ## 💡 Highlights
 
 - An [entry point](#option-entry) is any HTML template. **Start from HTML**, not from JS.
-- **Find** and automatic processing of templates in the [entry directory](#option-entry-path).
-- **Renders** the [template engines](#template-engine) "out of the box":
-  [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Tempura](#using-template-tempura), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
-  It is very easy to add support for any template engine.
-- Supports including of Markdown `*.md` files in the template, see [Markdown demo](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js) in browser.
+- **Automatically** processes templates found in the [entry directory](#option-entry-path).
+- Build-in support for [template engines](#template-engine): [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Tempura](#using-template-tempura), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
+- Build-in support for **Markdown** `*.md` files in templates, see [Markdown demo](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js) in browser.
 - **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
   - `<link href="./style.scss" rel="stylesheet">`\
   No longer need to define source style files in Webpack entry or import styles in JavaScript.
@@ -43,10 +51,10 @@ Advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-w
 - **Resolves** [source files](#loader-option-sources) of assets in [attributes](#loader-option-sources-default) such as `href` `src` `srcset` using **relative path** or **alias**:
   - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
-  Source files will be resolved, processed and auto-replaced with correct URLs in the bundled output.
+  Source files will be resolved, processed and auto-replaced with correct URLs in the generated HTML.
 - **Inlines** [JS](#recipe-inline-js), [CSS](#recipe-inline-css) and [Images](#recipe-inline-image) into HTML. See [how to inline all resources](#recipe-inline-all-assets-to-html) into single HTML file.
-- [HMR for CSS](#option-css-hot) - update CSS in browser without a full reload.
-- Recompiles the template after changes in the [data file](#option-entry-data) assigned to the entry page as a JSON or JS filename.
+- Supports the [HMR for CSS](#option-css-hot) to update CSS in browser without a full reload.
+- Watches for changes in the [data file](#option-entry-data) linked to the template in the plugin option.
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
@@ -131,7 +139,7 @@ module.exports = {
 
   plugins: [
     new HtmlBundlerPlugin({
-     // all the necessary options are in one place
+      // specify the entry points for HTML pages (or a template)
       entry: {
         index: 'src/views/index.html', // save generated HTML into dist/index.html
       },
@@ -569,6 +577,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Auto generate **integrity hash** for `link` and `script` tags [View in browser](https://stackblitz.com/edit/webpack-integrity-hvnfmg?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/integrity/)
    - Inline multiple **SVG** files w/o ID collision [View in browser](https://stackblitz.com/edit/inline-svg-wo-ids-collision?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/inline-svg-unique-id/)
    - Bundle **Vue** app into single HTML file with **embedded** JS, CSS, images [View in browser](https://stackblitz.com/edit/vue-bundle-inlined-assets?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/vue-bundle-inlined-assets/)
+   - Using **Markdown** `*.md` files in templates [View in browser](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/markdown-to-html)
 
 <a id="features" name="features"></a>
 
@@ -592,6 +601,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 - enable/disable [extraction of comments](#option-extract-comments) to `*.LICENSE.txt` file
 - supports template engines such as [Eta](https://eta.js.org), [EJS](https://ejs.co), [Handlebars](https://handlebarsjs.com), [Nunjucks](https://mozilla.github.io/nunjucks/), [Pug](https://pugjs.org/), [TwigJS](https://github.com/twigjs/twig.js), [LiquidJS](https://github.com/harttle/liquidjs) and others
 - supports a [template function](#template-in-js) for usage in JS on the client-side
+- supports Markdown `*.md` files in templates
 - supports both `async` and `sync` [preprocessor](#loader-option-preprocessor-custom)
 - auto processing multiple HTML templates using the [entry path](#option-entry-path)
 - [pass data](#option-entry-advanced) into template from the plugin config
@@ -1291,6 +1301,9 @@ Type: `EntryObject | Array<EntryDescription> | string`.
 
 The `EntryObject` is identical to [Webpack entry](https://webpack.js.org/configuration/entry-context/#entry)
 plus additional `data` property to pass custom variables into the HTML template.
+
+Defines the entry points for HTML files. 
+You can specify a path to a template directory to automatically process all templates, or specify multiple entries if you want to manually manage templates files.
 
 > ℹ️ **Note**
 >

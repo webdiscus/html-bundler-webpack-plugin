@@ -1,7 +1,7 @@
 {
   "name": "html-bundler-webpack-plugin",
   "version": "4.9.2",
-  "description": "HTML Bundler Plugin for Webpack renders HTML templates containing source files of scripts, styles, images. Supports template engines: Eta, EJS, Handlebars, Nunjucks, Pug, TwigJS. Alternative to html-webpack-plugin.",
+  "description": "Processing HTML templates and bundling assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
     "bundler",

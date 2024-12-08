@@ -24,9 +24,7 @@ module.exports = {
         hot: true,
       },
 
-      //verbose: true,
-      //hotUpdate: false, // test to disable auto-injection of hot-update.js files
-      //hotUpdate: true,
+      verbose: true,
     }),
   ],
 
@@ -35,7 +33,6 @@ module.exports = {
       {
         test: /\.(css)/,
         use: ['css-loader'],
-        //use: [HtmlBundlerPlugin.cssLoader.loader, 'css-loader'],
       },
     ],
   },
@@ -44,10 +41,8 @@ module.exports = {
     static: {
       directory: path.join(__dirname, 'dist'),
     },
-    //hot: false, // // default is true, enable HMR (works for CSS only)
 
     // disable watch to avoid live reload
-    //liveReload: true, // default is true
     //liveReload: false, // default is true
     watchFiles: {
       paths: ['src/**/*.(html|eta)'], // if the `hot` option is enabled then exclude *.s?css from watched files
