@@ -1,5 +1,9 @@
 # Change log
 
+## 4.10.0 (2024-12-08)
+
+- feat: add support for handlebars helpers in compile mode
+
 ## 4.9.2 (2024-12-07)
 
 - fix: Error Cannot find module 'nunjucks', introduced in `4.9.1`

@@ -182,11 +182,11 @@ const stringifyJSON = (data) => {
     if (typeof value === 'function') {
       value = value.toString().replace(/\n/g, '');
 
-      // transform `{ fn() {} }` to `{"fn":()=>{}}`
+      // transform `{ fn() {} }` to `{"fn":function(){}}`
       const keySize = key.length;
-      if (key === value.slice(0, keySize)) {
-        const pos = value.indexOf(')', keySize + 1) + 1;
-        value = value.slice(keySize, pos) + '=>' + value.slice(pos).trimStart();
+      const pos = value.indexOf('(');
+      if (pos > 0 && value.slice(0, pos).trim() !== 'function') {
+        value = 'function' + value.slice(keySize);
       }
 
       value = quoteMark + value + quoteMark;
@@ -200,6 +200,20 @@ const stringifyJSON = (data) => {
     ? // remove the quotes around the function body
       json.replace(/("__REMOVE_QUOTE__|__REMOVE_QUOTE__")/g, '')
     : json || '{}';
+};
+
+const stringifyFn = (fn) => {
+  let value = fn.toString().replace(/\n/g, '');
+  let isArrowFunction = value.indexOf('=>', 1) > 0;
+
+  if (!isArrowFunction) {
+    const pos = value.indexOf('(');
+    if (pos > 0 && value.slice(0, pos).trim() !== 'function') {
+      value = 'function' + value.slice(pos);
+    }
+  }
+
+  return value;
 };
 
 module.exports = {
@@ -220,4 +234,5 @@ module.exports = {
   escapeSequences,
   escapeCodesForJSON,
   stringifyJSON,
+  stringifyFn,
 };

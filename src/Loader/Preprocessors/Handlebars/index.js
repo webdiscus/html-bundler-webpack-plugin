@@ -1,5 +1,5 @@
 const path = require('path');
-const { stringifyJSON } = require('../../Utils');
+const { stringifyJSON, stringifyFn } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 const LoaderFactory = require('../../LoaderFactory');
@@ -250,11 +250,25 @@ const preprocessor = (loaderContext, options) => {
     export(precompiledTemplate, { data }) {
       const exportFunctionName = 'templateFn';
       const exportCode = 'module.exports=';
+      let precompiledHelpers = '';
+
+      if (options.helpers || Array.isArray(options.helpers)) {
+        const helpers = getHelpers(options.helpers);
+
+        for (let name in helpers) {
+          let helper = helpers[name];
+          let source = stringifyFn(helper);
+
+          precompiledHelpers += `
+          Handlebars.registerHelper('${name}', ${source});`;
+        }
+      }
 
       return `
         var Handlebars = require('${runtimeFile}');
         var data = ${stringifyJSON(data)};
-        ${precompiledTemplate};
+        ${precompiledHelpers}
+        ${precompiledTemplate}
         var ${exportFunctionName} = (context) => {
           var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
           return template(Object.assign({}, data, context));
