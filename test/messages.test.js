@@ -1,4 +1,10 @@
-import { exceptionContain, stdoutContain, watchExceptionContain, watchStdoutContain } from './utils/helpers';
+import {
+  exceptionContain,
+  stdoutContain,
+  watchExceptionContain,
+  watchStdoutContain,
+  compareFiles,
+} from './utils/helpers';
 import { resolveModule } from '../src/Loader/Utils';
 import { loadModule } from '../src/Common/FileUtils';
 
@@ -134,6 +140,11 @@ describe('plugin exceptions', () => {
   test('splitChunks CSS file not found', () => {
     const containString = "Add the 'splitChunks.cacheGroups.{cacheGroup}.test' option";
     return exceptionContain('_exceptions/msg-exception-split-chunk-css', containString);
+  });
+
+  test('css error if minify:true', () => {
+    const containString = 'ERROR in ./src/style.scss';
+    return exceptionContain('_exceptions/msg-exception-scss-with-minify', containString);
   });
 });
 

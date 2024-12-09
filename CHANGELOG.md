@@ -1,5 +1,14 @@
 # Change log
 
+## 4.10.2 (2024-12-10)
+
+- fix: if a module build has failed then stop further processing of modules to allow output original error
+
+## 4.10.1 (2024-12-09)
+
+- fix: re-deploy broken package `v4.10.0` in npm repository.
+  An error occurred during deployment.
+
 ## 4.10.0 (2024-12-08)
 
 - feat: add support for handlebars helpers in compile mode

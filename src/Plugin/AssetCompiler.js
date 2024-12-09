@@ -428,6 +428,11 @@ class AssetCompiler {
     compilation.hooks.buildModule.tap(pluginName, this.beforeBuildModule);
     compilation.hooks.succeedModule.tap(pluginName, this.afterBuildModule);
 
+    // called when a module build has failed
+    compilation.hooks.failedModule.tap(pluginName, (module, error) => {
+      // TODO: collect errors
+    });
+
     // called after the succeedModule hook but right before the execution of a loader
     normalModuleHooks.loader.tap(pluginName, this.beforeLoader);
 
@@ -980,8 +985,13 @@ class AssetCompiler {
     // }
 
     for (const module of chunkModules) {
-      const { buildInfo, resource, resourceResolveData } = module;
+      const { error, buildInfo, resource, resourceResolveData } = module;
       const { isScript, isImportedStyle, isCSSStyleSheet } = resourceResolveData?._bundlerPluginMeta || {};
+
+      if (error) {
+        // stop further processing of modules in webpack and display an error message
+        return false;
+      }
 
       if (
         isScript ||
@@ -1039,6 +1049,7 @@ class AssetCompiler {
     // 1. render entries and styles specified in HTML
     for (const module of assetModules) {
       const { fileManifest } = module;
+
       let content = this.renderModule(module);
 
       if (content == null) continue;
