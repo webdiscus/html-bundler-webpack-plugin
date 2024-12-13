@@ -2,6 +2,7 @@ const path = require('path');
 // the 'enhanced-resolve' package already used in webpack, don't need to define it in package.json
 const ResolverFactory = require('enhanced-resolve');
 
+const { isUrl } = require('../Common/Helpers');
 const PluginService = require('../Plugin/PluginService');
 const Snapshot = require('../Plugin/Snapshot');
 const { resolveException } = require('./Messages/Exeptions');
@@ -139,6 +140,11 @@ class Resolver {
     if (resolvedRequest == null) {
       resolvedRequest = this.resolveAlias(request, type);
       isAliasArray = Array.isArray(resolvedRequest);
+    }
+
+    // resolved alias is an URL
+    if (resolvedRequest && !isAliasArray && isUrl(resolvedRequest)) {
+      return resolvedRequest;
     }
 
     // fallback to enhanced resolver
@@ -353,7 +359,15 @@ class Resolver {
     let resolvedFile = aliasPath;
 
     if (typeof aliasPath === 'string') {
-      let paths = [aliasPath, request.slice(alias.length)];
+      let file = request.slice(alias.length);
+      let paths = [aliasPath, file];
+
+      if (isUrl(aliasPath)) {
+        if (aliasPath.endsWith('/')) {
+          aliasPath = aliasPath.slice(0, -1);
+        }
+        return aliasPath + file;
+      }
 
       if (this.basedir && !fs.existsSync(aliasPath)) {
         paths.unshift(this.basedir);

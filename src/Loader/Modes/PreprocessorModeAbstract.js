@@ -1,4 +1,5 @@
 const Resolver = require('../Resolver');
+const { isUrl } = require('../../Common/Helpers');
 
 /**
  * @typedef {Object} PreprocessorModeProperties
@@ -83,6 +84,13 @@ class PreprocessorModeAbstract {
       resolvedFile = file.slice(9, -2);
     } else {
       resolvedFile = this.resolver.resolve(file, issuer);
+
+      if (isUrl(resolvedFile)) {
+        return {
+          resolvedFile,
+          requireExpression: resolvedFile,
+        };
+      }
     }
 
     return {
@@ -107,6 +115,13 @@ class PreprocessorModeAbstract {
       resolvedFile = file.slice(9, -2);
     } else {
       resolvedFile = this.resolver.resolve(file, issuer, type);
+
+      if (isUrl(resolvedFile)) {
+        return {
+          resolvedFile,
+          requireExpression: resolvedFile,
+        };
+      }
     }
 
     this.collection.addResource({ type, resource: resolvedFile, issuer, entryId });
@@ -133,6 +148,13 @@ class PreprocessorModeAbstract {
       resolvedFile = file.slice(9, -2);
     } else {
       resolvedFile = this.resolver.resolve(file, issuer, type);
+
+      if (isUrl(resolvedFile)) {
+        return {
+          resolvedFile,
+          requireExpression: resolvedFile,
+        };
+      }
     }
 
     this.collection.addResource({ type, resource: resolvedFile, issuer, entryId });

@@ -19,6 +19,19 @@ const pathToPosix = (value) => value.replace(/\\/g, '/');
 const isFunction = (value) => typeof value === 'function';
 
 /**
+ * @param {string} request
+ * @return {boolean}
+ */
+const isUrl = (request) => {
+  return (
+    request.startsWith('//') ||
+    request.startsWith('https://') ||
+    request.startsWith('http://') ||
+    request.startsWith('ftp://')
+  );
+};
+
+/**
  * Find a webpack plugin by instance name.
  *
  * @param {Array<Object>} plugins The webpack compiler.options.plugins.
@@ -217,6 +230,7 @@ const compareVersions = (version1, compare, version2) => {
 module.exports = {
   isWin,
   isFunction,
+  isUrl,
   findPlugin,
   pathToPosix,
   getFileExtension,

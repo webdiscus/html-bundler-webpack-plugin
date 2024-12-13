@@ -1,5 +1,9 @@
 # Change log
 
+## 4.10.3 (2024-12-13)
+
+- fix: resolve webpack alias correctly if it is external URL
+
 ## 4.10.2 (2024-12-10)
 
 - fix: if a module build has failed then stop further processing of modules to allow output original error

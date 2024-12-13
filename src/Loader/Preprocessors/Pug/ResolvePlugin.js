@@ -1,6 +1,6 @@
 const path = require('path');
 const { encodeReservedChars } = require('../../Utils');
-const { isWin, pathToPosix } = require('../../../Common/Helpers');
+const { isWin, isUrl, pathToPosix } = require('../../../Common/Helpers');
 const Resolver = require('../../Resolver');
 const LoaderFactory = require('../../LoaderFactory');
 
@@ -60,6 +60,8 @@ const LoaderResolvers = function (pluginCompiler) {
     __LOADER_REQUIRE__(file, issuer) {
       let resolvedFile = resolver.resolve(file, issuer);
 
+      if (isUrl(resolvedFile)) return resolvedFile;
+
       if (isRequireableScript(resolvedFile)) return require(resolvedFile);
 
       resolvedFile = encodeReservedChars(resolvedFile);
@@ -78,6 +80,8 @@ const LoaderResolvers = function (pluginCompiler) {
     __LOADER_REQUIRE_ASSET__(file, issuer) {
       let resolvedFile = resolver.resolve(file, issuer);
 
+      if (isUrl(resolvedFile)) return resolvedFile;
+
       resolvedFile = encodeReservedChars(resolvedFile);
 
       return `require('${resolvedFile}')`;
@@ -93,6 +97,8 @@ const LoaderResolvers = function (pluginCompiler) {
      */
     __LOADER_REQUIRE_SCRIPT__(file, issuer) {
       let resolvedFile = resolver.resolve(file, issuer, Resolver.types.script);
+
+      if (isUrl(resolvedFile)) return resolvedFile;
 
       resolvedFile = encodeReservedChars(resolvedFile);
 
@@ -110,6 +116,8 @@ const LoaderResolvers = function (pluginCompiler) {
     __LOADER_REQUIRE_STYLE__(file, issuer) {
       let resolvedFile = resolver.resolve(file, issuer, Resolver.types.style);
 
+      if (isUrl(resolvedFile)) return resolvedFile;
+
       resolvedFile = encodeReservedChars(resolvedFile);
 
       return `require('${resolvedFile}')`;
@@ -125,6 +133,8 @@ const LoaderResolvers = function (pluginCompiler) {
      */
     __LOADER_REQUIRE_EXPRESSION__(file, issuer) {
       let resolvedFile = resolver.resolve(file, issuer);
+
+      if (isUrl(resolvedFile)) return resolvedFile;
 
       if (isRequireableScript(resolvedFile)) return require(resolvedFile);
 

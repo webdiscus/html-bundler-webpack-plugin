@@ -75,7 +75,9 @@ describe('resolve url() in style', () => {
   test('@import url() in CSS', () => compareFiles('import-url-in-css'));
   test('@import url() in SCSS', () => compareFiles('import-url-in-scss'));
   test('url() in nested style', () => compareFiles('resolve-url-in-nested-style'));
-  test('alias in url()', () => compareFiles('resolve-alias-in-scss'));
+
+  test('alias as url', () => compareFiles('resolve-alias-url'));
+  test('alias in css url()', () => compareFiles('resolve-alias-in-scss'));
   test('data:image in url()', () => compareFiles('resolve-data-image-in-css'));
 });
 

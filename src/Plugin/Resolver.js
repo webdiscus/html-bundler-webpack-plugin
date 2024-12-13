@@ -225,6 +225,7 @@ class Resolver {
     if (rawRequest.includes('??ruleSet')) {
       resolveException(rawRequest, issuer.resource, this.rootContext, this.pluginOption);
     }
+
     // bypass the asset contained data-URL
     if (this.assetInline.isDataUrl(rawRequest)) return rawRequest;
 
