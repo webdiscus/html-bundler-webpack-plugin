@@ -1,7 +1,8 @@
 <div align="center">
     <img height="200" src="images/plugin-logo.png">
     <h1 align="center">
-        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a>
+        <a href="https://github.com/webdiscus/html-bundler-webpack-plugin">HTML Bundler Plugin for Webpack</a><br>
+        <sub>All-in-one Web Bundler</sub><br>
     </h1>
 </div>
 
@@ -12,11 +13,13 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
+> This plugin is all you need to generate a complete single- or multi-page website from your source assets.
+
 The plugin automates the processing of source files such as JS/TS, SCSS, images and other assets referenced in an HTML or template file.
 This plugin will generate an HTML file containing all the necessary links to JS, CSS, images and other resources.
 
 ## Why use the HTML Bundler Plugin?
- 
+
 This plugin is an advanced alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and replacement of many [plugins and loaders](#list-of-plugins).
 
 The HTML Bundler Plugin works a bit differently than `html-webpack-plugin`. 
