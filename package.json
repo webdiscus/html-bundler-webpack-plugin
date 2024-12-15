@@ -1,7 +1,7 @@
 {
   "name": "html-bundler-webpack-plugin",
   "version": "4.10.3",
-  "description": "Processing HTML templates and bundling assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
+  "description": "Generates complete single-page or multi-page website from source assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
     "bundler",
@@ -146,7 +146,7 @@
   },
   "dependencies": {
     "@types/html-minifier-terser": "^7.0.2",
-    "ansis": "3.3.2",
+    "ansis": "3.4.0-beta.1",
     "enhanced-resolve": ">=5.7.0",
     "eta": "^3.5.0",
     "html-minifier-terser": "^7.2.0"

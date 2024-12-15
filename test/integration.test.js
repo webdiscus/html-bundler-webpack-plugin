@@ -431,6 +431,7 @@ describe('special cases', () => {
   test('modify js in postprocess', () => compareFiles('postprocess-modify-js'));
 
   test('resolve-attr-style-url', () => compareFiles('resolve-attr-style-url'));
+  test('resolve image in a.href', () => compareFiles('resolve-attr-a-href-image'));
 
   test('resolve-attr-formatted', () => compareFiles('resolve-attr-formatted'));
   test('resolve-images-in-attrs-all-variants', () => compareFiles('resolve-images-in-attrs-all-variants'));

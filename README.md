@@ -1,3 +1,5 @@
+<a id="top" name="top"></a>
+
 <div align="center">
     <img height="200" src="images/plugin-logo.png">
     <h1 align="center">
@@ -61,7 +63,7 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
 - Generates the [preload](#option-preload) tags for fonts, images, video, scripts, styles.
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
-- You can create **own plugin** using the [Plugin Hooks](#plugin-hooks-and-callbacks).
+- You can create custom plugins using the provided [Plugin Hooks](#plugin-hooks-and-callbacks).
 - Over 600 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test) for various use cases.
 
 See [full list of features](#features).
@@ -196,8 +198,12 @@ Thank you to all our sponsors and patrons!
 <a href="https://github.com/chkpnt"><img src="https://avatars.githubusercontent.com/u/1956979?s=50&v=4" width="50" title="Gregor Dschung" alt="Gregor Dschung"></a>
 <a href="https://github.com/daltonboll"><img src="https://avatars.githubusercontent.com/u/5821829?v=4" width="50" title="Dalton Boll" alt="daltonboll"></a>
 
+---
 
-## ⚙️ How works the plugin
+#### [↑ top](#top) | [↓ contents](#contents)
+
+
+## ⚙️ How the plugin works
 
 The plugin resolves references in the HTML template and adds them to the Webpack compilation.
 Webpack will automatically process the source files, and the plugin replaces the references with their output filenames in the generated HTML.
@@ -259,6 +265,9 @@ It works stably in standard use cases, but it cannot be guaranteed to work in al
 If you have any problems, feel free to create an [issue](https://github.com/webdiscus/html-bundler-webpack-plugin/issues).
 
 ---
+
+#### [↑ top](#top) | [↓ contents](#contents)
+
 
 <a id="install" name="install"></a>
 
@@ -451,6 +460,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
 
 ---
 
+#### [↑ top](#top)
 
 <a id="contents" name="contents"></a>
 
@@ -509,7 +519,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [loaderOptions](#option-loader-options) (reference to loader options)
 <a id="toc-loader-options" name="toc-loader-options"></a>
 1. [Loader options](#loader-options)
-   - [sources](#loader-option-sources) (processing of custom tag attributes)
+   - [sources](#loader-option-sources) (resolving asset references in a specific tag attribute)
+     - [filter](#loader-option-sources-filter) (allow fine-tuning to resolve specific cases)
    - [root](#loader-option-root) (allow to resolve a path with leading `/`)
    - [context](#loader-option-context) (allow to resolve a path w/o leading `/`)
    - [beforePreprocessor](#loader-option-before-preprocessor) (callback)
@@ -547,6 +558,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline all resources into single HTML file](#recipe-inline-all-assets-to-html)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to resolve source image in the `style` attribute](#recipe-resolve-attr-style-url)
+   - [How to resolve source image in the `href` attribute](#recipe-resolve-attr-href-a-image) (`<a href="image.jpg">`)
    - [How to load CSS file dynamically](#recipe-dynamic-load-css) (lazy loading CSS)
    - [How to import CSS class names in JS](#recipe-css-modules) (CSS modules)
    - [How to import CSS stylesheet in JS](#recipe-css-style-sheet) ([CSSStyleSheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet))
@@ -581,6 +593,10 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - Inline multiple **SVG** files w/o ID collision [View in browser](https://stackblitz.com/edit/inline-svg-wo-ids-collision?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/inline-svg-unique-id/)
    - Bundle **Vue** app into single HTML file with **embedded** JS, CSS, images [View in browser](https://stackblitz.com/edit/vue-bundle-inlined-assets?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/vue-bundle-inlined-assets/)
    - Using **Markdown** `*.md` files in templates [View in browser](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js) | [source](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/examples/markdown-to-html)
+
+---
+
+#### [↑ back to contents](#contents)
 
 <a id="features" name="features"></a>
 
@@ -3214,6 +3230,8 @@ new HtmlBundlerPlugin({
 });
 ```
 
+See also an example of using the `filter` function: [How to resolve source image in `<a href="image.jpg">`](#recipe-resolve-attr-href-a-image).
+
 #### [↑ back to contents](#contents)
 
 <a id="loader-option-root" name="loader-option-root"></a>
@@ -5697,8 +5715,64 @@ The plugin resolves the `url()` value and replaces it in the generated HTML with
 <div style="background-image: url(assets/img/pic1.d4711676.png);"></div>
 ```
 
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-resolve-attr-href-a-image" name="recipe-resolve-attr-href-a-image"></a>
+
+## How to resolve source image in `<a href="image.jpg">`
+
+For example, you want to link a small image as a preview to open the full-size image in a new tab or pop-up window.
+
+A typical example:
+
+```html
+<!-- href contains HTML file -->
+<a href="index.html">home</a> | <a href="about.html">about</a>
+
+<!-- href contains image file, which should be resolved -->
+<a href="./images/cat-fullsize.jpg" target="_blank">
+   <img src="./images/cat-preview.jpg" />
+</a>
+```
+
+To resolve images in the `href` attribute of a tag, just enable it using the [loaderOptions.sources](#loader-option-sources) option.
+
+```js
+loaderOptions: {
+  sources: [
+    {
+      tag: 'a',
+      attributes: ['href'],
+    },
+  ],
+},
+```
+
+**Problem by resolving**
+
+All `href` attributes of all `<a>` tags will now be resolved, 
+which could cause an error if the `href` contained an HTML file, e.g. `<a href="index.html">`.
+
+**Solution**
+
+Use the [filter](#loader-option-sources-filter) function to avoid resolving non-image files.
+
+```js
+loaderOptions: {
+  sources: [
+    {
+      tag: 'a',
+      attributes: ['href'],
+      filter: ({ value }) => !value.endsWith('.html'), // return false to ignore *.html files
+    },
+  ],
+},
+```
 
 ---
+
 
 #### [↑ back to contents](#contents)
 

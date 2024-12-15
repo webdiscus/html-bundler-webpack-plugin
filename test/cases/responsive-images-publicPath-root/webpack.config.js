@@ -4,16 +4,16 @@ const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 module.exports = {
   mode: 'production',
 
+  output: {
+    path: path.join(__dirname, 'dist/'),
+    publicPath: '/', // test with the root path
+  },
+
   resolve: {
     alias: {
       '@images': path.join(__dirname, '../../fixtures/images'),
       '@styles': path.join(__dirname, 'src/assets/styles/'),
     },
-  },
-
-  output: {
-    path: path.join(__dirname, 'dist/'),
-    publicPath: '/', // test with the root path
   },
 
   plugins: [
