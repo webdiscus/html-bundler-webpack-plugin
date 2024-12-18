@@ -600,28 +600,32 @@ class AssetCompiler {
 
     if (!isEntry) {
       const dependency = PluginService.getDependencyInstance(this.compilation.compiler);
-      const isFileWatchable = dependency.isFileWatchable(fileName);
-      const isTemplate = this.pluginOption.isEntry(fileName);
 
-      if (isTemplate || isFileWatchable) {
-        if (this.pluginOption.isVerbose()) {
-          console.log(yellowBright`Modified partial: ${cyanBright(fileName)}`);
-        }
+      // dependency is null when no html entry defined and a style in entry was changed
+      if (dependency) {
+        const isFileWatchable = dependency.isFileWatchable(fileName);
+        const isTemplate = this.pluginOption.isEntry(fileName);
 
-        for (const module of this.compilation.modules) {
-          const moduleResource = module.resource || '';
+        if (isTemplate || isFileWatchable) {
+          if (this.pluginOption.isVerbose()) {
+            console.log(yellowBright`Modified partial: ${cyanBright(fileName)}`);
+          }
 
-          if (moduleResource && this.assetEntry.isEntryResource(moduleResource)) {
-            this.compilation.rebuildModule(module, (error) => {
-              if (error) {
-                // TODO: research the strange error - "Cannot read properties of undefined (reading 'state')"
-                //       in node_modules/webpack/lib/util/AsyncQueue.js:196
-              }
+          for (const module of this.compilation.modules) {
+            const moduleResource = module.resource || '';
 
-              if (this.pluginOption.isVerbose()) {
-                console.log(greenBright`   -> Rebuild entrypoint: ${cyanBright(moduleResource)}`);
-              }
-            });
+            if (moduleResource && this.assetEntry.isEntryResource(moduleResource)) {
+              this.compilation.rebuildModule(module, (error) => {
+                if (error) {
+                  // TODO: research the strange error - "Cannot read properties of undefined (reading 'state')"
+                  //       in node_modules/webpack/lib/util/AsyncQueue.js:196
+                }
+
+                if (this.pluginOption.isVerbose()) {
+                  console.log(greenBright`   -> Rebuild entrypoint: ${cyanBright(moduleResource)}`);
+                }
+              });
+            }
           }
         }
       }

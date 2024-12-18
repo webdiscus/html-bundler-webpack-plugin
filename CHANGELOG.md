@@ -1,5 +1,9 @@
 # Change log
 
+## 4.10.4 (2024-12-18)
+
+fix: fail rebuild after changed css file if no html entry defined, #132
+
 ## 4.10.3 (2024-12-13)
 
 - fix: resolve webpack alias correctly if it is external URL

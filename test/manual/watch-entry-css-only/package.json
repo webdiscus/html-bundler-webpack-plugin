@@ -1,10 +1,10 @@
 {
   "scripts": {
     "start": "webpack serve --mode development",
+    "watch": "webpack watch --mode development",
     "build": "webpack --mode=production --progress"
   },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "file:../../..",
-    "image-minimizer-webpack-plugin": "4.1.2"
+    "html-bundler-webpack-plugin": "file:../../.."
   }
 }

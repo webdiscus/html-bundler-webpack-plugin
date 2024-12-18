@@ -2,6 +2,10 @@
 
 See https://github.com/webdiscus/html-bundler-webpack-plugin/issues/130
 
+## Update 18-12-2024
+
+The bug is [fixed](https://github.com/webpack-contrib/image-minimizer-webpack-plugin/pull/460) in image-minimizer-webpack-plugin `v4.1.2`.
+
 ## Bug
 
 Webpack compilations fail after second rebuild when using filesystem cache:
