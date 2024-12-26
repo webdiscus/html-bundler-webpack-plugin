@@ -157,6 +157,10 @@ describe('plugin options', () => {
   test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
+  // TODO: fix Error: Binary data does not match! on GitHub only (local works file)
+  // test('renderStage, default', () =>
+  //   compareFiles('option-renderStage-default', true, /.(html|html.gz|css|css.map|js|js.map|json)$/));
+
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 

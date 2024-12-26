@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.10.4",
+  "version": "4.11.0",
   "description": "Generates complete single-page or multi-page website from source assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -169,6 +169,7 @@
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
     "cssnano": "^7.0.6",
+    "compression-webpack-plugin": "^11.1.0",
     "ejs": "^3.1.10",
     "favicons": "7.2.0",
     "handlebars": "^4.7.8",
@@ -204,7 +205,7 @@
     "vue": "3.5.12",
     "vue-loader": "^17.4.2",
     "webpack": "5.96.1",
-    "webpack-cli": "5.1.4",
+    "webpack-cli": "6.0.1",
     "webpack-dev-server": "^5.2.0"
   }
 }

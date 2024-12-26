@@ -84,6 +84,10 @@ declare namespace HtmlBundlerPlugin {
     minify?: 'auto' | boolean | MinifyOptions;
     minifyOptions?: MinifyOptions;
     /**
+     * The stage to render final HTML in the `processAssets` Webpack hook.
+     */
+    renderStage: null | number;
+    /**
      * Whether comments should be extracted to a separate file.
      * If the file foo.js contains the license banner, then the comments will be stored to foo.js.LICENSE.txt.
      * This option enables/disable storing of *.LICENSE.txt file.

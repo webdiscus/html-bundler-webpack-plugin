@@ -12,6 +12,16 @@ if (typeof global.btoa === 'undefined') {
   global.btoa = (input) => Buffer.from(input, 'latin1').toString('base64');
 }
 
+expect.extend({
+  toMatchBinaryData(received, expected) {
+    const pass = Buffer.compare(received, expected) === 0;
+    return {
+      message: () => (pass ? 'Binary data matches!' : 'Binary data does not match!'),
+      pass,
+    };
+  },
+});
+
 export const getCompareFileList = function (receivedPath, expectedPath) {
   return {
     received: readDirRecursiveSync(receivedPath)
@@ -23,14 +33,34 @@ export const getCompareFileList = function (receivedPath, expectedPath) {
   };
 };
 
-export const getCompareFileContents = function (
-  receivedFile,
-  expectedFile,
-  filter = /.(html|css|css.map|js|js.map|json)$/
-) {
-  return filter.test(receivedFile) && filter.test(expectedFile)
-    ? { received: readTextFileSync(receivedFile), expected: readTextFileSync(expectedFile) }
-    : { received: '', expected: '' };
+/**
+ * @param {string} receivedFile
+ * @param {string} expectedFile
+ * @param {RegExp|null} filter The filter which files should be compared by content.
+ * @return {{received: *, expected: *}|{received: string, expected: string}}
+ */
+export const compareFileContents = function (receivedFile, expectedFile, filter) {
+  let result = { received: '', expected: '' };
+  let binaryFilter = /.(gz|svg)$/;
+  let encoding = 'utf8';
+
+  if (filter.test(receivedFile) && filter.test(expectedFile)) {
+    if (binaryFilter.test(receivedFile)) {
+      encoding = 'binary';
+    }
+    result = { received: readTextFileSync(receivedFile, encoding), expected: readTextFileSync(expectedFile, encoding) };
+  }
+
+  if (encoding === 'binary') {
+    try {
+      expect(Buffer.from(result.received)).toMatchBinaryData(Buffer.from(result.expected));
+    } catch (e) {
+      let message = `\nCompare binary files:\n${receivedFile}\n${expectedFile}\n${e}`;
+      throw new Error(message);
+    }
+  } else {
+    expect(result.received).toEqual(result.expected);
+  }
 };
 
 /**
@@ -38,9 +68,14 @@ export const getCompareFileContents = function (
  *
  * @param {string} relTestCasePath The relative path to the test directory.
  * @param {boolean} compareContent Whether the content of files should be compared too.
+ * @param {RegExp|null} filter
  * @return {Promise<void>}
  */
-export const compareFiles = (relTestCasePath, compareContent = true) => {
+export const compareFiles = (
+  relTestCasePath,
+  compareContent = true,
+  filter = /.(html|css|css.map|js|js.map|json)$/
+) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
     webRootPath = path.join(absTestPath, PATHS.webRoot),
     expectedPath = path.join(absTestPath, PATHS.expected);
@@ -53,11 +88,7 @@ export const compareFiles = (relTestCasePath, compareContent = true) => {
 
         if (compareContent) {
           expectedFiles.forEach((file) => {
-            const { received, expected } = getCompareFileContents(
-              path.join(webRootPath, file),
-              path.join(expectedPath, file)
-            );
-            expect(received).toEqual(expected);
+            compareFileContents(path.join(webRootPath, file), path.join(expectedPath, file), filter);
           });
         }
 
@@ -85,6 +116,7 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
 
   const results = [];
   const expected = Array(num).fill(true);
+  const filter = /.(html|css|css.map|js|js.map|json)$/;
 
   for (let i = 0; i < num; i++) {
     const res = compile(PATHS, relTestCasePath, {})
@@ -94,11 +126,7 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
 
         if (compareContent) {
           expectedFiles.forEach((file) => {
-            const { received, expected } = getCompareFileContents(
-              path.join(webRootPath, file),
-              path.join(expectedPath, file)
-            );
-            expect(received).toEqual(expected);
+            compareFileContents(path.join(webRootPath, file), path.join(expectedPath, file), filter);
           });
         }
 
@@ -118,9 +146,14 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
  *
  * @param {string} relTestCasePath The relative path to the test directory.
  * @param {boolean} compareContent Whether the content of files should be compared too.
+ * @param {RegExp|null} filter
  * @return {Promise<void>}
  */
-export const watchCompareFiles = (relTestCasePath, compareContent = true) => {
+export const watchCompareFiles = (
+  relTestCasePath,
+  compareContent = true,
+  filter = /.(html|css|css.map|js|js.map|json)$/
+) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
     webRootPath = path.join(absTestPath, PATHS.webRoot),
     expectedPath = path.join(absTestPath, PATHS.expected);
@@ -133,11 +166,7 @@ export const watchCompareFiles = (relTestCasePath, compareContent = true) => {
 
         if (compareContent) {
           expectedFiles.forEach((file) => {
-            const { received, expected } = getCompareFileContents(
-              path.join(webRootPath, file),
-              path.join(expectedPath, file)
-            );
-            expect(received).toEqual(expected);
+            compareFileContents(path.join(webRootPath, file), path.join(expectedPath, file), filter);
           });
         }
 

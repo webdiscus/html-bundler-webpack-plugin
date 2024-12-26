@@ -1,4 +1,5 @@
 const path = require('path');
+const Compilation = require('webpack/lib/Compilation');
 const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 const { optionSplitChunksChunksAllWarning } = require('./Messages/Warnings');
@@ -721,6 +722,28 @@ class Option {
    */
   getEntryPath() {
     return this.dynamicEntry ? this.options.entry : null;
+  }
+
+  /**
+   * Get stage to render final HTML in the `processAssets` Webpack hook.
+   * @return {number|number}
+   */
+  getRenderStage() {
+    // defaults render stage should be earlier then PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER,
+    // because at this stage can be used other plugin which requires already rendered HTML,
+    // e.g. `compression-webpack-plugin` will save rendered and minified HTML into gzip
+
+    // NOTE: in specific use cases can be set the `renderStage: Infinity + 1` option
+    // to be ensures that the rendering process will be run after all optimizations and other plugins
+
+    let renderStage = this.options.renderStage || Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER - 1;
+
+    // minimal possible stage for the rendering
+    if (renderStage < Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE) {
+      renderStage = Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE;
+    }
+
+    return renderStage;
   }
 
   /**

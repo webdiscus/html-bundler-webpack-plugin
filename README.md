@@ -509,6 +509,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [postprocess](#option-postprocess) (callback)
    - [beforeEmit](#option-beforeEmit) (callback)
    - [afterEmit](#option-afterEmit) (callback)
+   - [renderStage](#option-renderStage)
    - [preload](#option-preload) (inject preload link tags)
    - [integrity](#option-integrity) (inject [subresource integrity hash](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) into script and style tags)
    - [minify](#option-minify) and [minifyOptions](#option-minify-options) (minification of generated HTML)
@@ -2398,6 +2399,56 @@ Callback parameters:
 - `entries: Array<CompileEntry>` the collection of entries containing all dependent assets,\
    the description of the `CompileEntry` see by [beforeEmit](#option-beforeEmit)
 - `compilation: Compilation` - the Webpack [compilation object](https://webpack.js.org/api/compilation-object/)
+
+#### [↑ back to contents](#contents)
+
+
+<a id="option-renderStage" name="option-renderStage"></a>
+
+### `renderStage` 
+
+Type: `null | number`
+
+Default: `Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER - 1`
+
+The [stage](https://webpack.js.org/api/compilation-hooks/#list-of-asset-processing-stages) to render output HTML in the [processAssets](https://webpack.js.org/api/compilation-hooks/#processassets) Webpack hook.
+The  minimal possible stage for the rendering is `PROCESS_ASSETS_STAGE_SUMMARIZE`.
+
+For example:
+
+```js
+const path = require('path');
+const Compilation = require('webpack/lib/Compilation');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+
+module.exports = {
+  mode: 'production',
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+  plugins: [
+    new CompressionPlugin(),
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/index.html',
+      },
+      // Ensures that the CompressionPlugin save the resulting HTML into the `*.html.gz` file
+      // after the rendering process in the HtmlBundlerPlugin.
+      renderStage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH + 1,
+    }),
+  ],
+};
+
+```
+
+> [!TIP]
+> To ensures that the rendering process will be run after all optimizations and after all other plugins
+> set the `renderStage: Infinity + 1`.
+ 
+> [!CAUTION]
+> Use this option only to order the sequence of asset processing across multiple plugins that use the same [processAssets](https://webpack.js.org/api/compilation-hooks/#processassets) hook.
+
 
 #### [↑ back to contents](#contents)
 
@@ -4844,7 +4895,7 @@ _./partials/people.ejs_
 - [ejs](#loader-option-preprocessor-options-ejs) - generates a fast smallest pure template function w/o runtime (**recommended** for use on client-side)\
   `include` is supported
 - [handlebars](#loader-option-preprocessor-options-handlebars) - generates a precompiled template with runtime (~18KB)\
-  `include` is NOT supported (yet)
+  `include` is supported
 - [nunjucks](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~41KB)\
   `include` is supported
 - [twig](#loader-option-preprocessor-options-nunjucks) - generates a precompiled template with runtime (~110KB)\
@@ -6825,7 +6876,7 @@ The generated HTML will not contain templating comments.
 
 ## Also See
 
-- [ansis][ansis] - The Node.js lib for ANSI color styling of text in terminal
+- [ansis][ansis] - The Node.js library for ANSI colors and styles in terminal output
 - [pug-loader][pug-loader] The Pug loader for Webpack
 - [pug-plugin][pug-plugin] The Pug plugin for Webpack
 

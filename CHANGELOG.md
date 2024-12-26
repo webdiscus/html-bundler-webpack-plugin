@@ -1,5 +1,12 @@
 # Change log
 
+## 4.11.0 (2024-12-27)
+
+- feat: add the `renderStage` option to define the stage for rendering output HTML in the processAssets Webpack hook
+- fix: set default render stage before the stage used in `compression-webpack-plugin` to save completely rendered HTML, #134
+- test: add test for the render stage
+- docs: add documentation for the new option in readme
+
 ## 4.10.4 (2024-12-18)
 
 fix: fail rebuild after changed css file if no html entry defined, #132

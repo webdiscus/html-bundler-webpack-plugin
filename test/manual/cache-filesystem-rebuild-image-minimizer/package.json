@@ -4,7 +4,10 @@
     "build": "webpack --mode=production --progress"
   },
   "devDependencies": {
-    "html-bundler-webpack-plugin": "file:../../..",
-    "image-minimizer-webpack-plugin": "4.1.2"
+    "html-bundler-webpack-plugin": "4.10.4",
+    "image-minimizer-webpack-plugin": "4.1.3",
+    "svgo": "^3.3.2",
+    "webpack": "5.97.1",
+    "webpack-cli": "5.1.4"
   }
 }

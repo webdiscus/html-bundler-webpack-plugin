@@ -402,6 +402,7 @@ class AssetCompiler {
     const fs = this.fs;
     const { NormalModule, Compilation } = compilation.compiler.webpack;
     const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
+    const renderStage = this.pluginOption.getRenderStage();
 
     this.IS_WEBPACK_VERSION_LOWER_5_96_0 = compareVersions(compilation.compiler.webpack.version, '<', '5.96.0');
 
@@ -449,10 +450,8 @@ class AssetCompiler {
     );
 
     // after render module's sources
-    // Notes:
-    // - only in the processAssets hook is possible to modify an asset content via async function
-    // - the stage`Infinity` ensures that the process will be run after all optimizations
-    compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: Infinity + 1 }, this.processAssetsFinalAsync);
+    // only in the processAssets hook is possible to modify an asset content via async function
+    compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: renderStage }, this.processAssetsFinalAsync);
 
     // output asset info tags in console statistics
     compilation.hooks.statsPrinter.tap(pluginName, (stats) => {

@@ -10,16 +10,13 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        // define templates here
         index: 'src/index.html',
       },
       js: {
-        // output filename of compiled JavaScript
-        filename: 'js/[name].[contenthash:8].js',
+        filename: '[name].[contenthash:8].js',
       },
       css: {
-        // output filename of extracted CSS
-        filename: 'css/[name].[contenthash:8].css',
+        filename: '[name].[contenthash:8].css',
       },
     }),
   ],
@@ -34,7 +31,7 @@ module.exports = {
         test: /\.(ico|png|jp?g|svg)/,
         type: 'asset/resource',
         generator: {
-          filename: 'img/[name].[hash:8][ext]',
+          filename: '[name].[hash:8][ext]',
         },
       },
     ],
