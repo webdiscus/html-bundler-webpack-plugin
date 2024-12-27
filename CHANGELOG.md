@@ -1,5 +1,9 @@
 # Change log
 
+## 4.11.1 (2024-12-27)
+
+- fix: in TypeScript the `renderStage` option should be optional
+
 ## 4.11.0 (2024-12-27)
 
 - feat: add the `renderStage` option to define the stage for rendering output HTML in the processAssets Webpack hook
