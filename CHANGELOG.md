@@ -1,5 +1,11 @@
 # Change log
 
+## 4.11.2 (2025-01-05)
+
+- chore: update dependencies
+- chore: update license to current date
+- docs: add in readme the recipe "How to import SVG in JavaScript"
+
 ## 4.11.1 (2024-12-27)
 
 - fix: in TypeScript the `renderStage` option should be optional

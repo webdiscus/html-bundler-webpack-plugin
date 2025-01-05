@@ -557,6 +557,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [How to inline JS in HTML](#recipe-inline-js)
    - [How to inline SVG, PNG images in HTML](#recipe-inline-image)
    - [How to inline all resources into single HTML file](#recipe-inline-all-assets-to-html)
+   - [How to import SVG in JS w/o `svg-url-loader`](#recipe-import-svg) (as filename, as data URL, as raw content)
    - [How to resolve source assets in an attribute containing JSON value](#recipe-resolve-attr-json)
    - [How to resolve source image in the `style` attribute](#recipe-resolve-attr-style-url)
    - [How to resolve source image in the `href` attribute](#recipe-resolve-attr-href-a-image) (`<a href="image.jpg">`)
@@ -5671,6 +5672,159 @@ module.exports = {
 
 [![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/edit/inline-all-assets-to-html?file=README.md)
 
+---
+
+#### [↑ back to contents](#contents)
+
+<a id="recipe-import-svg" name="recipe-import-svg"></a>
+
+## How to import SVG in JS
+
+You don't need the [svg-url-loader](https://github.com/bhovhannes/svg-url-loader) anymore.
+If you use it yet, remove this legacy loader from your configuration.
+Since Webpack 5, you can use the native Webpack [Asset Modules](https://webpack.js.org/guides/asset-modules/),
+which are supported by the Bundler Plugin.
+
+> [!NOTE]
+> This requires a couple of extra lines of configuration, 
+> but is faster since it doesn't use extra handlers like `svg-url-loader`.
+
+### Use cases
+
+#### Import SVG file in JS as output filename.
+
+Using default configuration of module rules with `asset/resource` module type, the imported SVG file will contain a output filename.
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.svg/i,
+      type: 'asset/resource',
+      generator: {
+        filename: 'img/[name].[hash:8][ext]',
+      },
+    },
+  ],
+}
+```
+
+The imported `file` contains the hashed output filename.
+
+```js
+import file from './image.svg';
+
+console.log(file); // img/image.416b7e1d.svg
+```
+
+#### Import SVG file in JS as data URL.
+
+To import SVG file as the data URL, use the `asset/inline` module type.
+If you import an SVG file in different ways, you can define a URL query for each module type.
+
+For example, use the `?dataurl` query to import a SVG file as data URL:
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.svg/i,
+      resourceQuery: /dataurl/, // <= you can define any query as you like
+      type: 'asset/inline',
+    },
+  ],
+}
+```
+
+By importing an SVG file using the `?dataurl` query, Webpack generates a base64-encoded data URL.
+
+```js
+import file from './image.svg?dataurl'; // <= the `dataurl` query must be defined in Webpack
+
+console.log(file); // data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo...vc3ZnPgo=
+```
+
+#### Import SVG file in JS as source code.
+
+To import the source code of the SVG file, use the `asset/source` module type.
+If you import an SVG file in different ways, define a URL query for each module type.
+
+For example, use the `?raw` query to import the source code of the SVG file:
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.svg/i,
+      resourceQuery: /raw/, // <= you can define any query as you like
+      type: 'asset/source',
+    },
+  ],
+}
+```
+
+By importing an SVG file using the `?raw` query, you will get source code.
+
+```js
+import file from './image.svg?raw'; // <= the `raw` query must be defined in Webpack
+
+console.log(file); // <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 96 960 960">...</svg>
+```
+
+### Import SVG in JS with different ways
+
+For example, you need:
+ 
+- by default, the output filename will be generated 
+- using `?dataurl` query, the base64-encoded data URL will be generated
+- using `?raw` query, the source code of the SVG file will be loaded 
+
+
+Combine all your use cases in the Webpack configuration with `oneOf`:
+
+```js
+module: {
+  rules: [
+    {
+      test: /\.svg/i, // note: don't add `$` to the end of the RegEx
+      oneOf: [
+        // import SVG in JS as data URL using `?dataurl` query
+        {
+          resourceQuery: /dataurl/,
+          type: 'asset/inline',
+        },
+        // import SVG in JS as raw content using `?raw` query
+        {
+          resourceQuery: /raw/,
+          type: 'asset/source',
+        },
+        // fallback to default behavior:
+        // import SVG in JS as output filename
+        {
+          type: 'asset/resource',
+          generator: {
+            filename: 'img/[name].[hash:8][ext]',
+          },
+        },
+      ],
+    },
+  ],
+},
+```
+
+Now you can import SVG with different ways in one JS file.
+
+```js
+import svgFilename from './image.svg'; // import as output filename
+import svgDataUrl from './image.svg?dataurl'; // import as data URL
+import svgSource from './image.svg?raw'; // import as source code
+
+console.log(svgFilename); // img/image.416b7e1d.svg
+console.log(svgDataUrl);  // data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo...vc3ZnPgo=
+console.log(svgSource);   // <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 96 960 960">...</svg>
+```
+
+See the [test case](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test/cases/js-import-image-svg) as working example.
 
 ---
 

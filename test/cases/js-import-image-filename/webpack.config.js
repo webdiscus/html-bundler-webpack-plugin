@@ -9,20 +9,22 @@ module.exports = {
     publicPath: '', // to import an image in the JS file, the publicPath must not be auto
   },
 
-  entry: {
-    index: './src/index.html',
-  },
-
-  plugins: [new HtmlBundlerPlugin()],
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: './src/index.html',
+      },
+    }),
+  ],
 
   module: {
     rules: [
       {
-        test: /.css$/,
+        test: /\.css$/,
         use: ['css-loader'],
       },
       {
-        test: /.(png|jpe?g|ico|svg)/,
+        test: /\.(png|jpe?g|ico|svg)/,
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext]',
