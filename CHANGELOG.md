@@ -1,7 +1,15 @@
 # Change log
 
-## 4.11.2 (2025-01-05)
+## 4.12.0-beta.0 (2025-01-06)
 
+- feat: add support for the `?inline` query by importing SVG file in JS as data URL
+  ```js
+  import file from './image.svg'; // import according the matched webpack config, defaults as output filename
+  
+  import file from './image.svg?inline'; // import as UTF-8 data URL
+  import file from './image.svg?inline=utf8'; // import as UTF-8 data URL
+  import file from './image.svg?inline=base64'; // import as base64-encoded data URL
+  ```
 - chore: update dependencies
 - chore: update license to current date
 - docs: add in readme the recipe "How to import SVG in JavaScript"

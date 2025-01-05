@@ -711,8 +711,8 @@ class AssetCompiler {
    */
   afterResolve(resolveData) {
     const { request, contextInfo, dependencyType, createData, _bundlerPluginMeta: meta } = resolveData;
-    const { resource } = createData;
-    const [file] = resource.split('?', 1);
+    const { resource, rawRequest } = createData;
+    const [file, query] = resource.split('?', 2);
     // note: the contextInfo.issuer is the filename w/o a query
     const { issuer } = contextInfo;
 
@@ -724,6 +724,51 @@ class AssetCompiler {
     if (meta.isLoaderImport || meta.isCSSStyleSheet || meta.isDependencyUrl || request.startsWith('data:')) return;
 
     if (issuer) {
+      // TODO: refactor into AssetInline
+      const isSvgFile = this.assetInline.isSvgFile(resource);
+      const isIssuerScript = this.pluginOption.isScript(issuer);
+      //const isInlineSvg = this.assetInline.isInlineSvg(resource, issuer);
+      const urlParams = new URLSearchParams(query);
+      const inlineValue = urlParams.get('inline');
+      const hasQueryInline = inlineValue != null;
+
+      if (isSvgFile && isIssuerScript && hasQueryInline) {
+        if (this.IS_WEBPACK_VERSION_LOWER_5_96_0) {
+          // TODO: refactor into Exceptions
+          throw new Error(`\nThe support for the \`?inline\` query for SVG is available since Webpack >= 5.96.`);
+        }
+
+        const availableValues = ['base64', 'utf8'];
+        if (inlineValue !== '' && !availableValues.includes(inlineValue)) {
+          // TODO: refactor into Exceptions
+          throw new Error(
+            `\nUnsupported \`?inline\` query value ${yellowBright(inlineValue)} in the request ${cyanBright(rawRequest)}\nAvailable values: ${yellowBright(availableValues.join(', '))} or ${yellowBright`undefined`}.`
+          );
+        }
+
+        /** @type {"base64" | false} encoding, false for `utf8`, see /webpack/lib/asset/AssetGenerator.js:encodeDataUri() */
+        const encoding = inlineValue === 'base64' ? 'base64' : false;
+
+        const moduleGraph = this.compilation.moduleGraph;
+        const dataUrlOptions = { encoding };
+        const filename = undefined;
+        const publicPath = undefined;
+        const outputPath = undefined;
+        const emit = false;
+
+        resolveData.createData.generator = new AssetGenerator(
+          moduleGraph,
+          dataUrlOptions,
+          filename,
+          publicPath,
+          outputPath,
+          emit
+        );
+
+        resolveData.createData.type = ASSET_MODULE_TYPE_INLINE;
+        resolveData.createData.parser = new AssetParser(true);
+      }
+
       const isIssuerStyle = this.pluginOption.isStyle(issuer);
       const parentModule = resolveData.dependencies[0]?._parentModule;
       const { isLoaderImport } = parentModule?.resourceResolveData?._bundlerPluginMeta || {};
@@ -852,11 +897,12 @@ class AssetCompiler {
       } else {
         // Webpack >= 5.96
         const moduleGraph = this.compilation.moduleGraph;
-        const dataUrl = undefined;
+        const dataUrlOptions = undefined;
         const publicPath = undefined;
         const outputPath = undefined;
         const emit = true;
-        createData.generator = new AssetGenerator(moduleGraph, dataUrl, filename, publicPath, outputPath, emit);
+
+        createData.generator = new AssetGenerator(moduleGraph, dataUrlOptions, filename, publicPath, outputPath, emit);
       }
 
       createData.parser = new AssetParser(false);

@@ -428,6 +428,7 @@ describe('special cases', () => {
 
   test('import image filename in JS', () => compareFiles('js-import-image-filename'));
   test('import SVG in JS', () => compareFiles('js-import-image-svg'));
+  test('import SVG in JS via inline query', () => compareFiles('js-import-image-svg-uri-utf8'));
 
   test('resolve img in attr json', () => compareFiles('resolve-attr-json-require'));
   test('multiple chunks with the same filename', () => compareFiles('entry-multiple-chunks-same-filename'));

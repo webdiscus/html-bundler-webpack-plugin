@@ -129,7 +129,7 @@ class AssetInline {
    */
   isSvgFile(request) {
     const [file] = request.split('?', 1);
-    return file.endsWith('.svg');
+    return file.toLowerCase().endsWith('.svg');
   }
 
   /**
