@@ -257,6 +257,13 @@ describe('inline images', () => {
   test('using svgo loader', () => compareFiles('inline-asset-svg-svgo'));
 });
 
+describe('import SVG in JS', () => {
+  test('custom query', () => compareFiles('js-import-image-svg-custom-query'));
+  test('inline query', () => compareFiles('js-import-image-svg-inline'));
+  test('regards maxSize, defaults', () => compareFiles('js-import-image-svg-maxsize'));
+  test('regards maxSize, dataUrl.encoding', () => compareFiles('js-import-image-svg-maxsize-dataurl-encoding'));
+});
+
 describe('inline styles & scripts', () => {
   test('inline all assets into one HTML', () => compareFiles('inline-all-asset-to-html'));
 
@@ -427,8 +434,6 @@ describe('special cases', () => {
   test('import raw content of a file', () => compareFiles('import-raw-html'));
 
   test('import image filename in JS', () => compareFiles('js-import-image-filename'));
-  test('import SVG in JS', () => compareFiles('js-import-image-svg'));
-  test('import SVG in JS via inline query', () => compareFiles('js-import-image-svg-uri-utf8'));
 
   test('resolve img in attr json', () => compareFiles('resolve-attr-json-require'));
   test('multiple chunks with the same filename', () => compareFiles('entry-multiple-chunks-same-filename'));

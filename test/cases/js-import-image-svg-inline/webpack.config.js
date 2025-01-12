@@ -10,6 +10,12 @@ module.exports = {
     publicPath: '', // by importing an image in the JS file, the publicPath must not be auto
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
@@ -24,9 +30,9 @@ module.exports = {
         test: /\.css$/,
         use: ['css-loader'],
       },
-      // import SVG in JS as output filename
+      // Note: since v4.12 the plugin supports the `?inline` query to load assets as data URL
       {
-        test: /\.svg/i,
+        test: /\.(svg|png|jpe?g)$/i,
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext]',

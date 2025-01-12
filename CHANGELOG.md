@@ -1,4 +1,22 @@
-# Change log
+# Changelog
+
+## 4.12.0 (2025-01-12)
+
+- feat(release): add support for the `?inline` query to load assets as data URL
+- test: add tests for `?inline` query
+- docs: update readme for new feature
+
+## 4.12.0-beta.1 (2025-01-07)
+
+- feat: add support for the `?inline` query to load assets as data URL in HTML, CSS and JS.
+  By using the `?inline` query, the following configuration can now be omitted:
+  ```js
+  {
+    // since v4.12 is not need anymore
+    resourceQuery: /inline/,
+    type: 'asset/inline',
+  },
+  ```
 
 ## 4.12.0-beta.0 (2025-01-06)
 

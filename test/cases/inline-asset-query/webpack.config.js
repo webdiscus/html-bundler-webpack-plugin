@@ -17,7 +17,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/views/index.html',
+        index: './src/index.html',
       },
     }),
   ],
@@ -25,22 +25,36 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /[\\/]images[\\/].+(png|jpe?g|svg|webp|ico)$/i,
-        oneOf: [
-          // inline image using `?inline` query
-          {
-            resourceQuery: /inline/,
-            type: 'asset/inline',
-          },
-          // save to file
-          {
-            type: 'asset/resource',
-            generator: {
-              filename: 'assets/img/[name].[hash:8][ext]',
-            },
-          },
-        ],
+        test: /\.(css|sass|scss)$/,
+        use: ['css-loader'],
       },
+      // Note: since v4.12 the plugin supports the `?inline` query to load assets as data URL
+      {
+        test: /[\\/]images[\\/].+(png|jpe?g|svg|webp|ico)$/i,
+        type: 'asset/resource',
+        generator: {
+          filename: 'img/[name].[hash:8][ext]',
+        },
+      },
+
+      // {
+      //   test: /[\\/]images[\\/].+(png|jpe?g|svg|webp|ico)$/i,
+      //   oneOf: [
+      //     // Note: since v4.12 is not need anymore
+      //     // inline image using `?inline` query
+      //     {
+      //       resourceQuery: /inline/,
+      //       type: 'asset/inline',
+      //     },
+      //     // save to file
+      //     {
+      //       type: 'asset/resource',
+      //       generator: {
+      //         filename: 'img/[name].[hash:8][ext]',
+      //       },
+      //     },
+      //   ],
+      // },
     ],
   },
 };

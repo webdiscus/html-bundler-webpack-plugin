@@ -711,8 +711,8 @@ class AssetCompiler {
    */
   afterResolve(resolveData) {
     const { request, contextInfo, dependencyType, createData, _bundlerPluginMeta: meta } = resolveData;
-    const { resource, rawRequest } = createData;
-    const [file, query] = resource.split('?', 2);
+    const { resource, type } = createData;
+    const [file] = resource.split('?', 1);
     // note: the contextInfo.issuer is the filename w/o a query
     const { issuer } = contextInfo;
 
@@ -720,54 +720,39 @@ class AssetCompiler {
     meta.isStyle = this.pluginOption.isStyle(file);
     meta.isCSSStyleSheet = this.isCSSStyleSheet(createData);
 
-    // skip: module loaded via importModule, css url, data-URL
-    if (meta.isLoaderImport || meta.isCSSStyleSheet || meta.isDependencyUrl || request.startsWith('data:')) return;
+    // skip modules loaded via importModule, data-URL
+    if (meta.isLoaderImport || meta.isCSSStyleSheet || request.startsWith('data:')) return;
 
     if (issuer) {
       // TODO: refactor into AssetInline
-      const isSvgFile = this.assetInline.isSvgFile(resource);
-      const isIssuerScript = this.pluginOption.isScript(issuer);
-      //const isInlineSvg = this.assetInline.isInlineSvg(resource, issuer);
-      const urlParams = new URLSearchParams(query);
-      const inlineValue = urlParams.get('inline');
-      const hasQueryInline = inlineValue != null;
+      const isAssetModule = [
+        ASSET_MODULE_TYPE,
+        ASSET_MODULE_TYPE_INLINE,
+        ASSET_MODULE_TYPE_RESOURCE,
+        ASSET_MODULE_TYPE_SOURCE,
+      ].includes(type);
 
-      if (isSvgFile && isIssuerScript && hasQueryInline) {
-        if (this.IS_WEBPACK_VERSION_LOWER_5_96_0) {
-          // TODO: refactor into Exceptions
-          throw new Error(`\nThe support for the \`?inline\` query for SVG is available since Webpack >= 5.96.`);
+      if (isAssetModule) {
+        const isSvgFile = this.assetInline.isSvgFile(resource);
+        const isIssuerScript = this.pluginOption.isScript(issuer);
+        const inlineParameter = this.getQueryValue(createData, 'inline');
+
+        // query `?inline`
+        if (inlineParameter != null) {
+          this.setAssetModuleTypeInline(createData);
+          this.setAssetModuleEncoding(createData, isSvgFile ? inlineParameter : 'base64');
+        } else {
+          // import SVG in JavaScript w/o `?inline` query
+          const hasConfigEncoding = this.getAssetModuleEncoding(createData) != null;
+          if (isIssuerScript && isSvgFile && type === ASSET_MODULE_TYPE && !hasConfigEncoding) {
+            // set UTF-8 encoding
+            this.setAssetModuleEncoding(createData, false);
+          }
         }
-
-        const availableValues = ['base64', 'utf8'];
-        if (inlineValue !== '' && !availableValues.includes(inlineValue)) {
-          // TODO: refactor into Exceptions
-          throw new Error(
-            `\nUnsupported \`?inline\` query value ${yellowBright(inlineValue)} in the request ${cyanBright(rawRequest)}\nAvailable values: ${yellowBright(availableValues.join(', '))} or ${yellowBright`undefined`}.`
-          );
-        }
-
-        /** @type {"base64" | false} encoding, false for `utf8`, see /webpack/lib/asset/AssetGenerator.js:encodeDataUri() */
-        const encoding = inlineValue === 'base64' ? 'base64' : false;
-
-        const moduleGraph = this.compilation.moduleGraph;
-        const dataUrlOptions = { encoding };
-        const filename = undefined;
-        const publicPath = undefined;
-        const outputPath = undefined;
-        const emit = false;
-
-        resolveData.createData.generator = new AssetGenerator(
-          moduleGraph,
-          dataUrlOptions,
-          filename,
-          publicPath,
-          outputPath,
-          emit
-        );
-
-        resolveData.createData.type = ASSET_MODULE_TYPE_INLINE;
-        resolveData.createData.parser = new AssetParser(true);
       }
+
+      // skip modules loaded in CSS via url()
+      if (meta.isDependencyUrl) return;
 
       const isIssuerStyle = this.pluginOption.isStyle(issuer);
       const parentModule = resolveData.dependencies[0]?._parentModule;
@@ -824,6 +809,65 @@ class AssetCompiler {
     }
 
     meta.isScript = this.collection.hasScript(request);
+  }
+
+  /**
+   * @param {Object} module
+   * @return {'base64' | false | undefined }
+   */
+  getAssetModuleEncoding(module) {
+    return module?.generatorOptions?.dataUrl?.encoding;
+  }
+
+  /**
+   * @param {Object} module The Webpack module.
+   * @param {string} name The name of the parameter.
+   * @return {string | undefined} A string if the given search parameter is found; otherwise, null
+   */
+  getQueryValue(module, name) {
+    const { resource } = module;
+    const [file, query] = resource.split('?', 2);
+    const urlParams = new URLSearchParams(query);
+
+    return urlParams.get(name);
+  }
+
+  /**
+   * Set data URL encoding for `asset/inline`.
+   *
+   * @param {Object} module
+   * @param {'base64' | 'utf8' | false} encoding
+   */
+  setAssetModuleEncoding(module, encoding) {
+    if (this.IS_WEBPACK_VERSION_LOWER_5_96_0) {
+      // TODO: refactor into Exceptions
+      throw new Error(`\nThe support for the \`?inline\` query for assets is available since Webpack >= 5.96.`);
+    }
+
+    // map `utf8` to false, see /webpack/lib/asset/AssetGenerator.js:encodeDataUri()
+    let assetEncoding = encoding === 'base64' ? 'base64' : false;
+
+    const moduleGraph = this.compilation.moduleGraph;
+    const moduleDataUrlOptions = module.generator.dataUrlOptions;
+    const dataUrlOptions = typeof moduleDataUrlOptions === 'object' ? { ...moduleDataUrlOptions } : {};
+    const filename = module.generator.filename;
+    const publicPath = module.generator.publicPath;
+    const outputPath = module.generator.outputPath;
+    const emit = module.generator.emit;
+
+    dataUrlOptions.encoding = assetEncoding;
+
+    module.generator = new AssetGenerator(moduleGraph, dataUrlOptions, filename, publicPath, outputPath, emit);
+  }
+
+  /**
+   * Force set asset module type to `asset/inline`.
+   *
+   * @param {Object} module
+   */
+  setAssetModuleTypeInline(module) {
+    module.type = ASSET_MODULE_TYPE_INLINE;
+    module.parser = new AssetParser(true);
   }
 
   /**

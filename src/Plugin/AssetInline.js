@@ -66,28 +66,11 @@ const parseValues = (content, value) => {
 };
 
 /**
- * @param {string} svg The SVG content.
- * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, innerSVG: string}}
+ * @param {string} content
+ * @return {string}
  */
-const parseSvg = (svg) => {
-  const svgOpenTag = '<svg';
-  const svgCloseTag = '</svg>';
-  const svgOpenTagStartPos = svg.indexOf(svgOpenTag);
-  const svgCloseTagPos = svg.indexOf(svgCloseTag, svgOpenTagStartPos);
-
-  if (svgOpenTagStartPos > 0) {
-    // extract SVG content only, ignore xml tag and comments before SVG tag
-    svg = svg.slice(svgOpenTagStartPos, svgCloseTagPos + svgCloseTag.length);
-  }
-
-  // parse SVG attributes and extract inner content of SVG
-  const svgAttrsStartPos = svgOpenTag.length;
-  const svgAttrsEndPos = svg.indexOf('>', svgAttrsStartPos);
-  const svgAttrsString = svg.slice(svgAttrsStartPos, svgAttrsEndPos);
-  const svgAttrs = parseAttributes(svgAttrsString);
-  const innerSVG = svg.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
-
-  // encode reserved chars in data URL for IE 9-11 (enable if needed)
+const encodeDataUrlContent = (content) => {
+  // alternative to encodeURIComponent - encode reserved chars in data URL for IE 9-11 (enable if needed)
   // const reservedChars = /["#%{}<>]/g;
   // const charReplacements = {
   //   '"': "'",
@@ -99,15 +82,42 @@ const parseSvg = (svg) => {
   //   '>': '%3E',
   // };
 
-  // encode reserved chars in data URL for modern browsers
+  // encode only reserved chars in data URL for modern browsers
   const reservedChars = /["#]/g;
   const charReplacements = {
     '"': "'",
     '#': '%23',
   };
   const replacer = (char) => charReplacements[char];
-  // note: don't have to encode as base64, pure svg is smaller
-  const dataUrl = 'data:image/svg+xml,' + svg.replace(/\s+/g, ' ').replace(reservedChars, replacer);
+
+  // we don't want use the encodeURIComponent() because it encodes space too that make content bigger then base64
+  return content.replace(/\s+/g, ' ').replace(reservedChars, replacer);
+};
+
+/**
+ * @param {string} content The SVG content.
+ * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, innerSVG: string}}
+ */
+const parseSvg = (content) => {
+  const svgOpenTag = '<svg';
+  const svgCloseTag = '</svg>';
+  const svgOpenTagStartPos = content.indexOf(svgOpenTag);
+  const svgCloseTagPos = content.indexOf(svgCloseTag, svgOpenTagStartPos);
+
+  if (svgOpenTagStartPos > 0) {
+    // extract SVG content only, ignore xml tag and comments before SVG tag
+    content = content.slice(svgOpenTagStartPos, svgCloseTagPos + svgCloseTag.length);
+  }
+
+  // parse SVG attributes and extract inner content of SVG
+  const svgAttrsStartPos = svgOpenTag.length;
+  const svgAttrsEndPos = content.indexOf('>', svgAttrsStartPos);
+  const svgAttrsString = content.slice(svgAttrsStartPos, svgAttrsEndPos);
+  const svgAttrs = parseAttributes(svgAttrsString);
+  const innerSVG = content.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
+
+  const encodedContent = encodeDataUrlContent(content);
+  const dataUrl = 'data:image/svg+xml,' + encodedContent;
 
   return {
     svgAttrs,
