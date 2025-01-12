@@ -2495,6 +2495,17 @@ The descriptions of the properties:
   e.g. `attributes: { crossorigin: true }`, `attributes: { media: '(max-width: 900px)' }`.\
   Defaults `{}`.
 
+> [!NOTE]
+> 
+> The `true` value of a property will be rendered as an attribute w/o a value.
+> 
+> For example, the  `attributes: { crossorigin: true }` will be rendered to:
+> ```html
+> <link rel="preload" ... crossorigin />
+> ```
+> 
+> Setting the [crossorigin](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/crossorigin) attribute to an empty value, like `crossorigin` or `crossorigin=""`, is the same as `anonymous`.
+
 If you define the `attributes` than you can write the `as`, `rel` and `type` properties in the `attributes`.
 
 For example:
@@ -2592,7 +2603,9 @@ preload: [
 
 > ℹ️ **Note**
 >
-> Font preloading requires the `crossorigin` attribute to be set.
+> Font preloading [requires](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#cors-enabled_fetches) the `crossorigin` attribute to be set.\
+> If the `crossorigin` property is not defined, it will be added for the `font` type automatically.
+> 
 > See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
 
 #### Preload tags order
@@ -5229,7 +5242,7 @@ module.exports = {
       preload: [
         {
           test: /\.(woff2|woff)$/,
-          attributes: { as: 'font', crossorigin: true },
+          attributes: { as: 'font' },
         },
       ],
     }),
@@ -5266,8 +5279,8 @@ The generated HTML contains the preload tag with the font:
   <head>
     <title>Demo</title>
     <!-- preload fonts detected in style -->
-    <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin="true" />
-    <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin="true" />
+    <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin />
     <!-- compiled style -->
     <link href="css/style.1f4faaff.css" rel="stylesheet" />
   </head>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.12.1 (2025-01-12)
+
+- fix: incorrect output of preload tag if "crossorigin: true", #139
+- fix: if `as=font` is used in preload and the `crossorigin` is not defined,
+       it will be added automatically, because the `crossorigin` is mandatory for `font` type
+
 ## 4.12.0 (2025-01-12)
 
 - feat(release): add support for the `?inline` query to load assets as data URL

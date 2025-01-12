@@ -150,19 +150,12 @@ describe('plugin options', () => {
   test('entry path filter includes', () => compareFiles('option-entry-path-filter-includes'));
   test('entry path filter excludes', () => compareFiles('option-entry-path-filter-excludes'));
 
-  test('preload', () => compareFiles('option-preload'));
-  test('preload attributes', () => compareFiles('option-preload-attributes'));
-  test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
-
   test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
   // TODO: fix Error: Binary data does not match! on GitHub only (local works file)
   // test('renderStage, default', () =>
   //   compareFiles('option-renderStage-default', true, /.(html|html.gz|css|css.map|js|js.map|json)$/));
-
-  // TODO: detect and remove unused split chinks
-  //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 
   // output deprecation messages
   test('watchFiles deprecation', () => watchCompareFiles('option-watchFiles-deprecation'));
@@ -172,6 +165,21 @@ describe('plugin options', () => {
   test('verbose', () => compareFiles('option-verbose'));
   // for debug only
   test('verbose output', () => compareFiles('option-verbose-output'));
+});
+
+describe('plugin option preload', () => {
+  test('preload', () => compareFiles('option-preload'));
+  test('preload font', () => compareFiles('option-preload-font'));
+  test('preload attributes', () => compareFiles('option-preload-attributes'));
+  test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
+
+  // special cases
+  test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
+  test('preload, no head', () => compareFiles('preload-no-head'));
+  test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));
+
+  // TODO: detect and remove unused split chinks
+  //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
 });
 
 describe('plugin minify option', () => {
@@ -426,9 +434,6 @@ describe('special cases', () => {
   test('resolve manifest.json', () => compareFiles('resolve-manifest.json'));
   test('encode / decode reserved HTML chars', () => compareFiles('decode-chars'));
 
-  test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
-  test('preload, no head', () => compareFiles('preload-no-head'));
-  test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));
   test('ignore files defined in webpack entry', () => compareFiles('ignore-webpack-entry'));
   test('issue if copy plugin copies a html file', () => compareFiles('issue-copy-plugin'));
   test('import raw content of a file', () => compareFiles('import-raw-html'));

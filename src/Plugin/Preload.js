@@ -120,6 +120,9 @@ class Preload {
       if (conf.rel) attrs.rel = conf.rel;
       if (conf.type) attrs.type = conf.type;
 
+      // for the `font` type, the `crossorigin` attribute is mandatory, if it is not defined, set to default value
+      if (as === 'font' && !('crossorigin' in attrs)) attrs.crossorigin = true;
+
       // whether the 'type' property exist regardless of a value;
       // if the property exists and have the undefined value, exclude this attribute in generating preload tag
       const hasType = 'type' in conf || (conf.attributes && 'type' in conf.attributes) || optionalTypeBy.has(attrs.as);
@@ -179,7 +182,8 @@ class Preload {
 
       let tag = `<link`;
       for (const [key, value] of Object.entries(attrs)) {
-        if (value != null) tag += ` ${key}="${value}"`;
+        if (value === true) tag += ` ${key}`;
+        else if (value != null) tag += ` ${key}="${value}"`;
       }
       tag += '>';
 

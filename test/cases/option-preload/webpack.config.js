@@ -51,6 +51,7 @@ module.exports = {
           as: 'font',
           type: 'font/custom-font', // test custom type
           // note: font preloading requires the crossorigin attribute to be set
+          // test: the `true` or empty string `''` value should be rendered as `crossorigin` attribute w/o a value
           attributes: { crossorigin: true },
         },
       ],

@@ -31,9 +31,11 @@ module.exports = {
         },
         {
           test: /\.(eot|ttf|woff2?)$/,
-          // test: `as` in attributes
-          // test: the empty string `''` value of `crossorigin` should be rendered as `crossorigin=""`
-          attributes: { as: 'font', crossorigin: '' },
+          // test: the `font` type requires mandatory `crossorigin` attribute, if it is not defined, set the default value
+          attributes: {
+            as: 'font',
+            //crossorigin: ''
+          },
         },
       ],
     }),
