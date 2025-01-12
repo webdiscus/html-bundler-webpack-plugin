@@ -20,24 +20,31 @@ module.exports = {
         index: './src/index.html',
       },
 
+      js: {
+        filename: 'js/[name].bundle.js',
+      },
+
       css: {
         filename: 'css/[name].bundle.css',
       },
 
       preload: [
         {
+          test: /\.(m?js)$/,
+          as: 'script',
+        },
+        {
           test: /\.(s?css|less)$/,
           as: 'style',
         },
         {
           test: /\.(eot|ttf|woff2?)$/,
-          // test: the `font` type requires mandatory `crossorigin` attribute, if it is not defined, set the default value
-          attributes: {
-            as: 'font',
-            //crossorigin: ''
-          },
+          attributes: { as: 'font' },
         },
       ],
+
+      // test: render HTML with both options the `preload` and `minify`
+      minify: true,
     }),
   ],
 

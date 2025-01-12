@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
+import HtmlMinimizerPlugin from 'html-minimizer-webpack-plugin';
 
 module.exports = {
   mode: 'production',
@@ -20,24 +21,31 @@ module.exports = {
         index: './src/index.html',
       },
 
+      js: {
+        filename: 'js/[name].bundle.js',
+      },
+
       css: {
         filename: 'css/[name].bundle.css',
       },
 
       preload: [
         {
+          test: /\.(m?js)$/,
+          as: 'script',
+        },
+        {
           test: /\.(s?css|less)$/,
           as: 'style',
         },
         {
           test: /\.(eot|ttf|woff2?)$/,
-          // test: the `font` type requires mandatory `crossorigin` attribute, if it is not defined, set the default value
-          attributes: {
-            as: 'font',
-            //crossorigin: ''
-          },
+          attributes: { as: 'font' },
         },
       ],
+
+      // use external minimizer
+      minify: false,
     }),
   ],
 
@@ -55,6 +63,20 @@ module.exports = {
           filename: 'fonts/[name][ext]',
         },
       },
+    ],
+  },
+
+  optimization: {
+    minimizer: [
+      // test: render HTML with `preload` option and an external minimizer
+      new HtmlMinimizerPlugin({
+        minify: HtmlMinimizerPlugin.swcMinify,
+        // https://github.com/swc-project/swc/blob/main/packages/html/index.ts
+        minimizerOptions: {
+          quotes: false,
+          tagOmission: false, // <= fix issue #137
+        },
+      }),
     ],
   },
 };
