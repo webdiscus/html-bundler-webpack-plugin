@@ -23,11 +23,11 @@ module.exports = {
       },
 
       js: {
-        filename: 'js/[name].bundle.js',
+        filename: 'js/[name].[contenthash:8].js',
       },
 
       css: {
-        filename: 'css/[name].bundle.css',
+        filename: 'css/[name].[contenthash:8].css',
       },
 
       preload: [
@@ -47,6 +47,9 @@ module.exports = {
 
       // use external minimizer
       minify: false,
+
+      // test: call the HTML rendering before running of the HtmlMinimizerPlugin
+      renderStage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE - 1,
     }),
   ],
 
@@ -75,7 +78,7 @@ module.exports = {
         // https://github.com/swc-project/swc/blob/main/packages/html/index.ts
         minimizerOptions: {
           quotes: false,
-          tagOmission: false, // <= avoid removing heda and body tags, fix issue #137
+          tagOmission: true, // <= after minification removes head and body tags
         },
       }),
     ],

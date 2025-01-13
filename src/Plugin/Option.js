@@ -739,9 +739,12 @@ class Option {
     let renderStage = this.options.renderStage || Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER - 1;
 
     // minimal possible stage for the rendering
-    if (renderStage < Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE) {
-      renderStage = Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE;
-    }
+    // TODO: research a really minimal possible stage,
+    //       because, e.g., html-minimizer-webpack-plugin uses the PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage,
+    //       and render must be called before this minimizer.
+    // if (renderStage < Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE) {
+    //   renderStage = Compilation.PROCESS_ASSETS_STAGE_SUMMARIZE;
+    // }
 
     return renderStage;
   }

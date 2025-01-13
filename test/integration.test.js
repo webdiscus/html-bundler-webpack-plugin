@@ -179,6 +179,7 @@ describe('plugin option preload', () => {
   test('preload, no head closing tag', () => compareFiles('preload-no-head-close'));
   test('preload and minify', () => compareFiles('option-preload-minify'));
   test('preload and external html minimizer', () => compareFiles('option-preload-html-minimizer'));
+  test('preload and html minimizer using renderStage', () => compareFiles('option-preload-html-minimizer-renderStage'));
 
   // TODO: detect and remove unused split chinks
   //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));

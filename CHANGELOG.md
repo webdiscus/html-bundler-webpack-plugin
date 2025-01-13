@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.12.2 (2025-01-13)
+
+- fix: allow to define the `renderStage` option lower than `PROCESS_ASSETS_STAGE_SUMMARIZE`, #137
+
 ## 4.12.1 (2025-01-12)
 
 - fix: incorrect output of preload tag if "crossorigin: true", #139

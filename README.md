@@ -2413,7 +2413,9 @@ Type: `null | number`
 Default: `Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER - 1`
 
 The [stage](https://webpack.js.org/api/compilation-hooks/#list-of-asset-processing-stages) to render output HTML in the [processAssets](https://webpack.js.org/api/compilation-hooks/#processassets) Webpack hook.
+<!--
 The  minimal possible stage for the rendering is `PROCESS_ASSETS_STAGE_SUMMARIZE`.
+-->
 
 For example:
 
@@ -2434,11 +2436,43 @@ module.exports = {
       entry: {
         index: 'src/index.html',
       },
-      // Ensures that the CompressionPlugin save the resulting HTML into the `*.html.gz` file
-      // after the rendering process in the HtmlBundlerPlugin.
+      // ensures that the CompressionPlugin save the resulting HTML into the `*.html.gz` file
+      // after the rendering process in the HtmlBundlerPlugin
       renderStage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH + 1,
     }),
   ],
+};
+
+```
+
+Other example with an optimization plugin:
+
+```js
+const path = require('path');
+const Compilation = require('webpack/lib/Compilation');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+const HtmlMinimizerPlugin = require('html-minimizer-webpack-plugin');
+
+module.exports = {
+  mode: 'production',
+  output: {
+    path: path.join(__dirname, 'dist/'),
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        index: 'src/index.html',
+      },
+      // ensures that the HTML rendering is called right before the HtmlMinimizerPlugin
+      renderStage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE - 1,
+    }),
+  ],
+  optimization: {
+    minimizer: [
+      // this plugin is called at the PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE stage
+      new HtmlMinimizerPlugin({}),
+    ],
+  },
 };
 
 ```
