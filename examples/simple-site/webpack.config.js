@@ -39,7 +39,7 @@ module.exports = {
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(ico|png|jp?g|svg)/,
+        test: /\.(ico|png|jpe?g|svg)/,
         type: 'asset',
         generator: {
           filename: 'img/[name].[hash:8][ext]', // save to file images >= 2 KB

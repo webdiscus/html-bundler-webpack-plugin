@@ -48,7 +48,7 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
-        test: /\.(ico|png|jp?g|svg)/,
+        test: /\.(ico|png|jpe?g|svg)/,
         type: 'asset/resource',
         include: path.resolve(__dirname, 'src'),
         exclude: /node_modules/,

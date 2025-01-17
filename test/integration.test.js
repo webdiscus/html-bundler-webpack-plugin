@@ -54,6 +54,8 @@ describe('resolve files', () => {
   test('resolve js in many entries with the same template', () => compareFiles('resolve-js-same-tmpl'));
   test('use the same js file in many html', () => compareFiles('resolve-js-diff-tmpl'));
 
+  test('assets filenames in relative entry', () => compareFiles('resolve-asset-filenames-in-relative-entry'));
+
   test('js, css with same name', () => compareFiles('resolve-js-css-with-same-name'));
 
   test('not resolve in template comment', () => compareFiles('comment-not-resolve'));

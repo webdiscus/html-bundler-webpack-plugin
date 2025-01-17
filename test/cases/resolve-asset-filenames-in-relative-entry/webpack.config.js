@@ -10,20 +10,19 @@ module.exports = {
 
   resolve: {
     alias: {
-      '@images': path.join(__dirname, '../../fixtures/images'),
+      //'@src': './src',
+      '@src': path.join(__dirname, 'src'),
     },
-  },
-
-  entry: {
-    'style.entry': './src/style.css',
-    'script.entry': './src/script.js',
-    'home.entry': './src/home.svg', // test: ignore processing in plugin
   },
 
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/index.html',
+        'home/index': './src/views/index.html',
+        about: {
+          import: './src/views/index.html',
+          filename: 'news/sport/index.html',
+        },
       },
       js: {
         filename: 'js/[name].[contenthash:8].js',
@@ -38,13 +37,17 @@ module.exports = {
     rules: [
       {
         test: /\.(css)$/,
-        use: ['css-loader'],
+        use: [
+          {
+            loader: 'css-loader',
+          },
+        ],
       },
       {
-        test: /\.(ico|png|jpe?g|svg)$/,
+        test: /\.(ico|png|jpe?g|svg)/,
         type: 'asset/resource',
         generator: {
-          filename: 'img/[name].[hash:8][ext][query]',
+          filename: 'img/[name].[hash:8][ext]',
         },
       },
     ],

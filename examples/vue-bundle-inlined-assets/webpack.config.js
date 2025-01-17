@@ -48,7 +48,7 @@ module.exports = {
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(ico|png|jp?g|svg)$/,
+        test: /\.(ico|png|jpe?g|svg)$/,
         type: 'asset/inline', // inline all images into HTML/CSS
       },
     ],

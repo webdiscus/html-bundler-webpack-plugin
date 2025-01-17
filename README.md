@@ -164,7 +164,7 @@ module.exports = {
           use: ['css-loader', 'sass-loader'],
         },
         {
-          test: /\.(ico|png|jp?g|svg)/,
+          test: /\.(ico|png|jpe?g|svg)/,
           type: 'asset/resource',
         },
       ],
@@ -403,7 +403,7 @@ module.exports = {
         use: ['css-loader', 'sass-loader'],
       },
       {
-        test: /\.(ico|png|jp?g|webp|svg)$/,
+        test: /\.(ico|png|jpe?g|webp|svg)$/,
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext][query]',
