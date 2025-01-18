@@ -61,17 +61,21 @@ class Preload {
   }
 
   /**
-   *
    * @param {AssetEntryOptions} entry The entry where is specified the resource.
    * @param {FileInfo|null} issuer The issuer file info.
    * @param {string} assetFile The asset output filename.
    * @return {string}
    */
   getPreloadFile(entry, issuer, assetFile) {
-    if (issuer && issuer.resource !== entry.resource) {
+    if (
+      (this.pluginOption.autoPublicPath || this.pluginOption.isRelativePublicPath) &&
+      issuer &&
+      issuer.resource !== entry.resource
+    ) {
       // recovery preload output file of an asset relative by entry point
       const issuerDir = path.dirname(issuer.filename);
       const webRootPath = path.posix.join(issuerDir, assetFile);
+
       assetFile = this.pluginOption.getAssetOutputFile(webRootPath, entry.filename);
     }
 

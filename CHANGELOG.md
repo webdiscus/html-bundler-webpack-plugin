@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.12.3 (2025-01-18)
+
+- fix: output URL for preloaded resources if publicPath is a URL or root path, #141
+
 ## 4.12.2 (2025-01-13)
 
 - fix: allow to define the `renderStage` option lower than `PROCESS_ASSETS_STAGE_SUMMARIZE`, #137

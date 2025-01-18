@@ -6,11 +6,13 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
+    publicPath: 'https://example.site/static/',
   },
 
   resolve: {
     alias: {
       '@src': path.join(__dirname, 'src'),
+      '@fonts': path.join(__dirname, '../../fixtures/fonts'),
     },
   },
 
@@ -29,6 +31,21 @@ module.exports = {
       css: {
         filename: 'css/[name].[contenthash:8].css',
       },
+
+      preload: [
+        {
+          test: /\.(js|ts)$/,
+          as: 'script',
+        },
+        {
+          test: /\.(s?css|less)$/,
+          as: 'style',
+        },
+        {
+          test: /\.(eot|ttf|woff2?)$/,
+          as: 'font',
+        },
+      ],
     }),
   ],
 
@@ -47,6 +64,13 @@ module.exports = {
         type: 'asset/resource',
         generator: {
           filename: 'img/[name].[hash:8][ext]',
+        },
+      },
+      {
+        test: /\.(eot|ttf|woff2?)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name][ext]',
         },
       },
     ],

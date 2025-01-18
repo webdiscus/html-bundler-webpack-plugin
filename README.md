@@ -702,6 +702,10 @@ The possible values:
 - `publicPath: '//cdn.example.com/'` - an external URL with the same protocol (`http://` or `https://`)
 - `publicPath: 'https://cdn.example.com/'` - an external URL with the `https://` protocol only
 
+> [!WARNING]
+> 
+> If an incorrect value is specified you'll receive 404 errors while loading these resources.
+
 <a id="webpack-option-output-filename" name="webpack-options-output-filename"></a>
 
 ### `output.filename`
