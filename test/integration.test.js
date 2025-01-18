@@ -171,12 +171,12 @@ describe('plugin options', () => {
 
 describe('plugin option preload', () => {
   test('preload', () => compareFiles('option-preload'));
-  test('publicPath absolute', () => compareFiles('option-preload-publicPath-absolute'));
-  test('publicPath url', () => compareFiles('option-preload-publicPath-url'));
-
   test('preload font', () => compareFiles('option-preload-font'));
   test('preload attributes', () => compareFiles('option-preload-attributes'));
-  test('preload with responsive images', () => compareFiles('option-preload-responsive-images'));
+
+  test('publicPath absolute', () => compareFiles('option-preload-publicPath-absolute'));
+  test('publicPath url', () => compareFiles('option-preload-publicPath-url'));
+  test('responsive images', () => compareFiles('option-preload-responsive-images'));
 
   // special cases
   test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));
@@ -186,8 +186,8 @@ describe('plugin option preload', () => {
   test('preload and external html minimizer', () => compareFiles('option-preload-html-minimizer'));
   test('preload and html minimizer using renderStage', () => compareFiles('option-preload-html-minimizer-renderStage'));
 
-  // TODO: detect and remove unused split chinks
-  //test('preload with split chunk', () => compareFiles('option-preload-split-chunk'));
+  test('dynamic import with magic comment webpackPreload', () => compareFiles('option-preload-dynamic-import'));
+  test('split chunk', () => compareFiles('option-preload-split-chunk'));
 });
 
 describe('plugin minify option', () => {

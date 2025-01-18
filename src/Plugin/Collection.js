@@ -7,6 +7,8 @@ const Preload = require('./Preload');
 const { noHeadException } = require('./Messages/Exception');
 
 /** @typedef {import('webpack').Compilation} Compilation */
+/** @typedef {import("webpack/lib/Entrypoint")} Entrypoint */
+/** @typedef {import("webpack/lib/ChunkGroup")} ChunkGroup */
 
 /**
  * @typedef {Object} CollectionData
@@ -288,11 +290,13 @@ class Collection {
     for (let [resource, { type, name, entries }] of this.assets) {
       if (type !== Collection.type.script) continue;
 
+      /** @type {Entrypoint} entrypoint */
       const entrypoint = namedChunkGroups.get(name);
 
       // prevent error when in watch mode after removing a script in the template
       if (!entrypoint) continue;
 
+      const childrenFiles = this.#getChildrenFiles(entrypoint);
       const chunkFiles = new Set();
 
       for (const { id, files, auxiliaryFiles } of entrypoint.chunks) {
@@ -310,7 +314,7 @@ class Collection {
         splitChunkIds.add(id);
       }
 
-      const hasSplitChunks = chunkFiles.size > 1;
+      const hasChunks = chunkFiles.size > 1;
 
       // do flat the Map<string, Set>
       const entryFilenames = new Set();
@@ -322,16 +326,17 @@ class Collection {
         // let's show an original error
         if (!assets.hasOwnProperty(entryFile)) continue;
 
-        const data = { type, resource, chunks: [] };
+        const data = { type, resource, chunks: [], children: [] };
         let injectedChunks;
 
-        if (hasSplitChunks) {
+        if (hasChunks) {
           if (!chunkCache.has(entryFile)) chunkCache.set(entryFile, new Set());
           injectedChunks = chunkCache.get(entryFile);
         }
 
+        // split chunks
         for (let chunkFile of chunkFiles) {
-          if (hasSplitChunks) {
+          if (hasChunks) {
             if (injectedChunks.has(chunkFile)) continue;
             injectedChunks.add(chunkFile);
           }
@@ -341,6 +346,20 @@ class Collection {
 
           splitChunkFiles.add(chunkFile);
           data.chunks.push({ inline, chunkFile, assetFile });
+        }
+
+        // dynamic imported chunks
+        for (let chunkFile of childrenFiles) {
+          if (hasChunks) {
+            if (injectedChunks.has(chunkFile)) continue;
+            injectedChunks.add(chunkFile);
+          }
+
+          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
+          const inline = this.pluginOption.isInlineJs(resource, chunkFile);
+
+          splitChunkFiles.add(chunkFile);
+          data.children.push({ inline, chunkFile, assetFile });
         }
 
         const entryData = this.data.get(entryFile);
@@ -367,6 +386,24 @@ class Collection {
         }
       }
     }
+  }
+
+  /**
+   * @param {Entrypoint} entrypoint
+   * @return {Array<string>}
+   */
+  #getChildrenFiles(entrypoint) {
+    let files = [];
+    const children = entrypoint.getChildren();
+
+    for (const chunkGroup of children) {
+      let chunkFiles = chunkGroup.getFiles();
+      if (chunkFiles) {
+        files.push(...chunkFiles);
+      }
+    }
+
+    return files;
   }
 
   /**

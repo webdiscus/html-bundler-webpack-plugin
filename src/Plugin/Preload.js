@@ -154,6 +154,13 @@ class Preload {
           // css
           preloadAssets.set(item.assetFile, conf._opts);
         }
+
+        // dynamic imported modules
+        if (Array.isArray(item.children)) {
+          for (let { chunkFile, assetFile } of item.children) {
+            preloadAssets.set(assetFile, conf._opts);
+          }
+        }
       }
 
       // assets in css

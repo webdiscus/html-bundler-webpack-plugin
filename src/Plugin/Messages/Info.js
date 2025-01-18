@@ -69,7 +69,10 @@ const renderAssets = (item, pad = padLevel2) => {
   }
 
   if (type === Collection.type.script) {
-    const isSingleChunk = item.chunks.length === 1;
+    const chunks = item.chunks || [];
+    const children = item.children || [];
+    const files = [...chunks, ...children];
+    const isSingleChunk = files.length === 1;
     let li;
     let padLen;
 
@@ -80,7 +83,7 @@ const renderAssets = (item, pad = padLevel2) => {
       str += `${'->'.padStart(padLevel1)} ${fg(120)`chunks:`}` + '\n';
     }
 
-    for (let { inline, chunkFile, assetFile } of item.chunks) {
+    for (let { inline, chunkFile, assetFile } of files) {
       li = isSingleChunk ? '->' : '';
       if (inline) {
         str += `${li.padStart(padLen)} ${gray(path.basename(chunkFile))} ${yellow`(inline)`}\n`;

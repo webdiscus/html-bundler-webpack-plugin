@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.13.0 (2025-01-18)
+
+- feat: add support for preloading of dynamic imported modules, #138
+
 ## 4.12.3 (2025-01-18)
 
 - fix: output URL for preloaded resources if publicPath is a URL or root path, #141
