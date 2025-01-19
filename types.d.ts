@@ -62,11 +62,7 @@ declare namespace HtmlBundlerPlugin {
      * If the entry is undefined, then must be defined the Webpack entry option.
      */
     entry?: EntryObject | Array<EntryDescription> | string;
-    entryFilter?:
-      | RegExp
-      | Array<RegExp>
-      | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
-      | ((file: string) => void | false);
+    entryFilter?: AdvancedFilter;
 
     // defaults is options.output.path
     outputPath?: string;
@@ -331,6 +327,7 @@ type AssetResource = {};
 
 type Preload = Array<{
   test: RegExp;
+  filter?: AdvancedFilter;
   as?: string;
   rel?: string;
   type?: string;
@@ -368,5 +365,23 @@ type ResolverType =
   | 'style'
   // used in a preprocessor for the resolving of including partials
   | 'include';
+
+/**
+ * Advanced custom filter defined by user in option.
+ */
+type AdvancedFilter =
+  | RegExp
+  | Array<RegExp>
+  | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+  | ((value: string) => void | true | false);
+
+/**
+ * Normalized advanced filter, ready for inner apply.
+ */
+type NormalizedAdvancedFilter = {
+  includes: Array<RegExp>;
+  excludes: Array<RegExp>;
+  fn: ((value: string) => void | false) | undefined;
+};
 
 export = HtmlBundlerPlugin;

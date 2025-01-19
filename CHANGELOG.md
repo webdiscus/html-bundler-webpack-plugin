@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.14.0 (2025-01-19)
+
+- feat: add the `filter` for the `preload` option
+
 ## 4.13.0 (2025-01-18)
 
 - feat: add support for preloading of dynamic imported modules, #138

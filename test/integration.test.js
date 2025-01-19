@@ -131,6 +131,24 @@ describe('plugin options', () => {
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));
 
+  test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
+  test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
+
+  // TODO: fix Error: Binary data does not match! on GitHub only (local works file)
+  // test('renderStage, default', () =>
+  //   compareFiles('option-renderStage-default', true, /.(html|html.gz|css|css.map|js|js.map|json)$/));
+
+  // output deprecation messages
+  test('watchFiles deprecation', () => watchCompareFiles('option-watchFiles-deprecation'));
+
+  test('hotUpdate', () => watchCompareFiles('option-hotUpdate'));
+
+  test('verbose', () => compareFiles('option-verbose'));
+  // for debug only
+  test('verbose output', () => compareFiles('option-verbose-output'));
+});
+
+describe('plugin option entry', () => {
   test('entry', () => compareFiles('option-entry'));
   test('entry data, multiple pages', () => compareFiles('entry-data-i18n-multipage'));
   // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
@@ -151,22 +169,6 @@ describe('plugin options', () => {
   test('entry path filter array', () => compareFiles('option-entry-path-filter-array'));
   test('entry path filter includes', () => compareFiles('option-entry-path-filter-includes'));
   test('entry path filter excludes', () => compareFiles('option-entry-path-filter-excludes'));
-
-  test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
-  test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
-
-  // TODO: fix Error: Binary data does not match! on GitHub only (local works file)
-  // test('renderStage, default', () =>
-  //   compareFiles('option-renderStage-default', true, /.(html|html.gz|css|css.map|js|js.map|json)$/));
-
-  // output deprecation messages
-  test('watchFiles deprecation', () => watchCompareFiles('option-watchFiles-deprecation'));
-
-  test('hotUpdate', () => watchCompareFiles('option-hotUpdate'));
-
-  test('verbose', () => compareFiles('option-verbose'));
-  // for debug only
-  test('verbose output', () => compareFiles('option-verbose-output'));
 });
 
 describe('plugin option preload', () => {
@@ -187,10 +189,11 @@ describe('plugin option preload', () => {
   test('preload and html minimizer using renderStage', () => compareFiles('option-preload-html-minimizer-renderStage'));
 
   test('dynamic import with magic comment webpackPreload', () => compareFiles('option-preload-dynamic-import'));
+  test('dynamic import, filter for individual preload', () => compareFiles('option-preload-dynamic-import-filter'));
   test('split chunk', () => compareFiles('option-preload-split-chunk'));
 });
 
-describe('plugin minify option', () => {
+describe('plugin option minify', () => {
   test('minify HTML', () => compareFiles('option-minify'));
   test('minify HTML with custom options', () => compareFiles('option-minify-options'));
   test('minify auto prod', () => compareFiles('option-minify-auto-prod'));

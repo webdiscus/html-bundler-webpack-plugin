@@ -66,6 +66,7 @@ class Option {
     this.loaderPath = loaderPath;
     this.options = options;
     this.testEntry = null;
+    this.entryFilter = options.entryFilter;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
 
@@ -279,6 +280,11 @@ class Option {
 
     // loader tests from rules have the highest priority, over defined in plugin options
     this.testEntry = loaderTests.size > 0 ? [...loaderTests] : [this.options.test];
+    this.normalizedEntryFilter = this.normalizeAdvancedFiler(this.testEntry, this.entryFilter);
+  }
+
+  getEntryFilter() {
+    return this.normalizedEntryFilter;
   }
 
   initWatchMode() {
@@ -747,6 +753,62 @@ class Option {
     // }
 
     return renderStage;
+  }
+
+  /**
+   * Normalize the filter option defined by user and create inner structure of one.
+   *
+   * @param {RegExp} test
+   * @param {AdvancedFilter} filter
+   * @return {{includes: RegExp[], excludes: RegExp[], fn: function}}
+   */
+  normalizeAdvancedFiler(test, filter) {
+    const isFunction = typeof filter === 'function';
+    let fn = isFunction ? filter : () => true;
+    let includes = [];
+    let excludes = [];
+
+    if (filter && !isFunction) {
+      if (filter instanceof RegExp) {
+        includes = [filter];
+      } else {
+        if (Array.isArray(filter)) {
+          includes = filter;
+        } else {
+          if ('includes' in filter && Array.isArray(filter.includes)) {
+            includes = filter.includes;
+          }
+          if ('excludes' in filter && Array.isArray(filter.excludes)) {
+            excludes = filter.excludes;
+          }
+        }
+      }
+    }
+
+    return {
+      includes,
+      excludes,
+      fn,
+    };
+  }
+
+  /**
+   * Apply the advanced filter to a value.
+   *
+   * @param {string} value
+   * @param {NormalizedAdvancedFilter} filter
+   * @return {boolean}
+   */
+  applyAdvancedFiler(value, filter) {
+    const { includes, excludes, fn } = filter;
+
+    const hasIncludes = includes.length > 0;
+    const hasExcludes = excludes.length > 0;
+
+    const isIncluded = !hasIncludes || includes.some((regex) => regex.test(value));
+    const isExcluded = hasExcludes && excludes.some((regex) => regex.test(value));
+
+    return isIncluded && !isExcluded && fn(value) !== false;
   }
 
   /**

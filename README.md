@@ -1660,16 +1660,16 @@ new HtmlBundlerPlugin({
 
 ### `entryFilter`
 
-Filter to process only matching template files.
+The filter to process only matching template files.
 This option works only if the [entry](#option-entry-path) option is a path.
 
 Type:
 ```ts
-type entryFilter = 
+type AdvancedFilter = 
   | RegExp
   | Array<RegExp>
   | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
-  | ((file: string) => void | false);
+  | ((file: string) => void | true | false);
 ```
 
 Default value:
@@ -2501,11 +2501,20 @@ Type:
 ```ts
 type Preload = Array<{
   test: RegExp;
+  filter?: AdvancedFilter;
   as?: string;
   rel?: string;
   type?: string;
   attributes?: { [attributeName: string]: string | boolean };
 }>;
+```
+
+```ts
+type AdvancedFilter =
+  | RegExp
+  | Array<RegExp>
+  | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+  | ((value: string) => void | true | false);
 ```
 
 Default: `null`
@@ -2515,6 +2524,7 @@ Generates and injects preload tags `<link rel="preload">` in the head before all
 The descriptions of the properties:
 
 - `test` - an RegEpx to match source asset files.
+- `filter` - an advanced filter to preload only matched output asset files.
 - `as` - a content type, one of `audio` `document` `embed` `font` `image` `object` `script` `style` `track` `video` `worker`
 - `rel` - a value indicates how to load a resource, one of `preload` `prefetch` , defaults `preload`
 - `type` - a [MIME type](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types) of the content.\
@@ -2553,6 +2563,93 @@ For example:
   test: /\.(ttf|woff2?)$/,
   attributes: { as: 'font', rel: 'prefetch', crossorigin: true },
 },
+```
+
+<a id="option-preload-filter" name="option-preload-filter"></a>
+
+#### `filter` option
+
+By default, all files matching the `test` option will be preloaded. 
+You can use the `filter` to preload specific files individually.
+
+The `AdvancedFilter` type provides a versatile way to define filtering logic, 
+from simple patterns to complex inclusion and exclusion criteria. 
+
+Here's are supported filter formats:
+
+- `RegExp`\
+   The filter matches a value if it satisfies this single regular expression.\
+   Works the same as `{ includes: [RegExp,] }`.\
+   For example:
+   ```js
+   filter: /vendor/, // preload files containing the `vendor` string only
+   ```
+
+- `Array<RegExp>`\
+  Matches a value if it satisfies **at least one** of the regular expressions in the array.\
+  Works the same as `{ includes: [RegExp1, RegExp2, ...] }`.\
+  For example:
+  ```js
+  filter: [/vendor1/, /vendor2/,], // preload files containing the `vendor1` or `vendor2`
+  ```
+
+- `{ includes?: Array<RegExp>; excludes?: Array<RegExp> }`\
+  An object with optional `includes` and `excludes` arrays of regular expressions.\
+  For more advanced filtering where inclusion and exclusion criteria need to be combined:
+  - `includes`: Matches values that satisfy **at least one** of the regular expressions in the array.
+  - `excludes`: Rejects values that satisfy **at least one** of the regular expressions in the array.
+  - For `includes` and `excludes`, the logic is AND: a value must match the `includes` patterns and **not match** the `excludes` patterns.
+
+  For example:
+  ```js
+  filter: {
+    includes: [/include-this/,],
+    excludes: [/exclude-this/,],
+  }
+  ```
+- `(value: string) => void | false`\
+  Custom logic provides maximum flexibility for filtering that cannot be expressed with regular expressions.\
+  A custom filter function takes an output asset file as input and decides whether it matches based on the return value:
+  - Returns `void` (`undefined`) or `true` if the value passes the filter.
+  - Returns `false` if the value fails the filter.
+
+For example, preload all JS files except dynamically imported (async chunks).
+
+There is the _app.js_:
+
+```js
+// specify the name of an individual chunk to exclude from preloading
+import(
+ /* webpackChunkName: "moduleA.asyncChunk" */
+ './moduleA',
+);
+
+import('./moduleB'); // other asyncChunk which should be preloaded
+import './moduleC'; // normal module
+```
+
+Use the `filter` preload option to exclude files:
+```js
+preload: [
+  {
+    test: /\.(js|ts)$/,
+    filter: {
+      excludes: [/asyncChunk/],
+    },
+    as: 'script',
+  },
+],
+```
+
+The same effect using the `filter` function:
+```js
+preload: [
+  {
+    test: /\.(js|ts)$/,
+    filter: (assetFile) => !/asyncChunk/.test(assetFile),
+    as: 'script',
+  },
+],
 ```
 
 #### Preload styles
@@ -2645,6 +2742,7 @@ preload: [
 > If the `crossorigin` property is not defined, it will be added for the `font` type automatically.
 > 
 > See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
+
 
 #### Preload tags order
 

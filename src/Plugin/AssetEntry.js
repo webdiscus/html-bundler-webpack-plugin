@@ -162,27 +162,8 @@ class AssetEntry {
   getDynamicEntry() {
     const { fs } = this;
     const dir = this.pluginOption.get().entry;
-    const entryFilter = this.pluginOption.get().entryFilter;
-    const isFunctionEntryFilter = typeof entryFilter === 'function';
-    let includes = [this.pluginOption.get().test];
-    let excludes = [];
-
-    if (entryFilter && !isFunctionEntryFilter) {
-      if (entryFilter instanceof RegExp) {
-        includes = [entryFilter];
-      } else {
-        if (Array.isArray(entryFilter)) {
-          includes = entryFilter;
-        } else {
-          if ('includes' in entryFilter && Array.isArray(entryFilter.includes)) {
-            includes = entryFilter.includes;
-          }
-          if ('excludes' in entryFilter && Array.isArray(entryFilter.excludes)) {
-            excludes = entryFilter.excludes;
-          }
-        }
-      }
-    }
+    const { includes: filterIncludes, excludes, fn: filterFn } = this.pluginOption.getEntryFilter();
+    const includes = filterIncludes.length ? filterIncludes : [this.pluginOption.get().test];
 
     try {
       if (!fs.lstatSync(dir).isDirectory()) optionEntryPathException(dir);
@@ -194,7 +175,7 @@ class AssetEntry {
     const entry = {};
 
     files.forEach((file) => {
-      if (isFunctionEntryFilter && entryFilter(file) === false) {
+      if (filterFn(file) === false) {
         return;
       }
 

@@ -131,8 +131,11 @@ class Preload {
       // if the property exists and have the undefined value, exclude this attribute in generating preload tag
       const hasType = 'type' in conf || (conf.attributes && 'type' in conf.attributes) || optionalTypeBy.has(attrs.as);
 
-      // save normalized attributes
-      conf._opts = { attrs, hasType };
+      // filter
+      const filter = this.pluginOption.normalizeAdvancedFiler(conf.test, conf.filter);
+
+      // save normalized options
+      conf._opts = { attrs, hasType, filter };
 
       groupBy[as] = [];
     }
@@ -148,17 +151,26 @@ class Preload {
         if (Array.isArray(item.chunks)) {
           // js
           for (let { chunkFile, assetFile } of item.chunks) {
-            preloadAssets.set(assetFile, conf._opts);
+            if (this.pluginOption.applyAdvancedFiler(assetFile, conf._opts.filter)) {
+              preloadAssets.set(assetFile, conf._opts);
+            }
           }
         } else {
-          // css
-          preloadAssets.set(item.assetFile, conf._opts);
+          //console.log('-- assetFile: ', item);
+          // css, images, fonts, etc
+          if (this.pluginOption.applyAdvancedFiler(item.assetFile, conf._opts.filter)) {
+            preloadAssets.set(item.assetFile, conf._opts);
+          }
+
+          //preloadAssets.set(item.assetFile, conf._opts);
         }
 
-        // dynamic imported modules
+        // dynamic imported modules, asyncChunks
         if (Array.isArray(item.children)) {
           for (let { chunkFile, assetFile } of item.children) {
-            preloadAssets.set(assetFile, conf._opts);
+            if (this.pluginOption.applyAdvancedFiler(assetFile, conf._opts.filter)) {
+              preloadAssets.set(assetFile, conf._opts);
+            }
           }
         }
       }
@@ -175,7 +187,9 @@ class Preload {
             ? this.getPreloadFile(data.entry, assetItem.issuer, assetItem.assetFile)
             : assetItem.assetFile;
 
-          preloadAssets.set(preloadFile, conf._opts);
+          if (this.pluginOption.applyAdvancedFiler(preloadFile, conf._opts.filter)) {
+            preloadAssets.set(preloadFile, conf._opts);
+          }
         }
       }
     }
