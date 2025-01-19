@@ -156,13 +156,10 @@ class Preload {
             }
           }
         } else {
-          //console.log('-- assetFile: ', item);
           // css, images, fonts, etc
           if (this.pluginOption.applyAdvancedFiler(item.assetFile, conf._opts.filter)) {
             preloadAssets.set(item.assetFile, conf._opts);
           }
-
-          //preloadAssets.set(item.assetFile, conf._opts);
         }
 
         // dynamic imported modules, asyncChunks
