@@ -62,7 +62,7 @@ declare namespace HtmlBundlerPlugin {
      * If the entry is undefined, then must be defined the Webpack entry option.
      */
     entry?: EntryObject | Array<EntryDescription> | string;
-    entryFilter?: AdvancedFilter;
+    entryFilter?: EntryFilter;
 
     // defaults is options.output.path
     outputPath?: string;
@@ -327,7 +327,7 @@ type AssetResource = {};
 
 type Preload = Array<{
   test: RegExp;
-  filter?: AdvancedFilter;
+  filter?: PreloadFilter;
   as?: string;
   rel?: string;
   type?: string;
@@ -368,12 +368,28 @@ type ResolverType =
 
 /**
  * Advanced custom filter defined by user in option.
+ * Abstract type for EntryFilter, PreloadFilter.
  */
-type AdvancedFilter =
+// type AdvancedFilter =
+//   | RegExp
+//   | Array<RegExp>
+//   | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+//   | ((value: unknown) => void | boolean);
+
+type EntryFilter =
   | RegExp
   | Array<RegExp>
   | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
-  | ((value: string) => void | true | false);
+  | ((file: string) => void | boolean);
+
+/**
+ * Preload custom filter defined by user in option.
+ */
+type PreloadFilter =
+  | RegExp
+  | Array<RegExp>
+  | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+  | ((asset: { sourceFiles: Array<string>; outputFile: string }) => void | boolean);
 
 /**
  * Normalized advanced filter, ready for inner apply.
@@ -381,7 +397,7 @@ type AdvancedFilter =
 type NormalizedAdvancedFilter = {
   includes: Array<RegExp>;
   excludes: Array<RegExp>;
-  fn: ((value: string) => void | false) | undefined;
+  fn: ((value: unknown) => void | boolean) | undefined;
 };
 
 export = HtmlBundlerPlugin;

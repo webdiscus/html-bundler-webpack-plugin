@@ -1,8 +1,26 @@
 # Changelog
 
-## 4.14.0 (2025-01-19)
+## 4.15.0-beta.0 (2025-01-20)
+
+- feat: add the fixed preload filter:
+  ```ts
+  type PreloadFilter =
+    | RegExp
+    | Array<RegExp>
+    | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+    | ((asset: { sourceFiles: Array<string>; outputFile: string }) => void | boolean); // <= BRAKING CHANGES compared to v4.14.0 (DEPRECATED)
+  ```
+
+## 4.14.0 (2025-01-19) DEPRECATED (filter API will be changed in next version)
 
 - feat: add the `filter` for the `preload` option
+  ```ts
+  type AdvancedFilter =
+    | RegExp
+    | Array<RegExp>
+    | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
+    | ((value: string) => void | true | false); // <= string argument DEPRECATED
+  ```
 
 ## 4.13.0 (2025-01-18)
 

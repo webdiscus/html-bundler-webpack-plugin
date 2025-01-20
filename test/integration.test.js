@@ -189,7 +189,8 @@ describe('plugin option preload', () => {
   test('preload and html minimizer using renderStage', () => compareFiles('option-preload-html-minimizer-renderStage'));
 
   test('dynamic import with magic comment webpackPreload', () => compareFiles('option-preload-dynamic-import'));
-  test('dynamic import, filter for individual preload', () => compareFiles('option-preload-dynamic-import-filter'));
+  test('dynamic import, filter RegExp', () => compareFiles('option-preload-dynamic-import-filter'));
+  test('dynamic import, filter Fn', () => compareFiles('option-preload-dynamic-import-filter-fn'));
   test('split chunk', () => compareFiles('option-preload-split-chunk'));
 });
 

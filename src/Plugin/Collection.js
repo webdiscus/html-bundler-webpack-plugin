@@ -341,25 +341,25 @@ class Collection {
             injectedChunks.add(chunkFile);
           }
 
-          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
           const inline = this.pluginOption.isInlineJs(resource, chunkFile);
+          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
           data.chunks.push({ inline, chunkFile, assetFile });
         }
 
         // dynamic imported chunks
-        for (let chunkFile of childrenFiles) {
+        for (let { sourceFile, outputFile: chunkFile } of childrenFiles) {
           if (hasChunks) {
             if (injectedChunks.has(chunkFile)) continue;
             injectedChunks.add(chunkFile);
           }
 
-          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
           const inline = this.pluginOption.isInlineJs(resource, chunkFile);
+          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
-          data.children.push({ inline, chunkFile, assetFile });
+          data.children.push({ inline, chunkFile, assetFile, sourceFile });
         }
 
         const entryData = this.data.get(entryFile);
@@ -390,14 +390,24 @@ class Collection {
 
   /**
    * @param {Entrypoint} entrypoint
-   * @return {Array<string>}
+   * @return {Array<{sourceFile: string, outputFile: string}>}
    */
   #getChildrenFiles(entrypoint) {
     let files = [];
     const children = entrypoint.getChildren();
 
     for (const chunkGroup of children) {
-      let chunkFiles = chunkGroup.getFiles();
+      // Note: there is no legal way to get the source file of the asyncChunk
+      // except using the private property `_modulePreOrderIndices`.
+      const [firsModule] = chunkGroup._modulePreOrderIndices.entries().next().value;
+
+      // The first module in the modulePreOrderIndices is the self module of the imported asyncChunk,
+      // other modules are dependencies imported in the first module.
+      // This is very strange structure, but other not exists.
+      const sourceFile = firsModule.resource;
+
+      let chunkFiles = chunkGroup.getFiles().map((value) => ({ sourceFile, outputFile: value }));
+
       if (chunkFiles) {
         files.push(...chunkFiles);
       }

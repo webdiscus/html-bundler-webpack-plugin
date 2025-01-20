@@ -151,21 +151,34 @@ class Preload {
         if (Array.isArray(item.chunks)) {
           // js
           for (let { chunkFile, assetFile } of item.chunks) {
-            if (this.pluginOption.applyAdvancedFiler(assetFile, conf._opts.filter)) {
+            // sourceFiles contain only one file
+            let sourceFiles = [item.resource];
+            let outputFile = assetFile;
+
+            if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
               preloadAssets.set(assetFile, conf._opts);
             }
           }
         } else {
           // css, images, fonts, etc
-          if (this.pluginOption.applyAdvancedFiler(item.assetFile, conf._opts.filter)) {
+          // sourceFiles may contain many file, when many style files are imported in a JS file,
+          // then all generated CSS contents will be squashed into one CSS file
+          let sourceFiles = Array.isArray(item.resource) ? item.resource : [item.resource];
+          let outputFile = item.assetFile;
+
+          if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
             preloadAssets.set(item.assetFile, conf._opts);
           }
         }
 
         // dynamic imported modules, asyncChunks
         if (Array.isArray(item.children)) {
-          for (let { chunkFile, assetFile } of item.children) {
-            if (this.pluginOption.applyAdvancedFiler(assetFile, conf._opts.filter)) {
+          for (let { chunkFile, assetFile, sourceFile } of item.children) {
+            // sourceFiles contain only one file
+            let sourceFiles = [sourceFile];
+            let outputFile = assetFile;
+
+            if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
               preloadAssets.set(assetFile, conf._opts);
             }
           }
@@ -180,12 +193,14 @@ class Preload {
           const conf = options.find(({ test }) => test.test(assetItem.resource));
           if (!conf) continue;
 
-          let preloadFile = assetItem.issuer
+          // sourceFiles contain only one file
+          let sourceFiles = [assetItem.resource];
+          let outputFile = assetItem.issuer
             ? this.getPreloadFile(data.entry, assetItem.issuer, assetItem.assetFile)
             : assetItem.assetFile;
 
-          if (this.pluginOption.applyAdvancedFiler(preloadFile, conf._opts.filter)) {
-            preloadAssets.set(preloadFile, conf._opts);
+          if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
+            preloadAssets.set(outputFile, conf._opts);
           }
         }
       }

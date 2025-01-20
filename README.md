@@ -2501,7 +2501,7 @@ Type:
 ```ts
 type Preload = Array<{
   test: RegExp;
-  filter?: AdvancedFilter;
+  filter?: PreloadFilter;
   as?: string;
   rel?: string;
   type?: string;
@@ -2510,11 +2510,11 @@ type Preload = Array<{
 ```
 
 ```ts
-type AdvancedFilter =
+type PreloadFilter =
   | RegExp
   | Array<RegExp>
   | { includes?: Array<RegExp>; excludes?: Array<RegExp> }
-  | ((value: string) => void | true | false);
+  | ((asset: { sourceFiles: Array<string>; outputFile: string }) => void | boolean);
 ```
 
 Default: `null`
@@ -2572,8 +2572,11 @@ For example:
 By default, all files matching the `test` option will be preloaded. 
 You can use the `filter` to preload specific files individually.
 
-The `AdvancedFilter` type provides a versatile way to define filtering logic, 
+The `PreloadFilter` type provides a versatile way to define filtering logic, 
 from simple patterns to complex inclusion and exclusion criteria. 
+
+The filter RegExp matches both the source and output files.
+If you need to match source or output files separately use the filter function, see below.
 
 Here's are supported filter formats:
 
@@ -2607,11 +2610,39 @@ Here's are supported filter formats:
     excludes: [/exclude-this/,],
   }
   ```
-- `(value: string) => void | false`\
+- `(asset: { sourceFiles: Array<string>; outputFile: string }) => void | boolean`\
   Custom logic provides maximum flexibility for filtering that cannot be expressed with regular expressions.\
-  A custom filter function takes an output asset file as input and decides whether it matches based on the return value:
+  A custom filter function takes the source files and the output asset file as input, and decides whether they match based on the return value:
   - Returns `void` (`undefined`) or `true` if the value passes the filter.
   - Returns `false` if the value fails the filter.
+
+> [!NOTE]
+> Only `style` type may have many files in the `sourceFiles`.\
+> If many styles are imported in one JS file, then all extracted CSS will be squashed into single CSS file with the name of a JS parent file. 
+> In this case the `sourceFiles` will have many files.
+> 
+> Usage for `style` type:
+> ```js
+> {
+>   test: /\.(s?css|less)$/,
+>   filter: ({ sourceFiles, outputFile }) => {
+>     return !sourceFiles.some((sourceFile) => /noPreload/.test(sourceFile));
+>   },
+>   as: 'style',
+> },
+> ```
+> 
+> All other types have only one file in the `sourceFiles` array.
+> You can use the argument destructor to extract only first source file.
+> 
+> Usage for all other types:
+> ```js
+> {
+>   test: /\.(js|ts)$/,
+>   filter: ({ sourceFiles: [sourceFile], outputFile }) => !/noPreload/.test(outputFile),
+>   as: 'script',
+> },
+> ```
 
 For example, preload all JS files except dynamically imported (async chunks).
 
@@ -2634,6 +2665,7 @@ preload: [
   {
     test: /\.(js|ts)$/,
     filter: {
+      // matches source and output files
       excludes: [/asyncChunk/],
     },
     as: 'script',
@@ -2646,7 +2678,7 @@ The same effect using the `filter` function:
 preload: [
   {
     test: /\.(js|ts)$/,
-    filter: (assetFile) => !/asyncChunk/.test(assetFile),
+    filter: ({ sourceFiles: [sourceFile], outputFile }) => !/asyncChunk/.test(sourceFile)),
     as: 'script',
   },
 ],

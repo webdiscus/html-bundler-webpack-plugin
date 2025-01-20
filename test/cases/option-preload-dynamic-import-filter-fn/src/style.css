@@ -1,0 +1,9 @@
+@font-face {
+  font-family: 'OpenSans';
+  src: url('@fonts/OpenSans/open-sans-regular.woff2') format('woff2');
+  font-style: normal;
+}
+
+h1 {
+  color: orangered;
+}

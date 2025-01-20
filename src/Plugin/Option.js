@@ -759,7 +759,7 @@ class Option {
    * Normalize the filter option defined by user and create inner structure of one.
    *
    * @param {RegExp} test
-   * @param {AdvancedFilter} filter
+   * @param {PreloadFilter} filter
    * @return {{includes: RegExp[], excludes: RegExp[], fn: function}}
    */
   normalizeAdvancedFiler(test, filter) {
@@ -795,7 +795,7 @@ class Option {
   /**
    * Apply the advanced filter to a value.
    *
-   * @param {string} value
+   * @param {string | {sourceFiles: Array<string>, outputFile: string}} value
    * @param {NormalizedAdvancedFilter} filter
    * @return {boolean}
    */
@@ -804,9 +804,17 @@ class Option {
 
     const hasIncludes = includes.length > 0;
     const hasExcludes = excludes.length > 0;
+    const values = [];
 
-    const isIncluded = !hasIncludes || includes.some((regex) => regex.test(value));
-    const isExcluded = hasExcludes && excludes.some((regex) => regex.test(value));
+    if (typeof filter === 'string') {
+      values.push(value);
+    } else {
+      if ('sourceFiles' in value) values.push(...value.sourceFiles);
+      if ('outputFile' in value) values.push(value.outputFile);
+    }
+
+    const isIncluded = !hasIncludes || includes.some((regex) => values.some((value) => regex.test(value)));
+    const isExcluded = hasExcludes && excludes.some((regex) => values.some((value) => regex.test(value)));
 
     return isIncluded && !isExcluded && fn(value) !== false;
   }

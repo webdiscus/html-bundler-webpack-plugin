@@ -31,35 +31,34 @@ module.exports = {
       preload: [
         {
           test: /\.(js|ts)$/,
-          filter: {
-            excludes: [/noPreload/, /asyncChunk/],
-          },
-          // the same effect using the function
-          //filter: (asset) => {
-          // filter: ({ sourceFiles: [sourceFile], outputFile }) => {
-          //   //console.log(' >> FILTER: ', { sourceFile, outputFile });
-          //   return !/noPreload|asyncChunk/.test(outputFile);
+          // filter: {
+          //   excludes: [/noPreload/, /asyncChunk/],
           // },
+          // the same effect using the function
+          filter: ({ sourceFiles: [sourceFile], outputFile }) => {
+            //console.log(' >> FILTER: ', { sourceFile, outputFile });
+            return !/noPreload|asyncChunk/.test(outputFile);
+          },
           as: 'script',
         },
         {
           test: /\.(s?css|less)$/,
           as: 'style',
-          filter: {
-            excludes: [/moduleB/],
-          },
-          // the same effect using the function
-          // filter: ({ sourceFiles, outputFile }) => {
-          //   //console.log(' >> FILTER: ', { sourceFiles, outputFile });
-          //   return !sourceFiles.some((sourceFile) => /moduleB/.test(sourceFile));
+          // filter: {
+          //   excludes: [/moduleB/],
           // },
+          // the same effect using the function
+          filter: ({ sourceFiles, outputFile }) => {
+            //console.log(' >> FILTER: ', { sourceFiles, outputFile });
+            return !sourceFiles.some((sourceFile) => /moduleB/.test(sourceFile));
+          },
         },
         {
           test: /\.(eot|ttf|woff2?)$/,
           as: 'font',
         },
       ],
-      verbose: true,
+      // verbose: true,
     }),
   ],
 
