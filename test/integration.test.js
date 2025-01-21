@@ -17,6 +17,7 @@ beforeAll(() => {
 
 describe('features tests', () => {
   test('Hello World!', () => compareFiles('hello-world'));
+
   test('use minimal options', () => compareFiles('options-minimal'));
   test('use style in html', () => compareFiles('use-style-in-html'));
   test('use script in html', () => compareFiles('use-script-in-html'));
@@ -532,4 +533,8 @@ describe('style imported in Vue', () => {
   test('import style file in vue', () => compareFiles('vue-import-css-file'));
   test('extract vue style', () => compareFiles('vue-import-css-style'));
   test('inline vue style', () => compareFiles('vue-import-css-style-inline'));
+});
+
+describe('issues', () => {
+  test('issue-minify-js-with-image-minimizer-142', () => compareFiles('issue-minify-js-with-image-minimizer-142'));
 });

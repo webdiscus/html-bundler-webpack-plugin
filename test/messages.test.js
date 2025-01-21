@@ -132,6 +132,11 @@ describe('plugin exceptions', () => {
     return exceptionContain('_exceptions/msg-exception-integrity-dynamic-crossOrigin', containString);
   });
 
+  test('integrity display original error', () => {
+    const containString = `You may need an appropriate loader to handle this file type`;
+    return exceptionContain('_exceptions/msg-exception-integrity-display-original-error', containString);
+  });
+
   test('inject css in HTML w/o head', () => {
     const containString = "The imported style can't be injected in HTML";
     return exceptionContain('_exceptions/msg-exception-import-css-wo-head', containString);

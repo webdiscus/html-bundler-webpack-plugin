@@ -1,0 +1,1 @@
+(()=>{"use strict";console.log(">> main.js"),function(){const e=document.querySelectorAll("h1");for(const o of Array.from(e))o.innerHTML="Hello! The page title has been replaced"}()})();

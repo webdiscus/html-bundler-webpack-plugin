@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.15.1 (2025-01-21)
+
+- fix: improve the handling exceptions in the integrity module, #143
+
 ## 4.15.0 (2025-01-21)
 
 - chore: bump from beta to release v4.15.0

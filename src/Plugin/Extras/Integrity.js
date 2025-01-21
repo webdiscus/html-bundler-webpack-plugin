@@ -125,7 +125,7 @@ class Integrity {
     for (const chunk of this.compilation.chunks) {
       const chunkFile = [...chunk.files][0];
 
-      if (!(typeof chunk.runtime === 'string') || !chunkFile.endsWith('.js')) {
+      if (!chunkFile || !(typeof chunk.runtime === 'string') || !chunkFile.endsWith('.js')) {
         continue;
       }
 
