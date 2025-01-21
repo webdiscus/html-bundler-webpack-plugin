@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.15.0 (2025-01-21)
+
+- chore: bump from beta to release v4.15.0
+
 ## 4.15.0-beta.0 (2025-01-20)
 
 - feat: add the fixed preload filter:
