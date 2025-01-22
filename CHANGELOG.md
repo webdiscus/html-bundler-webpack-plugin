@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.15.2 (2025-01-22)
+
+- fix: unpredictably Webpack compilation fails after a random number of runs, #143
+
 ## 4.15.1 (2025-01-21)
 
 - fix: improve the handling exceptions in the integrity module, #143

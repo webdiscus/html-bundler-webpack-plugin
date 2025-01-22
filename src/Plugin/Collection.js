@@ -66,12 +66,6 @@ class Collection {
   /** @type {Map<string, string | Array<string>>} The map of source file to output file */
   manifest = new Map();
 
-  /**
-   * Unique last index for each file with the same name.
-   * @type {Object<file: string, index: number>}
-   */
-  index = {};
-
   importStyleEsModule = true;
   orderedResources = new Map();
   importStyleRootIssuers = new Set();
@@ -113,20 +107,21 @@ class Collection {
   }
 
   /**
-   * @param {string} name
+   * @param {string?} name The entry name.
    * @param {string} resource
    * @param {string} issuer
+   * @return {string} Return the unique entry name.
    */
   #addToCompilation({ name, resource, issuer }) {
     const entry = {
-      name,
+      name: name,
       importFile: resource,
       filenameTemplate: this.pluginOption.getJs().filename,
       context: path.dirname(issuer),
       issuer,
     };
 
-    this.assetEntry.addToCompilation(entry);
+    return this.assetEntry.addToCompilation(entry);
   }
 
   /**
@@ -513,26 +508,6 @@ class Collection {
   }
 
   /**
-   * @param {string} file The source file of script.
-   * @return {string } Return unique assetFile
-   */
-  createUniqueName(file) {
-    const { name } = path.parse(file);
-    let uniqueName = name;
-
-    // the entrypoint name must be unique, if already exists then add an index: `main` => `main.1`, etc.
-    if (!this.assetEntry.isUnique(name, file)) {
-      // create unique name
-      if (!this.index[name]) {
-        this.index[name] = 1;
-      }
-      uniqueName = name + '.' + this.index[name]++;
-    }
-
-    return uniqueName;
-  }
-
-  /**
    * Find styles from all nested JS files.
    *
    * @param {number} entryId The entry id of the template where is the root issuer.
@@ -722,8 +697,7 @@ class Collection {
         name = this.assets.get(resource)?.name;
 
         if (!name) {
-          name = this.createUniqueName(resource);
-          this.#addToCompilation({ name, resource, issuer });
+          name = this.#addToCompilation({ resource, issuer });
         }
 
         inline = undefined;
@@ -1172,7 +1146,6 @@ class Collection {
    * Called only once when the plugin is applied.
    */
   clear() {
-    this.index = {};
     this.data.clear();
     this.assets.clear();
     this.orderedResources.clear();
@@ -1186,16 +1159,6 @@ class Collection {
    * Called before each new compilation after changes, in the serve/watch mode.
    */
   reset() {
-    // don't clear the index
-    // test case:
-    // there are 3 entries: home.html, news.html and about.html
-    // 1. add the `script.js` to the home.html => script.js
-    // 2. add the `script.js` to the news.html => script.1.js
-    // 3. add the `script.js` to the about.html => script.2.js
-    // but when the index is cleared, then after adding the file with the same name will be not unique
-    // and is generated a js file having a wrong content
-    //this.index = {};
-
     // don't delete entry data, clear only assets
     this.data.forEach((item, key) => {
       if (item.assets != null) item.assets = [];

@@ -88,6 +88,12 @@ class AssetEntry {
   entryNamePrefix = '__bundler-plugin-entry__';
 
   /**
+   * Unique last index for each file with the same name.
+   * @type {Object<file: string, index: number>}
+   */
+  uniqueEntryNameIndex = {};
+
+  /**
    *
    * @param {{}} pluginOption
    * @param {Collection} collection
@@ -217,18 +223,6 @@ class AssetEntry {
     }
 
     return files;
-  }
-
-  /**
-   * Whether the entry is unique.
-   *
-   * @param {string} name The name of the entry.
-   * @param {string} file The source file.
-   * @return {boolean}
-   */
-  isUnique(name, file) {
-    const entry = this.entriesByName.get(name);
-    return !entry || entry.sourceFile === file;
   }
 
   /**
@@ -513,7 +507,8 @@ class AssetEntry {
         isStyle: this.pluginOption.isStyle(sourceFile),
       };
 
-      this.#add(entry, assetEntryOptions);
+      this.#cacheEntry(assetEntryOptions);
+      this.#setFilename(entry, assetEntryOptions);
     }
   }
 
@@ -539,7 +534,7 @@ class AssetEntry {
 
     this.removedEntries.delete(file);
 
-    if (this.#exists(name, file)) return;
+    if (this.#hasEntry(name, file)) return;
 
     const entries = {};
     const entrypoint = { import: [file], filename: '[name].html' };
@@ -594,19 +589,23 @@ class AssetEntry {
   /**
    * Add a script to webpack compilation.
    *
-   * @param {string} name
+   * @param {string|null} name The entry name.
    * @param {string} importFile The resource, including a query.
    * @param {string} filenameTemplate
    * @param {string} context
    * @param {string} issuer
-   * @return {boolean} Return true if new file was added, if a file exists then return false.
+   * @return {string} Return the unique entry name.
    */
   addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
+    name = this.#getUniqueEntryName(name, importFile);
+
     // skip duplicate entries
-    if (this.#exists(name, importFile)) {
-      return false;
+    if (this.#hasEntry(name, importFile)) {
+      return name;
     }
 
+    const compiler = this.compiler;
+    const compilation = this.compilation;
     let [sourceFile] = importFile.split('?', 1);
 
     const entryOptions = {
@@ -636,16 +635,25 @@ class AssetEntry {
       isTemplate: false,
     };
 
-    this.#add(entryOptions, assetEntryOptions);
-    this.compilationEntryNames.add(name);
-
-    const compiler = this.compiler;
-    const compilation = this.compilation;
     const { EntryPlugin } = compiler.webpack;
     const entryDependency = EntryPlugin.createDependency(importFile, { name });
 
-    compilation.addEntry(context, entryDependency, entryOptions, (err, module) => {
-      if (err) throw new Error(err);
+    this.#cacheEntry(assetEntryOptions);
+    this.compilationEntryNames.add(name);
+
+    compilation.addEntry(context, entryDependency, entryOptions, (error, module) => {
+      if (error) {
+        throw new Error(error.toString());
+      }
+
+      // fix #143: if the same entry already exists, it caused Webpack error:
+      // "Conflicting entry option filename () => {...} vs () => {...}".
+      // This is a Webpack issue, occurs unpredictably, after a random number of runs
+      // when the sequence of processing modules is changed sporadically.
+      if (module) {
+        // assign a custom filename function only after the module has been successfully created
+        this.#setFilename(entryOptions, assetEntryOptions);
+      }
     });
 
     // add missing dependencies after rebuild
@@ -653,16 +661,43 @@ class AssetEntry {
       new EntryPlugin(context, importFile, { name }).apply(compiler);
     }
 
-    return true;
+    return name;
   }
 
   /**
+   * @param {string|null} name The entry name.
+   * @param {string} file The source file.
+   * @return {string } Return unique entry name.
+   */
+  #getUniqueEntryName(name, file) {
+    if (!name) {
+      name = path.parse(file).name;
+    }
+
+    let uniqueName = name;
+    let hasEntry = this.compilation.entries.has(name);
+
+    // the entrypoint name must be unique, if already exists then add an index: `main` => `main.1`, etc.
+    if (hasEntry) {
+      // create unique name
+      if (!this.uniqueEntryNameIndex[name]) {
+        this.uniqueEntryNameIndex[name] = 1;
+      }
+      uniqueName += '.' + this.uniqueEntryNameIndex[name]++;
+    }
+
+    return uniqueName;
+  }
+
+  /**
+   * Sets the filename as a function for a given entry.
+   * This function processes the filename template and applies adjustments.
+   *
    * @param {EntryOptions} entry The Webpack entry option object.
    * @param {AssetEntryOptions} assetEntryOptions
-   * @private
    */
-  #add(entry, assetEntryOptions) {
-    const { name, originalName, filenameTemplate, outputPath } = assetEntryOptions;
+  #setFilename(entry, assetEntryOptions) {
+    const { originalName, filenameTemplate, outputPath } = assetEntryOptions;
 
     if (path.isAbsolute(outputPath)) {
       assetEntryOptions.publicPath = path.relative(this.pluginOption.getWebpackOutputPath(), outputPath);
@@ -675,6 +710,7 @@ class AssetEntry {
       let filename = filenameTemplate;
 
       if (isFunction(filenameTemplate)) {
+        // type PathData: https://webpack.js.org/configuration/output/#template-strings
         // clone the pathData object to modify the chunk object w/o side effects in the main compilation
         const pathDataCloned = { ...pathData };
         pathDataCloned.chunk = { ...pathDataCloned.chunk };
@@ -687,6 +723,9 @@ class AssetEntry {
         if (pathDataCloned.filename == null) {
           pathDataCloned.filename = assetEntryOptions.sourceFile;
         }
+        // note: resource is full path including URL queries
+        // TODO: undocumented non-standard additional property, should be perhaps into filename?
+        pathDataCloned.resource = assetEntryOptions.resource;
 
         filename = filenameTemplate(pathDataCloned, assetInfo);
       }
@@ -698,11 +737,19 @@ class AssetEntry {
       return filename;
     };
 
-    entry.filename = filenameFn;
-    assetEntryOptions.filenameFn = filenameFn;
+    entry.filename = assetEntryOptions.filenameFn = filenameFn;
+  }
+
+  /**
+   * Save already added entry to cache.
+   *
+   * @param {AssetEntryOptions} assetEntryOptions
+   */
+  #cacheEntry(assetEntryOptions) {
+    const { name, id } = assetEntryOptions;
 
     this.entriesByName.set(name, assetEntryOptions);
-    this.entriesById.set(assetEntryOptions.id, assetEntryOptions);
+    this.entriesById.set(id, assetEntryOptions);
   }
 
   /**
@@ -713,8 +760,9 @@ class AssetEntry {
    * @return {boolean}
    * @private
    */
-  #exists(name, importFile) {
+  #hasEntry(name, importFile) {
     const entry = this.entriesByName.get(name);
+
     return entry != null && entry.importFile === importFile;
   }
 
@@ -723,6 +771,7 @@ class AssetEntry {
    * Called only once when the plugin is applied.
    */
   clear() {
+    this.uniqueEntryNameIndex = {};
     this.idIndex = 1;
     this.data.clear();
     this.entriesByName.clear();
@@ -734,6 +783,16 @@ class AssetEntry {
    * Called before each new compilation after changes, in the serve/watch mode.
    */
   reset() {
+    // don't clear the uniqueEntryNameIndex
+    // test case:
+    // there are 3 entries: home.html, news.html and about.html
+    // 1. add the `script.js` to the home.html => script.js
+    // 2. add the `script.js` to the news.html => script.1.js
+    // 3. add the `script.js` to the about.html => script.2.js
+    // but when the index is cleared, then after adding the file with the same name will be not unique
+    // and is generated a js file having a wrong content
+    //this.uniqueEntryNameIndex = {};
+
     for (const entryName of this.compilationEntryNames) {
       const entry = this.entriesByName.get(entryName);
       if (entry) {
