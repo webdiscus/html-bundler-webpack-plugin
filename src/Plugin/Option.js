@@ -320,7 +320,7 @@ class Option {
     }
 
     this.autoPublicPath = false;
-    this.isUrlPublicPath = false;
+    this.urlPublicPath = false;
     this.rootPublicPath = false;
     this.isRelativePublicPath = false;
     this.webpackPublicPath = publicPath;
@@ -328,7 +328,7 @@ class Option {
     if (publicPath === 'auto') {
       this.autoPublicPath = true;
     } else if (/^(\/\/|https?:\/\/)/i.test(publicPath)) {
-      this.isUrlPublicPath = true;
+      this.urlPublicPath = true;
     } else if (!publicPath.startsWith('/')) {
       this.isRelativePublicPath = true;
     } else if (publicPath.startsWith('/')) {
@@ -506,6 +506,10 @@ class Option {
 
   isRootPublicPath() {
     return this.rootPublicPath === true;
+  }
+
+  isUrlPublicPath() {
+    return this.urlPublicPath === true;
   }
 
   hasPostprocess() {
@@ -695,7 +699,7 @@ class Option {
       return isWin ? pathToPosix(outputFilename) : outputFilename;
     }
 
-    if (this.isUrlPublicPath) {
+    if (this.isUrlPublicPath()) {
       const url = new URL(assetFile, this.webpackPublicPath);
       return url.href;
     }

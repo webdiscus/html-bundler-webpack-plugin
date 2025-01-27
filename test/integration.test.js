@@ -132,9 +132,6 @@ describe('plugin options', () => {
   test('extractComments = false', () => compareFiles('option-extract-comments-false'));
   test('extractComments = true', () => compareFiles('option-extract-comments-true'));
 
-  test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
-  test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
-
   // TODO: fix Error: Binary data does not match! on GitHub only (local works file)
   // test('renderStage, default', () =>
   //   compareFiles('option-renderStage-default', true, /.(html|html.gz|css|css.map|js|js.map|json)$/));
@@ -473,12 +470,16 @@ describe('special cases', () => {
 });
 
 describe('integrity, common use cases', () => {
+  test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
+  test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
+
   // TODO: implement and add tests for preload
 
   // TODO: fix issue on windows
   test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));
   test('script, link, publicPath=""', () => compareFiles('integrity-publicPath-empty'));
   test('script, link, publicPath="/"', () => compareFiles('integrity-publicPath-root'));
+  test('script, link, publicPath="https://example.site/"', () => compareFiles('integrity-publicPath-url'));
 
   test('script async, prod', () => compareFiles('integrity-script-async-prod'));
 

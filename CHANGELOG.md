@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.15.3 (2025-01-27)
+
+- fix: compilation fails if used the integrity option with the publicPath as an external URL
+- fix: improve error messages inc. error stack if async processes fail
+
 ## 4.15.2 (2025-01-22)
 
 - fix: unpredictably Webpack compilation fails after a random number of runs, #143

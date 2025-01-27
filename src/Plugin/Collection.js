@@ -992,10 +992,14 @@ class Collection {
               if (hasIntegrity && !inline) {
                 // path to asset relative by output.path
                 let pathname = asset.assetFile;
+
                 if (this.pluginOption.isAutoPublicPath()) {
                   pathname = path.join(entryDirname, pathname);
                 } else if (this.pluginOption.isRootPublicPath()) {
                   pathname = pathname.slice(1);
+                } else if (this.pluginOption.isUrlPublicPath()) {
+                  let publicPath = this.pluginOption.getPublicPath();
+                  pathname = pathname.replace(publicPath, '');
                 }
 
                 const assetContent = compilation.assets[pathname].source();

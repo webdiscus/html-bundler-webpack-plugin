@@ -1734,7 +1734,10 @@ class AssetCompiler {
         // }
 
         if (this.exceptions.size > 0) {
-          const messages = Array.from(this.exceptions).join('\n\n');
+          const messages = Array.from(this.exceptions)
+            .map((error) => (error.stack ? error.stack : error.toString()))
+            .reduce((previousValue, currentValue) => previousValue + currentValue, '');
+
           this.exceptions.clear();
           throw new Error(messages);
         }
