@@ -103,6 +103,7 @@ class Preload {
       return;
     }
 
+    const crossorigin = this.pluginOption.getCrossorigin();
     const preloadAssets = new Map();
     const LF = this.pluginOption.getLF();
     const indent = LF + detectIndent(content, insertPos - 1);
@@ -150,13 +151,14 @@ class Preload {
       if (conf) {
         if (Array.isArray(item.chunks)) {
           // js
-          for (let { chunkFile, assetFile } of item.chunks) {
+          for (let { chunkFile, assetFile, integrity } of item.chunks) {
             // sourceFiles contain only one file
             let sourceFiles = [item.resource];
             let outputFile = assetFile;
 
             if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
-              preloadAssets.set(assetFile, conf._opts);
+              let props = this.createPreloadAttributes(conf, { integrity: integrity, crossorigin });
+              preloadAssets.set(assetFile, props);
             }
           }
         } else {
@@ -167,19 +169,21 @@ class Preload {
           let outputFile = item.assetFile;
 
           if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
-            preloadAssets.set(item.assetFile, conf._opts);
+            let props = this.createPreloadAttributes(conf, { integrity: item.integrity, crossorigin });
+            preloadAssets.set(item.assetFile, props);
           }
         }
 
         // dynamic imported modules, asyncChunks
         if (Array.isArray(item.children)) {
-          for (let { chunkFile, assetFile, sourceFile } of item.children) {
+          for (let { chunkFile, assetFile, sourceFile, integrity } of item.children) {
             // sourceFiles contain only one file
             let sourceFiles = [sourceFile];
             let outputFile = assetFile;
 
             if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
-              preloadAssets.set(assetFile, conf._opts);
+              let props = this.createPreloadAttributes(conf, { integrity: integrity, crossorigin });
+              preloadAssets.set(assetFile, props);
             }
           }
         }
@@ -239,6 +243,22 @@ class Preload {
       const str = tags.join(indent) + indent;
       return content.slice(0, insertPos) + str + content.slice(insertPos);
     }
+  }
+
+  /**
+   * @param {Object} conf
+   * @param {string|undefined} integrity
+   * @param {string} crossorigin
+   * @return {Object} Returns preload attributes. It my contains integrity if exists.
+   */
+  createPreloadAttributes(conf, { integrity, crossorigin }) {
+    let opts = { ...conf._opts };
+
+    if (integrity) {
+      opts.attrs = { ...opts.attrs, integrity, crossorigin };
+    }
+
+    return opts;
   }
 
   /**

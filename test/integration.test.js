@@ -474,6 +474,7 @@ describe('integrity, common use cases', () => {
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
   // TODO: implement and add tests for preload
+  test('integrity for preloads', () => compareFiles('integrity-for-preload'));
 
   // TODO: fix issue on windows
   test('script, link, publicPath="auto"', () => compareFiles('integrity-publicPath-auto'));

@@ -656,6 +656,13 @@ class Option {
   }
 
   /**
+   * @return {string}
+   */
+  getCrossorigin() {
+    return this.webpackOptions.output.crossOriginLoading || 'anonymous';
+  }
+
+  /**
    * Get the output path of the asset.
    *
    * @param {string | null} assetFile The output asset filename relative by output path.

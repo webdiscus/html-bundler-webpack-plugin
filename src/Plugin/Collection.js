@@ -7,8 +7,8 @@ const Preload = require('./Preload');
 const { noHeadException } = require('./Messages/Exception');
 
 /** @typedef {import('webpack').Compilation} Compilation */
-/** @typedef {import("webpack/lib/Entrypoint")} Entrypoint */
-/** @typedef {import("webpack/lib/ChunkGroup")} ChunkGroup */
+/** @typedef {import('webpack/lib/Entrypoint')} Entrypoint */
+/** @typedef {import('webpack/lib/ChunkGroup')} ChunkGroup */
 
 /**
  * @typedef {Object} CollectionData
@@ -57,6 +57,10 @@ class Collection {
   /** @type {Dependency} */
   dependency = null;
 
+  /**
+   * Map of assets by source file.
+   * @type {Map<string, any>}
+   */
   assets = new Map();
 
   /** @type {Map<string, {entry: AssetEntryOptions, assets: Array<{}>} >} Entries data */
@@ -913,10 +917,15 @@ class Collection {
         return Promise.resolve();
       }
 
+      /**
+       * Map of assets by output file.
+       * @type {Map<string, any>}
+       */
+      const assetsCache = new Map();
+
       const entryDirname = path.dirname(entryFilename);
       const importedStyles = [];
       const parseOptions = new Map();
-      const assetIntegrity = new Map();
       let hasInlineSvg = false;
       let content = rawSource.source();
 
@@ -1004,16 +1013,17 @@ class Collection {
 
                 const assetContent = compilation.assets[pathname].source();
                 asset.integrity = Integrity.getIntegrity(compilation, assetContent, pathname);
-                assetIntegrity.set(asset.assetFile, asset.integrity);
+                assetsCache.set(asset.assetFile, asset);
 
                 if (!parseOptions.has(type)) {
                   parseOptions.set(type, {
                     tag: 'link',
                     attributes: ['href'],
-                    filter: ({ attribute, attributes }) =>
-                      !attributes.hasOwnProperty('integrity') &&
-                      attribute === 'href' &&
-                      attributes.rel === 'stylesheet',
+                    // disable ignoring tags already containing integrity attribute
+                    // filter: ({ attribute, attributes }) =>
+                    //   !attributes.hasOwnProperty('integrity') &&
+                    //   attribute === 'href' &&
+                    //   attributes.rel === 'stylesheet',
                   });
                 }
               }
@@ -1021,18 +1031,22 @@ class Collection {
             case Collection.type.script:
               // 1.2 compute JS integrity
               if (hasIntegrity) {
-                for (const chunk of asset.chunks) {
+                // combine sync and async (dynamic imported) chunks into one array
+                const chunks = [...asset.chunks, ...asset.children];
+
+                // sync chunks
+                for (const chunk of chunks) {
                   if (!chunk.inline) {
                     const assetContent = compilation.assets[chunk.chunkFile].source();
                     chunk.integrity = Integrity.getIntegrity(compilation, assetContent, chunk.chunkFile);
-                    assetIntegrity.set(chunk.assetFile, chunk.integrity);
+                    assetsCache.set(chunk.assetFile, chunk);
 
                     if (!parseOptions.has(type)) {
                       parseOptions.set(type, {
                         tag: 'script',
                         attributes: ['src'],
-                        filter: ({ attribute, attributes }) =>
-                          !attributes.hasOwnProperty('integrity') && attribute === 'src',
+                        // disable ignoring tags already containing integrity attribute
+                        // filter: ({ attribute, attributes }) => !attributes.hasOwnProperty('integrity') && attribute === 'src',
                       });
                     }
                   }
@@ -1057,18 +1071,12 @@ class Collection {
         hasInlineSvg ? this.assetInline.inlineSvg(content, entryFilename) : content
       );
 
-      // 7. inject preloads
-      if (this.pluginOption.isPreload()) {
-        promise = promise.then(
-          (content) => this.preload.insertPreloadAssets(content, entry.filename, this.data) || content
-        );
-      }
-
-      // 8. inject integrity
+      // 7. inject integrity
       if (hasIntegrity) {
         promise = promise.then((content) => {
           // 2. parse generated html for `link` and `script` tags
           const parsedResults = [];
+          const crossorigin = this.pluginOption.getCrossorigin();
 
           for (const opts of parseOptions.values()) {
             parsedResults.push(...HtmlParser.parseTag(content, opts));
@@ -1079,15 +1087,23 @@ class Collection {
           let pos = 0;
           let output = '';
 
-          for (const { tag, parsedAttrs, attrs, startPos, endPos } of parsedResults) {
+          for (const { type, tag, parsedAttrs, attrs, startPos, endPos } of parsedResults) {
             if (!attrs || parsedAttrs.length < 1) continue;
 
             const assetFile = attrs.href || attrs.src;
-            const integrity = assetIntegrity.get(assetFile);
+            const asset = assetsCache.get(assetFile) || {};
+            const { integrity } = asset;
+            const integrityOrigin = attrs.integrity;
+
+            // update the integrity that was calculated to the original value parsed in HTML
+            if (integrityOrigin) {
+              asset.integrity = integrityOrigin;
+              continue;
+            }
 
             if (integrity) {
               attrs.integrity = integrity;
-              attrs.crossorigin = this.pluginOption.webpackOptions.output.crossOriginLoading || 'anonymous';
+              attrs.crossorigin = crossorigin;
 
               let attrsStr = '';
               for (const attrName in attrs) {
@@ -1102,6 +1118,13 @@ class Collection {
 
           return output + content.slice(pos);
         });
+      }
+
+      // 8. inject preloads containing integrity attribute
+      if (this.pluginOption.isPreload()) {
+        promise = promise.then(
+          (content) => this.preload.insertPreloadAssets(content, entry.filename, this.data) || content
+        );
       }
 
       // 9. beforeEmit hook allows plugins to change the html after chunks and inlined assets are injected

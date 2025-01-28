@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.16.0 (2025-01-28)
+
+- feat: add integrity attribute for preload tags if integrity option on, #145
+
 ## 4.15.3 (2025-01-27)
 
 - fix: compilation fails if used the integrity option with the publicPath as an external URL
