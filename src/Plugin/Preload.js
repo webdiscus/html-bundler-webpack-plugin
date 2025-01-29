@@ -1,5 +1,6 @@
 const path = require('path');
 const { detectIndent, getFileExtension } = require('../Common/Helpers');
+const { HtmlParser } = require('../Common/HtmlParser');
 const { optionPreloadAsException } = require('./Messages/Exception');
 
 /**
@@ -108,6 +109,7 @@ class Preload {
     const LF = this.pluginOption.getLF();
     const indent = LF + detectIndent(content, insertPos - 1);
     const groupBy = {};
+    let hasImage = false;
 
     // normalize preload attributes and create sorted groups in the order of the specified 'preload' options
     for (const conf of options) {
@@ -127,6 +129,7 @@ class Preload {
 
       // for the `font` type, the `crossorigin` attribute is mandatory, if it is not defined, set to default value
       if (as === 'font' && !('crossorigin' in attrs)) attrs.crossorigin = true;
+      if (as === 'image') hasImage = true;
 
       // whether the 'type' property exist regardless of a value;
       // if the property exists and have the undefined value, exclude this attribute in generating preload tag
@@ -140,6 +143,9 @@ class Preload {
 
       groupBy[as] = [];
     }
+
+    // pick up image attributes to preload
+    const imageAttributes = hasImage ? this.#getImageAttributes(content) : new Map();
 
     // prepare a flat array with preload assets
     for (let item of data.assets) {
@@ -170,6 +176,12 @@ class Preload {
 
           if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
             let props = this.createPreloadAttributes(conf, { integrity: item.integrity, crossorigin });
+            let imgAttrs = imageAttributes.get(item.assetFile);
+
+            if (imgAttrs) {
+              props.attrs = Object.assign(props.attrs, imgAttrs);
+            }
+
             preloadAssets.set(item.assetFile, props);
           }
         }
@@ -204,7 +216,8 @@ class Preload {
             : assetItem.assetFile;
 
           if (this.pluginOption.applyAdvancedFiler({ sourceFiles, outputFile }, conf._opts.filter)) {
-            preloadAssets.set(outputFile, conf._opts);
+            let props = this.createPreloadAttributes(conf);
+            preloadAssets.set(outputFile, props);
           }
         }
       }
@@ -212,11 +225,11 @@ class Preload {
 
     // save generated preload tags for verbose
     data.preloads = [];
-    for (const [filename, opts] of preloadAssets.entries()) {
-      const attrs = { ...opts.attrs };
+    for (const [filename, props] of preloadAssets.entries()) {
+      const { attrs } = props;
 
       attrs.href = filename;
-      if (!opts.hasType) {
+      if (!props.hasType) {
         const ext = getFileExtension(filename);
         attrs.type = mimeType[attrs.as]?.[ext] || attrs.as + '/' + ext;
       }
@@ -246,19 +259,59 @@ class Preload {
   }
 
   /**
-   * @param {Object} conf
-   * @param {string|undefined} integrity
-   * @param {string} crossorigin
-   * @return {Object} Returns preload attributes. It my contains integrity if exists.
+   * @param {Object} conf The source options from configuration.
+   * @param {string|undefined} integrity The integrity, used by script and style only.
+   * @param {string} crossorigin The attribute required for integrity, used by script and style only.
+   * @return {Object} Returns new object of preload attributes. It may contains integrity if exists.
    */
-  createPreloadAttributes(conf, { integrity, crossorigin }) {
-    let opts = { ...conf._opts };
+  createPreloadAttributes(conf, { integrity, crossorigin } = {}) {
+    let props = { ...conf._opts };
+
+    // create new object for attributes, to keep original config unchanged
+    props.attrs = { ...props.attrs };
 
     if (integrity) {
-      opts.attrs = { ...opts.attrs, integrity, crossorigin };
+      props.attrs.integrity = integrity;
+      props.attrs.crossorigin = crossorigin;
     }
 
-    return opts;
+    return props;
+  }
+
+  /**
+   * Pick up image attributes to preload.
+   *
+   * @param {string} content
+   * @return {Map<string, any>}
+   */
+  #getImageAttributes(content) {
+    const imageAttributes = new Map();
+    const parseOptions = {
+      tag: 'img',
+      attributes: ['srcset', 'sizes'],
+    };
+    const imageTags = HtmlParser.parseTag(content, parseOptions);
+
+    for (const tag of imageTags) {
+      const attrs = {};
+      let hasAttrs = false;
+
+      if (tag.attrs.srcset) {
+        attrs.imagesrcset = tag.attrs.srcset.replaceAll(/\n|\b|\s{2,}/g, '');
+        hasAttrs = true;
+      }
+
+      if (tag.attrs.sizes) {
+        attrs.imagesizes = tag.attrs.sizes.replaceAll(/\n|\b|\s{2,}/g, '');
+        hasAttrs = true;
+      }
+
+      if (hasAttrs) {
+        imageAttributes.set(tag.attrs.src, attrs);
+      }
+    }
+
+    return imageAttributes;
   }
 
   /**

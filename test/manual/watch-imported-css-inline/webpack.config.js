@@ -2,7 +2,8 @@ const path = require('path');
 const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-  mode: 'production',
+  //mode: 'production',
+  mode: 'development', // test inline big JS file after fatal error
   stats: 'minimal',
 
   output: {

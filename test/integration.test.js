@@ -176,7 +176,9 @@ describe('plugin option preload', () => {
 
   test('publicPath absolute', () => compareFiles('option-preload-publicPath-absolute'));
   test('publicPath url', () => compareFiles('option-preload-publicPath-url'));
+
   test('responsive images', () => compareFiles('option-preload-responsive-images'));
+  test('preload img srcset attribute', () => compareFiles('option-preload-img-srcset'));
 
   // special cases
   test('resolve preloaded script and style', () => compareFiles('resolve-preload-script-style'));

@@ -42,12 +42,10 @@ module.exports = {
         {
           test: /\.(png|jpe?g|webp)\?.*size=100/,
           as: 'image',
-          attributes: { media: '(max-width: 100px)' },
         },
         {
           test: /\.(png|jpe?g|webp)\?.*size=300/,
           as: 'image',
-          attributes: { media: '(max-width: 300px)' },
         },
         {
           // note: allow match images with a query, like image.png?size=50, but not image.png?sizes[]=50,sizes[]=100

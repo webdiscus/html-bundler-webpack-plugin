@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.17.0 (2025-01-29)
+
+- feat: pick up the `srcset` and `sizes` attributes for image preload, #149
+
 ## 4.16.0 (2025-01-28)
 
 - feat: add integrity attribute for preload tags if integrity option on, #145
