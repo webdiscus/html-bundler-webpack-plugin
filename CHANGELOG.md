@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.18.0 release (2025-02-03)
+
+- chore: bump the version for release
+- docs: add documentation for the router option
+
 ## 4.18.0-beta.2 (2025-02-03)
 
 - feat: if the `router` option is specified and not disabled, 

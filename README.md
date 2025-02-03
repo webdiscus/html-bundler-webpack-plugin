@@ -57,6 +57,7 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
   - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
   Source files will be resolved, processed and auto-replaced with correct URLs in the generated HTML.
+- **Resolves** [route URLs](#option-router) in `a.href`, useful for navigation in multi-pages.
 - **Inlines** [JS](#recipe-inline-js), [CSS](#recipe-inline-css) and [Images](#recipe-inline-image) into HTML. See [how to inline all resources](#recipe-inline-all-assets-to-html) into single HTML file.
 - Supports the [HMR for CSS](#option-css-hot) to update CSS in browser without a full reload.
 - Watches for changes in the [data file](#option-entry-data) linked to the template in the plugin option.
@@ -175,6 +176,9 @@ See full list of all [plugin options](#toc-plugin-options).
 
 [Open an example in StackBlitz](https://stackblitz.com/edit/hello-world-webpack?file=webpack.config.js)
 
+> [!TIP]
+> To resolve route URLs in `a.href` for navigation across multiple pages, you can enable the [router](#option-router) option.
+
 ---
 > 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.
 > 
@@ -227,6 +231,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
+- **NEW** added [router](#option-router) to resolve routes in `a.href`, useful for multi-pages (since `v4.18.0`).
 - **NEW** you can include Markdown `*.md` files in your HTML template (since `v4.6.0`).
 - **NEW** added supports the [HMR for CSS](#option-css-hot) (since `v4.5.0`).
 - **NEW** added supports the [multiple configurations](https://webpack.js.org/configuration/configuration-types/#exporting-multiple-configurations).
@@ -503,6 +508,8 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [js](#option-js) (options for JS)
    - [css](#option-css) (options for CSS)
    - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
+   - [sources](#option-sources) (🔗reference to [loaderOptions.sources](#loader-option-sources))
+   - [router](#option-router) (enable resolving of route URLs in `a.href`)
    - [beforePreprocessor](#option-before-preprocessor) (callback, 🔗reference to [loaderOptions.beforePreprocessor](#loader-option-before-preprocessor))
    - [preprocessor](#option-preprocessor) (callback or string, 🔗reference to [loaderOptions.preprocessor](#loader-option-preprocessor))
    - [preprocessorOptions](#option-preprocessor) (🔗reference to [loaderOptions.preprocessorOptions](#loader-option-preprocessorOptions))
@@ -2207,6 +2214,165 @@ Please see the details below under the [data](#loader-option-data) loader option
 
 #### [↑ back to contents](#contents)
 
+<a id="option-sources" name="option-sources"></a>
+
+### `sources`
+
+Since the `v4.18.0`, the `sources` plugin option is the reference to [loaderOptions.sources](#loader-option-sources).
+
+Now it is possible to define the `sources` option directly in the plugin options to simplify the config.
+
+
+The NEW syntactic "sugar":
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  // new reference to the loaderOptions.sources
+  sources: [...],
+}),
+```
+
+The old syntax is still valid and will never be deprecated:
+
+```js
+new HtmlBundlerPlugin({
+  entry: {
+    index: './src/views/home.ejs',
+  },
+  loaderOptions: {
+    // original option is under loaderOptions
+    sources: [...],
+  },
+}),
+```
+
+#### [↑ back to contents](#contents)
+
+<a id="option-router" name="option-router"></a>
+
+### `router`
+
+```ts
+type Router =
+  | boolean
+  | {
+      enabled?: boolean;
+      test?: RegExp | Array<RegExp>;
+      rewriteIndex?: false | string;
+      resolve?: (props: {
+        sourceRoute: string;
+        outputRoute: string;
+        sourceFile: string;
+        outputFile: string;
+      }) => void | string;
+    };
+```
+
+- `enabled` - Enable / disable the route resolving. Defaults `true`.
+- `test` - The router resolves values matching to the RegExp only.\
+   Defaults, defined the same as [plugin.test](#option-test) option to match templates of used [preprocessor](#option-preprocessor).
+- `rewriteIndex` - Rewrite the `index.html`.
+   - If [publicPath](#webpack-option-output-publicpath) is `auto`, replaces `index.html` with the specified string, should be on of: `'.'`, `''` (empty).
+   - If [publicPath](#webpack-option-output-publicpath) is not empty, replaces `index.html` with `''` (empty) regardless of specified value.
+   - If the route URL contains a query or a segment (e.g. `index.html#contact`), the `rewriteIndex` is ignored.
+- `resolve()` - Allow modify the resolved route URL.\
+   The argument is the object: 
+   - `sourceRoute` - The resolved attribute value (absolute path).
+   - `outputRoute` - The output URL regards [publicPath](#webpack-option-output-publicpath), e.g. by `auto` publicPath is relative to `outputFile`.
+   - `sourceFile` - The absolute path to the template file where is resolved the `sourceRoute`.
+   - `outputFile` - The output HTML filename of `sourceFile`, relative to the `dist/` directory.\
+   Return:
+     - void - Do nothing.
+     - string - The returned string replaces the value.
+
+The `router` option enable resolving of `a.href` (by defaults) values as a route URL to inner pages.
+This is useful for multi-page sites.
+
+Using the [sources](#loader-option-sources) option you can specify any tag attribute which should be resolved.
+
+> [!NOTE]
+> The router resolves routes specified in the `entry` plugin option only. An external URL will be ignored.
+
+
+```js
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+module.exports = {
+  resolve: {
+    alias: {
+      // recommended to use the alias for the route in templates
+      '@views': path.join(__dirname, 'src/views/pages'),
+    },
+  },
+  plugins: [
+    new HtmlBundlerPlugin({
+      entry: {
+        // multi-pages
+        index: './src/views/pages/home/index.html',
+        'news/sport/index': './src/views/pages/news/sport/index.html',
+      },
+      router: true, // enable resolving of route URLs in a.href
+    }),
+  ],
+};
+```
+
+In templates, specify the `source path` to the linked template. 
+The linked template must be specified in the `entry` plugin option too.
+
+The source _./src/views/pages/index.html_
+```html
+<html>
+<body>
+  <h1>Home</h1>
+  <a href="@views/home/index.html">Home</a> | <a href="@views/news/sport/index.html">Sport</a>
+</body>
+</html>
+```
+
+The source _./src/views/pages/news/sport/index.html_
+```html
+<html>
+<body>
+  <h1>Sports News</h1>
+  <a href="@views/home/index.html">Home</a> | <a href="@views/news/sport/index.html">Sport</a>
+</body>
+</html>
+```
+
+> [!TIP]
+> If you use a template, you can include navigation as a partial on all pages,
+> since the route URLs will be automatically resolved from their source files.
+
+The generated _dist/index.html_
+
+```html
+<html>
+<body>
+  <h1>Home</h1>
+  <a href="index.html">Home</a> | <a href="news/sport/index.html">Sport</a>
+</body>
+</html>
+```
+
+The generated _dist/news/sport/index.html_
+
+```html
+<html>
+<body>
+  <h1>Sports News</h1>
+  <a href="../../index.html">Home</a> | <a href="index.html">Sport</a>
+</body>
+</html>
+```
+
+> [!TIP]
+> You can use the `router.rewriteIndex` option to rewrite the `index.html`.
+
+#### [↑ back to contents](#contents)
+
 <a id="option-before-preprocessor" name="option-before-preprocessor"></a>
 
 ### `beforePreprocessor`
@@ -3259,6 +3425,10 @@ The default loader handles HTML files and `EJS`-like templates.
 <a id="loader-option-sources" name="loader-option-sources"></a>
 
 ### `sources`
+
+> ℹ️ **Note**
+> 
+> Since the `v4.18.0` is available new syntax, the [sources](#option-sources) option should be defined directly in the plugin option to simplify the config.
 
 Type:
 
