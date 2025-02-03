@@ -19,17 +19,23 @@ const pathToPosix = (value) => value.replace(/\\/g, '/');
 const isFunction = (value) => typeof value === 'function';
 
 /**
+ * Whether the request is a URL.
+ *
+ * Matches:
+ *  - https://example.com/img.png
+ *  - http://example.com/img.png
+ *  - ftp://example.com/img.png
+ *  - whatsapp://send?abid=1234567890&text=Hello
+ *  - something://example.com/img.png
+ *  - //img.png
+ *
+ * But not matches:
+ *  - /img.png
+ *
  * @param {string} request
  * @return {boolean}
  */
-const isUrl = (request) => {
-  return (
-    request.startsWith('//') ||
-    request.startsWith('https://') ||
-    request.startsWith('http://') ||
-    request.startsWith('ftp://')
-  );
-};
+const isUrl = (request) => /^(?:[a-z]+:)?\/\//.test(request);
 
 /**
  * Find a webpack plugin by instance name.
@@ -98,6 +104,22 @@ const addQueryParam = (request, name, value) => {
 };
 
 /**
+ * Split an URL to two parts, keeping ? or # in the second part.
+ *
+ * @param {string} url
+ * @return {[string, string]}
+ */
+const splitUrl = (url) => {
+  const match = url.match(/[\?#]/);
+
+  if (!match) return [url, ''];
+
+  const index = match.index;
+
+  return [url.slice(0, index), url.slice(index)];
+};
+
+/**
  * Delete form the request a query parameter.
  *
  * @param {string} request
@@ -148,6 +170,22 @@ const deepMerge = (a, b) => {
         : structuredClone(b[key] !== undefined ? b[key] : a[key]);
   }
   return result;
+};
+
+/**
+ * Whether at least one regular expression in a giving array matches the value.
+ *
+ * @param {string} value
+ * @param {Array<RegExp>} expressions
+ * @return {boolean}
+ */
+const testRegExpArray = (value, expressions) => {
+  if (value == null) return false;
+
+  // if is an URL, get it w/o a query
+  const [file] = value.split(/[\?#]/, 1);
+
+  return expressions.some((regexp) => regexp.test(file));
 };
 
 /**
@@ -237,10 +275,12 @@ module.exports = {
   parseQuery: (request) => parseRequest(request).query,
   getQueryParam,
   addQueryParam,
+  splitUrl,
   deleteQueryParam,
   getFixedUrlWithParams,
   deepMerge,
   detectIndent,
+  testRegExpArray,
   outToConsole,
   parseVersion,
   compareVersions,

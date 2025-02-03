@@ -1,4 +1,5 @@
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
+const { isUrl } = require('../Common/Helpers');
 
 class Template {
   /**
@@ -9,10 +10,10 @@ class Template {
    * @param {string|number} entryId The entry id where is loaded the resource.
    * @param {HtmlBundlerPlugin.Hooks} hooks The plugin hooks.
    * @param {Loader|null} loader
-   * @param {Option} loaderOption
    * @return {string}
    */
-  static resolve({ content, issuer, entryId, hooks, loader, loaderOption }) {
+  static resolve({ content, issuer, entryId, hooks, loader }) {
+    const loaderOption = loader.loaderOption;
     const sources = loaderOption.getSources();
 
     if (sources === false) {
@@ -33,35 +34,37 @@ class Template {
     let pos = 0;
 
     for (let { type, tag, raw, parsedAttrs } of parsedTags) {
-      for (let { attr, value, startPos, endPos, quote, inEscapedDoubleQuotes } of parsedAttrs) {
-        if (!value) continue;
+      for (let { attr, value, resolvedValue, startPos, endPos, quote, inEscapedDoubleQuotes } of parsedAttrs) {
+        if (resolvedValue == null) {
+          if (!value) continue;
 
-        const result = this.resolveFile({
-          loader,
-          isBasedir,
-          type,
-          value,
-          issuer,
-          entryId,
-          inEscapedDoubleQuotes,
-        });
+          const result = this.resolveFile({
+            loader,
+            isBasedir,
+            type,
+            value,
+            issuer,
+            entryId,
+            inEscapedDoubleQuotes,
+          });
 
-        // skip not resolvable value, e.g., URL
-        if (!result) continue;
+          // skip not resolvable value, e.g., URL
+          if (!result) continue;
 
-        const { resolvedFile, requireExpression } = result;
-        const hookResult = hooks.resolveSource.call(raw, {
-          type,
-          tag,
-          attribute: attr,
-          value,
-          resolvedFile,
-          issuer,
-          inEscapedDoubleQuotes,
-        });
+          const { resolvedFile, requireExpression } = result;
+          const hookResult = hooks.resolveSource.call(raw, {
+            type,
+            tag,
+            attribute: attr,
+            value,
+            resolvedFile,
+            issuer,
+            inEscapedDoubleQuotes,
+          });
 
-        // note: if the hook returns `undefined`, then the hookResult contains the value of the first argument
-        const resolvedValue = hookResult && hookResult !== raw ? hookResult : requireExpression;
+          // note: if the hook returns `undefined`, then the hookResult contains the value of the first argument
+          resolvedValue = hookResult && hookResult !== raw ? hookResult : requireExpression;
+        }
 
         // enclose the value in quotes
         if (!quote) quote = '';
@@ -86,6 +89,7 @@ class Template {
    * Ignore:
    *  - https://example.com/style.css
    *  - http://example.com/style.css
+   *  - whatsapp://send?abid=1234567890&text=Hello
    *  - //style.css
    *  - /style.css (ignore only if `loader.root` is false)
    *  - javascript:alert('hello')
@@ -97,7 +101,7 @@ class Template {
    *  - C:\path\to\file.ext
    *  - image.png?{size:600}
    *
-   * @param {Loader} loader
+   * @param {Loader} loader The Loader instance.
    * @param {boolean} isBasedir Whether is used the `root` option.
    * @param {string} type The type of source: 'style', 'script', 'asset'.
    * @param {string} value The attribute value to resolve as an absolute file path.
@@ -111,10 +115,10 @@ class Template {
 
     if (
       (!isBasedir && value.startsWith('/')) ||
-      value.startsWith('//') ||
+      isUrl(value) ||
       value.startsWith('#') ||
       value.startsWith('\\u0027') ||
-      (value.indexOf(':') > 0 && value.indexOf(':\\') < 0 && value.indexOf('?{') < 0)
+      (value.includes(':') && !value.includes(':\\') && !value.includes('?{'))
     ) {
       return false;
     }

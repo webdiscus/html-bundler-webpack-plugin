@@ -77,7 +77,7 @@ class Preload {
       const issuerDir = path.dirname(issuer.filename);
       const webRootPath = path.posix.join(issuerDir, assetFile);
 
-      assetFile = this.pluginOption.getAssetOutputFile(webRootPath, entry.filename);
+      assetFile = this.pluginOption.getOutputFilename(webRootPath, entry.filename);
     }
 
     return assetFile;

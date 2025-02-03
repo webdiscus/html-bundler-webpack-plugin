@@ -1463,7 +1463,7 @@ class AssetCompiler {
 
         const resolveAssetFile = (match, file) =>
           isAutoPublicPath
-            ? this.pluginOption.getAssetOutputFile(file, issuerFilename)
+            ? this.pluginOption.getOutputFilename(file, issuerFilename)
             : path.posix.join(publicPath, file);
 
         const cssContent = this.cssExtractModule.apply(inlineSources, (content) =>
@@ -1485,7 +1485,7 @@ class AssetCompiler {
       // CSS saved into file
       if (sources.length) {
         const assetFile = filename;
-        const outputFilename = this.pluginOption.getAssetOutputFile(assetFile, entryFilename);
+        const outputFilename = this.pluginOption.getOutputFilename(assetFile, entryFilename);
 
         this.collection.setData(
           entry,
@@ -1507,7 +1507,7 @@ class AssetCompiler {
 
           const resolveAssetFile = (match, file) =>
             isAutoPublicPath
-              ? this.pluginOption.getAssetOutputFile(file, issuerFilename)
+              ? this.pluginOption.getOutputFilename(file, issuerFilename)
               : path.posix.join(publicPath, file);
 
           const cssContent = this.cssExtractModule.apply(sources, (content) =>

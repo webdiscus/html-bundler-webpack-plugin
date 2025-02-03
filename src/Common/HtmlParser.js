@@ -173,20 +173,29 @@ class HtmlParser {
         const attrValue = attrs[attrName];
         const attrData = attrsData[attrName];
         const parsedAttr = this.parseAttributeValue(attrName, attrValue, attrData);
-        let res = true;
+        let resolvedValue = true;
 
         if (filter) {
           const { parsedValue } = parsedAttr;
-          res =
-            filter({ tag, attribute: attrName, value: attrValue, parsedValue, attributes: attrs, resourcePath }) !==
-            false;
+          resolvedValue = filter({
+            tag,
+            attribute: attrName,
+            value: attrValue,
+            parsedValue,
+            attributes: attrs,
+            resourcePath,
+          });
         }
 
-        if (res === true) {
+        if (resolvedValue !== false) {
           if (parsedAttr.attrs) {
             parsedAttrs.push(...parsedAttr.attrs);
           } else {
             parsedAttrs.push(parsedAttr);
+          }
+
+          if (typeof resolvedValue === 'string') {
+            parsedAttr.resolvedValue = resolvedValue;
           }
         }
       }

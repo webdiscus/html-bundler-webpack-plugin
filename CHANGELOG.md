@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.18.0-beta.1 (2025-02-03)
+
+- feat: revert improvement of the `sources[].filter()` function introduced in beta.0, it returns a boolean or void only
+- feat: remove the the `sources[].postprocess()` function, introduced in beta.0
+- feat: add the experimental `router` plugin option.
+
+## 4.18.0-beta.0 (2025-02-01)
+
+- feat: the loader option `loaderOptions.sources` in now available directly in plugin options.
+- feat: auto resolve source path in a.href and replaces it with output filename regards the publicPath
+- feat: improve the `sources[].filter()` function, it can now return a string to modify the original value
+- feat: add the `sources[].postprocess()` function, called after resolving output filenames\
+   **NOTE:** `postprocess` works only for `a.href` contained any `*.html` file
+- fix: does not resolve an attribute containing a specific link, e.g. `whatsapp://send?abid=1234567890&text=Hello`
+
 ## 4.17.0 (2025-01-29)
 
 - feat: pick up the `srcset` and `sizes` attributes for image preload, #149
@@ -61,7 +76,7 @@
 
 ## 4.12.1 (2025-01-12)
 
-- fix: incorrect output of preload tag if "crossorigin: true", #139
+- fix: incorrect output of preload tag if `crossorigin: true`, #139
 - fix: if `as=font` is used in preload and the `crossorigin` is not defined,
        it will be added automatically, because the `crossorigin` is mandatory for `font` type
 
@@ -110,7 +125,7 @@
 
 ## 4.10.4 (2024-12-18)
 
-fix: fail rebuild after changed css file if no html entry defined, #132
+- fix: fail rebuild after changed css file if no html entry defined, #132
 
 ## 4.10.3 (2024-12-13)
 
@@ -140,7 +155,7 @@ fix: fail rebuild after changed css file if no html entry defined, #132
 
 ## 4.9.0 (2024-12-07)
 
-- feat: using serve/watch, after a partial file is modified all entry point templates will be rebuilt, #127.\
+- feat: rebuilt all entry point templates by serve/watch, after a partial file is modified, #127.\
   **The problem:**
   Webpack doesn't know which partials are used in which templates, so Webpack can't rebuild the main template (entrypoint) where a partial has changed. 
 

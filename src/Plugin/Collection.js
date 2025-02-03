@@ -1,7 +1,7 @@
 const path = require('path');
 const { minify } = require('html-minifier-terser');
 const { HtmlParser, comparePos } = require('../Common/HtmlParser');
-const { getFixedUrlWithParams } = require('../Common/Helpers');
+const { getFixedUrlWithParams, splitUrl } = require('../Common/Helpers');
 const Integrity = require('./Extras/Integrity');
 const Preload = require('./Preload');
 const { noHeadException } = require('./Messages/Exception');
@@ -65,6 +65,9 @@ class Collection {
 
   /** @type {Map<string, {entry: AssetEntryOptions, assets: Array<{}>} >} Entries data */
   data = new Map();
+
+  /** @type {Map<string, Set<string> >} Route data. Inner pages detected in the template. */
+  innerRoute = new Map();
 
   // TODO: implement
   /** @type {Map<string, string | Array<string>>} The map of source file to output file */
@@ -341,7 +344,7 @@ class Collection {
           }
 
           const inline = this.pluginOption.isInlineJs(resource, chunkFile);
-          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
+          const assetFile = this.pluginOption.getOutputFilename(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
           data.chunks.push({ inline, chunkFile, assetFile });
@@ -355,7 +358,7 @@ class Collection {
           }
 
           const inline = this.pluginOption.isInlineJs(resource, chunkFile);
-          const assetFile = this.pluginOption.getAssetOutputFile(chunkFile, entryFile);
+          const assetFile = this.pluginOption.getOutputFilename(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
           data.children.push({ inline, chunkFile, assetFile, sourceFile });
@@ -797,6 +800,21 @@ class Collection {
   }
 
   /**
+   * @param {string} sourceFile The source file of an inner page.
+   * @param {string} issuer The template file where was detected the source file of an inner page.
+   */
+  saveInnerRoute(sourceFile, issuer) {
+    let issuerRoutes = this.innerRoute.get(issuer);
+
+    if (!issuerRoutes) {
+      issuerRoutes = new Set();
+      this.innerRoute.set(issuer, issuerRoutes);
+    }
+
+    issuerRoutes.add(sourceFile);
+  }
+
+  /**
    * Normalize style assets defined in html assets.
    *
    * When output CSS is a file, then is used a reference to the assets for later adding the resources.
@@ -902,11 +920,26 @@ class Collection {
     const hooks = this.hooks;
     const promises = [];
 
+    // router
+    //const isAutoPublicPath = this.pluginOption.isAutoPublicPath();
+    //const publicPath = this.pluginOption.getPublicPath();
+    const entrySourceFiles = new Map();
+    const isRouterEnabled = this.pluginOption.isRouterEnabled();
+    const routerOptions = this.pluginOption.getRouter();
+    const resolveRoute = this.pluginOption.getCustomRouteResolver();
+
     this.#normalizeData();
     this.#prepareScriptData();
 
     // TODO: update this.data.assets[].asset.resource after change the filename in a template
     //  - e.g. src="./main.js?v=1" => ./main.js?v=123 => WRONG filename is replaced
+
+    // prepare map source to output file
+    if (isRouterEnabled) {
+      for (const [entryFilename, { entry, assets }] of this.data) {
+        entrySourceFiles.set(entry.resource, entryFilename);
+      }
+    }
 
     for (const [entryFilename, { entry, assets }] of this.data) {
       const rawSource = compilation.assets[entryFilename];
@@ -923,6 +956,7 @@ class Collection {
        */
       const assetsCache = new Map();
 
+      const resourcePath = entry.resource;
       const entryDirname = path.dirname(entryFilename);
       const importedStyles = [];
       const parseOptions = new Map();
@@ -955,6 +989,54 @@ class Collection {
       if (this.pluginOption.hasPostprocess()) {
         // TODO:  update readme for postprocess
         promise = promise.then((value) => this.pluginOption.postprocess(value, templateInfo, compilation) || value);
+      }
+
+      // 2.1 postprocess of resolved page URL in a.href
+      const routesPages = this.innerRoute.get(resourcePath);
+
+      if (isRouterEnabled && routesPages) {
+        promise = promise.then((content) => {
+          const sourceFile = resourcePath;
+          const outputFile = entryFilename;
+
+          // sourceRoute is the resolved value of a tag attribute defined in sources option
+          for (let sourceRoute of routesPages) {
+            const [sourceRoutePath, sourceRouteQuery] = splitUrl(sourceRoute);
+            const outputValue = entrySourceFiles.get(sourceRoutePath);
+            let outputRoute = this.pluginOption.getOutputFilename(outputValue, outputFile);
+            let wasRouteModified = false;
+
+            if (resolveRoute) {
+              let result = resolveRoute({
+                sourceRoute,
+                outputRoute: outputRoute + sourceRouteQuery,
+                sourceFile,
+                outputFile,
+              });
+
+              if (typeof result === 'string' && result !== outputRoute) {
+                outputRoute = result;
+                wasRouteModified = true;
+              }
+            }
+
+            if (!wasRouteModified) {
+              if (!sourceRouteQuery) {
+                if (outputValue.includes('index.html') && routerOptions.rewriteIndex !== false) {
+                  let index = outputRoute === 'index.html' ? routerOptions.rewriteIndex : '';
+                  outputRoute = outputRoute.replace('index.html', index);
+                }
+              } else {
+                outputRoute += sourceRouteQuery;
+              }
+            }
+
+            // TODO: use a RegExp to allow double/single quotes or NL around of sourceRoute
+            content = content.replaceAll(`"${sourceRoute}"`, `"${outputRoute}"`);
+          }
+
+          return content;
+        });
       }
 
       // 3. minify HTML before inlining JS and CSS to avoid:

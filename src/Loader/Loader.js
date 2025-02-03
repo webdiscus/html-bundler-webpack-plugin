@@ -4,6 +4,7 @@ const Render = require('./Modes/Render');
 class Loader {
   /** @type {Render|Compile} */
   compiler = null;
+  loaderOption = null;
 
   constructor() {}
 
@@ -16,17 +17,14 @@ class Loader {
    */
   init(loaderContext, { pluginCompiler, loaderOption, resolver, collection }) {
     const { hot } = loaderContext;
-    const { preprocessorMode, esModule, self: useSelf } = loaderOption.get();
 
+    this.loaderOption = loaderOption;
     this.compiler = this.factory({
-      preprocessor: loaderOption.getPreprocessorModule(),
-      preprocessorMode,
-      esModule,
-      useSelf,
-      hot,
       pluginCompiler,
-      collection,
+      loaderOption,
       resolver,
+      collection,
+      hot,
     });
   }
 
@@ -35,23 +33,24 @@ class Loader {
    *
    * Note: default mode is `render`
    *
+   * @param {Option} loaderOption The loader option instance.
    * @param {{}} preprocessor The preprocessor option.
-   * @param {string} preprocessorMode The loader mode: compile or render.
-   * @param {boolean} esModule
-   * @param {boolean} useSelf Whether the `self` option is true.
-   * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
    * @param {Compiler} pluginCompiler
-   * @param {Collection} collection
    * @param {Resolver} resolver
+   * @param {Collection} collection
+   * @param {boolean} hot Whether the `hot` option of the `devServer` is enabled to page live reload.
+   *
    * @return {Render|Compile}
    */
-  factory({ preprocessor, preprocessorMode, esModule, useSelf, hot, pluginCompiler, collection, resolver }) {
+  factory({ pluginCompiler, loaderOption, resolver, collection, hot }) {
+    const { preprocessorMode } = loaderOption.get();
+
     switch (preprocessorMode) {
       case 'compile':
-        return new Compile({ preprocessor, esModule, hot, pluginCompiler, collection, resolver });
+        return new Compile({ loaderOption, pluginCompiler, collection, resolver, hot });
       case 'render':
       default:
-        return new Render({ preprocessor, esModule, hot, pluginCompiler, collection, resolver });
+        return new Render({ loaderOption, pluginCompiler, collection, resolver, hot });
     }
   }
 

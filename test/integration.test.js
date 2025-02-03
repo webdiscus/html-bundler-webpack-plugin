@@ -228,8 +228,6 @@ describe('plugin callbacks', () => {
   test('beforePreprocessor, return template', () => compareFiles('option-beforePreprocessor'));
   test('beforePreprocessor, return undefined', () => compareFiles('option-beforePreprocessor-return-undefined'));
 
-  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
-
   test('postprocess default', () => compareFiles('option-postprocess'));
   test('postprocess pipe', () => compareFiles('option-postprocess-pipe'));
 
@@ -240,18 +238,43 @@ describe('plugin callbacks', () => {
 
 describe('loader options common', () => {
   test('defaults, when in module.rules is not defined', () => compareFiles('loader-option-defaults'));
-  test('disable parsing for all tags and attributes', () => compareFiles('loader-option-sources-false'));
-
-  test('add custom tags and attributes', () => compareFiles('loader-option-sources-attrs'));
-  test('filter tags and attributes', () => compareFiles('loader-option-sources-filter'));
-  test('filter property attribute', () => compareFiles('loader-option-sources-filter-property'));
-  test('filter, parsedValues', () => compareFiles('loader-option-sources-filter-parsedValues'));
-
-  test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
-  test('preprocessor disabled', () => compareFiles('loader-option-preprocessor-disabled'));
-
   test('root', () => compareFiles('loader-option-root'));
   test('context', () => compareFiles('loader-option-context'));
+});
+
+describe('loader preprocessor options', () => {
+  test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
+  test('preprocessor disabled', () => compareFiles('option-preprocessor-disabled'));
+  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+
+  test('loader data', () => compareFiles('loader-option-preprocessor-data'));
+  test('loader data file', () => compareFiles('loader-option-preprocessor-data-file'));
+});
+
+describe('loader option sources', () => {
+  test('disable parsing for all tags and attributes', () => compareFiles('loader-option-sources-false'));
+  test('resolve source file in a.href', () => compareFiles('loader-option-sources-resolve-a_href'));
+});
+
+// reference to loader option sources
+describe('plugin option sources', () => {
+  test('disable parsing for all tags and attributes', () => compareFiles('option-sources-false'));
+  test('add custom tags and attributes', () => compareFiles('option-sources-attrs'));
+
+  test('filter tags and attributes', () => compareFiles('option-sources-filter'));
+  test('filter property attribute', () => compareFiles('option-sources-filter-property'));
+  test('filter, parsedValues', () => compareFiles('option-sources-filter-parsedValues'));
+});
+
+describe('plugin option router', () => {
+  // default router, resolve a.href
+  test('resolve source *.html file in a.href', () => compareFiles('option-router-resolve-a_href'));
+  test('resolve source *.eta file in a.href', () => compareFiles('option-router-resolve-a_href-eta'));
+  test('resolve pages in custom attributes', () => compareFiles('option-router-resolve-custom-attrs'));
+
+  test('rewriteIndex = "."', () => compareFiles('option-router-rewriteIndex-dot'));
+  test('rewriteIndex, publicPath as URL', () => compareFiles('option-router-rewriteIndex-publicPath-url'));
+  test('resolve function', () => compareFiles('option-router-resolve-fn'));
 });
 
 describe('resole entry name', () => {
@@ -259,11 +282,6 @@ describe('resole entry name', () => {
   test('entry as object', () => compareFiles('resolve-entry-name-obj'));
   test('entry as path', () => compareFiles('resolve-entry-name-path'));
   test('same entry name for html, js, css', () => compareFiles('entry-name-html-js-css'));
-});
-
-describe('loader preprocessor options', () => {
-  test('loader data', () => compareFiles('loader-option-preprocessor-data'));
-  test('loader data file', () => compareFiles('loader-option-preprocessor-data-file'));
 });
 
 describe('inline images', () => {

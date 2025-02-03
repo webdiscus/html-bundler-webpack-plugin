@@ -64,7 +64,7 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
 - Generates the [integrity](#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](#favicons-bundler-plugin) of different sizes for various platforms.
 - You can create custom plugins using the provided [Plugin Hooks](#plugin-hooks-and-callbacks).
-- Over 600 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test) for various use cases.
+- Over 700 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test) for various use cases.
 
 See [full list of features](#features).
 
@@ -3275,7 +3275,7 @@ type Sources =
         parsedValue: Array<string>;
         attributes: { [attributeName: string]: string };
         resourcePath: string;
-      }) => boolean | undefined;
+      }) => boolean | void;
     }>;
 ```
 
@@ -3362,7 +3362,7 @@ Examples of using argument properties:
     if (attribute === 'src') return false;
     if (value.endsWith('.webp')) return false;
     if ('srcset' in attributes && attributes['srcset'] === '') return false;
-    if (resourcePath.indexOf('example')) return false;
+    if (resourcePath.includes('example')) return false;
     // otherwise return 'true' or nothing (undefined) to allow the processing
   },
 }

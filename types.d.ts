@@ -105,6 +105,16 @@ declare namespace HtmlBundlerPlugin {
      * Use this option here to avoid definition of the rule for the template loader module.
      */
     loaderOptions?: LoaderOptions;
+
+    /**
+     * The reference to LoaderOptions.sources.
+     */
+    sources?: Sources;
+
+    /**
+     * The router options.
+     */
+    router?: Router;
   }
 
   export interface LoaderOptions {
@@ -339,6 +349,7 @@ type Sources =
   | Array<{
       tag?: string;
       attributes?: Array<string>;
+      // called before resolving
       filter?: (props: {
         tag: string;
         attribute: string;
@@ -348,8 +359,35 @@ type Sources =
         parsedValue: Array<string>;
         attributes: { [attributeName: string]: string };
         resourcePath: string;
-      }) => boolean | undefined;
+        // Return:
+        // - false - doesn't resolve it (skip)
+        // - true | void - the source will be resolved automatically,
+      }) => boolean | void;
     }>;
+
+type Router =
+  | boolean
+  | {
+      enabled?: boolean;
+      // replaces matched source route with it's output URL, defaults is <PluginOption>.test depends on used preprocessor
+      test?: RegExp | Array<RegExp>;
+      // Note: if a route contains a query (e.g. index.html?q=!), the rewriteIndex is ignored!
+      // if rewriteIndex is `false` (defaults), do nothing
+      // if rewriteIndex is a string:
+      //   - if publicPath is `auto` replaces "index.html" with the specified string, should be on of: ".", ""
+      //   - if publicPath is not empty, replaces "index.html" with "" (empty string) regardless of specified value
+      rewriteIndex?: false | string;
+      // called after the resolving of output filenames
+      resolve?: (props: {
+        sourceRoute: string; // resolved href value (absolute path)
+        outputRoute: string; // output URL regards publicPath, e.g. by auto publicPath is relative to outputFile
+        sourceFile: string; // absolute path to the template file
+        outputFile: string; // output HTML filename relative to the dist/ directory
+        // Return:
+        // - void - do nothing
+        // - any string - the returned string replaces the value
+      }) => void | string;
+    };
 
 type WatchFiles = {
   paths?: Array<string>;

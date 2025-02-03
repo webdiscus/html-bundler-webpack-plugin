@@ -7,17 +7,11 @@ const { errorToHtml } = require('../Messages/Exeptions');
  * Render into HTML and export as a JS module.
  */
 class Render extends PreprocessorModeAbstract {
-  collection = null;
-  pluginCompiler = null;
-
   /**
    * @param {PreprocessorModeProperties} props
    */
   constructor(props) {
     super(props);
-
-    this.collection = props.collection;
-    this.pluginCompiler = props.pluginCompiler;
   }
 
   /**

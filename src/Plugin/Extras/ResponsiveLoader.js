@@ -89,7 +89,7 @@ class ResponsiveLoader {
 
       if (source) {
         const contextObject = vm.createContext({
-          __webpack_public_path__: this.pluginOption.getAssetOutputPath(issuer.filename),
+          __webpack_public_path__: this.pluginOption.getOutputPath(issuer.filename),
           module: { exports: {} },
         });
         const script = new vm.Script(source, { filename: sourceFile });
@@ -109,11 +109,11 @@ class ResponsiveLoader {
     const assets = buildInfo.assetsInfo != null ? Array.from(buildInfo.assetsInfo.keys()) : [];
 
     if (assets.length === 1) {
-      asset = this.pluginOption.getAssetOutputFile(assets[0], issuer.filename);
+      asset = this.pluginOption.getOutputFilename(assets[0], issuer.filename);
     } else if (assets.length > 1 && sizes.length > 1) {
       asset = assets
         .map(
-          (assetFile, index) => this.pluginOption.getAssetOutputFile(assetFile, issuer.filename) + ` ${sizes[index]}w`
+          (assetFile, index) => this.pluginOption.getOutputFilename(assetFile, issuer.filename) + ` ${sizes[index]}w`
         )
         .join(',');
     }

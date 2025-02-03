@@ -4,30 +4,41 @@ const { isUrl } = require('../../Common/Helpers');
 /**
  * @typedef {Object} PreprocessorModeProperties
  *
- * @property{{}} preprocessor
- * @property {boolean} esModule
- * @property {boolean} hot
+ * @property {Option} loaderOption The loader option instance.
+ * @property {Compiler} pluginCompiler
  * @property {Collection} collection
+ * @property {Resolver} resolver
+ * @property {boolean} hot
  */
 
 /**
  * Base Preprocessor Mode class with abstract methods.
  */
 class PreprocessorModeAbstract {
+  pluginCompiler = null;
+  loaderOption = null;
   preprocessor = null;
   collection = null;
   resolver = null;
+  exportCode = '';
 
   /**
-   * @param {{}} preprocessor
-   * @param {boolean} esModule
-   * @param {boolean} hot
+   * @param {Option} loaderOption The loader option instance.
    * @param {Collection} collection
+   * @param {Compiler} pluginCompiler
    * @param {Resolver} resolver
+   * @param {boolean} hot
    */
-  constructor({ preprocessor, esModule, hot, collection, resolver }) {
+  constructor({ loaderOption, pluginCompiler, collection, resolver, hot }) {
+    const preprocessor = loaderOption.getPreprocessorModule();
+    const { esModule } = loaderOption.get();
+
+    //console.log('collection: ', collection);
+
     this.exportCode = esModule ? 'export default ' : 'module.exports=';
     this.preprocessor = preprocessor || {};
+    this.loaderOption = loaderOption;
+    this.pluginCompiler = pluginCompiler;
     this.collection = collection;
     this.resolver = resolver;
     this.hot = hot === true;
@@ -85,7 +96,15 @@ class PreprocessorModeAbstract {
     } else {
       resolvedFile = this.resolver.resolve(file, issuer);
 
-      if (isUrl(resolvedFile)) {
+      let isEntryFile = this.loaderOption.isEntry(resolvedFile);
+      let isRouteFile = this.loaderOption.isRoute(resolvedFile);
+      let isRequestUrl = isUrl(resolvedFile);
+
+      if (isRouteFile && !isRequestUrl) {
+        this.collection.saveInnerRoute(resolvedFile, issuer);
+      }
+
+      if (isEntryFile || isRouteFile || isRequestUrl) {
         return {
           resolvedFile,
           requireExpression: resolvedFile,

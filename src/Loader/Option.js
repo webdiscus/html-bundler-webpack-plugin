@@ -80,6 +80,11 @@ class Option {
       // whether it should be used ESM export for the rendered/compiled result
       options.esModule = options?.esModule === true;
 
+      // set reference to sources defined directly in plugin options
+      if (this.#pluginOption.options?.sources != null) {
+        options.sources = this.#pluginOption.options.sources;
+      }
+
       PluginService.setLoaderCache(this.pluginCompiler, loaderId, {
         options,
         preprocessorModule,
@@ -332,6 +337,26 @@ class Option {
   }
 
   /**
+   * Whether the file matches a route file.
+   *
+   * @param {string} resource The resource file, including a query.
+   * @return {boolean}
+   */
+  isRoute(resource) {
+    return this.#pluginOption.isRoute(resource);
+  }
+
+  /**
+   * Whether the file matches a template entry file.
+   *
+   * @param {string} resource The resource file, including a query.
+   * @return {boolean}
+   */
+  isEntry(resource) {
+    return this.#pluginOption.isEntry(resource);
+  }
+
+  /**
    * Whether the preprocessor function is already created.
    *
    * @return {boolean}
@@ -420,6 +445,8 @@ class Option {
 
     for (const item of sources) {
       const source = defaultSources.find(({ tag }) => tag === item.tag);
+      let { tag, attributes } = item;
+
       if (source) {
         if (item.attributes) {
           for (let attr of item.attributes) {

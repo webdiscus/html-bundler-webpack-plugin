@@ -186,7 +186,7 @@ class Resolver {
     let outputFilename;
 
     if (originalFilename != null) {
-      outputFilename = this.pluginOption.getAssetOutputFile(originalFilename, realIssuer.filename);
+      outputFilename = this.pluginOption.getOutputFilename(originalFilename, realIssuer.filename);
     } else if (resolve != null) {
       // resolve asset filename processed via external loader, e.g. `responsive-loader`
       outputFilename = resolve(realIssuer);

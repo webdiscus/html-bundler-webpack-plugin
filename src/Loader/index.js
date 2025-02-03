@@ -135,7 +135,7 @@ const loader = function (content, map, meta) {
     // })
     .then((content) => {
       errorStage = 'resolve';
-      return Template.resolve({ content, issuer: resource, entryId, hooks, loader, loaderOption });
+      return Template.resolve({ content, issuer: resource, entryId, hooks, loader });
     })
     .then((value) => {
       errorStage = 'export';

@@ -499,7 +499,7 @@ describe('parse attributes in tag', () => {
           src: 'img1.png?size=800',
           srcset: 'img1.png, img2.png 100w, img3.png 1.5x',
         },
-        // TODO: einheitlige strukture
+        // TODO: uniform structure
         parsedAttrs: [
           {
             attr: 'src',
@@ -742,6 +742,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 17,
@@ -764,6 +765,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 18,
@@ -786,6 +788,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 19,
@@ -808,6 +811,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 27,
@@ -830,6 +834,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 27,
@@ -852,6 +857,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 26,
@@ -874,6 +880,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 28,
@@ -896,6 +903,7 @@ describe('parse tags', () => {
       {
         tag: 'script',
         raw: `<script src="./main.js" async defer type="text/javascript">`,
+
         type: 'script',
         startPos: 0,
         endPos: 59,
@@ -930,6 +938,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 112,
@@ -970,6 +979,7 @@ describe('parse tags', () => {
       {
         tag: 'source',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 181,
@@ -1006,6 +1016,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a1" src="1.png">`,
+
         type: 'asset',
         startPos: 0,
         endPos: 28,
@@ -1027,6 +1038,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a2" src="2.png">`,
+
         type: 'asset',
         startPos: 28,
         endPos: 56,
@@ -1048,6 +1060,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a3" src="3.png">`,
+
         type: 'asset',
         startPos: 56,
         endPos: 84,
@@ -1080,6 +1093,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a1" src="require('image1.png')">`,
+
         type: 'asset',
         startPos: 0,
         endPos: 44,
@@ -1101,6 +1115,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a2" src="require('image2.png')">`,
+
         type: 'asset',
         startPos: 44,
         endPos: 88,
@@ -1122,6 +1137,7 @@ describe('parse tags', () => {
       {
         tag: 'img',
         raw: `<img class="a3" src="require('image3.png')">`,
+
         type: 'asset',
         startPos: 88,
         endPos: 132,
@@ -1163,6 +1179,7 @@ describe('escaped quote', () => {
       {
         tag: 'img',
         raw: html,
+
         type: 'asset',
         startPos: 0,
         endPos: 35,

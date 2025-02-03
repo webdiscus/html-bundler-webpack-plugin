@@ -9,8 +9,6 @@ const { errorToHtml } = require('../Messages/Exeptions');
 class Compile extends PreprocessorModeAbstract {
   enclosingQuotes = `'`;
   isExport = false;
-  collection = null;
-  pluginCompiler = null;
 
   /**
    * @param {PreprocessorModeProperties} props
@@ -18,9 +16,7 @@ class Compile extends PreprocessorModeAbstract {
   constructor(props) {
     super(props);
 
-    this.isExport = typeof props.preprocessor.export === 'function';
-    this.collection = props.collection;
-    this.pluginCompiler = props.pluginCompiler;
+    this.isExport = typeof this.preprocessor.export === 'function';
   }
 
   /**

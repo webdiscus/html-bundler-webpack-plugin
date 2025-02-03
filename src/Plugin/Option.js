@@ -1,6 +1,6 @@
 const path = require('path');
 const Compilation = require('webpack/lib/Compilation');
-const { isWin, isFunction, pathToPosix } = require('../Common/Helpers');
+const { isWin, isFunction, testRegExpArray, pathToPosix } = require('../Common/Helpers');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 const { optionSplitChunksChunksAllWarning } = require('./Messages/Warnings');
 
@@ -40,6 +40,16 @@ class Option {
     hot: false,
   };
 
+  /**
+   * Option for resolving inner pages.
+   */
+  router = {
+    enabled: true,
+    test: null,
+    resolve: null,
+    rewriteIndex: false,
+  };
+
   #entryLibrary = {
     name: 'return',
     type: 'jsonp', // compiles JS from source into HTML string via Function()
@@ -75,13 +85,21 @@ class Option {
     // remove cached data from previous webpack running
     this.#process.clear();
 
-    // add reference for the preprocessor option into the plugin options
-    if (loaderOptions && loaderOptions.preprocessor != null) {
-      options.preprocessor = loaderOptions.preprocessor;
+    // add references for loader options to plugin options
+    if (loaderOptions) {
+      // reference to preprocessor
+      if (loaderOptions.preprocessor != null) {
+        options.preprocessor = loaderOptions.preprocessor;
 
-      if (loaderOptions.preprocessorOptions != null) {
-        options.preprocessorOptions = loaderOptions.preprocessorOptions;
+        if (loaderOptions.preprocessorOptions != null) {
+          options.preprocessorOptions = loaderOptions.preprocessorOptions;
+        }
       }
+    }
+
+    // reference to sources
+    if (options.sources == null && loaderOptions?.sources != null) {
+      options.sources = loaderOptions.sources;
     }
 
     if (!isFunction(options.postprocess)) this.options.postprocess = null;
@@ -94,6 +112,31 @@ class Option {
 
     if (!options.watchFiles) this.options.watchFiles = {};
     this.options.hotUpdate = this.options.hotUpdate === true;
+  }
+
+  /**
+   * @return {boolean}
+   */
+  isRouterEnabled() {
+    return this.router.enabled === true;
+  }
+
+  /**
+   * Get router option for resolving a page URL.
+   *
+   * @return {Object|null}
+   */
+  getRouter() {
+    return this.router;
+  }
+
+  /**
+   * Get custom page url resolver.
+   *
+   * @return {Function | undefined}
+   */
+  getCustomRouteResolver() {
+    return this.router.resolve;
   }
 
   /**
@@ -244,6 +287,9 @@ class Option {
     this.initEntry(this.loaderPath);
     this.enableLibraryType();
 
+    // init router must be after initEntry()
+    this.initRouter();
+
     if (options.devServer) {
       // default value of the `hot` is `true`
       // https://webpack.js.org/configuration/dev-server/#devserverhot
@@ -283,8 +329,36 @@ class Option {
     this.normalizedEntryFilter = this.normalizeAdvancedFiler(this.testEntry, this.entryFilter);
   }
 
-  getEntryFilter() {
-    return this.normalizedEntryFilter;
+  /**
+   * Normalize router options.
+   */
+  initRouter() {
+    if ('router' in this.options) {
+      let routerOptions = this.options.router;
+
+      if (typeof routerOptions === 'boolean') {
+        this.router.enabled = routerOptions;
+      } else if (typeof routerOptions === 'object') {
+        this.router = { ...this.router, ...routerOptions };
+
+        if (typeof routerOptions.resolve !== 'function') {
+          this.router.resolve = null;
+        }
+
+        if (typeof routerOptions.rewriteIndex === 'string') {
+          // TODO: research whether we need `auto` value
+          let rewriteIndex = routerOptions.rewriteIndex === 'auto' ? '.' : routerOptions.rewriteIndex;
+
+          this.router.rewriteIndex = !this.isAutoPublicPath() && this.getPublicPath() ? '' : rewriteIndex;
+        }
+      }
+    }
+
+    if (this.router.test instanceof RegExp) {
+      this.router.test = [this.router.test];
+    } else if (!Array.isArray(this.router.test)) {
+      this.router.test = [...this.testEntry];
+    }
   }
 
   initWatchMode() {
@@ -315,6 +389,7 @@ class Option {
     if (typeof publicPath === 'function') {
       publicPath = publicPath.call(null, {});
     }
+
     if (publicPath === undefined) {
       publicPath = 'auto';
     }
@@ -404,17 +479,24 @@ class Option {
   }
 
   /**
-   * Whether the file is a template entry file.
+   * Whether the file matches a template file.
    *
    * @param {string} resource The resource file, including a query.
    * @return {boolean}
    */
   isEntry(resource) {
-    if (resource == null) return false;
+    return testRegExpArray(resource, this.testEntry);
+  }
 
-    const [file] = resource.split('?', 1);
-
-    return this.testEntry.find((test) => test.test(file)) != null;
+  /**
+   * Whether the file matches a inner route.
+   * Defaults should be a template defined in entry option.
+   *
+   * @param {string} resource The resource file, including a query.
+   * @return {boolean}
+   */
+  isRoute(resource) {
+    return testRegExpArray(resource, this.router.test);
   }
 
   /**
@@ -566,6 +648,13 @@ class Option {
   }
 
   /**
+   * @return {{includes: RegExp[], excludes: RegExp[], fn: Function}}
+   */
+  getEntryFilter() {
+    return this.normalizedEntryFilter;
+  }
+
+  /**
    * Get entry library type.
    * @return {{name: string, type: string}}
    */
@@ -663,12 +752,12 @@ class Option {
   }
 
   /**
-   * Get the output path of the asset.
+   * Get the output path of the asset regards the publicPath.
    *
    * @param {string | null} assetFile The output asset filename relative by output path.
    * @return {string}
    */
-  getAssetOutputPath(assetFile = null) {
+  getOutputPath(assetFile = null) {
     const isAutoRelative = assetFile && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(assetFile);
 
     if (this.autoPublicPath || isAutoRelative) {
@@ -685,13 +774,13 @@ class Option {
   }
 
   /**
-   * Get the output asset file regards the publicPath.
+   * Get the output filename regards the publicPath.
    *
    * @param {string} assetFile The output asset filename relative by output path.
    * @param {string} issuer The output issuer filename relative by output path.
    * @return {string}
    */
-  getAssetOutputFile(assetFile, issuer) {
+  getOutputFilename(assetFile, issuer) {
     const isAutoRelative = issuer && this.isRelativePublicPath && !this.assetEntry.isEntryFilename(issuer);
 
     // if the public path is relative, then a resource using not in the template file must be auto resolved

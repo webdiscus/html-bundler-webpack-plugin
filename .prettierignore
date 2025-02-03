@@ -1,4 +1,5 @@
 # Ignore all HTML files in test directory:
 test/cases/**/*.html
 test/cases/**/*.hbs
+test/cases/**/*.eta
 *.md

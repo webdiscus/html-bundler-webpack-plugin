@@ -1,0 +1,12 @@
+<nav>
+  <a href="@views/home/index.html">Home</a>
+  | <a href="@views/home/index.html?q=1">Home (query)</a>
+  | <a href="@views/home/index.html#test">Home (anchor)</a>
+  | <a href="@views/login/signup/index.eta">Sign up</a>
+  | <a href="javascript:void 0" data-link="@views/page1.html" onclick="location.href=this.dataset.link">Page 1 (JS)</a>
+  | <button href="@views/sub/page2.html" onclick="location.href=this.getAttribute('href')">Sub Page 2 (JS)</button>
+  | <button data-hyperlink="@views/sub/page3.html" onclick="location.href=this.dataset.hyperlink">Sub Page 3 (JS)</button>
+  | <a href="@images/apple.png" target="_blank">Image file</a>
+  | <a href="https://google.com" target="_blank">Google</a>
+  | <a href="/index.html">Home (not resolvable)</a>
+</nav>
