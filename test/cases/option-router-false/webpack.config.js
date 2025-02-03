@@ -6,9 +6,6 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    //publicPath: 'auto', // tested: OK
-    //publicPath: () => '/', // tested: OK
-    //publicPath: () => 'http://localhost:8080/', // tested: OK
   },
 
   resolve: {
@@ -24,9 +21,6 @@ module.exports = {
     new HtmlBundlerPlugin({
       entry: {
         index: './src/views/pages/home/index.html',
-        page1: './src/views/pages/page1.html',
-        'sub/page2': './src/views/pages/sub/page2.html',
-        'sub/page3': './src/views/pages/sub/page3.html',
         'login/signup/index': './src/views/pages/login/signup/index.eta',
       },
       css: {
@@ -35,20 +29,13 @@ module.exports = {
       sources: [
         {
           tag: 'a',
-          attributes: ['href', 'data-link'],
-        },
-        {
-          tag: 'button',
-          attributes: ['href', 'data-hyperlink'],
+          attributes: ['href'],
         },
       ],
-      // resolve routes in custom attributes w/o router definition
+      // force disable resolving of templates matching attributes specified in sources
+      router: false,
       // router: {
-      //   //enabled: true, // OK
-      //   //enabled: false, // OK
-      //   //test: /\.html$/, // OK
-      //   //test: [/\.html$/, /\.eta$/], // OK
-      //   //rewriteIndex: false, // OK
+      //   enabled: false, // tested: OK
       // },
     }),
   ],

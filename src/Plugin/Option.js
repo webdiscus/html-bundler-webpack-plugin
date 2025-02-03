@@ -115,22 +115,6 @@ class Option {
   }
 
   /**
-   * @return {boolean}
-   */
-  isRouterEnabled() {
-    return this.router.enabled === true;
-  }
-
-  /**
-   * Get router option for resolving a page URL.
-   *
-   * @return {Object|null}
-   */
-  getRouter() {
-    return this.router;
-  }
-
-  /**
    * Get custom page url resolver.
    *
    * @return {Function | undefined}
@@ -352,12 +336,44 @@ class Option {
           this.router.rewriteIndex = !this.isAutoPublicPath() && this.getPublicPath() ? '' : rewriteIndex;
         }
       }
+
+      if (this.isRouterEnabled()) {
+        this.addDefaultsRouterOptionsToSources();
+      }
     }
 
     if (this.router.test instanceof RegExp) {
       this.router.test = [this.router.test];
     } else if (!Array.isArray(this.router.test)) {
       this.router.test = [...this.testEntry];
+    }
+  }
+
+  /**
+   * If router option is defined and is not false, then add default options to sources,
+   * to resolve route in attributes.
+   */
+  addDefaultsRouterOptionsToSources() {
+    if (!Array.isArray(this.options.sources)) {
+      this.options.sources = [];
+    }
+
+    const { sources } = this.options;
+    let tagA = sources.find(({ tag }) => tag === 'a');
+    let hasHref = false;
+
+    if (tagA) {
+      if (Array.isArray(tagA.attributes)) {
+        hasHref = tagA.attributes.some((attr) => attr === 'href');
+      } else {
+        tagA.attributes = [];
+      }
+
+      if (!hasHref) {
+        tagA.attributes.push('href');
+      }
+    } else {
+      sources.push({ tag: 'a', attributes: ['href'] });
     }
   }
 
@@ -497,6 +513,16 @@ class Option {
    */
   isRoute(resource) {
     return testRegExpArray(resource, this.router.test);
+  }
+
+  /**
+   * Whether the router is force disabled.
+   * Defaults, when sources options matches a template, then it will be resolved.
+   *
+   * @return {boolean}
+   */
+  isRouterEnabled() {
+    return this.router.enabled !== false;
   }
 
   /**
@@ -674,6 +700,15 @@ class Option {
    */
   getCss() {
     return this.options.css;
+  }
+
+  /**
+   * Get router option for resolving a page URL.
+   *
+   * @return {Object|null}
+   */
+  getRouter() {
+    return this.router;
   }
 
   /**

@@ -347,6 +347,14 @@ class Option {
   }
 
   /**
+   * Whether the router is force disabled.
+   * @return {boolean}
+   */
+  isRouterEnabled() {
+    return this.#pluginOption.isRouterEnabled();
+  }
+
+  /**
    * Whether the file matches a template entry file.
    *
    * @param {string} resource The resource file, including a query.

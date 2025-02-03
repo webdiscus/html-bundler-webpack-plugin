@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.18.0-beta.2 (2025-02-03)
+
+- feat: if the `router` option is specified and not disabled, 
+  then ensure that `a.href` is present in the `sources` option
+- fix: if router is disabled and sources contains attributes matching a route file, then doesn't resolve it
+
 ## 4.18.0-beta.1 (2025-02-03)
 
 - feat: revert improvement of the `sources[].filter()` function introduced in beta.0, it returns a boolean or void only

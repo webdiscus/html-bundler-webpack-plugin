@@ -991,43 +991,42 @@ class Collection {
         promise = promise.then((value) => this.pluginOption.postprocess(value, templateInfo, compilation) || value);
       }
 
-      // 2.1 postprocess of resolved page URL in a.href
-      const routesPages = this.innerRoute.get(resourcePath);
+      // 2.1 postprocess of resolved page URLs matched to router.test from attributes specified in sources, e.g. a.href
+      const routerPages = this.innerRoute.get(resourcePath);
 
-      if (isRouterEnabled && routesPages) {
+      if (isRouterEnabled && routerPages) {
         promise = promise.then((content) => {
           const sourceFile = resourcePath;
           const outputFile = entryFilename;
 
           // sourceRoute is the resolved value of a tag attribute defined in sources option
-          for (let sourceRoute of routesPages) {
+          for (let sourceRoute of routerPages) {
             const [sourceRoutePath, sourceRouteQuery] = splitUrl(sourceRoute);
             const outputValue = entrySourceFiles.get(sourceRoutePath);
             let outputRoute = this.pluginOption.getOutputFilename(outputValue, outputFile);
+            let outputRouteWithQuery = outputRoute + sourceRouteQuery;
             let wasRouteModified = false;
 
             if (resolveRoute) {
               let result = resolveRoute({
                 sourceRoute,
-                outputRoute: outputRoute + sourceRouteQuery,
+                outputRoute: outputRouteWithQuery,
                 sourceFile,
                 outputFile,
               });
 
-              if (typeof result === 'string' && result !== outputRoute) {
+              if (typeof result === 'string' && result !== outputRouteWithQuery) {
                 outputRoute = result;
                 wasRouteModified = true;
               }
             }
 
             if (!wasRouteModified) {
-              if (!sourceRouteQuery) {
-                if (outputValue.includes('index.html') && routerOptions.rewriteIndex !== false) {
-                  let index = outputRoute === 'index.html' ? routerOptions.rewriteIndex : '';
-                  outputRoute = outputRoute.replace('index.html', index);
-                }
-              } else {
-                outputRoute += sourceRouteQuery;
+              if (sourceRouteQuery) {
+                outputRoute = outputRouteWithQuery;
+              } else if (outputValue.includes('index.html') && routerOptions.rewriteIndex !== false) {
+                let index = outputRoute === 'index.html' ? routerOptions.rewriteIndex : '';
+                outputRoute = outputRoute.replace('index.html', index);
               }
             }
 

@@ -84,7 +84,7 @@ class PreprocessorModeAbstract {
    * @param {string} file The required file.
    * @param {string} issuer The issuer of required file.
    * @param {string|number|null} entryId The entry id where is loaded the resource.
-   * @return {{requireExpression: string, resolvedFile: string}}
+   * @return {{requireExpression: string, resolvedFile: string} | false}
    */
   requireFile(file, issuer, entryId) {
     let resolvedFile = '';
@@ -100,8 +100,14 @@ class PreprocessorModeAbstract {
       let isRouteFile = this.loaderOption.isRoute(resolvedFile);
       let isRequestUrl = isUrl(resolvedFile);
 
-      if (isRouteFile && !isRequestUrl) {
-        this.collection.saveInnerRoute(resolvedFile, issuer);
+      if (isRouteFile) {
+        if (!this.loaderOption.isRouterEnabled()) {
+          return false;
+        }
+
+        if (!isRequestUrl) {
+          this.collection.saveInnerRoute(resolvedFile, issuer);
+        }
       }
 
       if (isEntryFile || isRouteFile || isRequestUrl) {

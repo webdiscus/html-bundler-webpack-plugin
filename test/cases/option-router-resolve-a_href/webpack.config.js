@@ -33,7 +33,7 @@ module.exports = {
       },
       sources: [
         {
-          // resolve page URLs automatically
+          // resolve page URLs automatically, w/o router option
           tag: 'a',
           attributes: ['href'],
         },

@@ -267,7 +267,7 @@ describe('plugin option sources', () => {
 });
 
 describe('plugin option router', () => {
-  // default router, resolve a.href
+  // resolve a.href w/o router option
   test('resolve source *.html file in a.href', () => compareFiles('option-router-resolve-a_href'));
   test('resolve source *.eta file in a.href', () => compareFiles('option-router-resolve-a_href-eta'));
   test('resolve pages in custom attributes', () => compareFiles('option-router-resolve-custom-attrs'));
@@ -275,6 +275,9 @@ describe('plugin option router', () => {
   test('rewriteIndex = "."', () => compareFiles('option-router-rewriteIndex-dot'));
   test('rewriteIndex, publicPath as URL', () => compareFiles('option-router-rewriteIndex-publicPath-url'));
   test('resolve function', () => compareFiles('option-router-resolve-fn'));
+
+  test('router: false', () => compareFiles('option-router-false'));
+  test('router: true', () => compareFiles('option-router-true'));
 });
 
 describe('resole entry name', () => {

@@ -42,7 +42,6 @@ module.exports = {
           attributes: ['href', 'data-hyperlink'],
         },
       ],
-      //router: true, // TODO: test it w/o defined sources option, defaults should be a.href
       router: {
         rewriteIndex: '.',
       },

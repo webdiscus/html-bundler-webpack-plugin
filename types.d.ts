@@ -369,9 +369,9 @@ type Router =
   | boolean
   | {
       enabled?: boolean;
-      // replaces matched source route with it's output URL, defaults is <PluginOption>.test depends on used preprocessor
+      // replaces matched source route with its output URL, defaults is <PluginOption>.test depends on used preprocessor
       test?: RegExp | Array<RegExp>;
-      // Note: if a route contains a query (e.g. index.html?q=!), the rewriteIndex is ignored!
+      // Note: if a route contains a query or a segment (e.g. index.html#contact), the rewriteIndex is ignored!
       // if rewriteIndex is `false` (defaults), do nothing
       // if rewriteIndex is a string:
       //   - if publicPath is `auto` replaces "index.html" with the specified string, should be on of: ".", ""
