@@ -1,0 +1,29 @@
+@font-face {
+  font-family: 'Dummy';
+  src: url('@fonts/dummy/font-01.woff2') format('woff2');
+  font-style: normal;
+}
+
+h1 {
+  color: orangered;
+}
+
+.dummy-font {
+  font-family: 'Dummy', monospace;
+  font-size: 24px;
+  color: mediumvioletred;
+}
+
+.bg-image-svg {
+  width: 24px;
+  height: 24px;
+  // inline svg in CSS as `data:image/svg+xml;utf8,<svg ...`
+  background: url('@images/icons/imac.svg');
+}
+
+.bg-image-png {
+  width: 24px;
+  height: 24px;
+  // inline image in CSS as `data:image/png;base64,iVBO...`
+  background: url('@images/icons/imac.png');
+}

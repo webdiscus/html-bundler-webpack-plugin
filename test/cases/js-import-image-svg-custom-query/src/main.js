@@ -1,6 +1,6 @@
 import svgFilename from './token.svg'; // import as output filename
-import svgBase64DataUrl from './token.svg?dataurl'; // import as base64-encoded data URL
-import svgUtf8DataUrl from './token.svg?inline'; // import as UTF-8 data URL
+import svgBase64DataUrl from './token.svg?inline'; // import as base64-encoded data URL
+import svgUtf8DataUrl from './token.svg?inline=escape'; // import as escaped data URL
 import svgSource from './token.svg?raw'; // import as source content
 
 // filename

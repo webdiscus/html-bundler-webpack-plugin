@@ -305,8 +305,24 @@ describe('import SVG in JS', () => {
   test('regards maxSize, dataUrl.encoding', () => compareFiles('js-import-image-svg-maxsize-dataurl-encoding'));
 });
 
+describe('inline SVG', () => {
+  // TODO: make all test variants for svg
+  test('default, asset/inline', () => compareFiles('svg-inline-default'));
+  test('default, asset/resource, inline query', () => compareFiles('svg-inline-default-query-inline'));
+  test('inline, generator.dataUrl()', () => compareFiles('svg-inline-generator-dataUrl-fn'));
+  test('inline, generator.dataUrl.encoding base64', () => compareFiles('svg-inline-generator-dataUrl-encoding-base64'));
+  test('inline, generator.dataUrl.encoding false', () => compareFiles('svg-inline-generator-dataUrl-encoding-false'));
+  test('option svg.inline.encoding false', () => compareFiles('svg-inline-opt-inline-encoding-false'));
+  test('option svg.inline.embed', () => compareFiles('svg-inline-opt-inline-embed'));
+  test('option svg.inline.encoding base64 (override generator)', () =>
+    compareFiles('svg-inline-opt-inline-encoding-base64'));
+
+  test('option svg.inline (not override generator)', () => compareFiles('svg-inline-opt-inline'));
+});
+
 describe('inline styles & scripts', () => {
-  test('inline all assets into one HTML', () => compareFiles('inline-all-asset-to-html'));
+  test('inline all assets into HTML', () => compareFiles('inline-all-asset-to-html'));
+  test('inline all assets into HTML, embed svg', () => compareFiles('inline-all-asset-to-html-svg-embed'));
 
   test('inline CSS via `?inline` and resolve url()', () => compareFiles('inline-style-query'));
 
@@ -562,4 +578,8 @@ describe('style imported in Vue', () => {
 
 describe('issues', () => {
   test('issue-minify-js-with-image-minimizer-142', () => compareFiles('issue-minify-js-with-image-minimizer-142'));
+});
+
+describe('resolve assets in entry', () => {
+  test('css in entry > resolve font', () => compareFiles('resolve-entry-css-font'));
 });

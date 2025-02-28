@@ -1,0 +1,19 @@
+@font-face {
+  font-family: 'Dummy1';
+  src: url('@fonts/dummy/font-01.woff2?inline') format('woff2');
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Dummy2';
+  src: url('@fonts/dummy/font-02.woff2') format('woff2');
+  font-style: normal;
+}
+
+h1 {
+  font-family: 'Dummy1', sans-serif;
+}
+
+h2 {
+  font-family: 'Dummy2', sans-serif;
+}

@@ -41,11 +41,11 @@ module.exports = {
         },
         generator: {
           filename: 'img/[name].[hash:8][ext]',
-          // test bundler plugin defaults encoding (UTF-8)
+          // test: plugin defaults encoding
           dataUrl: {
             // encoding values:
             // 'base64' - generates base64-encoded data URL (Webpack defaults)
-            // false    - generates UTF-8 data URL, use it only for SVG (Bundler plugin defaults)
+            // false    - generates escaped data URL, use it only for SVG
             //encoding: false,
             //encoding: 'base64',
           },

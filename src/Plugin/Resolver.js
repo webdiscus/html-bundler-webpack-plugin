@@ -240,12 +240,13 @@ class Resolver {
     // resolve resource
     if (resource != null) {
       // bypass the asset/inline as inline SVG
-      if (this.assetInline.isInlineSvg(resource, issuerFile)) {
+      if (this.pluginOption.isEntry(issuer.resource) && this.pluginOption.isEmbedSvg(resource)) {
         this.collection.setData(this.entryPoint, issuer, {
           type: Collection.type.inlineSvg,
-          inline: true,
+          inline: true, // embed into DOM by replacing img with an inline svg
           resource,
         });
+
         return resource;
       }
 
@@ -257,7 +258,11 @@ class Resolver {
       const dataUrl = this.assetInline.getDataUrl(resource, issuerFile);
 
       if (dataUrl != null) {
-        this.collection.setData(this.entryPoint, issuer, { type: Collection.type.resource, inline: true, resource });
+        this.collection.setData(this.entryPoint, issuer, {
+          type: Collection.type.resource,
+          inline: true,
+          resource,
+        });
         return dataUrl;
       }
     }

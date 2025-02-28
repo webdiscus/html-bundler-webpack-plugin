@@ -27,11 +27,6 @@ module.exports = {
       {
         test: /\.svg/i,
         oneOf: [
-          // import SVG in JS as data URL using `?dataurl` query
-          {
-            resourceQuery: /dataurl/,
-            type: 'asset/inline',
-          },
           // import SVG in JS as raw content using `?raw` query
           {
             resourceQuery: /raw/,

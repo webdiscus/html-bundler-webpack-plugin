@@ -1,7 +1,6 @@
 import svgFilename from './token.svg'; // import as output filename
 import svgBase64DataUrl from './token.svg?inline=base64'; // import as base64-encoded data URL
-import svgUtf8DataUrl from './token.svg?inline'; // import as UTF-8 data URL
-import svgUtf8DataUrl2 from './token.svg?inline=utf8'; // import as UTF-8 data URL
+import svgUtf8DataUrl from './token.svg?inline=escape'; // import as UTF-8 data URL
 
 import pngFilename from '@images/icons/imac.png';
 import pngDataUrl from '@images/icons/imac.png?inline';
@@ -24,7 +23,6 @@ document.getElementById('svg-utf8-data-url').append(img3);
 console.log('>> svgFilename: ', svgFilename);
 console.log('>> svgBase64DataUrl: ', svgBase64DataUrl);
 console.log('>> svgUtf8DataUrl: ', svgUtf8DataUrl);
-console.log('>> svgUtf8DataUrl2: ', svgUtf8DataUrl2);
 
 // test bin images
 console.log('>> pngFilename: ', pngFilename);

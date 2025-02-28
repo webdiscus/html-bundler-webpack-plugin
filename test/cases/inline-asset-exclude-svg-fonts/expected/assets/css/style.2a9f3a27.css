@@ -1,5 +1,5 @@
 .data-url-svg {
-  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' height='24' viewBox='0 0 24 24' width='24'><path d='M0 0h24v24H0z' fill='none'/><path d='M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 12H3V4h18v10z'/></svg>");
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224%22%20class%3D%22injected-attribute%22%20viewBox%3D%220%200%2024%2024%22%20width%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M21%202H3c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h7l-2%203v1h8v-1l-2-3h7c1.1%200%202-.9%202-2V4c0-1.1-.9-2-2-2zm0%2012H3V4h18v10z%22%2F%3E%3C%2Fsvg%3E");
   width: 100px;
   height: 100px;
   border: 1px solid chocolate;

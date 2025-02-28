@@ -26,7 +26,6 @@ module.exports = {
       // inline svg, with query `?inline`
       {
         test: /\.(svg)$/i,
-        resourceQuery: /inline/,
         type: 'asset/inline',
         // test of processing via svgo-loader
         // warning by `npm i svgo-loader`:

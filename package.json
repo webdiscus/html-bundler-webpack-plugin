@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.18.0",
+  "version": "4.19.0-beta.0",
   "description": "Generates complete single-page or multi-page website from source assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -62,6 +62,10 @@
     "test:unitQueryParser": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.queryParser.test.js",
     "test:verbose": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
     "test:verbose-update": "jest --detectOpenHandles --updateSnapshot --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
+    "use:npmReadme": "mv 'README.md' 'README.git.md' && mv 'README.npm.md' 'README.md'",
+    "use:gitReadme": "mv 'README.md' 'README.npm.md' && mv 'README.git.md' 'README.md'",
+    "prepublishOnly": "run-s use:npmReadme",
+    "postpublish": "npm run use:gitReadme",
     "publish:public": "npm publish --access public",
     "publish:beta": "npm publish --tag beta"
   },
@@ -146,7 +150,7 @@
   },
   "dependencies": {
     "@types/html-minifier-terser": "^7.0.2",
-    "ansis": "3.9.0",
+    "ansis": "3.16.0",
     "enhanced-resolve": ">=5.7.0",
     "eta": "^3.5.0",
     "html-minifier-terser": "^7.2.0"
@@ -181,6 +185,7 @@
     "jest": "^29.7.0",
     "liquidjs": "^10.18.0",
     "markdown-it": "^14.1.0",
+    "mini-svg-data-uri": "^1.4.4",
     "mustache": "^4.2.0",
     "normalize.css": "^8.0.1",
     "nunjucks": "^3.2.4",

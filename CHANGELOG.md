@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.19.0-beta.0
+
+### BREAKING CHANGES by inlining SVG only
+
+- Inline `<img src="icon.svg">`:
+  - OLD: replaces `<img>` with `<svg>` tag
+  - NEW: inlines SVG as escaped data URL
+- Encoding of data URL:
+  - OLD: defaults, escaped URL (`#%` chars only), e.g. `data:image/svg+xml,<svg>...</svg>`
+  - NEW: defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO` or full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option
+
+## 4.18.2 release (2025-02-20)
+
+- fix: the output SVG should contain the changes made in generator.dataUrl()
+- docs: add information about preload priority to readme
+
 ## 4.18.0 release (2025-02-03)
 
 - chore: bump the version for release

@@ -1,10 +1,10 @@
-import svgFilename from './bild-2k.svg'; // import as output filename for file > 1 kB
-import svgDataUrl from './token.svg'; // base64 data URL
-import svgDataUrl2 from './token.svg?inline'; // UTF-8 data URL
-import svgDataUrl3 from './token.svg?inline=base64'; // base64 data URL
-import svgDataUrl4 from './token.svg?inline=utf8'; // UTF-8 data URL
-import svgDataUrl5 from './token.svg'; // base64 data URL
-import svgForceDataUrl from './bild-2k.svg?inline'; // force import as data URL using `?inline` query
+import svgFilename from '@images/2k-over/bild.svg'; // import as output filename for file > 1 kB
+import svgDataUrl from '@images/icons/token.svg'; // escaped data URL
+import svgDataUrl2 from '@images/icons/token.svg?inline'; // escaped data URL
+import svgDataUrl3 from '@images/icons/token.svg?inline=base64'; // base64 data URL
+import svgDataUrl4 from '@images/icons/token.svg?inline=escape'; // escaped data URL
+import svgDataUrl5 from '@images/icons/token.svg'; // escaped data URL
+import svgForceDataUrl from '@images/2k-over/bild.svg?inline'; // force import as data URL using `?inline` query
 
 console.log('>> svgFilename: ', svgFilename);
 console.log('>> svgDataUrl: ', svgDataUrl); // ok

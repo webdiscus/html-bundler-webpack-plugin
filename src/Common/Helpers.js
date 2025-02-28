@@ -73,7 +73,21 @@ const getFileExtension = (resource, win = isWin) => {
 };
 
 /**
- * Get the query parameter the request.
+ * Whether the request contains the query parameter.
+ *
+ * @param {string} request
+ * @param {string} name
+ * @return {boolean}
+ */
+const hasQueryParam = (request, name) => {
+  const [, query] = request.split('?', 2);
+  const urlParams = new URLSearchParams(query);
+
+  return urlParams.get(name) != null;
+};
+
+/**
+ * Get the query parameter from the request.
  *
  * @param {string} request
  * @param {string} name
@@ -84,6 +98,19 @@ const getQueryParam = (request, name) => {
   const urlParams = new URLSearchParams(query);
 
   return urlParams.get(name);
+};
+
+/**
+ * Get all query parameters from the request.
+ *
+ * @param {string} request
+ * @return {URLSearchParams|null}
+ */
+const getQueryParams = (request) => {
+  const queryString = request.split('?')[1];
+  if (!queryString) return null;
+
+  return new URLSearchParams(queryString);
 };
 
 /**
@@ -164,10 +191,23 @@ const getFixedUrlWithParams = (request) => {
 const deepMerge = (a, b) => {
   const result = {};
   for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
-    result[key] =
-      a[key]?.constructor === Object && b[key]?.constructor === Object
-        ? deepMerge(a[key], b[key])
-        : structuredClone(b[key] !== undefined ? b[key] : a[key]);
+    const aValue = a[key];
+    const bValue = b[key];
+
+    if (aValue?.constructor === Object && bValue?.constructor === Object) {
+      result[key] = deepMerge(aValue, bValue);
+    } else if (typeof bValue === 'function') {
+      // keep functions as-is
+      result[key] = bValue;
+    } else {
+      try {
+        result[key] = structuredClone(bValue !== undefined ? bValue : aValue);
+      } catch (err) {
+        console.warn(`Skipping cloning for key "${key}" due to:`, err);
+        // use original reference
+        result[key] = bValue !== undefined ? bValue : aValue;
+      }
+    }
   }
   return result;
 };
@@ -273,7 +313,9 @@ module.exports = {
   pathToPosix,
   getFileExtension,
   parseQuery: (request) => parseRequest(request).query,
+  hasQueryParam,
   getQueryParam,
+  getQueryParams,
   addQueryParam,
   splitUrl,
   deleteQueryParam,

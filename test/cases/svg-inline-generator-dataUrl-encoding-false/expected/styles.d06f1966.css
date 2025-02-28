@@ -1,0 +1,7 @@
+.icon-imac {
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20width%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M21%202H3c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h7l-2%203v1h8v-1l-2-3h7c1.1%200%202-.9%202-2V4c0-1.1-.9-2-2-2zm0%2012H3V4h18v10z%22%2F%3E%3C%2Fsvg%3E");
+}

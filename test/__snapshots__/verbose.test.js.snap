@@ -95,7 +95,7 @@ assets:
               -> ../css/style.bundle.2.css
                  resource: ~fixtures/images/melon.png
                         -> ../assets/img/melon.a92cb911.png
-                   inline: ~fixtures/images/token.svg
+                   inline: ~fixtures/images/icons/token.svg
        resource: ~fixtures/images/fig.png
               -> ../assets/img/fig.c6809878.png
        resource: ~fixtures/images/responsive/hardware.webp?size=300

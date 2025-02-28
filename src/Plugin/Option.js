@@ -1,6 +1,6 @@
 const path = require('path');
 const Compilation = require('webpack/lib/Compilation');
-const { isWin, isFunction, testRegExpArray, pathToPosix } = require('../Common/Helpers');
+const { isWin, isFunction, testRegExpArray, pathToPosix, deepMerge, getQueryParam } = require('../Common/Helpers');
 const { postprocessException, beforeEmitException } = require('./Messages/Exception');
 const { optionSplitChunksChunksAllWarning } = require('./Messages/Warnings');
 
@@ -40,6 +40,16 @@ class Option {
     hot: false,
   };
 
+  // default options for both the plugin.svg options and a URL quiry
+  svg = {
+    test: /\.svg/i,
+    enabled: undefined,
+    inline: {
+      embed: false,
+      encoding: 'base64',
+    },
+  };
+
   /**
    * Option for resolving inner pages.
    */
@@ -74,11 +84,33 @@ class Option {
   constructor(pluginContext, { options, loaderPath }) {
     this.pluginContext = pluginContext;
     this.loaderPath = loaderPath;
+
+    // original plugin options specified by user,
+    // used to detect `undefined` plugin options,
+    // in this case will be used the webpack option
+
+    // TODO: save all user options, currently occurs DataCloneError
+    //this.originalOptions = deepMerge(options, {});
+    this.originalOptions = {
+      // currently is used only for svg
+      svg: deepMerge(options.svg || {}, {}),
+    };
+
+    // the plugin defined by used merged with defaults options
     this.options = options;
+
     this.testEntry = null;
     this.entryFilter = options.entryFilter;
     this.options.css = { ...this.css, ...this.options.css };
     this.options.js = { ...this.js, ...this.options.js };
+
+    const hasSvgOptions = this.options?.svg != null;
+    this.options.svg = deepMerge(this.svg, this.options?.svg || {});
+
+    if (hasSvgOptions) {
+      // auto enable if the svg option is defined
+      this.options.svg.enabled = this.options.svg?.enabled !== false;
+    }
 
     const loaderOptions = this.options.loaderOptions;
 
@@ -565,12 +597,10 @@ class Option {
    * @return {boolean}
    */
   isInlineJs(resource, chunk) {
-    const [, query] = resource.split('?', 2);
-    const urlParams = new URLSearchParams(query);
+    const value = getQueryParam(resource, 'inline');
     const { inline } = this.options.js;
 
-    if (urlParams.has('inline')) {
-      const value = urlParams.get('inline');
+    if (value != null) {
       return this.toBool(value, false, inline.enabled);
     }
 
@@ -590,13 +620,110 @@ class Option {
    * @return {boolean}
    */
   isInlineCss(resource) {
-    const [, query] = resource.split('?', 2);
-    const urlParams = new URLSearchParams(query);
-    const value = urlParams.get('inline');
+    const value = getQueryParam(resource, 'inline');
     const hasQueryInline = value != null;
     const isInlinedByQuery = this.toBool(value, false, false);
 
     return (this.options.css.inline && (isInlinedByQuery || !hasQueryInline)) || isInlinedByQuery;
+  }
+
+  /**
+   * Get SVG option to inline by resource regards URL query options.
+   *
+   * @param {string} resource The path of the resource, including queries.
+   * @param {NormalModule} module The Webpack module of the resource.
+   * @return {{encoding: string|boolean, embed: boolean} | null}
+   */
+  getInlineSvgOptions(resource, module = null) {
+    const inline = getQueryParam(resource, 'inline');
+    const embed = getQueryParam(resource, 'embed');
+    const svgOptionsOriginal = this.originalOptions.svg;
+
+    /** @type {'base64' | false | undefined } webpackModuleEncoding */
+    const webpackModuleEncoding = module?.generatorOptions?.dataUrl?.encoding;
+
+    let result = {
+      encoding: this.svg.inline.encoding,
+      embed: this.svg.inline.embed,
+    };
+
+    if (svgOptionsOriginal?.inline?.encoding == null && webpackModuleEncoding != null) {
+      result.encoding = webpackModuleEncoding;
+    }
+
+    if (this.options.svg.enabled === true && this.options.svg.test.test(resource)) {
+      result.embed = this.options.svg.inline.embed === true;
+
+      if (svgOptionsOriginal?.inline?.encoding != null) {
+        result.encoding = this.options.svg.inline.encoding;
+      }
+    }
+
+    if (inline != null) {
+      // if exists `?inline` query then use image as data URL
+      result.embed = false;
+
+      switch (inline) {
+        // `?inline` - force inlines using default encoding
+        case '':
+          break;
+        // `?inline=false` - force disables inline
+        case 'false':
+          result = null;
+          break;
+        // `?inline=embed` - force replaces <img> with <svg>
+        case 'embed':
+          result.embed = true;
+          break;
+        // `?inline=escape` - force inlines svg as escaped data URL
+        case 'escape':
+          result.encoding = false;
+          break;
+        // `?inline=base64|any` - force inlines svg as base64 encoded data URL
+        case 'base64':
+        // through
+        default:
+          result.encoding = 'base64';
+          break;
+      }
+    } else if (this.options.svg.enabled !== true) {
+      result = null;
+    }
+
+    if (result && result.encoding == null) {
+      // TODO: test this case
+      result.encoding = 'base64';
+    }
+
+    return embed != null ? { embed: true } : result;
+  }
+
+  /**
+   * Determines whether an SVG resource can be inlined or embedded.
+   *
+   * The inlining behavior is enabled via plugin options or URL query parameters.
+   *
+   * @param {string} resource
+   * @return {boolean}
+   */
+  isInlineSvg(resource) {
+    let svgOptions = this.getInlineSvgOptions(resource);
+
+    return svgOptions != null;
+  }
+
+  /**
+   * Determines whether an SVG resource can be embedded by replacing the `<img>` tag with an inline `<svg>`.
+   *
+   * The inlining behavior is enabled via plugin options or URL query parameters.
+   *
+   * @param {string} resource
+   * @return {boolean}
+   */
+  isEmbedSvg(resource) {
+    let svgOptions = this.getInlineSvgOptions(resource);
+
+    return svgOptions?.embed === true;
   }
 
   /**
@@ -651,10 +778,21 @@ class Option {
   }
 
   /**
+   * Get all plugin options including default values if not specified.
+   *
    * @return {PluginOptions}
    */
   get() {
     return this.options;
+  }
+
+  /**
+   * Get only options specified by user.
+   *
+   * @return {PluginOptions}
+   */
+  getOriginal() {
+    return this.originalOptions;
   }
 
   /**

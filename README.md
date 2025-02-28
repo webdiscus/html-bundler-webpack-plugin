@@ -2705,9 +2705,11 @@ The descriptions of the properties:
   - `sound.oga` as `audio/ogg`
   - `sound.weba` as `audio/webm`
   - etc.
-- `attributes` - an object with additional custom attributes like `crossorigin` `media` etc.,\
-  e.g. `attributes: { crossorigin: true }`, `attributes: { media: '(max-width: 900px)' }`.\
-  Defaults `{}`.
+- `attributes` - an object with additional custom attributes like `crossorigin` `media` etc. Defaults `{}`.\
+  For example:
+    - `attributes: { crossorigin: true }`
+    - `attributes: { media: '(max-width: 900px)' }`
+    - `attributes: { fetchpriority: 'high' }`
 
 > [!NOTE]
 > 
@@ -3008,6 +3010,39 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
   </body>
 </html>
 ```
+
+#### Preload priority
+
+The `fetchpriority` attribute helps optimize resource loading by prioritizing critical assets and deferring less important ones.
+
+**Available values:**
+
+- `auto` (default) – The browser determines the priority automatically.
+- `high` – The resource is fetched with high priority.
+- `low` – The resource is fetched with lower priority.
+
+Using `fetchpriority` is especially beneficial for improving **Core Web Vitals**, 
+particularly **Largest Contentful Paint (LCP)**, by ensuring essential resources load as quickly as possible.
+
+**Example:** Preloading an LCP image with high priority
+
+```js
+preload: [
+  {
+    test: /lcp-image\.webp/i,
+    attributes: {
+      as: 'image',
+      fetchpriority: 'high',
+    },
+  },
+],
+```
+
+**More info:**
+
+- [Fetch priority](https://web.dev/articles/fetch-priority)
+- [Optimize Largest Contentful Paint](https://web.dev/articles/optimize-lcp)
+
 
 #### [↑ back to contents](#contents)
 

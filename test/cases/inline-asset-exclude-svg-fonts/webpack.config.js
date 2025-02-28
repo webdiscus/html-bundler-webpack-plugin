@@ -57,6 +57,22 @@ module.exports = {
             // image > 1 KB save to file
             generator: {
               filename: 'assets/img/[name].[hash:8][ext]',
+
+              dataUrl: (source, { filename, module: { rawRequest } }) => {
+                if (filename.includes('.svg')) {
+                  let dataURI = source.toString();
+
+                  // test: modify original source
+                  dataURI = dataURI.replace('viewBox', `class="injected-attribute" viewBox`);
+
+                  return `data:image/svg+xml,` + encodeURIComponent(Buffer.from(dataURI, 'utf-8').toString());
+                }
+
+                // binary resource
+                const ext = path.extname(filename.split('?')[0]).slice(1);
+
+                return `data:image/${ext};base64,` + source.toString('base64');
+              },
             },
           },
         ],

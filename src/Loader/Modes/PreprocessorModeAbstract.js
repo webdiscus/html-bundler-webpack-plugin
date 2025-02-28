@@ -33,8 +33,6 @@ class PreprocessorModeAbstract {
     const preprocessor = loaderOption.getPreprocessorModule();
     const { esModule } = loaderOption.get();
 
-    //console.log('collection: ', collection);
-
     this.exportCode = esModule ? 'export default ' : 'module.exports=';
     this.preprocessor = preprocessor || {};
     this.loaderOption = loaderOption;

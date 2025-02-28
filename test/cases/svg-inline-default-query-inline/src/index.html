@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="./styles.css" rel="stylesheet">
+  <script src="./main.js" defer="defer"></script>
+</head>
+<body>
+  <b>HTML: SVG as img tag, filename</b>
+  <div><img src="@images/icons/home.svg" class="icon"></div>
+
+  <b>HTML: SVG as img tag, base64 encoded</b>
+  <div><img src="@images/icons/home.svg?inline" class="icon"></div>
+
+  <b>HTML: SVG as img tag, escaped</b>
+  <div><img src="@images/icons/home.svg?inline=escape" class="icon"></div>
+
+  <b>HTML: SVG as svg tag</b>
+  <div><img src="@images/icons/home.svg?embed" class="icon"></div>
+
+  <b>HTML: PNG, base64 encoded</b>
+  <div><img src="@images/icons/home.png?inline" class="icon"></div>
+
+  <b>CSS: SVG background image as filename </b>
+  <div class="icon-imac"></div>
+
+  <b>CSS: SVG background image as data URL (default base64)</b>
+  <div class="icon-imac-inline"></div>
+
+  <b>JS: SVG import as data URL (default base64)</b>
+  <div id="js-svg-data-url"></div>
+
+  <b>JS: SVG import as filename</b>
+  <div id="svg-filename"></div>
+</body>
+</html>

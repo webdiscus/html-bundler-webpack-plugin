@@ -10,6 +10,12 @@ module.exports = {
     publicPath: '', // by importing an image in the JS file, the publicPath must not be auto
   },
 
+  resolve: {
+    alias: {
+      '@images': path.join(__dirname, '../../fixtures/images'),
+    },
+  },
+
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
@@ -20,10 +26,6 @@ module.exports = {
 
   module: {
     rules: [
-      {
-        test: /\.css$/,
-        use: ['css-loader'],
-      },
       // Note: since v4.12 the plugin supports the `?inline` query to load SVG as data URL
       {
         test: /\.svg/i,
@@ -35,13 +37,13 @@ module.exports = {
         },
         generator: {
           filename: 'img/[name].[hash:8][ext]',
-          // test bundler plugin with defined encoding
+          // test: Webpack encoding
           dataUrl: {
             // encoding values:
             // 'base64' - generates base64-encoded data URL (Webpack defaults)
-            // false    - generates UTF-8 data URL, use it only for SVG (Bundler plugin defaults)
-            //encoding: false,
-            encoding: 'base64', // test defined encoding
+            // false    - generates escaped data URL, use it only for SVG
+            encoding: false,
+            //encoding: 'base64',
           },
         },
       },

@@ -19,13 +19,22 @@ module.exports = {
       entry: {
         index: './src/index.html',
       },
+
+      svg: {
+        inline: {
+          // test: all svg files will be inlined into DOM as <svg> tag, except:
+          // - <link href="" rel="icon"> tag
+          // - images with the `?inline` query
+          embed: true,
+        },
+      },
     }),
   ],
 
   module: {
     rules: [
       {
-        test: /\.(png|jpg|svg)$/,
+        test: /\.(png|jpe?g|svg)$/,
         type: 'asset/inline',
       },
     ],
