@@ -2,14 +2,42 @@
 
 ## 4.19.0-beta.0
 
-### BREAKING CHANGES by inlining SVG only
+### 🔥 BREAKING CHANGES by inlining SVG only
 
 - Inline `<img src="icon.svg">`:
   - OLD: replaces `<img>` with `<svg>` tag
-  - NEW: inlines SVG as escaped data URL
+  - NEW: inlines SVG as base64-encoded data URL. Use new `svg.inline.embed = true` option to keep old behaviour.
 - Encoding of data URL:
   - OLD: defaults, escaped URL (`#%` chars only), e.g. `data:image/svg+xml,<svg>...</svg>`
-  - NEW: defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO` or full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option
+  - NEW: defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO` or full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option.
+
+
+### ✨ Feature
+
+New `svg` plugin option:
+
+```ts
+type SvgOptions = {
+  enabled?: boolean;
+  // RegEx to match SVG files.
+  // Defaults `/\.svg/i`.
+  test?: RegExp;
+  inline?: {
+    // Enable inline SVG by replacing <img> with <svg>, only in HTML.
+    // Equivalent to query: `?inline=embed` | `?embed`.
+    // Defaults `false`.
+    embed?: boolean;
+    // Data URL encoding, overrides `generator.dataUrl.encoding` option.
+    // Equivalent to query: `?inline=base64` | `?inline=escape`.
+    // Defaults the `generator.dataUrl.encoding` option, if undefined then `base64`.
+    encoding?: 'base64' | false;
+  };
+};
+```
+
+### Bugfix
+
+Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 
 ## 4.18.2 release (2025-02-20)
 

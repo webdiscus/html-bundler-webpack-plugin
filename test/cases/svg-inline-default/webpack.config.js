@@ -40,7 +40,7 @@ module.exports = {
 
         inline: {
           // equivalent to query: ?inline=embed or ?embed
-          //embed: true, // enable inline SVG by replacing <img> with <svg>, only for HTML
+          //embed: true, // inline SVG in HTML by replacing `<img>` with `<svg>`
           // data URL encoding
           // equivalent to query: ?inline=base64
           //encoding: 'base64', // inline as a base64-encoded data URL, e.g.: `data:image/svg+xml;base64,PHN2y...`

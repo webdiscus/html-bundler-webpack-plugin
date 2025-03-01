@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.19.0-beta.0",
+  "version": "4.19.0-beta.2",
   "description": "Generates complete single-page or multi-page website from source assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -62,9 +62,9 @@
     "test:unitQueryParser": "jest --detectOpenHandles --collectCoverage --config ./test/jest.config.js --runTestsByPath ./test/unit.queryParser.test.js",
     "test:verbose": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
     "test:verbose-update": "jest --detectOpenHandles --updateSnapshot --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
-    "use:npmReadme": "mv 'README.md' 'README.git.md' && mv 'README.npm.md' 'README.md'",
-    "use:gitReadme": "mv 'README.md' 'README.npm.md' && mv 'README.git.md' 'README.md'",
-    "prepublishOnly": "run-s use:npmReadme",
+    "use:npmReadme": "mv 'README.md' './.github/README.git.md' && mv 'README.npm.md' 'README.md'",
+    "use:gitReadme": "mv 'README.md' 'README.npm.md' && mv './.github/README.git.md' 'README.md'",
+    "prepublishOnly": "npm run use:npmReadme",
     "postpublish": "npm run use:gitReadme",
     "publish:public": "npm publish --access public",
     "publish:beta": "npm publish --tag beta"

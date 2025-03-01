@@ -70,6 +70,7 @@ declare namespace HtmlBundlerPlugin {
     filename?: FilenameTemplate;
     js?: JsOptions;
     css?: CssOptions;
+    svg?: SvgOptions;
     /**
      * The references to LoaderOptions.
      * It's syntactic "sugar" to avoid the complicated structure of options.
@@ -260,6 +261,23 @@ type CssOptions = {
   // - `devServer.hot` option must be enabled (defaults)
   // - `devServer.watchFiles.paths` option must contains files excluding CSS/SCSS, e.g. `['src/**/*.(html)']`
   hot?: boolean;
+};
+
+type SvgOptions = {
+  enabled?: boolean;
+  // RegEx to match SVG files.
+  // Defaults `/\.svg/i`.
+  test?: RegExp;
+  inline?: {
+    // Enable inline SVG by replacing <img> with <svg>, only in HTML.
+    // Equivalent to query: `?inline=embed` | `?embed`.
+    // Defaults `false`.
+    embed?: boolean;
+    // Data URL encoding, overrides `generator.dataUrl.encoding` option.
+    // Equivalent to query: `?inline=base64` | `?inline=escape`.
+    // Defaults the `generator.dataUrl.encoding` option, if undefined then `base64`.
+    encoding?: 'base64' | false;
+  };
 };
 
 type IntegrityOptions = {

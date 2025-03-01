@@ -20,7 +20,7 @@ This plugin will generate an HTML file containing all the necessary links to JS,
 
 ## Why use the HTML Bundler Plugin?
 
-This plugin is a powerful alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and a replacement for many [plugins and loaders](#list-of-plugins).
+This plugin is a powerful alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and a replacement for many [plugins and loaders](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#list-of-plugins).
 
 The HTML Bundler Plugin works a bit differently than `html-webpack-plugin`. 
 It doesn't just inject JavaScript and CSS into an HTML.
