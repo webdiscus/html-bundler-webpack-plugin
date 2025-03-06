@@ -135,6 +135,26 @@ const isLinkScript = (attrs) => {
   return false;
 };
 
+/**
+ * Parse tag attributes in a tag string.
+ *
+ * The string must contains only tag string with attributes, e.g.:
+ * `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16px' height='16px'>`
+ *
+ * @param {string} string
+ * @returns {Object<key: string, value: string>} The parsed attributes as the object key:value.
+ */
+const parseTagAttributes = (string) => {
+  const matches = string.matchAll(/(\S+)=["'](.+?)["']/gm);
+  let attrs = {};
+
+  for (const [, key, val] of matches) {
+    attrs[key] = val;
+  }
+
+  return attrs;
+};
+
 class HtmlParser {
   /**
    * Parse values of tag attributes.
@@ -523,4 +543,4 @@ class HtmlParser {
   }
 }
 
-module.exports = { HtmlParser, comparePos };
+module.exports = { HtmlParser, comparePos, parseTagAttributes };

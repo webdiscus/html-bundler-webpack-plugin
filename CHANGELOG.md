@@ -1,6 +1,13 @@
 # Changelog
 
-## 4.19.0-beta.0
+## 4.19.0-beta.3
+
+- fix: apply the encoding specified in the query to the data URL of an SVG for files imported in JS
+  ```js
+  import svg from './icons.svg?inline=base64'; // <= use exactly this encoding, independ how is specified anywhere global
+  ```
+
+## 4.19.0-beta.0 - 4.19.0-beta.2
 
 ### 🔥 BREAKING CHANGES by inlining SVG only
 

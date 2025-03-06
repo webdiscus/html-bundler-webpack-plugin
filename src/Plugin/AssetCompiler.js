@@ -736,9 +736,10 @@ class AssetCompiler {
         let encoding = 'base64'; // default encoding for all resources
         let hasInlineQuery = getQueryParam(resource, 'inline') != null;
         let isInlineSvg = false;
+        let svgOptions;
 
         if (this.assetInline.isSvgFile(resource)) {
-          const svgOptions = this.pluginOption.getInlineSvgOptions(resource, createData);
+          svgOptions = this.pluginOption.getInlineSvgOptions(resource, createData);
 
           isInlineSvg = svgOptions != null;
           encoding = svgOptions?.encoding;
@@ -747,7 +748,7 @@ class AssetCompiler {
         // query `?inline`
         if (hasInlineQuery || isInlineSvg) {
           this.setAssetModuleTypeInline(createData);
-          this.setAssetModuleEncoding(createData, encoding);
+          this.setAssetModuleEncoding(createData, encoding, hasInlineQuery, svgOptions);
         }
       }
 
@@ -816,8 +817,10 @@ class AssetCompiler {
    *
    * @param {Object} module
    * @param {'base64' | false} encoding
+   * @param {boolean} hasInlineQuery
+   * @param {Object | null} svgOptions
    */
-  setAssetModuleEncoding(module, encoding) {
+  setAssetModuleEncoding(module, encoding, hasInlineQuery, svgOptions) {
     if (this.IS_WEBPACK_VERSION_LOWER_5_96_0) {
       // TODO: refactor into Exceptions
       throw new Error(`\nThe support for the \`?inline\` query for assets is available since Webpack >= 5.96.`);
@@ -832,14 +835,37 @@ class AssetCompiler {
     const publicPath = module.generator.publicPath;
     const outputPath = module.generator.outputPath;
     const emit = module.generator.emit;
+    const issuer = module.resourceResolveData?.context?.issuer;
+    const isIssuerScript = this.pluginOption.isScript(issuer || '');
     let dataUrlOptions;
 
     if (dataUrlOptionsType === 'function') {
       dataUrlOptions = moduleDataUrlOptions;
+      if (isIssuerScript) {
+        dataUrlOptions = (...args) => {
+          // extra processes SVG loaded in a JS file, because it will not be processed in renderManifest
+          let res = moduleDataUrlOptions(...args);
+          let normalized = this.assetInline.normalizeEncoding(res, svgOptions);
+
+          // TODO: research why is called double (perhaps the JS file (issuer) is called double)
+          // console.log(
+          //   ' ====> INJECTION: ',
+          //   { isIssuerScript, resource: module.resource, svgOptions, normalized },
+          //   res,
+          //   args
+          // );
+
+          return normalized.dataUrl;
+        };
+      } else {
+        dataUrlOptions = moduleDataUrlOptions;
+      }
     } else {
       dataUrlOptions = dataUrlOptionsType === 'object' ? { ...moduleDataUrlOptions } : {};
       dataUrlOptions.encoding = assetEncoding;
     }
+
+    //console.log('*** saveData: ', { resource: module.resource, encoding, dataUrlOptions }, '\n');
 
     module.generator = new AssetGenerator(moduleGraph, dataUrlOptions, filename, publicPath, outputPath, emit);
   }
@@ -1040,7 +1066,11 @@ class AssetCompiler {
    *
    * @param {Object} module The Webpack module.
    */
-  afterBuildModule(module) {}
+  afterBuildModule(module) {
+    // if (module.resource.includes('&js')) {
+    //   console.log('*** afterBuildModule: ', module);
+    // }
+  }
 
   /**
    * @param {Array<Object>} result
@@ -1107,34 +1137,38 @@ class AssetCompiler {
         moduleType = buildInfo.dataUrl === true ? ASSET_MODULE_TYPE_INLINE : ASSET_MODULE_TYPE_RESOURCE;
       }
 
+      let svgOption = null;
+
+      // TODO: refactor
       if (this.assetInline.isSvgFile(resource) && this.pluginOption.isInlineSvg(resource)) {
-        this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType);
-      }
+        svgOption = this.pluginOption.getInlineSvgOptions(resource, module);
+        this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType, svgOption);
+      } else {
+        switch (moduleType) {
+          case JAVASCRIPT_MODULE_TYPE_AUTO:
+            const assetModule = this.createAssetModule(entry, chunk, module);
 
-      switch (moduleType) {
-        case JAVASCRIPT_MODULE_TYPE_AUTO:
-          const assetModule = this.createAssetModule(entry, chunk, module);
+            if (assetModule == null) continue;
+            if (assetModule === false) return;
 
-          if (assetModule == null) continue;
-          if (assetModule === false) return;
-
-          assetModules.add(assetModule);
-          break;
-        case ASSET_MODULE_TYPE_RESOURCE:
-          // resource required in the template or in the CSS via url()
-          this.assetResource.saveData(module);
-          break;
-        case ASSET_MODULE_TYPE_INLINE:
-          this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType);
-          break;
-        case ASSET_MODULE_TYPE_SOURCE:
-          // support the source type for SVG only
-          if (this.assetInline.isSvgFile(resource)) {
+            assetModules.add(assetModule);
+            break;
+          case ASSET_MODULE_TYPE_RESOURCE:
+            // resource required in the template or in the CSS via url()
+            this.assetResource.saveData(module);
+            break;
+          case ASSET_MODULE_TYPE_INLINE:
             this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType);
-          }
-          break;
-        default:
-        // do nothing
+            break;
+          case ASSET_MODULE_TYPE_SOURCE:
+            // support the source type for SVG only
+            if (this.assetInline.isSvgFile(resource)) {
+              this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType);
+            }
+            break;
+          default:
+          // do nothing
+        }
       }
     }
 

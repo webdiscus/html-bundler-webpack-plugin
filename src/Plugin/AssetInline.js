@@ -5,6 +5,8 @@ const {
   ASSET_MODULE_TYPE_RESOURCE,
 } = require('webpack/lib//ModuleTypeConstants');
 
+const { parseTagAttributes } = require('../Common/HtmlParser');
+
 /**
  * @param {{key: string, value: string}} attrs
  * @param {Array<string>} exclude The list of excluded attributes from the result.
@@ -12,6 +14,7 @@ const {
  */
 const attrsToString = (attrs, exclude = []) => {
   let res = '';
+
   for (const key in attrs) {
     if (exclude.indexOf(key) < 0) {
       res += ` ${key}="${attrs[key]}"`;
@@ -19,22 +22,6 @@ const attrsToString = (attrs, exclude = []) => {
   }
 
   return res;
-};
-
-/**
- * Parse tag attributes in a tag string.
- *
- * @param {string} string
- * @returns {Object<key: string, value: string>} The parsed attributes as the object key:value.
- */
-const parseAttributes = (string) => {
-  let attrs = {};
-  const matches = string.matchAll(/(\S+)="(.+?)"/gm);
-  for (const [, key, val] of matches) {
-    attrs[key] = val;
-  }
-
-  return attrs;
 };
 
 /**
@@ -59,7 +46,7 @@ const parseValues = (content, value) => {
 
     result.push({
       value,
-      attrs: parseAttributes(content.slice(tagStartPos, tagEndPos)),
+      attrs: parseTagAttributes(content.slice(tagStartPos, tagEndPos)),
       tagStartPos,
       tagEndPos,
       valueStartPos,
@@ -106,58 +93,91 @@ const encodeDataUrlContent = (content) => {
   return content.replace(/\s+/g, ' ').replace(reservedChars, replacer);
 };
 
+const normalizeEncoding = (source, svgOption) => {
+  let svgPos = source.indexOf(',');
+  let svgContent = source.slice(svgPos + 1);
+  let isEncodedBase64 = false;
+  let encoding = svgOption?.encoding;
+  let dataUrl;
+
+  if (source.includes(';base64,')) {
+    isEncodedBase64 = true;
+    svgContent = Buffer.from(svgContent, 'base64').toString('utf-8');
+  }
+
+  if (!isEncodedBase64) {
+    svgContent = decodeURIComponent(svgContent);
+  }
+
+  if (encoding === 'base64' && !isEncodedBase64) {
+    dataUrl = `data:image/svg+xml;base64,` + Buffer.from(svgContent, 'utf-8').toString('base64');
+  } else if (encoding === false && isEncodedBase64) {
+    dataUrl = 'data:image/svg+xml,' + encodeURIComponent(svgContent);
+  } else {
+    dataUrl = source;
+  }
+
+  return {
+    svgContent,
+    dataUrl,
+  };
+};
+
 /**
  * @param {string} source The SVG content or data URL containing SVG.
- * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, innerSVG: string}}
+ * @param {Object|null} svgOption The SVG options.
+ * @return {{dataUrl: string, svgAttrs: Object<key:string, value:string>, svgBody: string}}
  */
-const parseSvg = (source) => {
+const parseSvg = (source, svgOption) => {
   let isDataUrl = source.startsWith('data:');
-  let isEncodedBase64 = false;
-  let contentRaw = source;
   let dataUrl;
+  let svgContent;
 
   // decode data from base64
   if (isDataUrl) {
-    dataUrl = source;
-
-    let encoding = 'base64,';
-    let pos = dataUrl.indexOf(encoding);
-
-    if (pos > 0) {
-      isEncodedBase64 = true;
-      contentRaw = source.slice(pos + encoding.length);
-      contentRaw = Buffer.from(contentRaw, 'base64').toString('utf-8');
-    }
+    let res = normalizeEncoding(source, svgOption);
+    svgContent = res.svgContent;
+    dataUrl = res.dataUrl;
   } else {
+    svgContent = source;
     // TODO: add option to custom URI encoding
     //dataUrl = 'data:image/svg+xml,' + encodeDataUrlContent(source);
     dataUrl = 'data:image/svg+xml,' + encodeURIComponent(source);
   }
 
-  if (!isEncodedBase64) {
-    contentRaw = decodeURIComponent(contentRaw);
-  }
+  // if (isEscaped && !isEncodedBase64) {
+  //   contentRaw = decodeURIComponent(contentRaw);
+  //   //console.log('--- parseSvg: ', { contentRaw, isDataUrl });
+  // }
 
-  const svgOpenTag = '<svg';
-  const svgCloseTag = '</svg>';
-  const svgOpenTagStartPos = contentRaw.indexOf(svgOpenTag);
-  const svgCloseTagPos = contentRaw.indexOf(svgCloseTag, svgOpenTagStartPos);
+  const openTag = '<svg';
+  const closeTag = '</svg>';
+  const openTagPos = svgContent.indexOf(openTag);
+  const closeTagPos = svgContent.indexOf(closeTag, openTagPos);
 
-  if (svgOpenTagStartPos > 0) {
+  if (openTagPos > 0) {
     // extract SVG content only, ignore xml tag and comments before SVG tag
-    contentRaw = contentRaw.slice(svgOpenTagStartPos, svgCloseTagPos + svgCloseTag.length);
+    svgContent = svgContent.slice(openTagPos);
   }
 
   // parse SVG attributes and extract inner content of SVG
-  const svgAttrsStartPos = svgOpenTag.length;
-  const svgAttrsEndPos = contentRaw.indexOf('>', svgAttrsStartPos);
-  const svgAttrsString = contentRaw.slice(svgAttrsStartPos, svgAttrsEndPos);
-  const svgAttrs = parseAttributes(svgAttrsString);
-  const innerSVG = contentRaw.slice(svgAttrsEndPos + 1, svgCloseTagPos - svgOpenTagStartPos);
+  let tagEndPos = svgContent.indexOf('>');
+
+  if (tagEndPos < 0) {
+    throw new Error('ERROR by parsing SVG:\n' + svgContent);
+  }
+
+  tagEndPos++;
+
+  const tagString = svgContent.slice(0, tagEndPos);
+  const svgAttrs = parseTagAttributes(tagString);
+  const svgBody = svgContent.slice(tagEndPos, closeTagPos - openTagPos);
+
+  //console.log('--- parseSvg: ', { encoding, source });
 
   return {
     svgAttrs,
-    innerSVG,
+    svgBody,
     dataUrl,
   };
 };
@@ -268,14 +288,19 @@ class AssetInline {
     }
   }
 
+  normalizeEncoding(source, svgOption) {
+    return normalizeEncoding(source, svgOption);
+  }
+
   /**
    * @param {AssetEntryOptions} entry The entry where is specified the resource.
    * @param {Chunk} chunk The Webpack chunk.
    * @param {Module} module The Webpack module.
    * @param {CodeGenerationResults|Object} codeGenerationResults Code generation results of resource modules.
    * @param {string} assetType The Webpack module.
+   * @param {Object|null} svgOption The SVG options.
    */
-  saveData(entry, chunk, module, codeGenerationResults, assetType) {
+  saveData(entry, chunk, module, codeGenerationResults, assetType, svgOption) {
     const { resource } = module;
     const item = this.data.get(resource);
 
@@ -320,7 +345,10 @@ class AssetInline {
       //   source = module.originalSource().source().toString();
       // }
 
-      item.source = item.isSvg ? parseSvg(source) : { dataUrl: source };
+      item.source = item.isSvg ? parseSvg(source, svgOption) : { dataUrl: source };
+
+      //console.log('*** saveData: ', { resource }, '\n', item);
+      //console.log('*** saveData: ', { resource }, '\n');
     }
   }
 
@@ -375,9 +403,9 @@ class AssetInline {
         const attrsString = attrsToString(attrs, [...excludeAttrs, 'title']);
         const titleStr = 'title' in attrs ? attrs['title'] : 'alt' in attrs ? attrs['alt'] : null;
         const title = titleStr ? `<title>${titleStr}</title>` : '';
-        const inlineSvg = `<svg${attrsString}>${title}${source.innerSVG}</svg>`;
+        const svgContent = `<svg${attrsString}>${title}${source.svgBody}</svg>`;
 
-        output += content.slice(pos, tagStartPos) + inlineSvg;
+        output += content.slice(pos, tagStartPos) + svgContent;
         pos = tagEndPos;
       }
     }

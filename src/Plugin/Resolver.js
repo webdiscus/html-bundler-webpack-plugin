@@ -243,7 +243,7 @@ class Resolver {
       if (this.pluginOption.isEntry(issuer.resource) && this.pluginOption.isEmbedSvg(resource)) {
         this.collection.setData(this.entryPoint, issuer, {
           type: Collection.type.inlineSvg,
-          inline: true, // embed into DOM by replacing img with an inline svg
+          inline: true, // embed into DOM by replacing <img> with <svg>
           resource,
         });
 

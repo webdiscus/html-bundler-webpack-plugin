@@ -40,7 +40,7 @@ class Option {
     hot: false,
   };
 
-  // default options for both the plugin.svg options and a URL quiry
+  // default options for both the plugin.svg options and a URL query
   svg = {
     test: /\.svg/i,
     enabled: undefined,

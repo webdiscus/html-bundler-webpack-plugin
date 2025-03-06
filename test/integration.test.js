@@ -310,6 +310,12 @@ describe('inline SVG', () => {
   test('default, asset/inline', () => compareFiles('svg-inline-default'));
   test('default, asset/resource, inline query', () => compareFiles('svg-inline-default-query-inline'));
   test('inline, generator.dataUrl()', () => compareFiles('svg-inline-generator-dataUrl-fn'));
+
+  test('inline, generator.dataUrl(), query in js', () => compareFiles('svg-inline-generator-dataUrl-fn-query-js'));
+
+  // TODO:
+  //  - test query embed in CSS => error
+
   test('inline, generator.dataUrl.encoding base64', () => compareFiles('svg-inline-generator-dataUrl-encoding-base64'));
   test('inline, generator.dataUrl.encoding false', () => compareFiles('svg-inline-generator-dataUrl-encoding-false'));
   test('option svg.inline.encoding false', () => compareFiles('svg-inline-opt-inline-encoding-false'));

@@ -4,7 +4,7 @@ import fs from 'fs';
 import { findPlugin, getFileExtension, parseVersion, compareVersions } from '../src/Common/Helpers';
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
-import { HtmlParser } from '../src/Common/HtmlParser';
+import { HtmlParser, parseTagAttributes } from '../src/Common/HtmlParser';
 import {
   isDir,
   asyncLoadModule,
@@ -84,6 +84,34 @@ describe('misc', () => {
     const received = source.sort(compareArrays);
 
     return expect(received).toEqual(expected);
+  });
+});
+
+describe('parseTagAttributes', () => {
+  test(`double quotes: <svg viewBox="0 0 16 16"`, () => {
+    let str = `;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16px" height="16px">`;
+
+    const received = parseTagAttributes(str);
+    const expected = {
+      xmlns: 'http://www.w3.org/2000/svg',
+      viewBox: '0 0 16 16',
+      width: '16px',
+      height: '16px',
+    };
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`single quotes: <svg viewBox='0 0 16 16'`, () => {
+    let str = `;<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16px' height='16px'>`;
+
+    const received = parseTagAttributes(str);
+    const expected = {
+      xmlns: 'http://www.w3.org/2000/svg',
+      viewBox: '0 0 16 16',
+      width: '16px',
+      height: '16px',
+    };
+    return expect(received).toStrictEqual(expected);
   });
 });
 
