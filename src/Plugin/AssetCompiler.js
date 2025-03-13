@@ -17,7 +17,7 @@ const {
   ASSET_MODULE_TYPE_RESOURCE,
 } = require('webpack/lib//ModuleTypeConstants');
 
-const { yellowBright, cyanBright, green, greenBright } = require('ansis');
+const { yellowBright, cyanBright, green, greenBright, yellow } = require('ansis');
 
 const Config = require('../Common/Config');
 const { baseUri, urlPathPrefix, cssLoaderName } = require('../Loader/Utils');
@@ -44,6 +44,7 @@ const Integrity = require('./Extras/Integrity');
 
 const { compilationName, verbose } = require('./Messages/Info');
 const { PluginError, afterEmitException } = require('./Messages/Exception');
+const { outputWarning } = require('./Messages/Warnings');
 
 const loaderPath = require.resolve('../Loader');
 const LoaderFactory = require('../Loader/LoaderFactory');
@@ -741,6 +742,10 @@ class AssetCompiler {
         if (this.assetInline.isSvgFile(resource)) {
           svgOptions = this.pluginOption.getInlineSvgOptions(resource, createData);
 
+          if (svgOptions?.warning) {
+            outputWarning(svgOptions.warning);
+          }
+
           isInlineSvg = svgOptions != null;
           encoding = svgOptions?.encoding;
         }
@@ -829,8 +834,8 @@ class AssetCompiler {
     let assetEncoding = encoding === 'base64' ? 'base64' : false;
 
     const moduleGraph = this.compilation.moduleGraph;
-    const moduleDataUrlOptions = module.generator.dataUrlOptions;
-    const dataUrlOptionsType = typeof moduleDataUrlOptions;
+    const moduleDataUrl = module.generator.dataUrlOptions;
+    const moduleDataUrlType = typeof moduleDataUrl;
     const filename = module.generator.filename;
     const publicPath = module.generator.publicPath;
     const outputPath = module.generator.outputPath;
@@ -839,29 +844,28 @@ class AssetCompiler {
     const isIssuerScript = this.pluginOption.isScript(issuer || '');
     let dataUrlOptions;
 
-    if (dataUrlOptionsType === 'function') {
-      dataUrlOptions = moduleDataUrlOptions;
+    if (moduleDataUrlType === 'function') {
       if (isIssuerScript) {
         dataUrlOptions = (...args) => {
           // extra processes SVG loaded in a JS file, because it will not be processed in renderManifest
-          let res = moduleDataUrlOptions(...args);
-          let normalized = this.assetInline.normalizeEncoding(res, svgOptions);
+          let resultDataUrl = moduleDataUrl(...args);
+          let normalized = this.assetInline.normalizeDataUrlEncoding(resultDataUrl, svgOptions);
 
           // TODO: research why is called double (perhaps the JS file (issuer) is called double)
           // console.log(
           //   ' ====> INJECTION: ',
           //   { isIssuerScript, resource: module.resource, svgOptions, normalized },
-          //   res,
+          //   resultDataUrl,
           //   args
           // );
 
           return normalized.dataUrl;
         };
       } else {
-        dataUrlOptions = moduleDataUrlOptions;
+        dataUrlOptions = moduleDataUrl;
       }
     } else {
-      dataUrlOptions = dataUrlOptionsType === 'object' ? { ...moduleDataUrlOptions } : {};
+      dataUrlOptions = moduleDataUrlType === 'object' ? { ...moduleDataUrl } : {};
       dataUrlOptions.encoding = assetEncoding;
     }
 
@@ -967,7 +971,7 @@ class AssetCompiler {
   /**
    * Called after a module instance is created.
    *
-   * @param {Module} module The Webpack module.
+   * @param {NormalModule} module The Webpack module.
    * @param {Object} createData
    * @param {Object} resolveData
    */
@@ -1001,7 +1005,9 @@ class AssetCompiler {
     ].includes(type);
 
     const isSvgFile = this.assetInline.isSvgFile(resource);
-    const isInlineSvg = this.pluginOption.isInlineSvg(resource);
+    const isInlineSvg = isSvgFile ? this.pluginOption.getInlineSvgOptions(resource, module) != null : false;
+
+    //console.log('*** isInlineSvg: ', { resource, isSvgFile, isInlineSvg });
 
     if (
       type === ASSET_MODULE_TYPE ||
@@ -1137,12 +1143,14 @@ class AssetCompiler {
         moduleType = buildInfo.dataUrl === true ? ASSET_MODULE_TYPE_INLINE : ASSET_MODULE_TYPE_RESOURCE;
       }
 
-      let svgOption = null;
-
       // TODO: refactor
-      if (this.assetInline.isSvgFile(resource) && this.pluginOption.isInlineSvg(resource)) {
-        svgOption = this.pluginOption.getInlineSvgOptions(resource, module);
-        this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType, svgOption);
+      let svgOptions = this.assetInline.isSvgFile(resource)
+        ? this.pluginOption.getInlineSvgOptions(resource, module)
+        : null;
+
+      if (svgOptions !== null) {
+        //console.log('*** renderManifest: ', { resource }, svgOptions);
+        this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType, svgOptions);
       } else {
         switch (moduleType) {
           case JAVASCRIPT_MODULE_TYPE_AUTO:

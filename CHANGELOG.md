@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.19.0-beta.4
+
+- feat: display a warning when used `embed` URL query for SVG files in JS or CSS
+
 ## 4.19.0-beta.3
 
 - fix: apply the encoding specified in the query to the data URL of an SVG for files imported in JS

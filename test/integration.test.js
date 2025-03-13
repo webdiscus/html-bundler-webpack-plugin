@@ -306,7 +306,6 @@ describe('import SVG in JS', () => {
 });
 
 describe('inline SVG', () => {
-  // TODO: make all test variants for svg
   test('default, asset/inline', () => compareFiles('svg-inline-default'));
   test('default, asset/resource, inline query', () => compareFiles('svg-inline-default-query-inline'));
   test('inline, generator.dataUrl()', () => compareFiles('svg-inline-generator-dataUrl-fn'));
@@ -315,6 +314,8 @@ describe('inline SVG', () => {
 
   // TODO:
   //  - test query embed in CSS => error
+  test('type asset, in css, js', () => compareFiles('svg-inline-asset-css-js'));
+  test('warning using embed query in CSS or JS', () => compareFiles('svg-inline-in-css-js-embed-query-warning'));
 
   test('inline, generator.dataUrl.encoding base64', () => compareFiles('svg-inline-generator-dataUrl-encoding-base64'));
   test('inline, generator.dataUrl.encoding false', () => compareFiles('svg-inline-generator-dataUrl-encoding-false'));
@@ -462,6 +463,8 @@ describe('optimization', () => {
 
 describe('custom plugins', () => {
   test('favicons', () => compareFiles('plugin-favicons'));
+  // TODO: fix publicPath
+  //test('favicons, path option as URL', () => compareFiles('plugin-favicons-path-url'));
   test('favicons defaults', () => compareFiles('plugin-favicons-defaults'));
   test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
   test('favicons used on one of many pages', () => compareFiles('plugin-favicons-oneof-pages'));
@@ -518,7 +521,6 @@ describe('integrity, common use cases', () => {
   test('integrity.hashFunctions array', () => compareFiles('option-integrity-hashFunctions-array'));
   test('integrity.hashFunctions string', () => compareFiles('option-integrity-hashFunctions-string'));
 
-  // TODO: implement and add tests for preload
   test('integrity for preloads', () => compareFiles('integrity-for-preload'));
 
   // TODO: fix issue on windows

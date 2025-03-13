@@ -6,6 +6,7 @@ const { optionSplitChunksChunksAllWarning } = require('./Messages/Warnings');
 
 const Preprocessor = require('../Loader/Preprocessor');
 const PluginService = require('../Plugin/PluginService');
+const { bold, yellow, magenta, cyan } = require('ansis');
 
 class Option {
   /** @type {HtmlBundlerPlugin.PluginOptions} */
@@ -533,7 +534,7 @@ class Option {
    * @return {boolean}
    */
   isEntry(resource) {
-    return testRegExpArray(resource, this.testEntry);
+    return resource && testRegExpArray(resource, this.testEntry);
   }
 
   /**
@@ -544,7 +545,7 @@ class Option {
    * @return {boolean}
    */
   isRoute(resource) {
-    return testRegExpArray(resource, this.router.test);
+    return resource && testRegExpArray(resource, this.router.test);
   }
 
   /**
@@ -635,8 +636,17 @@ class Option {
    * @return {{encoding: string|boolean, embed: boolean} | null}
    */
   getInlineSvgOptions(resource, module = null) {
+    const meta = module?.resourceResolveData?._bundlerPluginMeta;
+
+    // get data from cache
+    if (meta && 'inlineSvg' in meta) {
+      return meta.inlineSvg;
+    }
+
+    const issuer = module?.resourceResolveData?.context?.issuer;
+    const isIssuerEntry = this.isEntry(issuer);
     const inline = getQueryParam(resource, 'inline');
-    const embed = getQueryParam(resource, 'embed');
+    const embed = getQueryParam(resource, 'embed') != null;
     const svgOptionsOriginal = this.originalOptions.svg;
 
     /** @type {'base64' | false | undefined } webpackModuleEncoding */
@@ -646,6 +656,10 @@ class Option {
       encoding: this.svg.inline.encoding,
       embed: this.svg.inline.embed,
     };
+
+    if (issuer && !isIssuerEntry && embed) {
+      result.warning = `The ${bold.greenBright`embed`} URL query for an ${cyan`SVG file`} takes effect only in an ${magenta`HTML context`}.\n${magenta`Context:`} ${issuer}\n${cyan`Resource:`} ${resource}`;
+    }
 
     if (svgOptionsOriginal?.inline?.encoding == null && webpackModuleEncoding != null) {
       result.encoding = webpackModuleEncoding;
@@ -695,21 +709,29 @@ class Option {
       result.encoding = 'base64';
     }
 
-    return embed != null ? { embed: true } : result;
-  }
+    if (isIssuerEntry && embed) {
+      result = { embed: true };
+    }
 
-  /**
-   * Determines whether an SVG resource can be inlined or embedded.
-   *
-   * The inlining behavior is enabled via plugin options or URL query parameters.
-   *
-   * @param {string} resource
-   * @return {boolean}
-   */
-  isInlineSvg(resource) {
-    let svgOptions = this.getInlineSvgOptions(resource);
+    // save detected option into module
+    if (meta && !('inlineSvg' in meta)) {
+      meta.inlineSvg = result;
 
-    return svgOptions != null;
+      // if (!this.svgOptionCallCounter) {
+      //   this.svgOptionCallCounter = 1;
+      // } else {
+      //   this.svgOptionCallCounter++;
+      // }
+
+      // console.log(
+      //   '*** getInlineSvgOptions: ',
+      //   { issuer, resource, isIssuerEntry, embed, svgOptionCallCounter: this.svgOptionCallCounter, result }
+      //
+      //   // module
+      // );
+    }
+
+    return result;
   }
 
   /**
@@ -718,10 +740,19 @@ class Option {
    * The inlining behavior is enabled via plugin options or URL query parameters.
    *
    * @param {string} resource
+   * @param {string} issuer
    * @return {boolean}
    */
-  isEmbedSvg(resource) {
-    let svgOptions = this.getInlineSvgOptions(resource);
+  isEmbedSvg(resource, issuer) {
+    /** @type {NormalModule} */
+    let mockModule = {
+      resourceResolveData: {
+        context: {
+          issuer,
+        },
+      },
+    };
+    let svgOptions = this.getInlineSvgOptions(resource, mockModule);
 
     return svgOptions?.embed === true;
   }

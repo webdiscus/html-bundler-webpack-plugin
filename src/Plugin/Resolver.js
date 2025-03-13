@@ -240,7 +240,11 @@ class Resolver {
     // resolve resource
     if (resource != null) {
       // bypass the asset/inline as inline SVG
-      if (this.pluginOption.isEntry(issuer.resource) && this.pluginOption.isEmbedSvg(resource)) {
+      if (
+        this.assetInline.isSvgFile(resource) &&
+        this.pluginOption.isEntry(issuer.resource) &&
+        this.pluginOption.isEmbedSvg(resource, issuer.resource)
+      ) {
         this.collection.setData(this.entryPoint, issuer, {
           type: Collection.type.inlineSvg,
           inline: true, // embed into DOM by replacing <img> with <svg>

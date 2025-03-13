@@ -91,7 +91,7 @@ const hasQueryParam = (request, name) => {
  *
  * @param {string} request
  * @param {string} name
- * @return {string}
+ * @return {string|null}
  */
 const getQueryParam = (request, name) => {
   const [, query] = request.split('?', 2);

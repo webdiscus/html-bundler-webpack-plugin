@@ -23,9 +23,14 @@ ${greenBright`+     chunks: 'all',`} // <= DEFINE it here only
 },
 `;
 
+  outputWarning(message);
+};
+
+const outputWarning = (message) => {
   outToConsole(headerWarning + message);
 };
 
 module.exports = {
+  outputWarning,
   optionSplitChunksChunksAllWarning,
 };

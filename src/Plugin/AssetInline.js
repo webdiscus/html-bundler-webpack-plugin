@@ -93,7 +93,14 @@ const encodeDataUrlContent = (content) => {
   return content.replace(/\s+/g, ' ').replace(reservedChars, replacer);
 };
 
-const normalizeEncoding = (source, svgOption) => {
+/**
+ * Convert the source to the specified encoding if it differs.
+ *
+ * @param {string} source
+ * @param {object|null} svgOption
+ * @return {{svgContent: string, dataUrl: string}}
+ */
+const normalizeDataUrlEncoding = (source, svgOption) => {
   let svgPos = source.indexOf(',');
   let svgContent = source.slice(svgPos + 1);
   let isEncodedBase64 = false;
@@ -135,7 +142,7 @@ const parseSvg = (source, svgOption) => {
 
   // decode data from base64
   if (isDataUrl) {
-    let res = normalizeEncoding(source, svgOption);
+    let res = normalizeDataUrlEncoding(source, svgOption);
     svgContent = res.svgContent;
     dataUrl = res.dataUrl;
   } else {
@@ -144,11 +151,6 @@ const parseSvg = (source, svgOption) => {
     //dataUrl = 'data:image/svg+xml,' + encodeDataUrlContent(source);
     dataUrl = 'data:image/svg+xml,' + encodeURIComponent(source);
   }
-
-  // if (isEscaped && !isEncodedBase64) {
-  //   contentRaw = decodeURIComponent(contentRaw);
-  //   //console.log('--- parseSvg: ', { contentRaw, isDataUrl });
-  // }
 
   const openTag = '<svg';
   const closeTag = '</svg>';
@@ -172,8 +174,6 @@ const parseSvg = (source, svgOption) => {
   const tagString = svgContent.slice(0, tagEndPos);
   const svgAttrs = parseTagAttributes(tagString);
   const svgBody = svgContent.slice(tagEndPos, closeTagPos - openTagPos);
-
-  //console.log('--- parseSvg: ', { encoding, source });
 
   return {
     svgAttrs,
@@ -288,8 +288,15 @@ class AssetInline {
     }
   }
 
-  normalizeEncoding(source, svgOption) {
-    return normalizeEncoding(source, svgOption);
+  /**
+   * Convert the source to the specified encoding if it differs.
+   *
+   * @param {string} source
+   * @param {object|null} svgOption
+   * @return {{svgContent: string, dataUrl: string}}
+   */
+  normalizeDataUrlEncoding(source, svgOption) {
+    return normalizeDataUrlEncoding(source, svgOption);
   }
 
   /**
@@ -300,7 +307,7 @@ class AssetInline {
    * @param {string} assetType The Webpack module.
    * @param {Object|null} svgOption The SVG options.
    */
-  saveData(entry, chunk, module, codeGenerationResults, assetType, svgOption) {
+  saveData(entry, chunk, module, codeGenerationResults, assetType, svgOption = null) {
     const { resource } = module;
     const item = this.data.get(resource);
 
@@ -346,9 +353,6 @@ class AssetInline {
       // }
 
       item.source = item.isSvg ? parseSvg(source, svgOption) : { dataUrl: source };
-
-      //console.log('*** saveData: ', { resource }, '\n', item);
-      //console.log('*** saveData: ', { resource }, '\n');
     }
   }
 

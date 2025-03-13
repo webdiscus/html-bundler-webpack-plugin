@@ -2,22 +2,16 @@
 <html>
 <head>
   <link href="./styles.css" rel="stylesheet">
-  <script src="./main.js?test" defer="defer"></script>
+  <script src="./main.js" defer="defer"></script>
 </head>
 <body>
   <b>HTML: SVG as output of `generator.dataUrl()` function</b>
   <div><img src="@images/icons/home.svg" class="icon"></div>
 
-  <b>HTML: SVG as img tag, base64 encoded</b>
-  <div><img src="@images/icons/home.svg?inline=base64" class="icon"></div>
-
-  <b>HTML: SVG as img tag, escaped</b>
-  <div><img src="@images/icons/home.svg?inline=escape" class="icon"></div>
-
   <b>HTML: SVG as svg tag</b>
   <div><img src="@images/icons/home.svg?embed" class="icon"></div>
 
-  <b>CSS: SVG background image as data URL (svgToMiniDataURI) </b>
+  <b>CSS: SVG background image as data URL (svgToMiniDataURI)</b>
   <div class="icon-imac"></div>
 
   <b>CSS: SVG background image as data URL (default base64)</b>
