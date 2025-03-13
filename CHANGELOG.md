@@ -55,6 +55,10 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 - fix: the output SVG should contain the changes made in generator.dataUrl()
 - docs: add information about preload priority to readme
 
+## 4.18.1 release (2025-03-13)
+
+- fix: output.publicPath ignored for FaviconsBundlerPlugin, #156
+
 ## 4.18.0 release (2025-02-03)
 
 - chore: bump the version for release
