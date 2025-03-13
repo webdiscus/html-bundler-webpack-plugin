@@ -16,6 +16,21 @@ class FaviconsBundlerPlugin {
   faviconFile = '';
 
   /**
+   * The output path to save generated files.
+   *
+   * @type {string}
+   * */
+  outputPath = '';
+
+  /**
+   * The full output public path..
+   * It will be used if Webpack output.publicPath ia a URL.
+   *
+   * @type {string}
+   * */
+  outputUrl = '';
+
+  /**
    * The key is the source HTML file, where was found the original `faviconFile` parsed in the `faviconTag`.
    * The `faviconFile` is the source file of the parsed favicon file.
    * The `faviconTag` is a link tag string, used as a placeholder which will be replaced with the generated favicon tags.
@@ -31,11 +46,18 @@ class FaviconsBundlerPlugin {
     this.options = options;
     // favicons configuration options, see https://github.com/itgalaxy/favicons#usage
     this.options.faviconsConfig = { ...config.defaults, ...(options.faviconOptions || {}) };
+    this.outputPath = this.options.faviconsConfig?.path ?? '';
   }
 
   apply(compiler) {
     const bundlerPluginOption = PluginService.getPluginContext(compiler).pluginOption;
     const enabled = bundlerPluginOption.toBool(this.options?.enabled, true, 'auto');
+    const isUrlPublicPath = bundlerPluginOption.isUrlPublicPath();
+
+    if (isUrlPublicPath) {
+      let publicPath = bundlerPluginOption.getPublicPath();
+      this.outputUrl = new URL(this.outputPath, publicPath).href;
+    }
 
     if (!enabled) {
       return;
@@ -90,6 +112,7 @@ class FaviconsBundlerPlugin {
             // save favicon manifest files on disk
             response.files.forEach(({ name, contents }) => {
               let outputFile = path.posix.join(this.options.faviconsConfig.path, name);
+
               compilation.emitAsset(outputFile, new RawSource(contents));
             });
           });
@@ -102,7 +125,15 @@ class FaviconsBundlerPlugin {
         const page = this.pages.get(info.sourceFile);
 
         if (page && this.faviconResponse) {
-          content = content.replace(page.faviconTag, this.faviconResponse.html);
+          let { outputUrl, outputPath } = this;
+          let faviconHtml = this.faviconResponse.html;
+
+          if (outputUrl) {
+            faviconHtml = faviconHtml.replaceAll(outputPath, outputUrl);
+          }
+
+          // inject generated <link> tags
+          content = content.replace(page.faviconTag, faviconHtml);
         }
 
         return content;

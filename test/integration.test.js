@@ -441,6 +441,7 @@ describe('optimization', () => {
 describe('custom plugins', () => {
   test('favicons', () => compareFiles('plugin-favicons'));
   test('favicons defaults', () => compareFiles('plugin-favicons-defaults'));
+  test('favicons, publicPath URL', () => compareFiles('plugin-favicons-publicPath-url'));
   test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
   test('favicons used on one of many pages', () => compareFiles('plugin-favicons-oneof-pages'));
   test('favicons used on many pages', () => compareFiles('plugin-favicons-multi-pages'));

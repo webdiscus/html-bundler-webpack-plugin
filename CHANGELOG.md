@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.18.1 release (2025-03-13)
+
+- fix: output.publicPath ignored for FaviconsBundlerPlugin, #156
+
 ## 4.18.0 release (2025-02-03)
 
 - chore: bump the version for release
