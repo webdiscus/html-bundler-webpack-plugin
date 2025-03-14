@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 
-import { findPlugin, getFileExtension, parseVersion, compareVersions } from '../src/Common/Helpers';
+import { joinUrl, findPlugin, getFileExtension, parseVersion, compareVersions } from '../src/Common/Helpers';
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
 import { HtmlParser } from '../src/Common/HtmlParser';
@@ -84,6 +84,80 @@ describe('misc', () => {
     const received = source.sort(compareArrays);
 
     return expect(received).toEqual(expected);
+  });
+});
+
+describe('joinUrl', () => {
+  test(`'https://cdn.com', '/path/to'`, () => {
+    const received = joinUrl('https://cdn.com', '/path/to');
+    const expected = 'https://cdn.com/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'https://cdn.com/', 'path/to'`, () => {
+    const received = joinUrl('https://cdn.com/', 'path/to');
+    const expected = 'https://cdn.com/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'https://cdn.com', 'path/to'`, () => {
+    const received = joinUrl('https://cdn.com', 'path/to');
+    const expected = 'https://cdn.com/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'https://cdn.com/v1/', '/path/to'`, () => {
+    const received = joinUrl('https://cdn.com/v1/', '/path/to');
+    const expected = 'https://cdn.com/v1/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'https://cdn.com/v1/', '/path', '/to'`, () => {
+    const received = joinUrl('https://cdn.com/v1/', '/path', '/to');
+    const expected = 'https://cdn.com/v1/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'https://cdn.com/v1/', '/path/', '/to/'`, () => {
+    const received = joinUrl('https://cdn.com/v1/', '/path/', '/to/');
+    const expected = 'https://cdn.com/v1/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'//cdn.com/v1/', '/path/', '/to/'`, () => {
+    const received = joinUrl('//cdn.com/v1/', '/path/', '/to/');
+    const expected = '//cdn.com/v1/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'/', 'path', 'to/'`, () => {
+    const received = joinUrl('/', 'path', 'to/');
+    const expected = '/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'/path', ''`, () => {
+    const received = joinUrl('/path', '');
+    const expected = '/path';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'/path', '', ''`, () => {
+    const received = joinUrl('/path', '', '');
+    const expected = '/path';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'/path', '', '', 'to', ''`, () => {
+    const received = joinUrl('/path', '', '', 'to', '');
+    const expected = '/path/to';
+    return expect(received).toStrictEqual(expected);
+  });
+
+  test(`'/path'`, () => {
+    const received = joinUrl('/path');
+    const expected = '/path';
+    return expect(received).toStrictEqual(expected);
   });
 });
 

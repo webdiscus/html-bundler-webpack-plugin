@@ -1,8 +1,12 @@
 # Changelog
 
+## 4.18.2 release (2025-03-14)
+
+- fix(FaviconsBundlerPlugin): join URL containing sub-paths with a path, #156
+
 ## 4.18.1 release (2025-03-13)
 
-- fix: output.publicPath ignored for FaviconsBundlerPlugin, #156
+- fix(FaviconsBundlerPlugin): output.publicPath ignored, #156
 
 ## 4.18.0 release (2025-02-03)
 

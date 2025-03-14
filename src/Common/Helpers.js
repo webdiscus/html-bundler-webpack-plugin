@@ -38,6 +38,34 @@ const isFunction = (value) => typeof value === 'function';
 const isUrl = (request) => /^(?:[a-z]+:)?\/\//.test(request);
 
 /**
+ * Join a base URL with multiple sub-paths, ensuring correct formatting (removes extra slashes).
+ *
+ * Example:
+ *   joinUrl('https://cdn.com/v1/', '/path/', '/to/') => 'https://cdn.com/v1/path/to'
+ *
+ * @param {...string} paths - The base URL and any number of sub-paths to join.
+ * @return {string} The joined URL.
+ */
+const joinUrl = (...paths) => {
+  let result = paths[0].replace(/\/+$/, '');
+  let tail = '';
+
+  if (paths.length > 1) {
+    tail = paths
+      .slice(1) // skip the first part since it's already handled
+      .filter(Boolean) // remove empty strings from the paths
+      .map((p) => p.replace(/^\/+|\/+$/g, '')) // remove leading/trailing slashes from other parts
+      .join('/');
+  }
+
+  if (tail) {
+    result += '/' + tail;
+  }
+
+  return result;
+};
+
+/**
  * Find a webpack plugin by instance name.
  *
  * @param {Array<Object>} plugins The webpack compiler.options.plugins.
@@ -269,6 +297,7 @@ module.exports = {
   isWin,
   isFunction,
   isUrl,
+  joinUrl,
   findPlugin,
   pathToPosix,
   getFileExtension,
