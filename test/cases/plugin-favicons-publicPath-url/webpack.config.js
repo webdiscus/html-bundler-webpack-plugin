@@ -8,7 +8,7 @@ module.exports = {
 
   output: {
     path: path.join(__dirname, 'dist/'),
-    publicPath: 'https://cdn.com/', // test URL in FaviconsBundlerPlugin
+    publicPath: 'https://cdn.com/v1/', // test URL with sub paths in FaviconsBundlerPlugin
   },
 
   plugins: [
@@ -29,8 +29,6 @@ module.exports = {
       // favicons configuration options, see https://github.com/itgalaxy/favicons#usage
       faviconOptions: {
         path: '/favicons',
-        url: 'https://www.facebook.com',
-        //path: 'https://cdn.com/favicons',
         appName: 'My App',
         icons: {
           favicons: true, // Create regular favicons.

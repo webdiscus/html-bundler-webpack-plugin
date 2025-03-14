@@ -4,7 +4,7 @@ const { favicons, config } = require('favicons');
 const { black, blueBright, yellow } = require('ansis');
 const PluginService = require('../../src/Plugin/PluginService');
 const BundlerPlugin = require('../../src/');
-const { outToConsole } = require('../../src/Common/Helpers');
+const { joinUrl, outToConsole } = require('../../src/Common/Helpers');
 
 class FaviconsBundlerPlugin {
   pluginName = 'favicons-bundler-plugin';
@@ -56,7 +56,7 @@ class FaviconsBundlerPlugin {
 
     if (isUrlPublicPath) {
       let publicPath = bundlerPluginOption.getPublicPath();
-      this.outputUrl = new URL(this.outputPath, publicPath).href;
+      this.outputUrl = joinUrl(publicPath, this.outputPath);
     }
 
     if (!enabled) {
