@@ -150,7 +150,7 @@
   },
   "dependencies": {
     "@types/html-minifier-terser": "^7.0.2",
-    "ansis": "4.0.0-beta.4",
+    "ansis": "3.17.0",
     "enhanced-resolve": ">=5.7.0",
     "eta": "^3.5.0",
     "html-minifier-terser": "^7.2.0"

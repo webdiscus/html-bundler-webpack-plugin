@@ -10,6 +10,8 @@
   ```js
   import svg from './icons.svg?inline=base64'; // <= use exactly this encoding, independ how is specified anywhere global
   ```
+- fix: the output SVG should contain the changes made in generator.dataUrl()
+- docs: add information about preload priority to readme
 
 ## 4.19.0-beta.0 - 4.19.0-beta.2
 
@@ -49,11 +51,6 @@ type SvgOptions = {
 ### Bugfix
 
 Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
-
-## 4.18.2 release (2025-02-20)
-
-- fix: the output SVG should contain the changes made in generator.dataUrl()
-- docs: add information about preload priority to readme
 
 ## 4.18.1 release (2025-03-13)
 

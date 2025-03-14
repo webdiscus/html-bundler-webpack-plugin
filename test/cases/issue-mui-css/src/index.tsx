@@ -8,7 +8,6 @@ const root = createRoot(document.getElementById('app')!);
 
 root.render(
   <Stack>
-    <p>Hello!</p>
-    <p>How are you?</p>
+    <h1>Hello World!</h1>
   </Stack>
 );
