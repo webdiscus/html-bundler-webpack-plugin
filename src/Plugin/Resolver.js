@@ -274,6 +274,7 @@ class Resolver {
     // if is used the filename like `./main.js`, then the resource is an absolute file
     // if is used the filename like `../js/main.js`, then the resource is null and the rawRequest is an absolute file
     const file = resource || rawRequest;
+
     if (this.pluginOption.js.test.test(file) && this.assetEntry.isEntryResource(issuer.resource)) {
       // occur after rename/delete of a js file when the entry module was already rebuilt
       Snapshot.addMissingFile(issuer.resource, file);

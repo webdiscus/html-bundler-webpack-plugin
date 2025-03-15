@@ -69,6 +69,9 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
 
 See [full list of features](#features).
 
+> [!IMPORTANT]
+> If this plugin makes your work easier, you might like to star ⭐ it.
+
 ## HTML template as entry point
 
 <center>
@@ -178,13 +181,6 @@ See full list of all [plugin options](#toc-plugin-options).
 
 > [!TIP]
 > To resolve route URLs in `a.href` for navigation across multiple pages, you can enable the [router](#option-router) option.
-
----
-> 🦖 **Mozilla** already uses this plugin to build static HTML files for the [Mozilla AI GUIDE](https://github.com/mozilla/ai-guide) site.
-> 
-> The plugin has been actively developed for more than 2 years, and since 2023 it is open source.\
-> Please support this project by giving it a star ⭐.
----
 
 
 ## ❤️ Sponsors & Patrons

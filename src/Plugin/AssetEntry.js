@@ -597,7 +597,15 @@ class AssetEntry {
    * @return {string} Return the unique entry name.
    */
   addToCompilation({ name, importFile, filenameTemplate, context, issuer }) {
-    name = this.#getUniqueEntryName(name, importFile);
+    //const issuerId = this.getByResource(issuer)?.id;
+
+    if (!name) {
+      name = path.parse(importFile).name;
+    }
+
+    let originalName = name;
+
+    name = this.#getUniqueEntryName(name);
 
     // skip duplicate entries
     if (this.#hasEntry(name, importFile)) {
@@ -624,6 +632,7 @@ class AssetEntry {
     const assetEntryOptions = {
       id: undefined,
       name,
+      originalName,
       filenameTemplate,
       filename: undefined,
       resource: importFile,
@@ -666,14 +675,9 @@ class AssetEntry {
 
   /**
    * @param {string|null} name The entry name.
-   * @param {string} file The source file.
    * @return {string } Return unique entry name.
    */
-  #getUniqueEntryName(name, file) {
-    if (!name) {
-      name = path.parse(file).name;
-    }
-
+  #getUniqueEntryName(name) {
     let uniqueName = name;
     let hasEntry = this.compilation.entries.has(name);
 
@@ -749,7 +753,10 @@ class AssetEntry {
     const { name, id } = assetEntryOptions;
 
     this.entriesByName.set(name, assetEntryOptions);
-    this.entriesById.set(id, assetEntryOptions);
+
+    if (id) {
+      this.entriesById.set(id, assetEntryOptions);
+    }
   }
 
   /**

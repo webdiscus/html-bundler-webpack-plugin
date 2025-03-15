@@ -52,6 +52,7 @@ module.exports = {
               // dataUrl: {
               //   encoding: false,
               // },
+              // test: using the `?inline` query w/o a value does not encode if dataUrl is a function
               dataUrl: (source, { filename }) => {
                 let svg = source.toString().replace('viewBox', 'class="processed-data-url" viewBox');
                 //console.log('dataUrl: ', filename);

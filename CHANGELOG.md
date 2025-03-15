@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.19.0-beta.5
+
+- feat: if ?inline query is not specified, dataURL is a result of generator.dataUrl() function.
+  The encoding can be specified using a query value (`base64` or `escape`).
+
 ## 4.19.0-beta.4
 
 - feat: display a warning when used `embed` URL query for SVG files in JS or CSS

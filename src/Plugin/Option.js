@@ -651,9 +651,12 @@ class Option {
 
     /** @type {'base64' | false | undefined } webpackModuleEncoding */
     const webpackModuleEncoding = module?.generatorOptions?.dataUrl?.encoding;
+    const isDataUrlFunction = typeof module?.generatorOptions?.dataUrl === 'function';
 
     let result = {
-      encoding: this.svg.inline.encoding,
+      isDataUrlFunction,
+      encoding: null,
+      inline: true,
       embed: this.svg.inline.embed,
     };
 
@@ -683,7 +686,7 @@ class Option {
           break;
         // `?inline=false` - force disables inline
         case 'false':
-          result = null;
+          result.inline = false;
           break;
         // `?inline=embed` - force replaces <img> with <svg>
         case 'embed':
@@ -701,34 +704,23 @@ class Option {
           break;
       }
     } else if (this.options.svg.enabled !== true) {
-      result = null;
+      result.inline = false;
     }
 
-    if (result && result.encoding == null) {
+    if (!isDataUrlFunction && result.encoding == null) {
       // TODO: test this case
       result.encoding = 'base64';
     }
 
     if (isIssuerEntry && embed) {
-      result = { embed: true };
+      // embedded is always inlined, but in HTML only
+      result.embed = true;
+      result.inline = true;
     }
 
     // save detected option into module
     if (meta && !('inlineSvg' in meta)) {
       meta.inlineSvg = result;
-
-      // if (!this.svgOptionCallCounter) {
-      //   this.svgOptionCallCounter = 1;
-      // } else {
-      //   this.svgOptionCallCounter++;
-      // }
-
-      // console.log(
-      //   '*** getInlineSvgOptions: ',
-      //   { issuer, resource, isIssuerEntry, embed, svgOptionCallCounter: this.svgOptionCallCounter, result }
-      //
-      //   // module
-      // );
     }
 
     return result;

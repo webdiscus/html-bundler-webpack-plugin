@@ -18,7 +18,7 @@ module.exports = {
   plugins: [
     new HtmlBundlerPlugin({
       entry: {
-        index: './src/views/index.html',
+        index: './src/views/home/index.html',
         news: './src/views/news/index.html',
         about: './src/views/about/index.html',
       },

@@ -435,6 +435,16 @@ class AssetCompiler {
       // TODO: collect errors
     });
 
+    // TODO: avoid random index order
+    // compilation.hooks.beforeChunkIds.tap(pluginName, (chunks) => {
+    //   for (const chunk of chunks) {
+    //     if (chunk.name.startsWith('script')) {
+    //       // TODO: sort chinks by index and rename chunk.name, chunk.runtime according index
+    //       console.log(chunks);
+    //     }
+    //   }
+    // });
+
     // called after the succeedModule hook but right before the execution of a loader
     normalModuleHooks.loader.tap(pluginName, this.beforeLoader);
 
@@ -548,6 +558,7 @@ class AssetCompiler {
       return;
     }
 
+    // 2. Invalidate a JavaScript file loaded in an entry template.
     // 2. Invalidate a JavaScript file loaded in an entry template.
 
     if (actionType && isScript) {
@@ -742,11 +753,13 @@ class AssetCompiler {
         if (this.assetInline.isSvgFile(resource)) {
           svgOptions = this.pluginOption.getInlineSvgOptions(resource, createData);
 
+          //console.log('--- afterResolve: ', { issuer, resource, svgOptions });
+
           if (svgOptions?.warning) {
             outputWarning(svgOptions.warning);
           }
 
-          isInlineSvg = svgOptions != null;
+          isInlineSvg = svgOptions.inline;
           encoding = svgOptions?.encoding;
         }
 
@@ -1005,7 +1018,7 @@ class AssetCompiler {
     ].includes(type);
 
     const isSvgFile = this.assetInline.isSvgFile(resource);
-    const isInlineSvg = isSvgFile ? this.pluginOption.getInlineSvgOptions(resource, module) != null : false;
+    const isInlineSvg = isSvgFile && this.pluginOption.getInlineSvgOptions(resource, module).inline;
 
     //console.log('*** isInlineSvg: ', { resource, isSvgFile, isInlineSvg });
 
@@ -1072,11 +1085,7 @@ class AssetCompiler {
    *
    * @param {Object} module The Webpack module.
    */
-  afterBuildModule(module) {
-    // if (module.resource.includes('&js')) {
-    //   console.log('*** afterBuildModule: ', module);
-    // }
-  }
+  afterBuildModule(module) {}
 
   /**
    * @param {Array<Object>} result
@@ -1148,7 +1157,7 @@ class AssetCompiler {
         ? this.pluginOption.getInlineSvgOptions(resource, module)
         : null;
 
-      if (svgOptions !== null) {
+      if (svgOptions?.inline) {
         //console.log('*** renderManifest: ', { resource }, svgOptions);
         this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType, svgOptions);
       } else {

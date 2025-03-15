@@ -312,9 +312,8 @@ describe('inline SVG', () => {
 
   test('inline, generator.dataUrl(), query in js', () => compareFiles('svg-inline-generator-dataUrl-fn-query-js'));
 
-  // TODO:
-  //  - test query embed in CSS => error
-  test('type asset, in css, js', () => compareFiles('svg-inline-asset-css-js'));
+  // TODO: move to warning tests
+  test('dataUrl fn, query in css, js', () => compareFiles('svg-inline-asset-css-js-dataUrl-fn-query'));
   test('warning using embed query in CSS or JS', () => compareFiles('svg-inline-in-css-js-embed-query-warning'));
 
   test('inline, generator.dataUrl.encoding base64', () => compareFiles('svg-inline-generator-dataUrl-encoding-base64'));
@@ -463,8 +462,6 @@ describe('optimization', () => {
 
 describe('custom plugins', () => {
   test('favicons', () => compareFiles('plugin-favicons'));
-  // TODO: fix publicPath
-  //test('favicons, path option as URL', () => compareFiles('plugin-favicons-path-url'));
   test('favicons defaults', () => compareFiles('plugin-favicons-defaults'));
   test('favicons, publicPath URL', () => compareFiles('plugin-favicons-publicPath-url'));
   test('favicons, minify', () => compareFiles('plugin-favicons-minify-true'));
