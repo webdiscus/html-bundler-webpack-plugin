@@ -1,0 +1,24 @@
+{
+  "version": "0.2",
+  "maxNumberOfProblems": 500,
+  "allowCompoundWords": true,
+  "dictionaries": [
+    "!aws",
+    "!cryptocurrencies",
+    "fullstack",
+    "custom-words"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "custom-words",
+      "description": "Additional dictionary",
+      "path": "./.dictionaries/custom-words.txt"
+    }
+  ],
+  "language": "en",
+  "useGitignore": true,
+  "ignorePaths": [
+    ".dictionaries/",
+    "demo.md"
+  ]
+}
