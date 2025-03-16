@@ -20,8 +20,5 @@
   "ignorePaths": [
     ".dictionaries/",
     "demo.md"
-  ],
-  "words": [
-    "Gregor"
   ]
 }
