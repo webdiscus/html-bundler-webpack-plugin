@@ -1,61 +1,57 @@
 # Changelog
 
-## 4.19.0-beta.5
-
-- feat: if ?inline query is not specified, dataURL is a result of generator.dataUrl() function.
-  The encoding can be specified using a query value (`base64` or `escape`).
-
-## 4.19.0-beta.4
-
-- feat: display a warning when used `embed` URL query for SVG files in JS or CSS
-
-## 4.19.0-beta.3
-
-- fix: apply the encoding specified in the query to the data URL of an SVG for files imported in JS
-  ```js
-  import svg from './icons.svg?inline=base64'; // <= use exactly this encoding, independ how is specified anywhere global
-  ```
-- fix: the output SVG should contain the changes made in generator.dataUrl()
-- docs: add information about preload priority to readme
-
-## 4.19.0-beta.0 - 4.19.0-beta.2
+## 4.19.0
 
 ### 🔥 BREAKING CHANGES by inlining SVG only
 
 - Inline `<img src="icon.svg">`:
   - OLD: replaces `<img>` with `<svg>` tag
-  - NEW: inlines SVG as base64-encoded data URL. Use new `svg.inline.embed = true` option to keep old behaviour.
+  - NEW: inline SVG as base64-encoded data URL. Use new `svg.inline.embed = true` option to keep old behavior.
 - Encoding of data URL:
   - OLD: defaults, escaped URL (`#%` chars only), e.g. `data:image/svg+xml,<svg>...</svg>`
-  - NEW: defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO` or full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option.
+  - NEW: 
+    - defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO`
+    - full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option.
 
+### ✨ Features
 
-### ✨ Feature
+- Added support the `?inline` URL query to force inline an image as dataURL in HTML, JS and CSS.
+  The encoding can be specified using a query value (`base64` or `escape`):
+  ```html
+  <img src="./icon.svg?inline"/>        --> src as data URL regards configured encoding, defaults base64
+  <img src="./icon.svg?inline=base64"/> --> <img src="data:image/svg+xml;base64,PHN2Zy..."/>
+  <img src="./icon.svg?inline=escape"/> --> <img src="data:image/svg+xml,%3Csvg%20...%2F%3E"/>
+  ```
+- Added support the `?embed` URL query to replace `<img>` with `<svg>` tag kipping img attributes:
+  ```html
+  <img class="icon" src="./icon.svg?embed"/>
+  ```
+  Result:
+  ```html
+  <svg class="icon" ...>...</svg>
+    ```
+- When inlining SVG as a data URL, consider Webpack's `generator.dataUrl()` and `generator.dataUrl.encoding` options.
+- Display a warning when used `?embed` URL query for SVG files in JS or CSS.
 
-New `svg` plugin option:
-
-```ts
-type SvgOptions = {
-  enabled?: boolean;
-  // RegEx to match SVG files.
-  // Defaults `/\.svg/i`.
-  test?: RegExp;
-  inline?: {
-    // Enable inline SVG by replacing <img> with <svg>, only in HTML.
-    // Equivalent to query: `?inline=embed` | `?embed`.
-    // Defaults `false`.
-    embed?: boolean;
-    // Data URL encoding, overrides `generator.dataUrl.encoding` option.
-    // Equivalent to query: `?inline=base64` | `?inline=escape`.
-    // Defaults the `generator.dataUrl.encoding` option, if undefined then `base64`.
-    encoding?: 'base64' | false;
+- New `svg` plugin option:
+  ```ts
+  type SvgOptions = {
+    enabled?: boolean;
+    // RegEx to match SVG files.
+    // Defaults `/\.svg/i`.
+    test?: RegExp;
+    inline?: {
+      // Enable inline SVG by replacing <img> with <svg>, only in HTML.
+      // Equivalent to query: `?inline=embed` | `?embed`.
+      // Defaults `false`.
+      embed?: boolean;
+      // Data URL encoding, overrides `generator.dataUrl.encoding` option.
+      // Equivalent to query: `?inline=base64` | `?inline=escape`.
+      // Defaults the `generator.dataUrl.encoding` option, if undefined then `base64`.
+      encoding?: 'base64' | false;
+    };
   };
-};
-```
-
-### Bugfix
-
-Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
+  ```
 
 ## 4.18.2 release (2025-03-14)
 
@@ -84,7 +80,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 
 ## 4.18.0-beta.0 (2025-02-01)
 
-- feat: the loader option `loaderOptions.sources` in now available directly in plugin options.
+- feat: the loader option `loaderOptions.sources` is now available directly in plugin options.
 - feat: auto resolve source path in a.href and replaces it with output filename regards the publicPath
 - feat: improve the `sources[].filter()` function, it can now return a string to modify the original value
 - feat: add the `sources[].postprocess()` function, called after resolving output filenames\

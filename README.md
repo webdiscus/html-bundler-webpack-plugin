@@ -44,16 +44,13 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
 
 ## 💡 Highlights
 
-- An [entry point](#option-entry) is any HTML template. **Start from HTML**, not from JS.
+- An [entry point](#option-entry) is any HTML template. **Start from HTML or template**, not from JS.
 - **Automatically** processes templates found in the [entry directory](#option-entry-path).
 - Build-in support for [template engines](#template-engine): [Eta](#using-template-eta), [EJS](#using-template-ejs), [Handlebars](#using-template-handlebars), [Nunjucks](#using-template-nunjucks), [Pug](#using-template-pug), [Tempura](#using-template-tempura), [TwigJS](#using-template-twig), [LiquidJS](#using-template-liquidjs).
 - Build-in support for **Markdown** `*.md` files in templates, see [Markdown demo](https://stackblitz.com/edit/markdown-to-html-webpack?file=webpack.config.js) in browser.
-- **Source files** of [`script`](#option-js) and [`style`](#option-css) can be specified directly in HTML:
-  - `<link href="./style.scss" rel="stylesheet">`\
-  No longer need to define source style files in Webpack entry or import styles in JavaScript.
-  - `<script src="./app.ts" defer="defer"></script>`\
-  No longer need to define source JavaScript files in Webpack entry.
-- **Resolve** [source files](#loader-option-sources) of assets in [attributes](#loader-option-sources-default) such as `href` `src` `srcset` using **relative path** or **alias**:
+- **Resolve** [source files](#loader-option-sources) of [`scripts`](#option-js), [`styles`](#option-css) and other assets:
+  - `<link href="./style.scss" rel="stylesheet">`
+  - `<script src="./app.ts" defer="defer"></script>`
   - `<link href="../images/favicon.svg" type="image/svg" rel=icon />`
   - `<img src="@images/pic.png" srcset="@images/pic400.png 1x, @images/pic800.png 2x" />`\
   Source files will be resolved, processed and auto-replaced with correct URLs in the generated HTML.
@@ -226,6 +223,7 @@ If you have discovered a bug or have a feature suggestion, feel free to create a
 
 ## 🔆 What's New in v4
 
+- **NEW** added support the `?inline` and `?embed` queries to inline SVG in HTML, JS and CSS (since `v4.19.0`).
 - **NEW** added [router](#option-router) to resolve routes in `a.href`, useful for multi-pages (since `v4.18.0`).
 - **NEW** you can include Markdown `*.md` files in your HTML template (since `v4.6.0`).
 - **NEW** added supports the [HMR for CSS](#option-css-hot) (since `v4.5.0`).
@@ -502,6 +500,7 @@ See [boilerplate](https://github.com/webdiscus/webpack-html-scss-boilerplate)
    - [filename](#option-filename) (output filename of HTML file)
    - [js](#option-js) (options for JS)
    - [css](#option-css) (options for CSS)
+   - [svg](#option-svg) (options for SVG)
    - [data](#option-data) (🔗reference to [loaderOptions.data](#loader-option-data))
    - [sources](#option-sources) (🔗reference to [loaderOptions.sources](#loader-option-sources))
    - [router](#option-router) (enable resolving of route URLs in `a.href`)
@@ -747,7 +746,7 @@ module.exports = {
 
 The starting point to build the bundle.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Using this plugin an `entry point` is an HTML template.
 > All script and style source files must be specified in the HTML template.
@@ -1787,7 +1786,7 @@ module.exports = {
   },
   plugins: [
     new HtmlBundlerPlugin({
-      // absoulte html output directory
+      // absolute html output directory
       outputPath: path.join(__dirname, 'dist/example/'),
       // OR relative to output.path
       // outputPath: 'example/',
@@ -1824,7 +1823,7 @@ The generated _dist/example/index.html_:
 </html>
 ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > The `outputPath` is NOT used for output assets (js, css, images, etc.).
 
@@ -1903,10 +1902,10 @@ If `inline` is `'auto'` or `boolean`, available values:
 
 If `inline` is an `object`:
 
-- `enabled` - has the values: `true` (**defaults**), `false` or `'auto'`, descriptsion see above,\
+- `enabled` - has the values: `true` (**defaults**), `false` or `'auto'`, description see above,\
    if the `enabled` is undefined, then using the `inline` as the `object`, the value is `true`
-- `chunk` - inlines the single chunk when output chunk filename matches a regular expression(s)
-- `source` - inlines all chunks when source filename matches a regular expression(s)
+- `chunk` - inline the single chunk when output chunk filename matches a regular expression(s)
+- `source` - inline all chunks when source filename matches a regular expression(s)
 - `attributeFilter` - filter function to keep/remove attributes for inlined script tag. If undefined, all attributes will be removed.\
   Destructed arguments:
   - `attribute` - attribute name
@@ -1943,7 +1942,7 @@ runtime.xxxxxxxx.js        -> inline the chunk into HTML and NOT save as file
 
 The single `runtime.xxxxxxxx.js` chunk will be injected into HTML, other chunks will be saved to output directory.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The `filename` and `chunkFilename` options are the same as in Webpack `output` options, just defined in one place along with other relevant plugin options.
 > You don't need to define them in the in Webpack `output` options anymore. Keep the config clean & clear.
@@ -2036,7 +2035,7 @@ module.exports = {
 };
 ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > Webpack tries to split and concatenate chunks of all files (templates, styles, scripts) into jumbles.
 > Therefore, the `test` option `MUST` be specified to match only source JS files, otherwise Webpack will generate **invalid output files**.
@@ -2095,7 +2094,7 @@ For example:
 <link href="./style.scss" rel="stylesheet" />
 ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > Don't import source styles in JavaScript. Styles should be specified directly in HTML.\
 > Don't define source JS files in Webpack entry. Scripts must be specified directly in HTML.
@@ -2124,13 +2123,14 @@ If you want to have a different output filename, you can use the `filename` opti
 
 #### `css.hot` option
 
+> [!CAUTION]
 > ⚠️ Limitation
 > 
 > - HMR works only for styles imported in JavaScript files. Doesn't works for styles defined directly in HTML via `link` tag.
 > - Hot update without a full reload works only for styles imported in a last JavaScript file.\
 >   If you have many JS files defined in HTML, where are imported styles, and change a style file imported in the first JS file,
 >   then changes will not be detected in HMR module. You should reload the browser manually.
->   This behaviour is a BUG in Webpack. The [style-loader](https://github.com/webpack-contrib/style-loader) has exactly same limitation. 
+>   This behavior is a BUG in Webpack. The [style-loader](https://github.com/webpack-contrib/style-loader) has exactly same limitation. 
 >
 
 If you use the [Live Reload](#setup-live-reload) configuration, then be sure to exclude the style files (CSS/SCSS) from watching,
@@ -2157,16 +2157,100 @@ devServer: {
 },
 ``` 
 
-**💡 Tip**: to enable HMR for all style files without a full reload, import all those styles in one JS file.
+> [!TIP]
+> To enable HMR for all style files without a full reload, import all those styles in one JS file.
 
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > Don't use `mini-css-extract-plugin` because the bundler plugin extracts CSS much faster than other plugins.
 >
 > Don't use `resolve-url-loader` because the bundler plugin resolves all URLs in CSS, including assets from node modules.
 >
 > Don't use `style-loader` because the bundler plugin can auto inline CSS and HMR.
+
+#### [↑ back to contents](#contents)
+
+<a id="option-svg" name="option-svg"></a>
+
+### `svg`
+
+The option to configure inlining SVG into HTML, JS and CSS.
+
+Type:
+```ts
+type SvgOptions = {
+  enabled?: boolean;
+  test?: RegExp;
+  inline?: {
+    embed?: boolean;
+    encoding?: 'base64' | false;
+  };
+};
+```
+
+- `enabled` - enable this option. Defaults `true`.
+- `test` - an RegEpx to apply this options to SVG files that pass test assertion. Defaults `/\.svg/i`.
+- `inline` - options to inline SVG:
+  - `embed` - enable inline SVG by replacing `<img>` with `<svg>`, only in HTML. Defaults `false`.\
+              Equivalent to URL query: `?inline=embed` or `?embed`.
+  - `encoding` - data URL encoding, overrides `generator.dataUrl.encoding` Webpack option.\
+     Values:
+    - `'base64'` - force encode the data URL as `base64`. Defaults.\
+       Equivalent to URL query: `?inline=base64`.
+    - `false` - force disable encoding and escape the data URL.\
+       Equivalent to URL query: `?inline=escape`.
+
+> [!TIP]
+> To inline a single SVG file use the `?inline` URL query.
+
+#### Using `?inline` query
+
+Force inline SVG as data URL using default encoding, regardless the module type, even is it `asset/resource`.
+
+```html
+<img src="./icon.svg?inline"/>
+```
+Output is depends on `generator.dataUrl.encoding` Webpack option, default encoding is `base64`:
+```html
+<img src="data:image/svg+xml;base64,PHN2Zy..."/>
+```
+
+#### Using `?inline=base64`  query
+
+Force inline SVG as base64-encoded data URL, regardless the `generator.dataUrl.encoding` Webpack option.
+
+```html
+<img src="./icon.svg?inline=base64"/>
+```
+Output:
+```html
+<img src="data:image/svg+xml;base64,PHN2Zy..."/>
+```
+
+#### Using `?inline=escape`  query
+
+Force inline SVG as escaped data URL, regardless the `generator.dataUrl.encoding` Webpack option.
+
+```html
+<img src="./icon.svg?inline=escape"/>
+```
+Output:
+```html
+<img src="data:image/svg+xml,%3Csvg%20...%2F%3E"/>
+```
+
+#### Using `?inline=embed` or shortly `?embed` query
+
+Force embed SVG as raw content replacing `<img>` tag with `<svg>`, works only in HTML.
+
+```html
+<img class="icon" alt="stern" src="./icon.svg?embed"/>
+```
+Output:
+```html
+<svg class="icon" viewBox="0 96 960 960" width="48" height="48"><title>stern</title>...</svg>
+```
 
 #### [↑ back to contents](#contents)
 
@@ -2699,9 +2783,11 @@ The descriptions of the properties:
   - `sound.oga` as `audio/ogg`
   - `sound.weba` as `audio/webm`
   - etc.
-- `attributes` - an object with additional custom attributes like `crossorigin` `media` etc.,\
-  e.g. `attributes: { crossorigin: true }`, `attributes: { media: '(max-width: 900px)' }`.\
-  Defaults `{}`.
+- `attributes` - an object with additional custom attributes like `crossorigin` `media` etc. Defaults `{}`.\
+  For example:
+    - `attributes: { crossorigin: true }`
+    - `attributes: { media: '(max-width: 900px)' }`
+    - `attributes: { fetchpriority: 'high' }`
 
 > [!NOTE]
 > 
@@ -2913,7 +2999,7 @@ preload: [
 ],
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The `media` attribute be useful when used [responsive-loader](https://www.npmjs.com/package/responsive-loader).
 
@@ -2928,7 +3014,7 @@ preload: [
 ],
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Font preloading [requires](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#cors-enabled_fetches) the `crossorigin` attribute to be set.\
 > If the `crossorigin` property is not defined, it will be added for the `font` type automatically.
@@ -3002,6 +3088,39 @@ The generated HTML contains the preload tags exactly in the order of `preload` o
   </body>
 </html>
 ```
+
+#### Preload priority
+
+The `fetchpriority` attribute helps optimize resource loading by prioritizing critical assets and deferring less important ones.
+
+**Available values:**
+
+- `auto` (default) – The browser determines the priority automatically.
+- `high` – The resource is fetched with high priority.
+- `low` – The resource is fetched with lower priority.
+
+Using `fetchpriority` is especially beneficial for improving **Core Web Vitals**, 
+particularly **Largest Contentful Paint (LCP)**, by ensuring essential resources load as quickly as possible.
+
+**Example:** Preloading an LCP image with high priority
+
+```js
+preload: [
+  {
+    test: /lcp-image\.webp/i,
+    attributes: {
+      as: 'image',
+      fetchpriority: 'high',
+    },
+  },
+],
+```
+
+**More info:**
+
+- [Fetch priority](https://web.dev/articles/fetch-priority)
+- [Optimize Largest Contentful Paint](https://web.dev/articles/optimize-lcp)
+
 
 #### [↑ back to contents](#contents)
 
@@ -3094,7 +3213,7 @@ If the `integrity` option is an object, then default options are:
 }
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The [W3C recommends](https://www.w3.org/TR/2016/REC-SRI-20160623/#hash-collision-attacks) using the `SHA-384` hash algorithm.
 
@@ -3107,7 +3226,7 @@ The `integrity` or `integrity.enabled` has one of values:
 The `hashFunctions` option can be a string to specify a single hash function name,
 or an array to specify multiple hash functions for compatibility with many browsers.
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > When used the `integrity` option:
 >
@@ -3226,7 +3345,7 @@ watchFiles: {
 
 Allows to configure paths and files to watch file changes for rebuild in `watch` or `serv` mode.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > To watch changes with a `live reload` in the browser, you must additionally configure the `watchFiles` in `devServer`,
 > see [setup live reload](#setup-live-reload).
@@ -3268,7 +3387,7 @@ watchFiles: {
 To exclude watching of files defined in `paths` and `includes`, you can use the `excludes` option.
 This option has the priority over paths and files.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > To display all watched files, enable the [`verbose`](#option-verbose) option.
 
@@ -3306,7 +3425,7 @@ Possible values:
 - `true` - display information
 - `auto` - in `development` mode enable verbose, in `production` mode disable verbose
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > If you want to colorize the console output in your app, use the best Node.js lib [ansis][ansis].
 
@@ -3378,7 +3497,7 @@ module.exports = {
 > Define this rule only for special cases, e.g. when you have templates with different templating engines.\
 > An example see by [How to use some different template engines](#recipe-diff-templates).
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Options defined in `module.rules` take precedence over the same options defined in `loaderOptions`.
 
@@ -3405,12 +3524,12 @@ If the `HtmlBundlerPlugin.loader` is not configured, the plugin add it with defa
 
 The default loader handles HTML files and `EJS`-like templates.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > It is recommended to define all loader options in the [`loaderOptions`](#option-loader-options) by the plugin options
 > to keep the webpack config clean and smaller.
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > The plugin works only with the own loader `HtmlBundlerPlugin.loader`.
 > Do not use another loader.
@@ -3467,11 +3586,11 @@ By default, resolves source files in the following tags and attributes:
 | `video`  | `src` `poster`                                                                                               |
 | `object` | `data`                                                                                                       |
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > It is not recommended to use the [deprecated](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/xlink:href) `xlink:href` attribute by the `image` and `use` tags.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Automatically are processed only attributes containing a relative path or Webpack alias:
 >
@@ -3564,12 +3683,12 @@ For example, allow processing only for images in `content` attribute of the `met
   <head>
     <!-- ignore the 'content' attribute via filter -->
     <meta name="theme-color" content="#ffffff" />
-    <meta property="og:title" content="Frutis" />
+    <meta property="og:title" content="Fruits" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:video:type" content="video/mp4" />
 
     <!-- resolve the 'content' attribute via filter  -->
-    <meta property="og:image" content="./frutis.png" />
+    <meta property="og:image" content="./fruits.png" />
     <meta property="og:video" content="./video.mp4" />
   </head>
   <body>
@@ -3823,7 +3942,7 @@ module.exports = {
 };
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Since the `v2.2.0` is available new syntax, the [preprocessor](#option-preprocessor)
 > and the [preprocessorOptions](#option-preprocessor) should be defined directly in the plugin option
@@ -3899,14 +4018,14 @@ The default `preprocessor` is pre-configured as the following function:
 ```js
 const { Eta } = require('eta');
 const eta = new Eta({
-  async: false, // defaults is false, wenn is true then must be used `await includeAsync()`
+  async: false, // defaults is false, when is true then must be used `await includeAsync()`
   useWith: true, // allow to use variables in template without `it.` scope
   views: process.cwd(), // directory that contains templates
 });
 preprocessor = (content, { data }) => eta.renderString(content, data);
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The plugin supports `EJS`-like templates "out of the box" therefore the `HtmlBundlerPlugin.loader` can be omitted in the Webpack config.
 
@@ -3948,7 +4067,7 @@ Each preprocessor has its own options, depend on using template engine.
 {
   preprocessor: 'eta',
   preprocessorOptions: {
-    async: false, // defaults 'false', wenn is 'true' then must be used `await includeAsync()`
+    async: false, // defaults 'false', when is 'true' then must be used `await includeAsync()`
     useWith: true, // defaults 'true', use variables in template without `it.` scope
     views: 'src/views', // relative path to directory that contains templates
     // views: path.join(__dirname, 'src/views'), // absolute path to directory that contains templates
@@ -4180,7 +4299,7 @@ Usage of helpers:
 {{#[wrapper/span]}}The text wrapped with span tag.{{/[wrapper/span]}}
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > - The helper located in a subdirectory, e.g. `wrapper/span.js` will be available in template as `[wrapper/span]`.
 > - When helper name contain the `/` slash, then the helper name must be wrapped with the `[]`.
@@ -4424,7 +4543,7 @@ You can use a relative path:
 > {% extends myTemplate %}
 > ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > The Twig template containing `tabs` will not be compiled into HTML.\
 > Use the `spaces` as an indent in templates.
@@ -4459,11 +4578,11 @@ Type: `string`
 The string value is an absolute or relative filename of a JSON or JS file. The JS file must export an object.
 The data file will be reloaded after changes.
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Use the `data` as a path to dynamically update variables in a template **without restarting Webpack**.
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > The [entry.{name}.data](#option-entry-data) property overrides the same property defined in the loader `data`.
 
@@ -4558,7 +4677,7 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 - [TwigJS](https://github.com/twigjs/twig.js)
 
 <!--
-> ℹ️ **Note**
+> [!NOTE]
 >
 > For Pug templates use the [pug-plugin](https://github.com/webdiscus/pug-plugin).
 > This plugin works on the same codebase but has additional Pug-specific options and features.
@@ -4570,7 +4689,7 @@ Using the [preprocessor](#loader-option-preprocessor), you can compile any templ
 
 _Supported "out of the box"_
 
-`Eta` is [compatible\*](#eta-compatibilty-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
+`Eta` is [compatible\*](#eta-compatibility-with-ejs) with `EJS` syntax, is smaller and faster than `EJS`.
 
 For example, there is the template _src/views/page/index.eta_
 
@@ -4625,9 +4744,9 @@ new HtmlBundlerPlugin({
 
 See the [`eta` preprocessor options](#loader-option-preprocessor-options-eta).
 
-<a id="eta-compatibilty-with-ejs" name="eta-compatibilty-with-ejs"></a>
+<a id="eta-compatibility-with-ejs" name="eta-compatibility-with-ejs"></a>
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > For compatibility the Eta compiler with the EJS templates, the default preprocessor use the `useWith: true` Eta option
 > to use variables in template without the Eta-specific `it.` scope.
@@ -4880,7 +4999,7 @@ module.exports = {
           people: ['Walter White', 'Jesse Pinkman'],
         },
       },
-      // define preprocessor as the function that shoud return a string or promise
+      // define preprocessor as the function that should return a string or promise
       preprocessor: (content, { data }) => Mustache.render(content, data),
     }),
   ],
@@ -5359,7 +5478,7 @@ The example to keep original directory structure for images:
 },
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > For images, it is recommended to use the hashed output filename.
 
@@ -5523,16 +5642,16 @@ _styles.scss_
 
 ```scss
 @font-face {
-  font-family: 'MyFont';
+  font-family: 'Monaco';
   // load source fonts using the `@fonts` Webpack alias to the font directory
   src:
-    local(MyFont Regular),
-    url('@fonts/myfont.woff2') format('woff2'),
-    url('@fonts/myfont.woff') format('woff');
+    local(Monaco Regular),
+    url('@fonts/monaco.woff2') format('woff2'),
+    url('@fonts/monaco.woff') format('woff');
 }
 
 body {
-  font-family: 'MyFont', serif;
+  font-family: 'Monaco', serif;
 }
 ```
 
@@ -5599,7 +5718,7 @@ module.exports = {
 };
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > Font preloading requires the `crossorigin` attribute to be set.
 > See [font preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload#what_types_of_content_can_be_preloaded).
@@ -5611,8 +5730,8 @@ The generated HTML contains the preload tag with the font:
   <head>
     <title>Demo</title>
     <!-- preload fonts detected in style -->
-    <link rel="preload" href="fonts/myfont.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="fonts/myfont.woff" as="font" type="font/woff" crossorigin />
+    <link rel="preload" href="fonts/monaco.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="fonts/monaco.woff" as="font" type="font/woff" crossorigin />
     <!-- compiled style -->
     <link href="css/style.1f4faaff.css" rel="stylesheet" />
   </head>
@@ -5622,7 +5741,7 @@ The generated HTML contains the preload tag with the font:
 </html>
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > You don't need a plugin to copy files from source directory to public.
 > All source fonts will be coped to output directory automatically.
@@ -5643,7 +5762,7 @@ There are two ways to inline CSS in HTML:
 The `inline` option can take the following values: `false`, `true` and `'auto'`.
 For details see the [inline option](#option-css).
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The individual `?inline` query parameter takes precedence over the globally `css.inline` option.\
 > For example, if `css.inline = true` and in HTML a single file has the `?inline=false` query,
@@ -5770,7 +5889,7 @@ The generated HTML contains inline CSS already processed via Webpack:
 </html>
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > To enable the source map in inline CSS set the Webpack option [`devtool`](https://webpack.js.org/configuration/devtool/#devtool).
 
@@ -5790,7 +5909,7 @@ There are two ways to inline CSS in HTML:
 The `inline` option can take the following values: `false`, `true` and `'auto'`.
 For details see the [inline option](#option-js).
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > The individual `?inline` query parameter takes precedence over the globally `js.inline` option.\
 > For example, if `js.inline = true` and in HTML a single file has the `?inline=false` query,
@@ -5906,7 +6025,7 @@ The generated HTML contains inline JS already compiled via Webpack:
 </html>
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > If Webpack is started as `serve` or `watch`,
 > the inlined JS code will contain additional HMR code.
@@ -5951,7 +6070,7 @@ module: {
 }
 ```
 
-The plugin automatically inlines images smaller then `maxSize`.
+The plugin automatically inline images smaller then `maxSize`.
 
 ---
 
@@ -6011,18 +6130,10 @@ The Bundler Plugin supports the `?inline` URL query to force load SVG file as a 
 > The `inline` query works independent of used module type.
 
 The `inline` query parameter supports values of encoding:
-- `utf8` - import SVG as UTF-8 data URL (defaults, can be omitted)
-- `base64` - import SVG as base64-encoded data URL
+- `base64` - default, import SVG as base64-encoded data URL
+- `escape` - import SVG as escaped data URL
 
-For example, import SVG as UTF-8 data URL:
-
-```js
-import file from './image.svg?inline';
-
-console.log(file); // data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2...%3C%2Fsvg%3E
-```
-
-To import SVG as base64-encoded data URL, use the `?inline=base64` query.
+To import SVG as base64-encoded data URL, use the `?inline=base64` or `?inline` query.
 
 ```js
 import file from './image.svg?inline=base64';
@@ -6033,16 +6144,10 @@ console.log(file); // data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo...vc3ZnP
 Import SVG as escaped data URL:
 
 ```js
-import svgFilename from './image.svg'; // import as output filename
-import svgDataUrl from './image.svg?dataurl'; // import as data URL
-import svgSource from './image.svg?raw'; // import as source code
+import file from './image.svg?inline=escape';
 
-console.log(svgFilename); // img/image.416b7e1d.svg
-console.log(svgDataUrl);  // data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo...vc3ZnPgo=
-console.log(svgSource);   // <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 96 960 960">...</svg>
+console.log(file); // data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2...%3C%2Fsvg%3E
 ```
-
-See the [test case](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test/cases/js-import-image-svg) as working example.
 
 ---
 
@@ -6080,6 +6185,12 @@ module.exports = {
       js: {
         inline: true, // inline JS into HTML
       },
+      svg: {
+        inline: {
+          // optional: inline SVG in HTML by replacing <img> with <svg>
+          //embed: true,
+        },
+      }
     }),
   ],
   module: {
@@ -6896,7 +7007,7 @@ module.exports = {
 };
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > In the `test` option must be specified all extensions of scripts which should be split.
 
@@ -6929,7 +7040,7 @@ For example, in a template are used the scripts and styles from `node_modules`:
 </html>
 ```
 
-> ℹ️ **Note**
+> [!NOTE]
 >
 > In the generated HTML, all script tags remain in their original places, and the split chunks will be added there
 > in the order in which Webpack generated them.
@@ -6952,7 +7063,7 @@ module.exports = {
 };
 ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > If you will to use the `test` as `/[\\/]node_modules[\\/]`, without extension specification,
 > then Webpack concatenates JS code together with CSS in one file and Webpack compilation will failed or generate files with a wrong content.
@@ -7031,7 +7142,7 @@ module.exports = {
 };
 ```
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > The group name MUST be different from the script names used in the template.
 > Otherwise, a chunk name conflict occurs.
@@ -7044,8 +7155,7 @@ The split files will be saved like this:
 
 ```
 dist/js/runtime.9cd0e0f9.js
-dist/js/npm.popperjs/core.f96a1152.js <- split chunks of node modules
-dist/js/npm.bootstrap.f69a4e44.js
+dist/js/npm.bootstrap.f69a4e44.js <- split chunks of node modules
 dist/js/npm.underscore.4e44f69a.js
 dist/js/main.3010da09.js <- base code of main script
 dist/js/app-5fa74877.7044e96a.js <- split chinks of main script
@@ -7062,7 +7172,7 @@ dist/js/app-5fa74877.1aceb2db.js
 
 ### How to split CSS files
 
-> ⚠️ **Warning**
+> [!WARNING]
 >
 > Splitting CSS to many chunks is principally impossible. Splitting works only for JS files.
 
