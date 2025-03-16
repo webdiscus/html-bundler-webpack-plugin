@@ -72,7 +72,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 
 ## 4.18.0-beta.2 (2025-02-03)
 
-- feat: if the `router` option is specified and not disabled, 
+- feat: if the `router` option is specified and not disabled,
   then ensure that `a.href` is present in the `sources` option
 - fix: if router is disabled and sources contains attributes matching a route file, then doesn't resolve it
 
@@ -89,7 +89,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 - feat: improve the `sources[].filter()` function, it can now return a string to modify the original value
 - feat: add the `sources[].postprocess()` function, called after resolving output filenames\
    **NOTE:** `postprocess` works only for `a.href` contained any `*.html` file
-- fix: does not resolve an attribute containing a specific link, e.g. `whatsapp://send?abid=1234567890&text=Hello`
+- fix: does not resolve an attribute containing a specific link, e.g. `whatsapp://send?id=1234567890&text=Hello`
 
 ## 4.17.0 (2025-01-29)
 
@@ -179,7 +179,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 - feat: add support for the `?inline` query by importing SVG file in JS as data URL
   ```js
   import file from './image.svg'; // import according the matched webpack config, defaults as output filename
-  
+
   import file from './image.svg?inline'; // import as UTF-8 data URL
   import file from './image.svg?inline=utf8'; // import as UTF-8 data URL
   import file from './image.svg?inline=base64'; // import as base64-encoded data URL
@@ -233,7 +233,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 
 - feat: rebuilt all entry point templates by serve/watch, after a partial file is modified, #127.\
   **The problem:**
-  Webpack doesn't know which partials are used in which templates, so Webpack can't rebuild the main template (entrypoint) where a partial has changed. 
+  Webpack doesn't know which partials are used in which templates, so Webpack can't rebuild the main template (entrypoint) where a partial has changed.
 
 ## 4.8.1 (2024-12-06)
 
@@ -299,7 +299,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 ## 4.4.2 (2024-11-18)
 
 - fix: add Exception when used `splitChunks` and occurs the error: Can't resolve a CSS file in template
-- fix: correct Exception message when a source CSS file is not found 
+- fix: correct Exception message when a source CSS file is not found
 
 ## 4.4.1 (2024-11-05)
 
@@ -332,7 +332,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
   WARNING: Webpack version `5.96.0` introduces the BREAKING CHANGE in the `CodeGenerationResults` class!
 - feat: add support for Webpack `>= 5.96` to correct CSS lazy loading
   WARNING: Webpack version `5.96.0` introduces the BREAKING CHANGE in the `AssetGenerator` class!
-- chore: update package and devel dependencies
+- chore: update package and dev dependencies
 - test: update tests
 
 ## 4.1.4 (2024-11-01)
@@ -342,7 +342,7 @@ Consider `generator.dataUrl()` and `generator.dataUrl.encoding` Webpack options.
 ## 4.1.3 (2024-10-28)
 
 - fix: if `filesystem` cache is used, webpack stats or errors are not displayed, #115
-- test: allow set the `stats.preset` webpack option to display stats info by testing 
+- test: allow set the `stats.preset` webpack option to display stats info by testing
 
 ## 4.1.2 (2024-10-21)
 
@@ -499,7 +499,7 @@ module.exports = [
 
 - fix: ERROR in RealContentHashPlugin in serv/watch mode after adding new import file
 - fix: when using integrity occurs ERROR in RealContentHashPlugin in serv/watch mode after changes by using dynamic import
-  
+
 ### MISC
 
 - refactor: rewrite all static classes to regular, this is needed to support webpack multiple configurations
@@ -671,7 +671,7 @@ See release 4.0.0
       });
     }
   }
-  
+
   module.exports = {
     plugins: [
       new MyPlugin({
@@ -764,7 +764,7 @@ See release 4.0.0
 ## 3.5.0 (2024-02-18)
 
 - feat: add support for the `Pug` template engine.
-  The `pug` preprocessor based on the [@webdiscus/pug-loader](https://github.com/webdiscus/pug-loader) source code 
+  The `pug` preprocessor based on the [@webdiscus/pug-loader](https://github.com/webdiscus/pug-loader) source code
   and has the same options and features.
 - test: add pug tests
 - docs: add documentation for using the pug
@@ -852,7 +852,7 @@ See release 4.0.0
   For example:
   ```js
   import personTmpl from './partials/person.ejs';
-  
+
   // render template function with variables in browser
   document.getElementById('person').innerHTML = personTmpl({ name: 'Walter White', age: 50});
   ```
@@ -939,7 +939,7 @@ See release 4.0.0
   ```js
   const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
   const { FaviconsBundlerPlugin } = require('html-bundler-webpack-plugin/plugins');
-  
+
   module.exports = {
     plugins: [
       new HtmlBundlerPlugin({
@@ -965,7 +965,7 @@ See release 4.0.0
     style.rel = 'stylesheet';
     document.head.appendChild(style);
   }
-  
+
   loadCSS(require('./style.scss?url')); // <= dynamic load the source style file with `url` query
   ```
 - feat: add `js.inline.attributeFilter` option to keep some original script tag attributes when JS is inlined.\
@@ -1034,7 +1034,7 @@ See release 4.0.0
     style.rel = 'stylesheet';
     document.head.appendChild(style);
   }
-  
+
   loadCSS(require('./style.scss?lazy')); // <= dynamic load the source style file with `lazy` query
   ```
 - feat(EXPERIMENTAL): add `beforePreprocessor` hook, undocumented
@@ -1469,7 +1469,7 @@ See release 4.0.0
     loaderOptions: {
       preprocessor: 'nunjucks', // <= NEW 'nunjucks' value
       preprocessorOptions: {
-        // async: true, // dafaults is false, to compile asynchronous templates set as true
+        // async: true, // defaults is false, to compile asynchronous templates set as true
       },
     },
   }),
@@ -1757,7 +1757,7 @@ If you have pure HTML file you can disable this processing to save the compilati
 - feat: improve verbose information output for extracted scripts
 - fix: resolve scripts in diff pages generated from one template
 - fix: warning for duplicate files when many html files are generated from one template
-- refactor: optimise code structure, code cleanup
+- refactor: optimize code structure, code cleanup
 - refactor: optimize code for processing of scripts
 - test: add base and advanced test template for new issues
 - chore: add GitHub CONTRIBUTING.md
@@ -1775,7 +1775,7 @@ If you have pure HTML file you can disable this processing to save the compilati
 - fix: resolve assets when the same file is used on many pages generated from the same template
 - fix: pass data to template after changes when using HMR
 - fix: by verbose display a file path relative by working directory instead of an absolute path
-- refactor: code optimisation
+- refactor: code optimization
 - test: add tests for bugfixes
 - docs: update readme
 
@@ -1843,8 +1843,8 @@ If you have pure HTML file you can disable this processing to save the compilati
 - feat: add to default resolving the `data` attribute of `object` tag
 - feat: add supports the `responsive-loader`
 - fix: resolve exact attribute name w/o leading wildcard
-- fix: resolve mutiline attributes
-- fix: resolve mutiline values in srcset attribute
+- fix: resolve multiline attributes
+- fix: resolve multiline values in srcset attribute
 - test: add tests for new options, messages
 - docs: update readme
 

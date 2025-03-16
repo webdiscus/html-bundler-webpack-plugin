@@ -89,7 +89,7 @@ class Template {
    * Ignore:
    *  - https://example.com/style.css
    *  - http://example.com/style.css
-   *  - whatsapp://send?abid=1234567890&text=Hello
+   *  - whatsapp://send?id=1234567890&text=Hello
    *  - //style.css
    *  - /style.css (ignore only if `loader.root` is false)
    *  - javascript:alert('hello')

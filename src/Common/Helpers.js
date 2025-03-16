@@ -25,7 +25,7 @@ const isFunction = (value) => typeof value === 'function';
  *  - https://example.com/img.png
  *  - http://example.com/img.png
  *  - ftp://example.com/img.png
- *  - whatsapp://send?abid=1234567890&text=Hello
+ *  - whatsapp://send?id=1234567890&text=Hello
  *  - something://example.com/img.png
  *  - //img.png
  *
