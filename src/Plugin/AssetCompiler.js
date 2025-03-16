@@ -753,8 +753,6 @@ class AssetCompiler {
         if (this.assetInline.isSvgFile(resource)) {
           svgOptions = this.pluginOption.getInlineSvgOptions(resource, createData);
 
-          //console.log('--- afterResolve: ', { issuer, resource, svgOptions });
-
           if (svgOptions?.warning) {
             outputWarning(svgOptions.warning);
           }
@@ -881,8 +879,6 @@ class AssetCompiler {
       dataUrlOptions = moduleDataUrlType === 'object' ? { ...moduleDataUrl } : {};
       dataUrlOptions.encoding = assetEncoding;
     }
-
-    //console.log('*** saveData: ', { resource: module.resource, encoding, dataUrlOptions }, '\n');
 
     module.generator = new AssetGenerator(moduleGraph, dataUrlOptions, filename, publicPath, outputPath, emit);
   }
@@ -1020,8 +1016,6 @@ class AssetCompiler {
     const isSvgFile = this.assetInline.isSvgFile(resource);
     const isInlineSvg = isSvgFile && this.pluginOption.getInlineSvgOptions(resource, module).inline;
 
-    //console.log('*** isInlineSvg: ', { resource, isSvgFile, isInlineSvg });
-
     if (
       type === ASSET_MODULE_TYPE ||
       type === ASSET_MODULE_TYPE_INLINE ||
@@ -1158,7 +1152,6 @@ class AssetCompiler {
         : null;
 
       if (svgOptions?.inline) {
-        //console.log('*** renderManifest: ', { resource }, svgOptions);
         this.assetInline.saveData(entry, chunk, module, codeGenerationResults, moduleType, svgOptions);
       } else {
         switch (moduleType) {

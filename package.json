@@ -53,7 +53,7 @@
   },
   "scripts": {
     "security": "npm audit --omit=dev",
-    "lint:spelling": "cspell lint --color --show-context \"**/*.md\"",
+    "lint:spell": "cspell lint --color --show-context \"**/*.md\"",
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --config ./test/jest.config.js",
     "test:coverage": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest --collectCoverage --config ./test/jest.config.js",
     "test:index": "jest --detectOpenHandles --config ./test/jest.config.js --runTestsByPath ./test/index.test.js",
