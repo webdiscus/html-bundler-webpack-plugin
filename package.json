@@ -64,7 +64,7 @@
     "test:verbose-update": "jest --detectOpenHandles --updateSnapshot --config ./test/jest.config.js --runTestsByPath ./test/verbose.test.js",
     "publish:public": "npm publish --access public",
     "publish:beta": "npm publish --tag beta",
-    "lint:spelling": "cspell lint --show-context **/*.md"
+    "lint:spelling": "cspell lint --show-context \"**/*.md\""
   },
   "main": "src/index.js",
   "types": "types.d.ts",
