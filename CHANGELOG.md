@@ -1,5 +1,9 @@
 # Changelog
 
+## Not Released
+
+- fix: `js.chunkFilename` should default to `js.filename` when possible.
+
 ## 4.19.0
 
 ### 🔥 BREAKING CHANGES by inlining SVG only
