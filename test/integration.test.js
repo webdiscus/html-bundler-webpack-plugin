@@ -102,6 +102,7 @@ describe('plugin options', () => {
   test('js.chunkFilename', () => compareFiles('option-js-chunkFilename'));
   test('js.chunkFilename as function', () => compareFiles('option-js-chunkFilename-function'));
   test('js.chunkFilename not set', () => compareFiles('option-js-chunkFilename-notset'));
+  test('js.chunkFilename default to filename', () => compareFiles('option-js-chunkFilename-default-to-filename'));
   test('js and css outputPath absolute', () => compareFiles('option-js-css-outputPath-absolute'));
   test('js and css outputPath relative', () => compareFiles('option-js-css-outputPath-relative'));
 

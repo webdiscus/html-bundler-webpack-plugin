@@ -236,7 +236,19 @@ class Option {
 
     if (js.chunkFilename) {
       options.output.chunkFilename = js.chunkFilename;
-    } else {
+    } else if (js.filename) {
+      /**
+       * When js.filename exists, it is possible that options.output.filename is overridden
+       *
+       * But, that overide is happened after webpack populated the options.output.filename, thus
+       * webpack doesn't see the js.filename, and will populate the options.output.chunkFilename
+       * with its default value "[id].js". This is not ideal since js.filename should be preferred
+       * over "[id].js".
+       *
+       * So we manually override the options.output.chunkFilename with js.filename
+       */
+      options.output.chunkFilename = js.filename;
+    } else { // default to options.output.chunkFilename, which webpack always populate with no-exist-default "[id].js"
       js.chunkFilename = options.output.chunkFilename;
     }
 
