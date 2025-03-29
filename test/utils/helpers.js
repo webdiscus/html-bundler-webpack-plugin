@@ -84,6 +84,7 @@ export const compareFiles = (
     compile(PATHS, relTestCasePath, {})
       .then(() => {
         const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
+
         expect(receivedFiles).toEqual(expectedFiles);
 
         if (compareContent) {
@@ -95,7 +96,7 @@ export const compareFiles = (
         return Promise.resolve(true);
       })
       .catch((error) => {
-        return Promise.reject(error);
+        return Promise.reject(new Error(error.stack ? error.stack : error));
       })
   ).resolves.toBe(true);
 };
@@ -133,7 +134,7 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
         return Promise.resolve(true);
       })
       .catch((error) => {
-        return Promise.reject(error);
+        return Promise.reject(new Error(error.stack));
       });
     results.push(res);
   }
@@ -173,7 +174,7 @@ export const watchCompareFiles = (
         return Promise.resolve(true);
       })
       .catch((error) => {
-        return Promise.reject(error);
+        return Promise.reject(new Error(error.stack));
       })
   ).resolves.toBe(true);
 };

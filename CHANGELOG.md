@@ -1,12 +1,12 @@
 # Changelog
 
-## Not Released
+## 4.19.1
 
-- fix: `js.chunkFilename` should default to `js.filename` when possible.
+- fix: `js.chunkFilename` should default to `js.filename` when `js.filename` is specified as a string, #164
 
 ## 4.19.0
 
-### 🔥 BREAKING CHANGES by inlining SVG only
+### 🔥 CHANGES by inlining SVG only
 
 - Inline `<img src="icon.svg">`:
   - OLD: replaces `<img>` with `<svg>` tag
@@ -14,8 +14,8 @@
 - Encoding of data URL:
   - OLD: defaults, escaped URL (`#%` chars only), e.g. `data:image/svg+xml,<svg>...</svg>`
   - NEW: 
-    - defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO`
-    - full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20` regards `generator.dataUrl.encoding` option.
+    - defaults, base64 encoded, e.g. `data:image/svg+xml;base64,iVBO...`
+    - full escaped URL, e.g. `data:image/svg+xml,%3Csvg%20...` regards `generator.dataUrl.encoding` option.
 
 ### ✨ Features
 
