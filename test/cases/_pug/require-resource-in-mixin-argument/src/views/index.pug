@@ -1,8 +1,0 @@
-mixin image(file, alt)
-  img(src=file alt=alt)&attributes(attributes)
-
-- var img = require('../images/image.png')
-+image(img, 'logo-a').logo-a
-
-//- test require as mixin argument
-+image(require('../images/image.png'), 'logo-b').logo-b

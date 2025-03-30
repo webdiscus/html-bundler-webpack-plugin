@@ -1,1 +1,0 @@
-console.log('>> alias to main.js');

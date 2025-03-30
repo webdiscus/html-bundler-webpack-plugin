@@ -1,1 +1,0 @@
-(()=>{"use strict";const e="img/image.697ef306.png";let t=document.createElement("img");t.setAttribute("src",e),document.getElementById("root").append(t),console.log(">> main imageFile: ",e)})();

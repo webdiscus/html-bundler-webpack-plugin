@@ -1,7 +1,0 @@
-{
-  "watch": [
-    "webpack.config.js"
-  ],
-  "ext": "json,js",
-  "exec": "webpack serve --mode development"
-}

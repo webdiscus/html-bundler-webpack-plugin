@@ -1,7 +1,0 @@
-{
-  "private": true,
-  "devDependencies": {
-    "html-bundler-webpack-plugin": "file:../../..",
-    "typescript": "^5.3.3"
-  }
-}

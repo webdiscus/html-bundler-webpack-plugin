@@ -1,1 +1,0 @@
-(()=>{"use strict";console.log(">> main-a"),console.log(">> app"),console.log(">> home")})();

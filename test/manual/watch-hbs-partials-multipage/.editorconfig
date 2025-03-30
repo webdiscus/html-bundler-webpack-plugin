@@ -1,7 +1,0 @@
-root = true
-
-[*.html]
-insert_final_newline = true
-
-[*.hbs]
-insert_final_newline = true

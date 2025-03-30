@@ -1,9 +1,0 @@
-h1 {
-  color: red;
-}
-
-.bg-style {
-  background-image: url('@fixtures/images/pear.png');
-  width: 160px;
-  height: 130px;
-}

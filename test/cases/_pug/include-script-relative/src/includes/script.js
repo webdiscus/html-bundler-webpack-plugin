@@ -1,1 +1,0 @@
-const str = 'Include the JavaScript file in script tag.';

@@ -1,1 +1,0 @@
-(()=>{const e=document.getElementById("test-elm").getAttribute("data-bigpicture"),t=JSON.parse(e);console.log(">> main",{value:e},t)})();
