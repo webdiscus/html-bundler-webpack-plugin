@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.19.2
+
+- feat: case-insensitive preprocessor patterns, #165
+
 ## 4.19.1
 
 - fix: `js.chunkFilename` should default to `js.filename` when `js.filename` is specified as a string, #164
