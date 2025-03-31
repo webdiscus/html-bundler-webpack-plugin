@@ -132,4 +132,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
-module.exports.test = /\.(html|eta)$/;
+module.exports.test = /\.(html|eta)$/i;

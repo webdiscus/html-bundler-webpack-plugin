@@ -295,4 +295,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
-module.exports.test = /\.(html|hbs|handlebars)$/;
+module.exports.test = /\.(html|hbs|handlebars)$/i;
