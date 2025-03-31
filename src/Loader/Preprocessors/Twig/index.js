@@ -177,4 +177,4 @@ const preprocessor = (loaderContext, options) => {
 };
 
 module.exports = preprocessor;
-module.exports.test = /\.(html|twig)$/;
+module.exports.test = /\.(html|twig)$/i;

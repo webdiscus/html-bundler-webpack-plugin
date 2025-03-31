@@ -74,4 +74,4 @@ const preprocessor = (loaderContext, options, { esModule, watch }) => {
 };
 
 module.exports = preprocessor;
-module.exports.test = /\.(pug|jade)$/;
+module.exports.test = /\.(pug|jade)$/i;

@@ -138,4 +138,4 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
 };
 
 module.exports = preprocessor;
-module.exports.test = /\.(html|njk)$/;
+module.exports.test = /\.(html|njk)$/i;
