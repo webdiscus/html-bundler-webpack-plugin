@@ -39,11 +39,9 @@ npm install html-bundler-webpack-plugin --save-dev
 
 Check out quick [Get Started](https://webdiscus.github.io/html-bundler-webpack-plugin/category/getting-started) and the [other guides](https://webdiscus.github.io/html-bundler-webpack-plugin/guides).
 
-Read the [full documentation](https://webdiscus.github.io/html-bundler-webpack-plugin).
+## Documentation
 
-```text
-If this plugin makes your work easier, you might like to star ⭐ it.
-```
+For full documentation, visit [HTML Bundler Docs](https://webdiscus.github.io/html-bundler-webpack-plugin).
 
 ## Read it
 
@@ -52,6 +50,11 @@ If this plugin makes your work easier, you might like to star ⭐ it.
 - [Keep output directory structure in Webpack](https://dev.to/webdiscus/how-to-keep-the-folder-structure-of-source-templates-in-webpack-for-output-html-files-39bj)
 - [Auto generate an integrity hash for `link` and `script` tags](https://dev.to/webdiscus/webpack-auto-generate-an-integrity-hash-for-link-and-script-tags-in-an-html-template-48p5)
 
+## Support & Appreciation
+
+```text
+If this plugin helps you, consider giving it a ⭐ to show your support!
+```
 
 ## Sponsors & Patrons
 
