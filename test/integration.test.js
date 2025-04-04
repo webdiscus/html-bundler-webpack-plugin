@@ -247,7 +247,8 @@ describe('loader options common', () => {
 describe('loader preprocessor options', () => {
   test('preprocessor by defaults', () => compareFiles('loader-option-preprocessor-default'));
   test('preprocessor disabled', () => compareFiles('option-preprocessor-disabled'));
-  test('preprocessor data', () => compareFiles('option-preprocessor-data'));
+  test('global and page data', () => compareFiles('option-preprocessor-data'));
+  test('global data in partial', () => compareFiles('option-preprocessor-data-for-partials'));
 
   test('loader data', () => compareFiles('loader-option-preprocessor-data'));
   test('loader data file', () => compareFiles('loader-option-preprocessor-data-file'));

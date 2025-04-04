@@ -35,16 +35,20 @@ npm install html-bundler-webpack-plugin --save-dev
 - **Generates integrity attributes**:  Adds `integrity` attributes to `<link>` and `<script>` tags to ensure resource integrity and security.
 - **Generates favicons**: Creates favicons of various sizes for different platforms and injects them into the HTML.
 
-## Get Started
-
-Check out quick [Get Started](https://webdiscus.github.io/html-bundler-webpack-plugin/category/getting-started) and the [other guides](https://webdiscus.github.io/html-bundler-webpack-plugin/guides).
-
 ## Documentation
+
+- [Get Started](https://webdiscus.github.io/html-bundler-webpack-plugin/category/getting-started)
+- [Migrating from `html-webpack-plugin`](https://webdiscus.github.io/html-bundler-webpack-plugin/getting-started/migrating-from-html-webpack-plugin)
+- [Features](https://webdiscus.github.io/html-bundler-webpack-plugin/introduction#key-features)
+- [Options](https://webdiscus.github.io/html-bundler-webpack-plugin/category/options)
+- [Guides](https://webdiscus.github.io/html-bundler-webpack-plugin/guides)
+- [F.A.Q.](https://webdiscus.github.io/html-bundler-webpack-plugin/faq/import-url-in-css)
 
 For full documentation, visit [HTML Bundler Docs](https://webdiscus.github.io/html-bundler-webpack-plugin).
 
 ## Read it
 
+- [Why do developers migrate from Webpack?](https://webdiscus.github.io/html-bundler-webpack-plugin/introduction#why-do-developers-migrate-from-webpack)
 - [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
 - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
 - [Keep output directory structure in Webpack](https://dev.to/webdiscus/how-to-keep-the-folder-structure-of-source-templates-in-webpack-for-output-html-files-39bj)
