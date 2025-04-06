@@ -108,7 +108,6 @@ const loader = function (content, map, meta) {
       const loaderOptions = loaderOption.get();
       errorStage = 'preprocessor';
 
-      //throw new Error('TEST ERR!!!');
       // TODO: add to types.d.ts loaderOptions as 3rd param
       return hooks.preprocessor.promise(value, loaderContext, loaderOptions);
     })
@@ -175,7 +174,6 @@ const loader = function (content, map, meta) {
           // unrecoverable configuration error, requires to restart Webpack
 
           const render = new Render({});
-          console.log('##### LOADER ERR: ', error, { errorStage });
           const browserErrorMessage = render.exportError(error, resource);
           callback(error, browserErrorMessage);
           return;

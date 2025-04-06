@@ -319,7 +319,6 @@ class Option {
       fileExistsAsync.call(fs, dataFile).then((exists) => {
         if (!exists) {
           reject(getDataFileNotFoundException(dataFile));
-          return;
         }
 
         PluginService.setDataFiles(this.pluginCompiler, dataValue, dataFile);

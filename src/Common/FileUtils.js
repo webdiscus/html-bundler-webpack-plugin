@@ -3,7 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
-const { red, redBright, cyan, whiteBright } = require('ansis');
+const { red, redBright, cyan, whiteBright, yellow } = require('ansis');
 const { isWin, pathToPosix } = require('./Helpers');
 
 /**
@@ -32,7 +32,7 @@ function loadModuleAsync(filePath) {
 
   const loadEsm = (fileUrl) =>
     import(fileUrl).then((module) => {
-      // if ESM file has the .js extension
+      // handle ESM file that has the .js extension
       if (module.__esModule === true && typeof module.default === 'object') {
         module = module.default;
       }
@@ -52,18 +52,18 @@ function loadModuleAsync(filePath) {
     if (ext === '.cjs' || ext === '.json' || ext === '.js') {
       try {
         const module = require(absolutePath);
-        return Promise.resolve(module.default ?? module);
+        return module.default ?? module;
       } catch (error) {
         if (error.code === 'ERR_REQUIRE_ESM') {
           // fallback to ESM
           return loadEsm(fileUrl);
         }
-        return Promise.reject(error);
+        throw error;
       }
     }
 
-    return Promise.reject(
-      new Error(`Unsupported file type: ${cyan(`.${ext}`)}\nSupported extensions: .js, .cjs, .mjs, .json`)
+    throw new Error(
+      `Unsupported file type: ${cyan`${ext}`}\nSupported module extensions: ${yellow`.js, .cjs, .mjs, .json`}`
     );
   });
 }
