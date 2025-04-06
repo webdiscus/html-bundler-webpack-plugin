@@ -51,45 +51,47 @@ const loader = function (content, map, meta) {
 
   const dependency = LoaderFactory.createDependency(pluginCompiler);
   const resolver = LoaderFactory.createResolver(pluginCompiler, loaderContext);
-  const loaderOption = LoaderFactory.createOption(pluginCompiler, loaderContext);
   const loader = LoaderFactory.createLoader(pluginCompiler);
   const hooks = PluginService.getHooks(pluginCompiler);
+  const loaderOptionPromise = LoaderFactory.createOption(pluginCompiler, loaderContext);
+  let loaderOption = null;
 
-  // bind the loaderOption before initialisations
-  PluginService.setLoaderOption(pluginCompiler, loaderOption);
+  loaderOptionPromise
+    .then((result) => {
+      // the options must be initialized before others
+      errorStage = 'init';
+      loaderOption = result;
 
-  new Promise((resolve) => {
-    // the options must be initialized before others
-    errorStage = 'init';
+      // bind the loaderOption before initialisations
+      PluginService.setLoaderOption(pluginCompiler, loaderOption);
 
-    if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
+      if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
 
-    // INIT dependency must be initialized before init Option, because in Option is initialised preprocessor, that require dependency
-    dependency.init({ loaderContext, loaderOption });
+      // INIT dependency must be initialized before init Option, because in Option is initialised preprocessor, that require dependency
+      dependency.init({ loaderContext, loaderOption });
 
-    // INIT preprocessor
-    Preprocessor.init(loaderContext, loaderOption);
+      // INIT preprocessor
+      Preprocessor.init(loaderContext, loaderOption);
 
-    // INIT loader
-    loader.init(loaderContext, {
-      pluginCompiler,
-      loaderOption,
-      resolver,
-      collection: PluginService.getPluginContext(pluginCompiler).collection,
-    });
+      // INIT loader
+      loader.init(loaderContext, {
+        pluginCompiler,
+        loaderOption: loaderOption,
+        resolver,
+        collection: PluginService.getPluginContext(pluginCompiler).collection,
+      });
 
-    // INIT resolver
-    // prevent double initialization with same options, it occurs when many entry files used in one webpack config
-    // TODO: check whether it is here need, because already used LoaderFactory with caching of created/initialised instances
-    if (!PluginService.isCached(pluginCompiler, rootContext)) {
-      resolver.init(loaderOption);
-    }
+      // INIT resolver
+      // prevent double initialization with same options, it occurs when many entry files used in one webpack config
+      // TODO: check whether it is here need, because already used LoaderFactory with caching of created/initialised instances
+      if (!PluginService.isCached(pluginCompiler, rootContext)) {
+        resolver.init(loaderOption);
+      }
 
-    // init watching after all initialisations
-    //if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
-
-    resolve();
-  })
+      // init watching after all initialisations
+      // TODO: check whether it is here need
+      //if (loaderOption.isWatchMode()) loaderOption.initWatchFiles();
+    })
     .then(() => {
       errorStage = 'beforePreprocessor';
       return hooks.beforePreprocessor.promise(content, loaderContext);
@@ -105,6 +107,8 @@ const loader = function (content, map, meta) {
     .then((value) => {
       const loaderOptions = loaderOption.get();
       errorStage = 'preprocessor';
+
+      //throw new Error('TEST ERR!!!');
       // TODO: add to types.d.ts loaderOptions as 3rd param
       return hooks.preprocessor.promise(value, loaderContext, loaderOptions);
     })
@@ -169,7 +173,9 @@ const loader = function (content, map, meta) {
         default:
           // TODO: test this case
           // unrecoverable configuration error, requires to restart Webpack
+
           const render = new Render({});
+          console.log('##### LOADER ERR: ', error, { errorStage });
           const browserErrorMessage = render.exportError(error, resource);
           callback(error, browserErrorMessage);
           return;

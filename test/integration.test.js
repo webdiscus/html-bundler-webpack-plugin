@@ -154,6 +154,12 @@ describe('plugin option entry', () => {
   // test this case in manual/entry-data-i18n-multipage, because it's possible only in real serve mode
   // test('entry data, multiple pages, watch', () => watchCompareFiles('entry-data-i18n-multipage-watch'));
 
+  test('entry data CJS .cjs file', () => compareFiles('option-entry-data-file-commonjs-cjs'));
+  test('entry data CJS .js file', () => compareFiles('option-entry-data-file-commonjs-js'));
+
+  test('entry data ESM .mjs file', () => compareFiles('option-entry-data-file-esm-mjs'));
+  test('entry data ESM .js file', () => compareFiles('option-entry-data-file-esm-js'));
+
   test('entry data file', () => compareFiles('option-entry-data-file'));
   test('entry data json', () => compareFiles('option-entry-data-json-for-script'));
   test('entry array', () => compareFiles('option-entry-array'));

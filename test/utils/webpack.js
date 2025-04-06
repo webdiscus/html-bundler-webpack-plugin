@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack');
+const { loadModuleAsync } = require('../../src/Common/FileUtils');
+const { outToConsole } = require('../../src/Common/Helpers');
 const { merge } = require('webpack-merge');
-
-const outToConsole = (...args) => process.stdout.write(args.join(' ') + '\n');
 
 const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
   const testPath = path.join(PATHS.testSource, relTestCasePath);
@@ -18,35 +18,38 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
     throw new Error(`The config file '${configFile}' not found for test: ${relTestCasePath}`);
   }
 
-  const testConfig = require(configFile);
   const commonConfig = require(commonConfigFile);
-  const baseConfig = {
-    // the home directory for webpack should be the same where the tested webpack.config.js located
-    context: testPath,
-  };
 
-  if (Array.isArray(testConfig)) {
-    const finalConfig = [];
+  return loadModuleAsync(configFile).then((testConfig) => {
+    const baseConfig = {
+      // the home directory for webpack should be the same where the tested webpack.config.js located
+      context: testPath,
+    };
 
-    testConfig.forEach((config) => {
-      const commonConfig = require(commonConfigFile);
+    if (Array.isArray(testConfig)) {
+      const finalConfig = [];
 
-      // remove module rules in common config when custom rules are defined by test config or options
-      if ((webpackOpts.module && webpackOpts.module.rules) || (config.module && config.module.rules)) {
-        commonConfig.module.rules = [];
-      }
+      testConfig.forEach((config) => {
+        const commonConfig = require(commonConfigFile);
 
-      finalConfig.push(merge(baseConfig, commonConfig, webpackOpts, config));
-    });
+        // remove module rules in common config when custom rules are defined by test config or options
+        if ((webpackOpts.module && webpackOpts.module.rules) || (config.module && config.module.rules)) {
+          commonConfig.module.rules = [];
+        }
 
-    return finalConfig;
-  }
+        finalConfig.push(merge(baseConfig, commonConfig, webpackOpts, config));
+      });
 
-  // remove module rules in common config when custom rules are defined by test config or options
-  if ((webpackOpts.module && webpackOpts.module.rules) || (testConfig.module && testConfig.module.rules)) {
-    commonConfig.module.rules = [];
-  }
-  return merge(baseConfig, commonConfig, webpackOpts, testConfig);
+      return finalConfig;
+    }
+
+    // remove module rules in common config when custom rules are defined by test config or options
+    if ((webpackOpts.module && webpackOpts.module.rules) || (testConfig.module && testConfig.module.rules)) {
+      commonConfig.module.rules = [];
+    }
+
+    return merge(baseConfig, commonConfig, webpackOpts, testConfig);
+  });
 };
 
 /**
@@ -55,25 +58,23 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
  * @param {{}} webpackOpts
  * @return {Promise<unknown>}
  */
-export const compile = (PATHS, testCasePath, webpackOpts) =>
-  new Promise((resolve, reject) => {
-    let config;
+export const compile = async (PATHS, testCasePath, webpackOpts) => {
+  let config;
 
-    try {
-      config = prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
-    } catch (error) {
-      reject('[webpack prepare config] ' + error.toString());
-      return;
-    }
+  try {
+    config = await prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
+  } catch (error) {
+    throw new Error('[webpack prepare config] ' + error.toString());
+  }
 
-    const compiler = webpack(config);
+  // create the webpack compiler with the resolved config
+  const compiler = webpack(config);
 
+  return new Promise((resolve, reject) => {
     compiler.run((error, stats) => {
       if (typeof config.stats === 'string') {
         let preset = config.stats;
-        config.stats = {
-          preset,
-        };
+        config.stats = { preset };
       }
 
       if (!error) {
@@ -84,6 +85,7 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
           outToConsole(statsOutput);
         }
       }
+
       compiler.close((closeErr) => {
         if (error) {
           reject('[webpack compiler]\n' + error.stack);
@@ -94,33 +96,34 @@ export const compile = (PATHS, testCasePath, webpackOpts) =>
           reject('[webpack compiler stats]\n' + stats.toString());
           return;
         }
-      });
 
-      resolve(stats);
+        resolve(stats); // successful compilation
+      });
     });
   });
+};
 
-export const watch = (
+export const watch = async (
   PATHS,
   testCasePath,
   webpackOpts,
   onWatch = (watching) => {
     watching.close((err) => {
-      //console.log('Watching Ended.', { Error: err });
+      // console.log('Watching Ended.', { Error: err });
     });
   }
-) =>
-  new Promise((resolve, reject) => {
-    let config;
+) => {
+  let config;
 
-    try {
-      config = prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
-    } catch (error) {
-      reject('[webpack watch prepare config] ' + error.toString());
-      return;
-    }
+  try {
+    config = await prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
+  } catch (error) {
+    throw new Error('[webpack watch prepare config] ' + error.toString());
+  }
 
-    const compiler = webpack(config);
+  const compiler = webpack(config);
+
+  return new Promise((resolve, reject) => {
     const watching = compiler.watch({ aggregateTimeout: 100, poll: undefined }, (error, stats) => {
       if (error) {
         reject('[webpack watch] ' + error);
@@ -141,3 +144,4 @@ export const watch = (
       resolve(stats);
     });
   });
+};

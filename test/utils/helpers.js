@@ -12,6 +12,17 @@ if (typeof global.btoa === 'undefined') {
   global.btoa = (input) => Buffer.from(input, 'latin1').toString('base64');
 }
 
+const promisifyStdout = function (stdout) {
+  const { calls } = stdout.mock;
+  let output = calls.length > 0 ? calls[0][0] : '';
+  output = ansis.strip(output);
+
+  stdout.mockClear();
+  stdout.mockRestore();
+
+  return Promise.resolve(output);
+};
+
 expect.extend({
   toMatchBinaryData(received, expected) {
     const pass = Buffer.compare(received, expected) === 0;
@@ -196,16 +207,9 @@ export const stdoutContain = (relTestCasePath, containString) => {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   return expect(
-    compile(PATHS, relTestCasePath, {}).then(() => {
-      const { calls } = stdout.mock;
-      let output = calls.length > 0 ? calls[0][0] : '';
-      output = ansis.strip(output);
-
-      stdout.mockClear();
-      stdout.mockRestore();
-
-      return Promise.resolve(output);
-    })
+    compile(PATHS, relTestCasePath, {})
+      .then(() => promisifyStdout(stdout))
+      .catch((error) => promisifyStdout(stdout))
   ).resolves.toContain(containString);
 };
 
@@ -215,16 +219,9 @@ export const watchStdoutContain = (relTestCasePath, containString) => {
   return expect(
     watch(PATHS, relTestCasePath, {}, (watching) => {
       watching.close();
-    }).then(() => {
-      const { calls } = stdout.mock;
-      let output = calls.length > 0 ? calls[0][0] : '';
-      output = ansis.strip(output);
-
-      stdout.mockClear();
-      stdout.mockRestore();
-
-      return Promise.resolve(output);
     })
+      .then(() => promisifyStdout(stdout))
+      .catch((error) => promisifyStdout(stdout))
   ).resolves.toContain(containString);
 };
 
@@ -247,16 +244,9 @@ export const stdoutSnapshot = function (relTestCasePath, done) {
   const stdout = jest.spyOn(process.stdout, 'write').mockImplementation(() => {});
 
   return expect(
-    compile(PATHS, relTestCasePath, {}).then(() => {
-      const { calls } = stdout.mock;
-      let output = calls.length > 0 ? calls[0][0] : '';
-      output = ansis.strip(output);
-
-      stdout.mockClear();
-      stdout.mockRestore();
-
-      return Promise.resolve(output);
-    })
+    compile(PATHS, relTestCasePath, {})
+      .then(() => promisifyStdout(stdout))
+      .catch((error) => promisifyStdout(stdout))
   ).resolves.toMatchSnapshot();
 };
 
@@ -266,15 +256,8 @@ export const watchStdoutSnapshot = function (relTestCasePath, done) {
   return expect(
     watch(PATHS, relTestCasePath, {}, (watching) => {
       watching.close();
-    }).then(() => {
-      const { calls } = stdout.mock;
-      let output = calls.length > 0 ? calls[0][0] : '';
-      output = ansis.strip(output);
-
-      stdout.mockClear();
-      stdout.mockRestore();
-
-      return Promise.resolve(output);
     })
+      .then(() => promisifyStdout(stdout))
+      .catch((error) => promisifyStdout(stdout))
   ).resolves.toMatchSnapshot();
 };

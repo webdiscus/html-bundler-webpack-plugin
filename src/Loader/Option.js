@@ -1,9 +1,9 @@
 const path = require('path');
 const PluginService = require('../Plugin/PluginService');
-const { parseQuery } = require('../Common/Helpers');
-const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
+const { parseQuery, outToConsole } = require('../Common/Helpers');
+const { rootSourceDir, filterParentPaths, fileExistsAsync, loadModuleAsync } = require('../Common/FileUtils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
-const { dataFileNotFoundException, dataFileException } = require('./Messages/Exeptions');
+const { getDataFileNotFoundException, getDataFileException } = require('./Messages/Exeptions');
 const {
   watchPathsWarning,
   watchFilesOptionFilesDeprecation,
@@ -96,27 +96,43 @@ class Option {
 
     this.#options = options;
     this.#preprocessorModule = preprocessorModule;
-
-    // if the data option is a string, it must be an absolute or relative filename of an existing file that exports the data
-    const loaderData = this.#loadData(options.data);
-    const entryData = this.#loadData(loaderContext.entryData);
-    const contextData = loaderContext.data || {};
-
-    // merge plugin and loader data, the plugin data property overrides the same loader data property
-    loaderObject.data = { ...contextData, ...loaderData, ...entryData, ...this.#queryData };
-
     this.#initPreprocessor(loaderContext);
 
-    // beforePreprocessor
-    if (typeof options.beforePreprocessor !== 'function') {
-      options.beforePreprocessor = null;
-    }
+    const promises = [options.data, loaderContext.entryData, this.#queryData].map((file) => this.#loadData(file));
 
-    // clean loaderContext of artifacts
-    if (loaderContext.entryData != null) delete loaderContext.entryData;
+    return Promise.all(promises)
+      .then(([pluginData, loaderData, queryData]) => {
+        const contextData = loaderContext.data || {};
 
-    // defaults, cacheable is true, the loader option is not documented in readme, use it only for debugging
-    if (loaderContext.cacheable != null) loaderContext.cacheable(options?.cacheable !== false);
+        // merge plugin and loader data; plugin data overrides same keys in loader data
+        loaderObject.data = {
+          ...contextData, // inner data
+          ...pluginData, // data plugin option (global data available in all templates)
+          ...loaderData, // entry data option (template specifically data)
+          ...queryData, // data URL query
+        };
+
+        // normalize beforePreprocessor option
+        if (typeof options.beforePreprocessor !== 'function') {
+          options.beforePreprocessor = null;
+        }
+
+        // clean up loaderContext
+        if (loaderContext.entryData != null) {
+          delete loaderContext.entryData;
+        }
+
+        // apply cacheable flag; it's not documented, use it only for debugging
+        if (loaderContext.cacheable != null) {
+          loaderContext.cacheable(options?.cacheable !== false);
+        }
+
+        return loaderObject.data; // (optional: useful if caller wants the result)
+      })
+      .catch((err) => {
+        // display own errors so as not to block subsequent actions
+        outToConsole(err);
+      });
   }
 
   #initPreprocessor(loaderContext) {
@@ -271,32 +287,45 @@ class Option {
 
   /**
    * @param {Object|string|null} dataValue If string, the relative or absolute filename.
-   * @return {Object}
+   * @return {Promise<Object>}
    */
   #loadData(dataValue) {
-    if (typeof dataValue !== 'string') return dataValue || {};
-
-    let dataFile = PluginService.getDataFiles(this.pluginCompiler, dataValue);
-
-    if (!dataFile) {
-      const fs = this.fileSystem;
-      dataFile = this.resolveFile(dataValue);
-
-      if (!fs.existsSync(dataFile)) {
-        dataFileNotFoundException(dataFile);
+    return new Promise((resolve, reject) => {
+      if (typeof dataValue !== 'string') {
+        resolve(dataValue || {});
+        return;
       }
 
-      PluginService.setDataFiles(this.pluginCompiler, dataValue, dataFile);
-    }
+      const fs = this.fileSystem;
+      let dataFile = PluginService.getDataFiles(this.pluginCompiler, dataValue);
 
-    let data;
-    try {
-      data = require(dataFile);
-    } catch (error) {
-      dataFileException(error, dataFile);
-    }
+      const load = () => {
+        loadModuleAsync(dataFile)
+          .then((data) => {
+            resolve(data || {});
+          })
+          .catch((error) => {
+            reject(getDataFileException(error, dataFile));
+          });
+      };
 
-    return data || {};
+      if (dataFile) {
+        load();
+        return;
+      }
+
+      dataFile = this.resolveFile(dataValue);
+
+      fileExistsAsync.call(fs, dataFile).then((exists) => {
+        if (!exists) {
+          reject(getDataFileNotFoundException(dataFile));
+          return;
+        }
+
+        PluginService.setDataFiles(this.pluginCompiler, dataValue, dataFile);
+        load();
+      });
+    });
   }
 
   /**

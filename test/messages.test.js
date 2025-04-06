@@ -66,13 +66,13 @@ describe('loader exceptions', () => {
   });
 
   test('exception: loader data file not found', () => {
-    const containString = `The data file not found`;
-    return exceptionContain('_exceptions/msg-exception-loader-data-file-not-found', containString);
+    const containString = `Data file not found`;
+    return stdoutContain('_exceptions/msg-exception-loader-data-file-not-found', containString);
   });
 
   test('exception: loader data file is invalid', () => {
     const containString = `Load the data file failed`;
-    return exceptionContain('_exceptions/msg-exception-loader-data-file-invalid', containString);
+    return stdoutContain('_exceptions/msg-exception-loader-data-file-invalid', containString);
   });
 
   test('exception preprocessor: load module', () => {

@@ -2,53 +2,74 @@
 
 const path = require('path');
 const fs = require('fs');
+const { pathToFileURL } = require('url');
 const { red, redBright, cyan, whiteBright } = require('ansis');
 const { isWin, pathToPosix } = require('./Helpers');
-const Config = require('../Common/Config');
-
-const { pluginName } = Config.get();
-
-// string containing the '/node_modules/'
-const nodeModuleDirname = path.sep + 'node_modules' + path.sep;
-const testDirname = path.sep + path.join(pluginName, 'test') + path.sep;
-const srcDirname = path.sep + path.join(pluginName, 'src') + path.sep;
 
 /**
- * Dynamically load a CommonJS or ESM module.
+ * Check whether the file exists.
  *
- * @param {string} filePath The path to the module file.
- * @returns {Promise<any>} The loaded module.
- * @throws
+ * @param {string} file The file path.
+ * @return {Promise<boolean>}
  */
-async function asyncLoadModule(filePath) {
-  const absolutePath = path.resolve(filePath);
-  const ext = path.extname(absolutePath).toLowerCase();
-
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`File not found: ${cyan(absolutePath)}`);
-  }
-
-  if (ext === '.mjs') {
-    // ESM file
-    return import(absolutePath);
-  } else if (ext === '.cjs' || ext === '.js') {
-    // CommonJS file
-    try {
-      return require(absolutePath);
-    } catch (error) {
-      if (error.code === 'ERR_REQUIRE_ESM') {
-        // fallback to ESM
-        return import(absolutePath);
-      }
-      throw error;
-    }
-  } else {
-    throw new Error(`Unsupported file type: ${cyan(`.${ext}`)}`);
-  }
+function fileExistsAsync(file) {
+  return fs.promises
+    .access(file, fs.constants.F_OK)
+    .then(() => true)
+    .catch(() => false);
 }
 
 /**
- * Load node module.
+ * Load a CommonJS or ESM module.
+ *
+ * @param {string} filePath Relative or absolute path to the module file.
+ * @returns {Promise<any>} The exported module.
+ */
+function loadModuleAsync(filePath) {
+  const absolutePath = path.resolve(filePath);
+  const fileUrl = pathToFileURL(absolutePath).href;
+  const ext = path.extname(absolutePath).toLowerCase();
+
+  const loadEsm = (fileUrl) =>
+    import(fileUrl).then((module) => {
+      // if ESM file has the .js extension
+      if (module.__esModule === true && typeof module.default === 'object') {
+        module = module.default;
+      }
+
+      return module.default ?? module;
+    });
+
+  return fileExistsAsync(absolutePath).then((exists) => {
+    if (!exists) {
+      throw new Error(`File not found: ${cyan(absolutePath)}`);
+    }
+
+    if (ext === '.mjs') {
+      return loadEsm(fileUrl);
+    }
+
+    if (ext === '.cjs' || ext === '.json' || ext === '.js') {
+      try {
+        const module = require(absolutePath);
+        return Promise.resolve(module.default ?? module);
+      } catch (error) {
+        if (error.code === 'ERR_REQUIRE_ESM') {
+          // fallback to ESM
+          return loadEsm(fileUrl);
+        }
+        return Promise.reject(error);
+      }
+    }
+
+    return Promise.reject(
+      new Error(`Unsupported file type: ${cyan(`.${ext}`)}\nSupported extensions: .js, .cjs, .mjs, .json`)
+    );
+  });
+}
+
+/**
+ * Load CJS node module synchronously.
  *
  * @param {string} moduleName The name of node module.
  * @param {function=} callback The function to load a module.
@@ -184,49 +205,6 @@ const resolveFile = (file, { fs, root = process.cwd(), paths = [], extensions = 
 };
 
 /**
- * Return the path of the file relative to a directory.
- *
- * Note: this is not a true relative path, this path is for verbose only.
- *
- * @param {string} file
- * @param {string} dir
- * @return {string}
- */
-const relativePathVerbose = (file, dir = process.cwd()) => {
-  let relFile = file;
-
-  if (!path.isAbsolute(file)) {
-    file = path.join(dir, file);
-  }
-
-  if (file.startsWith(dir)) {
-    relFile = path.relative(dir, file);
-  } else if ('NODE_ENV_TEST' in process.env) {
-    // for test only:
-    // get the relative path to the test directory, because on another machine the absolute path is different,
-    // e.g. test by CI on GitHub,
-    const testDirnamePos = file.indexOf(testDirname);
-    const srcDirnamePos = file.indexOf(srcDirname);
-
-    if (testDirnamePos > 0) {
-      return '~' + file.slice(testDirnamePos + testDirname.length);
-    } else if (srcDirnamePos > 0) {
-      return '~' + file.slice(srcDirnamePos + 1);
-    }
-  }
-
-  // extract the node module path
-  const nodeModulePos = relFile.indexOf(nodeModuleDirname);
-  if (nodeModulePos > 0) {
-    relFile = relFile.slice(nodeModulePos + nodeModuleDirname.length);
-  }
-
-  if (!path.extname(file)) relFile = path.join(relFile, path.sep);
-
-  return isWin ? pathToPosix(relFile) : relFile;
-};
-
-/**
  * Autodetect a root source directory.
  * Defaults, it is first-level subdirectory of a template, relative to root context.
  *
@@ -317,12 +295,12 @@ const touch = (file, { fs }) => {
 };
 
 module.exports = {
-  asyncLoadModule,
+  fileExistsAsync,
+  loadModuleAsync,
   loadModule,
   isDir,
   readDirRecursiveSync,
   resolveFile,
-  relativePathVerbose,
   rootSourceDir,
   filterParentPaths,
   touchAsync,

@@ -2,7 +2,7 @@ const path = require('path');
 
 class Config {
   static #loaded = false;
-  static #configFile = '';
+  static #configFile = '../config.js';
   static #config = {
     // plugin name, must be same as node module name
     pluginName: 'webpack-plugin',

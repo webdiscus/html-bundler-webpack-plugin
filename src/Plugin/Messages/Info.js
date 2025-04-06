@@ -1,19 +1,65 @@
 const path = require('path');
 const { red, green, cyan, cyanBright, magenta, black, yellow, yellowBright, fg, bg, white } = require('ansis');
-const { outToConsole, isFunction } = require('../../Common/Helpers');
-const { relativePathVerbose } = require('../../Common/FileUtils');
 const Config = require('../../Common/Config');
-
+const { isWin, pathToPosix, outToConsole } = require('../../Common/Helpers');
 const PluginService = require('../PluginService');
 const Collection = require('../Collection');
-
-const { pluginLabel } = Config.get();
 
 const gray = fg(244);
 const padLevel1 = 16;
 const padLevel2 = padLevel1 + 10;
 const padLevel3 = padLevel2 + 8;
 const padChunks = padLevel1 + 4;
+
+const { pluginName, pluginLabel } = Config.get();
+
+/**
+ * Return the path of the file relative to a directory.
+ *
+ * Note: this is not a true relative path, this path is for verbose only.
+ *
+ * @param {string} file
+ * @param {string} dir
+ * @return {string}
+ */
+const relativePathVerbose = (file, dir = process.cwd()) => {
+  const nodeModuleDirname = path.sep + 'node_modules' + path.sep;
+  const testDirname = path.sep + path.join(pluginName, 'test') + path.sep;
+  const srcDirname = path.sep + path.join(pluginName, 'src') + path.sep;
+
+  const isTest = 'NODE_ENV_TEST' in process.env;
+  let relFile = file;
+
+  if (!path.isAbsolute(file)) {
+    file = path.join(dir, file);
+  }
+
+  if (file.startsWith(dir)) {
+    relFile = path.relative(dir, file);
+  } else if (isTest) {
+    // for test only:
+    // get the relative path to the test directory, because on another machine the absolute path is different,
+    // e.g. test by CI on GitHub,
+    const testDirnamePos = file.indexOf(testDirname);
+    const srcDirnamePos = file.indexOf(srcDirname);
+
+    if (testDirnamePos > 0) {
+      return '~' + file.slice(testDirnamePos + testDirname.length);
+    } else if (srcDirnamePos > 0) {
+      return '~' + file.slice(srcDirnamePos + 1);
+    }
+  }
+
+  // extract the node module path
+  const nodeModulePos = relFile.indexOf(nodeModuleDirname);
+  if (nodeModulePos > 0) {
+    relFile = relFile.slice(nodeModulePos + nodeModuleDirname.length);
+  }
+
+  if (!path.extname(file)) relFile = path.join(relFile, path.sep);
+
+  return isWin ? pathToPosix(relFile) : relFile;
+};
 
 /**
  * Get the compilation name styled based on the presence of an error.
@@ -186,6 +232,7 @@ const verbose = (pluginCompiler) => {
 };
 
 module.exports = {
+  relativePathVerbose,
   compilationName,
   verbose,
 };

@@ -1,7 +1,7 @@
 const Config = require('./Common/Config');
 
 // Note: init config before import any source file
-Config.init('./config.js');
+//Config.init('./config.js');
 
 const AssetCompiler = require('./Plugin/AssetCompiler');
 const loader = require.resolve('./Loader');

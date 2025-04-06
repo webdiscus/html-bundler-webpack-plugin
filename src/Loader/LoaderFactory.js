@@ -55,7 +55,7 @@ class LoaderFactory {
   /**
    * @param {Compiler} compiler The webpack Compiler instance.
    * @param {*} opts Options of the loader Option instance.
-   * @return {Option}
+   * @return {Promise<Option>}
    */
   static createOption(compiler, ...opts) {
     const context = this.#contexts.get(compiler);
@@ -66,9 +66,8 @@ class LoaderFactory {
 
     // loader option must be initialised for every entry,
     // because it contains different options, e.g. entry.data
-    context.loaderOption.init(...opts);
 
-    return context.loaderOption;
+    return context.loaderOption.init(...opts).then(() => context.loaderOption);
   }
 
   /**

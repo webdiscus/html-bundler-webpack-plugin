@@ -5,14 +5,8 @@ import { joinUrl, findPlugin, getFileExtension, parseVersion, compareVersions } 
 import WeakMapIterable from '../src/Common/WeakMapIterable';
 import VMScript from '../src/Common/VMScript';
 import { HtmlParser, parseTagAttributes } from '../src/Common/HtmlParser';
-import {
-  isDir,
-  asyncLoadModule,
-  loadModule,
-  resolveFile,
-  filterParentPaths,
-  relativePathVerbose,
-} from '../src/Common/FileUtils';
+import { relativePathVerbose } from '../src/Plugin/Messages/Info';
+import { isDir, loadModuleAsync, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import {
   stringifyJSON,
   stringifyFn,
@@ -1671,16 +1665,16 @@ describe('plugin isInlineCss option', () => {
   });
 });
 
-describe('asyncLoadModule', () => {
+describe('loadModuleAsync', () => {
   test('example.cjs', async () => {
     // usage example
     // (async () => {
     //   // dynamically load CommonJS module
-    //   const commonJSModule = await asyncLoadModule('./fixtures/modules/example.cjs');
+    //   const commonJSModule = await loadModuleAsync('./fixtures/modules/example.cjs');
     //   console.log('Loaded CommonJS Module:', commonJSModule);
     // })();
 
-    const commonJSModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example.cjs'));
+    const commonJSModule = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example.cjs'));
     const received = commonJSModule.message;
     const expected = 'Hello from CommonJS';
 
@@ -1688,7 +1682,7 @@ describe('asyncLoadModule', () => {
   });
 
   test('example-cjs.js', async () => {
-    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example-cjs.js'));
+    const esmModule = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example-cjs.js'));
     const received = esmModule.message;
     const expected = 'Hello from .js file';
 
@@ -1697,7 +1691,7 @@ describe('asyncLoadModule', () => {
 
   // Jest doesn't support ESM without --experimental-vm-modules
   test('example.mjs', async () => {
-    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example.mjs'));
+    const esmModule = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example.mjs'));
     const received = esmModule.message;
     const expected = 'Hello from ESM';
 
@@ -1705,7 +1699,7 @@ describe('asyncLoadModule', () => {
   });
 
   test('example-esm.js', async () => {
-    const esmModule = await asyncLoadModule(path.join(__dirname, './fixtures/modules/example-esm.js'));
+    const esmModule = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example-esm.js'));
     const received = esmModule.message;
     const expected = 'Hello from .js file';
 
@@ -1753,7 +1747,9 @@ describe('FileUtils Sync', () => {
 
     return expect(received).toEqual(expected);
   });
+});
 
+describe('relativePathVerbose', () => {
   test('relativePathVerbose absolute file', () => {
     const received = relativePathVerbose('/root/src/view/index.html', '/root/src/');
     const expected = 'view/index.html';
@@ -1761,14 +1757,14 @@ describe('FileUtils Sync', () => {
   });
 
   test('relativePathVerbose absolute file test', () => {
-    const received = relativePathVerbose('/bar/src/webpack-plugin/test/view/index.html', '/foo/src/');
+    const received = relativePathVerbose('/bar/src/html-bundler-webpack-plugin/test/view/index.html', '/foo/src/');
     const expected = '~view/index.html';
     return expect(received).toEqual(expected);
   });
 
   test('relativePathVerbose absolute file src', () => {
-    const received = relativePathVerbose('/bar/src/webpack-plugin/src/view/index.html', '/foo/src/');
-    const expected = '~webpack-plugin/src/view/index.html';
+    const received = relativePathVerbose('/bar/src/html-bundler-webpack-plugin/src/view/index.html', '/foo/src/');
+    const expected = '~html-bundler-webpack-plugin/src/view/index.html';
     return expect(received).toEqual(expected);
   });
 

@@ -15,8 +15,11 @@ jobs:
     strategy:
       fail-fast: false # doesn't stop on first failure
       matrix:
+        # Note: test on Windows is impossible,
+        # because test assets become diff filenames with content hash
+
         os: [ubuntu-latest]
-        node-version: [18, 20, 22]
+        node-version: [20, 22]
 
     runs-on: ${{ matrix.os }}
     name: integration - Node ${{ matrix.node-version }} on ${{ matrix.os }}
@@ -42,6 +45,3 @@ jobs:
         with:
           flags: integration
           token: ${{ secrets.CODECOV_TOKEN }}
-# Note: test on Windows is impossible,
-# because test assets become diff filenames with content hash,
-# the same problem with node 14

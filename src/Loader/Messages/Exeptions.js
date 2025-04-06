@@ -96,21 +96,21 @@ const unsupportedPreprocessorException = (preprocessor) => {
 
 /**
  * @param {string} file
- * @throws {Error}
+ * @return {LoaderException}
  */
-const dataFileNotFoundException = (file) => {
-  const message = `The data file not found: ${cyan(file)}.`;
+const getDataFileNotFoundException = (file) => {
+  const message = `Data file not found: ${cyan(file)}.`;
 
-  throw new LoaderException(message);
+  return new LoaderException(message);
 };
 
 /**
  * @param {Error} error
  * @param {string} file
- * @throws {Error}
+ * @return {LoaderException}
  */
-const dataFileException = (error, file) => {
-  throw new LoaderException(`Load the data file failed.\nFile: ${cyan(file)}`, error);
+const getDataFileException = (error, file) => {
+  return new LoaderException(`Load the data file failed.\nFile: ${cyan(file)}`, error);
 };
 
 /**
@@ -145,7 +145,7 @@ const beforePreprocessorError = (error, file) => {
     red`beforePreprocessor failed.` +
       `\n` +
       `File: ${cyan(file)}\n\n` +
-      `${yellow`If you see this message after fixing the error, try to reload your browser manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
+      `${yellow`If this message appears in a browser, fix the error and reload the page manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
     error
   );
 };
@@ -160,7 +160,7 @@ const preprocessorError = (error, file) => {
     red`Preprocessor failed.` +
       `\n` +
       `File: ${cyan(file)}\n\n` +
-      `${yellow`If you see this message after fixing the error, try to reload your browser manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
+      `${yellow`If this message appears in a browser, fix the error and reload the page manually`} ${bgYellow.black` CTRL/Command + R `}\n`,
     error
   );
 };
@@ -191,8 +191,8 @@ module.exports = {
   errorToHtml,
   resolveException,
   unsupportedPreprocessorException,
-  dataFileNotFoundException,
-  dataFileException,
+  getDataFileNotFoundException,
+  getDataFileException,
   notInitializedPluginError,
   initError,
   beforePreprocessorError,
