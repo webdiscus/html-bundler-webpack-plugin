@@ -31,7 +31,8 @@ function loadModuleAsync(filePath) {
   const ext = path.extname(absolutePath).toLowerCase();
 
   const loadEsm = (fileUrl) =>
-    import(fileUrl).then((module) => {
+    // bypass the cache and read real data after changes
+    import(`${fileUrl}?nocache=${Date.now()}`).then((module) => {
       // handle ESM file that has the .js extension
       if (module.__esModule === true && typeof module.default === 'object') {
         module = module.default;
