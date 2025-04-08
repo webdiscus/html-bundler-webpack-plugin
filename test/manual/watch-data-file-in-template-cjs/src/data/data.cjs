@@ -1,10 +1,8 @@
-import company from './company.js';
+const company = require('./company.js');
 
-const data = {
+module.exports = {
   company: {
     ...company(),
     email: 'admin@awesomecorp.com', // override company.email
   },
 };
-
-export default data;

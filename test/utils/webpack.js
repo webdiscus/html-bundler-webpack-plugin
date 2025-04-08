@@ -1,26 +1,43 @@
+import { pathToFileURL } from 'url';
+import { cyan, yellow } from 'ansis';
+
 const fs = require('fs');
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack');
-const { loadModuleAsync } = require('../../src/Common/FileUtils');
+const { loadCacheableModuleAsync } = require('../../src/Common/FileUtils');
 const { outToConsole } = require('../../src/Common/Helpers');
 const { merge } = require('webpack-merge');
 
+const findWebpackConfigFile = (configPath, relTestCasePath) => {
+  const configFileJs = path.join(configPath, 'webpack.config.js');
+  const configFileMjs = path.join(configPath, 'webpack.config.mjs');
+
+  if (fs.existsSync(configFileJs)) {
+    return configFileJs;
+  }
+
+  if (fs.existsSync(configFileMjs)) {
+    return configFileMjs;
+  }
+
+  throw new Error(
+    `\nNo Webpack config file found in ${cyan(configPath)}\nExpected one of: ${yellow`webpack.config.js, webpack.config.mjs.`}\n`
+  );
+};
+
 const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
   const testPath = path.join(PATHS.testSource, relTestCasePath);
-  const configFile = path.join(testPath, 'webpack.config.js');
   const commonConfigFile = path.join(PATHS.base, 'webpack.common.js');
+  const configFile = findWebpackConfigFile(testPath, relTestCasePath);
 
   // change directory to current test folder, needed for the test default webpack output path
   process.chdir(testPath);
 
-  if (!fs.existsSync(configFile)) {
-    throw new Error(`The config file '${configFile}' not found for test: ${relTestCasePath}`);
-  }
-
   const commonConfig = require(commonConfigFile);
 
-  return loadModuleAsync(configFile).then((testConfig) => {
+  //return loadModuleAsync(configFile).then((testConfig) => {
+  return loadCacheableModuleAsync(configFile).then((testConfig) => {
     const baseConfig = {
       // the home directory for webpack should be the same where the tested webpack.config.js located
       context: testPath,
@@ -44,11 +61,11 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
     }
 
     // remove module rules in common config when custom rules are defined by test config or options
-    if ((webpackOpts.module && webpackOpts.module.rules) || (testConfig.module && testConfig.module.rules)) {
+    if ((webpackOpts.module && webpackOpts.module.rules) || (testConfig?.module && testConfig?.module.rules)) {
       commonConfig.module.rules = [];
     }
 
-    return merge(baseConfig, commonConfig, webpackOpts, testConfig);
+    return merge(baseConfig, commonConfig, webpackOpts, testConfig ?? {});
   });
 };
 
@@ -64,7 +81,7 @@ export const compile = async (PATHS, testCasePath, webpackOpts) => {
   try {
     config = await prepareWebpackConfig(PATHS, testCasePath, webpackOpts);
   } catch (error) {
-    throw new Error('[webpack prepare config] ' + error.toString());
+    throw new Error('[webpack prepare config] ' + error.message + '\n' + error.stack);
   }
 
   // create the webpack compiler with the resolved config

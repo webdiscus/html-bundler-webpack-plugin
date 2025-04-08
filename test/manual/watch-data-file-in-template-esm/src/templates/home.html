@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Home</title>
+</head>
+<body>
+  <h1>Welcome to <%= company.name %></h1>
+
+  <% /* pass data to the partial with `it` */ %>
+  <%~ include('src/templates/partials/footer.html', it) %>
+</body>
+</html>

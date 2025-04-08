@@ -1,5 +1,7 @@
 import company from './company.js';
 
+console.log(company());
+
 const data = {
   company: {
     ...company(),

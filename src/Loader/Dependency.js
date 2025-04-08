@@ -87,7 +87,7 @@ class Dependency {
   }
 
   /**
-   * Add file using include & exculude filter.
+   * Add file using include & exclude filter.
    *
    * @param {string} file
    */
