@@ -10,9 +10,6 @@ const {
   watchIgnoreOptionIgnoreDeprecation,
 } = require('./Messages/Warnings');
 
-const Dependency = require('./Dependency');
-const { compiler } = require('nunjucks');
-
 /**
  * @typedef OptionSources
  * @property {string} tag

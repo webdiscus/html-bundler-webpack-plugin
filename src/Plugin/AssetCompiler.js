@@ -493,9 +493,6 @@ class AssetCompiler {
    *      Research: find the hook, what called once, before the 'invalid' hook,
    *      to create the snapshot of files after change.
    *
-   * TODO: invalidate entry where are used variables from ESM sub imported file.
-   *       see test/manual/watch-data-file-in-template/
-   *
    * @param {string} fileName The old filename before change.
    * @param {Number|null} changeTime
    */
