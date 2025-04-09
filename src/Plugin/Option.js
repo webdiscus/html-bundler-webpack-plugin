@@ -61,6 +61,13 @@ class Option {
     rewriteIndex: false,
   };
 
+  /**
+   * Experimental options.
+   */
+  #experiments = {
+    esmLoaderWithoutCache: false, // use custom ESM loader without cache
+  };
+
   #entryLibrary = {
     name: 'return',
     type: 'jsonp', // compiles JS from source into HTML string via Function()
@@ -145,6 +152,10 @@ class Option {
 
     if (!options.watchFiles) this.options.watchFiles = {};
     this.options.hotUpdate = this.options.hotUpdate === true;
+
+    if ('experiments' in options) {
+      this.#experiments = { ...this.#experiments, ...options.experiments };
+    }
   }
 
   /**
@@ -785,6 +796,14 @@ class Option {
 
   hasAfterEmit() {
     return this.options.afterEmit != null;
+  }
+
+  /**
+   * Get experimental option.
+   * @return {boolean}
+   */
+  useExperimentalEsmLoaderWithoutCache() {
+    return this.#experiments.esmLoaderWithoutCache === true;
   }
 
   /**

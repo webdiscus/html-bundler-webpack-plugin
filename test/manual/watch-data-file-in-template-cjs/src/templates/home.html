@@ -1,12 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <title>Home</title>
-</head>
-<body>
-  <h1>Welcome to <%= company.name %></h1>
+  <head>
+    <title>Home</title>
+  </head>
+  <body>
+    <h1>Welcome to <%= company.name %></h1>
 
-  <% /* pass data to the partial with `it` */ %>
-  <%~ include('src/templates/partials/footer.html', it) %>
-</body>
+    <h2>Info</h2>
+    <p>Company.name: <%= Company.name %></p>
+    <p>Company.getName(): <%= Company.getName() %></p>
+    <p>Hostname: <%= info.url.hostname %></p>
+    <p>Date: <%= info.date.toDateString() %></p>
+    <p>Time: <%= info.date.toLocaleTimeString("de-DE") %></p>
+
+    <h2>Footer</h2>
+    <% /* pass data to the partial with `it` */ %> <%~ include('src/templates/partials/footer.html', it) %>
+  </body>
 </html>

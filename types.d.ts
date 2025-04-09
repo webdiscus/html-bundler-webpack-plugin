@@ -116,6 +116,11 @@ declare namespace HtmlBundlerPlugin {
      * The router options.
      */
     router?: Router;
+
+    /**
+     * The undocumented experimental options for private usage or testing only.
+     */
+    experiments?: { [key: string]: any };
   }
 
   export interface LoaderOptions {

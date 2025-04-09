@@ -1,6 +1,6 @@
 // This file is used in the ./loader.js
 
-import { serialize } from 'node:v8';
+import { serialize } from './serializer.js';
 
 const moduleUrl = process.env.MODULE_URL;
 

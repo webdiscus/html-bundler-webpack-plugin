@@ -15,6 +15,9 @@ export default {
         includes: [/company.js/], // watch changes in the file imported in data.mjs
       },
       //verbose: true,
+      experiments: {
+        esmLoaderWithoutCache: true,
+      },
     }),
   ],
 

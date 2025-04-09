@@ -1698,6 +1698,21 @@ describe('loadModuleAsync', () => {
     expect(received).toEqual(expected);
   });
 
+  // TODO: test complex object with complex types, like URL
+  // test('example-complex.mjs', async () => {
+  //   const received = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example-complex.mjs'), false);
+  //   const expected = {
+  //     obj: { foo: 'bar', bar: 'baz' },
+  //     date: new Date('2025-04-08T16:08:39.369Z'),
+  //     isNaN: (num) => Number.isNaN(num),
+  //   };
+  //
+  //   console.log('received.url: ', received.url.hostname);
+  //   //console.log('isNaN: ', received.isNaN(1 / 'a'));
+  //
+  //   expect(received).toEqual(expected);
+  // });
+
   test('example-esm.js', async () => {
     const esmModule = await loadModuleAsync(path.join(__dirname, './fixtures/modules/example-esm.js'));
     const received = esmModule.message;

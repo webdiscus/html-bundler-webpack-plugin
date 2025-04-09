@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
-const { deserialize } = require('node:v8');
+const { deserialize } = require('./serializer');
 const { fork } = require('node:child_process');
 
 const childScript = path.resolve(__dirname, './child.mjs');
@@ -41,7 +41,7 @@ function loader(filePath) {
             reject(Object.assign(new Error(msg.error.message), msg.error));
           } else if (msg.buffer) {
             try {
-              const result = deserialize(Buffer.from(msg.buffer));
+              const result = deserialize(msg.buffer);
               resolve(result);
             } catch (error) {
               reject(error);

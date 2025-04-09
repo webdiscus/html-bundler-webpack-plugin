@@ -290,6 +290,8 @@ class Option {
    * @return {Promise<Object>}
    */
   #loadData(dataValue) {
+    const useLoadModuleCache = !this.#pluginOption.useExperimentalEsmLoaderWithoutCache();
+
     return new Promise((resolve, reject) => {
       if (typeof dataValue !== 'string') {
         resolve(dataValue || {});
@@ -300,7 +302,7 @@ class Option {
       let dataFile = PluginService.getDataFiles(this.pluginCompiler, dataValue);
 
       const load = () => {
-        loadModuleAsync(dataFile)
+        loadModuleAsync(dataFile, useLoadModuleCache)
           .then((data) => {
             resolve(data || {});
           })

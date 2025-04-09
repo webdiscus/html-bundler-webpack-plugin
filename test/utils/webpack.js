@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack');
-const { loadCacheableModuleAsync } = require('../../src/Common/FileUtils');
+const { loadModuleAsync } = require('../../src/Common/FileUtils');
 const { outToConsole } = require('../../src/Common/Helpers');
 const { merge } = require('webpack-merge');
 
@@ -36,8 +36,7 @@ const prepareWebpackConfig = (PATHS, relTestCasePath, webpackOpts = {}) => {
 
   const commonConfig = require(commonConfigFile);
 
-  //return loadModuleAsync(configFile).then((testConfig) => {
-  return loadCacheableModuleAsync(configFile).then((testConfig) => {
+  return loadModuleAsync(configFile).then((testConfig) => {
     const baseConfig = {
       // the home directory for webpack should be the same where the tested webpack.config.js located
       context: testPath,
