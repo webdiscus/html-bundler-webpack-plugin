@@ -65,7 +65,7 @@ class Option {
    * Experimental options.
    */
   #experiments = {
-    esmLoaderWithoutCache: false, // use custom ESM loader without cache
+    // reserved for experiments in beta versions
   };
 
   #entryLibrary = {
@@ -796,14 +796,6 @@ class Option {
 
   hasAfterEmit() {
     return this.options.afterEmit != null;
-  }
-
-  /**
-   * Get experimental option.
-   * @return {boolean}
-   */
-  useExperimentalEsmLoaderWithoutCache() {
-    return this.#experiments.esmLoaderWithoutCache === true;
   }
 
   /**

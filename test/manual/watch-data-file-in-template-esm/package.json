@@ -1,6 +1,7 @@
 {
   "scripts": {
     "start": "webpack serve --mode development",
+    "start:esm": "node --experimental-vm-modules ../../../node_modules/webpack-cli/bin/cli.js serve --mode development",
     "watch": "webpack watch --mode development",
     "build": "webpack --mode=production --progress"
   },

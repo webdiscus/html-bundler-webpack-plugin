@@ -1,7 +1,9 @@
 const path = require('path');
 const PluginService = require('../Plugin/PluginService');
 const { parseQuery, outToConsole } = require('../Common/Helpers');
-const { rootSourceDir, filterParentPaths, fileExistsAsync, loadModuleAsync } = require('../Common/FileUtils');
+const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
+const { loadModuleAsync } = require('../Common/FileSystem/loadModule');
+const { fileExistsAsync } = require('../Common/FileSystem/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { getDataFileNotFoundException, getDataFileException } = require('./Messages/Exeptions');
 const {
@@ -290,8 +292,6 @@ class Option {
    * @return {Promise<Object>}
    */
   #loadData(dataValue) {
-    const useLoadModuleCache = !this.#pluginOption.useExperimentalEsmLoaderWithoutCache();
-
     return new Promise((resolve, reject) => {
       if (typeof dataValue !== 'string') {
         resolve(dataValue || {});
@@ -302,7 +302,7 @@ class Option {
       let dataFile = PluginService.getDataFiles(this.pluginCompiler, dataValue);
 
       const load = () => {
-        loadModuleAsync(dataFile, useLoadModuleCache)
+        loadModuleAsync(dataFile)
           .then((data) => {
             resolve(data || {});
           })

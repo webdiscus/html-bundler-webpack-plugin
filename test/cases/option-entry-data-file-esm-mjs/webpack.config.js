@@ -17,6 +17,9 @@ module.exports = {
         },
       },
       //data: 'src/data.mjs',
+      experiments: {
+        esmLoaderWithoutCache: true,
+      },
     }),
   ],
 };

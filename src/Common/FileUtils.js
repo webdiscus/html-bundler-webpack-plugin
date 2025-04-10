@@ -1,106 +1,7 @@
-// noinspection DuplicatedCode
-
 const path = require('path');
 const fs = require('fs');
-const { pathToFileURL } = require('url');
 const { red, redBright, cyan, whiteBright, yellow } = require('ansis');
 const { isWin, pathToPosix } = require('./Helpers');
-
-const customEsmLoader = require('./FileSystem/ModuleLoader/loader');
-
-const nativeEsmLoader = (absolutePath) => {
-  const fileUrl = pathToFileURL(absolutePath).href;
-
-  // Note: read real data after changes from root file, sub-imported files are still cached.
-  return import(`${fileUrl}?nocache=${Date.now()}`);
-};
-
-/**
- * Check whether the file exists.
- *
- * @param {string} file The file path.
- * @return {Promise<boolean>}
- */
-function fileExistsAsync(file) {
-  return fs.promises
-    .access(file, fs.constants.F_OK)
-    .then(() => true)
-    .catch(() => false);
-}
-
-/**
- * Load a CommonJS or ESM module without cache for sub-imports.
- *
- * Note: The exported value must be serializable using v8.serialize.
- * This excludes functions, promises, and other unsupported types.
- *
- * Use it for loading ESM data modules where live changes should be picked up
- * without restarting the main process or clearing the cache manually.
- *
- * @param {string} filePath Relative or absolute path to the module file.
- * @returns {Promise<any>} The exported module.
- */
-
-/**
- * Load a CommonJS or ESM module using the native module cache.
- *
- * This function loads the specified module once and returns the cached version
- * on subsequent calls. It supports both CommonJS and ESM formats.
- *
- * Note: If the loaded file or any of its dependencies change,
- * the updated data will not be reflected unless the Node.js module cache is manually cleared.
- *
- * Use it for stable or static modules where performance is preferred over live reloading.
- *
- * @param {string} filePath Relative or absolute path to the module file.
- * @param {boolean} cache
- * @returns {Promise<any>} The exported module.
- */
-function loadModuleAsync(filePath, cache = true) {
-  const absolutePath = path.resolve(filePath);
-  const ext = path.extname(absolutePath).toLowerCase();
-
-  const esmLoader = cache ? nativeEsmLoader : customEsmLoader;
-
-  const loadEsm = (filePath) =>
-    esmLoader(filePath).then((module) => {
-      // handle ESM file that has the .js extension
-      if (module && module.__esModule === true && typeof module.default === 'object') {
-        module = module.default;
-      }
-
-      //console.log(' >> loadEsm: ', module?.default ?? module);
-
-      return module?.default ?? module;
-    });
-
-  return fileExistsAsync(absolutePath).then((exists) => {
-    if (!exists) {
-      throw new Error(`File not found: ${cyan(absolutePath)}`);
-    }
-
-    if (ext === '.mjs') {
-      return loadEsm(absolutePath);
-    }
-
-    if (ext === '.cjs' || ext === '.json' || ext === '.js') {
-      try {
-        const module = require(absolutePath);
-        return module.default ?? module;
-      } catch (error) {
-        if (error.code === 'ERR_REQUIRE_ESM') {
-          // fallback to ESM
-          return loadEsm(absolutePath);
-        }
-        throw error;
-      }
-    }
-
-    throw new Error(
-      `Unsupported file type: ${cyan`${ext}`}\nSupported module extensions: ${yellow`.js, .cjs, .mjs, .json`}`
-    );
-  });
-}
 
 /**
  * Load CJS node module synchronously.
@@ -329,8 +230,6 @@ const touch = (file, { fs }) => {
 };
 
 module.exports = {
-  fileExistsAsync,
-  loadModuleAsync,
   loadModule,
   isDir,
   readDirRecursiveSync,

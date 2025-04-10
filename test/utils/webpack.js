@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const process = require('process');
 const webpack = require('webpack');
-const { loadModuleAsync } = require('../../src/Common/FileUtils');
+const { loadModuleAsync } = require('../../src/Common/FileSystem/loadModule');
 const { outToConsole } = require('../../src/Common/Helpers');
 const { merge } = require('webpack-merge');
 

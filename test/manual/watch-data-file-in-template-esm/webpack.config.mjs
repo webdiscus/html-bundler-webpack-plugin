@@ -7,17 +7,17 @@ export default {
     new HtmlBundlerPlugin({
       entry: {
         index: './src/templates/home.html',
-        about: './src/templates/about.html',
+        //about: './src/templates/about.html',
       },
       data: './src/data/data.mjs', // test changes in ESM file
       hotUpdate: true, // if JS files are not used, use it to enable live reload
       watchFiles: {
-        includes: [/company.js/], // watch changes in the file imported in data.mjs
+        includes: [/src\/data\/.*\.(m?js)/], // watch changes in the file imported in data.mjs
       },
-      //verbose: true,
       experiments: {
         esmLoaderWithoutCache: true,
       },
+      //verbose: true,
     }),
   ],
 
