@@ -1,3 +1,6 @@
+import { URL } from 'node:url'; // node
+import assert from 'assert'; // node
+import ansis from 'ansis'; // npm
 import company from './company.js';
 
 class Company {
@@ -27,6 +30,9 @@ const data = {
     date: new Date(),
   },
   test: {
+    ansi: ansis.red`hello`,
+    assert: assert('hello', 'hello!'),
+    host: new URL('https://example.com'),
     ArrayBuffer: new ArrayBuffer(8),
     Uint8Array: new Uint8Array([10, 20, 30]),
     Float64Array: new Float64Array([1.1, 2.2]),

@@ -19,6 +19,11 @@ async function resolve(specifier, context, nextResolve) {
   const parentUrl = new URL(context.parentURL);
   const flag = 'nocache';
 
+  // skip builtin node and npm modules in resolve hook
+  if (resolved.format === 'builtin' || resolvedUrl.protocol === 'node:' || resolved.url.includes('/node_modules/')) {
+    return resolved;
+  }
+
   if (!resolvedUrl.searchParams.get(flag) && parentUrl.searchParams.get(flag)) {
     resolvedUrl.searchParams.set(flag, Date.now().toString());
 
