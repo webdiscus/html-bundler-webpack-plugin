@@ -1,11 +1,12 @@
 const path = require('path');
-const nativeEsmLoader = require('./Module/moduleLoader');
-const registerLoader = require('./Module/register');
-const { fileExistsAsync } = require('./Utils');
 const { cyan, yellow } = require('ansis');
+const { fileExistsAsync } = require('./Utils');
+const nativeEsmLoader = require('./Module/moduleLoader');
 
-// Register the custom module loader.
-registerLoader();
+// Register the custom module loader to read real data w/o cache from changed ESM files.
+// It is required for using loadModuleAsync() by serv/watch mode.
+// const registerLoader = require('./Module/register');
+// registerLoader();
 
 /**
  * Load a CommonJS or ESM module.

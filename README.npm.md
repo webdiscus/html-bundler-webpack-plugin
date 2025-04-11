@@ -13,30 +13,16 @@
 [![codecov](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin/branch/master/graph/badge.svg?token=Q6YMEN536M)](https://codecov.io/gh/webdiscus/html-bundler-webpack-plugin)
 [![node](https://img.shields.io/npm/dm/html-bundler-webpack-plugin)](https://www.npmjs.com/package/html-bundler-webpack-plugin)
 
-> This plugin is all you need to generate a complete single- or multi-page website from your source assets.
+The plugin automates the creation of complete web pages by processing HTML templates with linked assets. 
+It resolves dependencies, compiles templates, and ensures that the output HTML contains correct output URLs.
 
-The plugin automates the processing of source files such as JS/TS, SCSS, images and other assets referenced in an HTML or template file.
-This plugin will generate an HTML file containing all the necessary links to JS, CSS, images and other resources.
+## Install
 
-## Why use the HTML Bundler Plugin?
+```bash
+npm install html-bundler-webpack-plugin --save-dev
+```
 
-This plugin is a powerful alternative to [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) and a replacement for many [plugins and loaders](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#list-of-plugins).
-
-The HTML Bundler Plugin works a bit differently than `html-webpack-plugin`. 
-It doesn't just inject JavaScript and CSS into an HTML.
-Instead, it resolves all the source files of the assets referenced directly in the template 
-and ensures the generated HTML contains the correct output URLs of resources after Webpack processes them.
-Additionally, CSS extracted from styles imported in JS can be injected into HTML as a `<link>` tag or as an inlined CSS.
-
----
-
-<h3 align="center">
-📋 <a href="https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#contents">Table of Contents</a> 🚀<a href="https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#install">Install and Quick Start</a> 🖼 <a href="https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#usage-examples">Usage examples</a>
-</h3>
-
----
-
-## 💡 Highlights
+## Highlights
 
 - An [entry point](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#option-entry) is any HTML template. **Start from HTML or template**, not from JS.
 - **Automatically** processes templates found in the [entry directory](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#option-entry-path).
@@ -57,8 +43,16 @@ Additionally, CSS extracted from styles imported in JS can be injected into HTML
 - Generates the [integrity](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#option-integrity) attribute in the `link` and `script` tags.
 - Generates the [favicons](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#favicons-bundler-plugin) of different sizes for various platforms.
 - You can create custom plugins using the provided [Plugin Hooks](https://github.com/webdiscus/html-bundler-webpack-plugin/blob/master/README.md#plugin-hooks-and-callbacks).
-- Over 700 [tests](https://github.com/webdiscus/html-bundler-webpack-plugin/tree/master/test) for various use cases.
 
----
+[GitHub](https://github.com/webdiscus/html-bundler-webpack-plugin)
 
-📖 See [full documentation on GitHub](https://github.com/webdiscus/html-bundler-webpack-plugin).
+## Documentation
+
+- [Get Started](https://webdiscus.github.io/html-bundler-webpack-plugin/category/getting-started)
+- [Migrating from `html-webpack-plugin`](https://webdiscus.github.io/html-bundler-webpack-plugin/getting-started/migrating-from-html-webpack-plugin)
+- [Features](https://webdiscus.github.io/html-bundler-webpack-plugin/introduction#key-features)
+- [Options](https://webdiscus.github.io/html-bundler-webpack-plugin/category/options)
+- [Guides](https://webdiscus.github.io/html-bundler-webpack-plugin/guides)
+- [F.A.Q.](https://webdiscus.github.io/html-bundler-webpack-plugin/faq/import-url-in-css)
+
+For full documentation, visit [HTML Bundler Docs](https://webdiscus.github.io/html-bundler-webpack-plugin).

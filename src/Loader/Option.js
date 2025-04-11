@@ -3,6 +3,7 @@ const PluginService = require('../Plugin/PluginService');
 const { parseQuery, outToConsole } = require('../Common/Helpers');
 const { rootSourceDir, filterParentPaths } = require('../Common/FileUtils');
 const { loadModuleAsync } = require('../Common/FileSystem/loadModule');
+const registerLoader = require('../Common/FileSystem/Module/register');
 const { fileExistsAsync } = require('../Common/FileSystem/Utils');
 const { findRootIssuer } = require('../Common/CompilationHelpers');
 const { getDataFileNotFoundException, getDataFileException } = require('./Messages/Exeptions');
@@ -99,6 +100,12 @@ class Option {
     this.#options = options;
     this.#preprocessorModule = preprocessorModule;
     this.#initPreprocessor(loaderContext);
+
+    if (this.isWatchMode()) {
+      // Register the custom module loader to read real data w/o cache from changed ESM files.
+      // It is required for using loadModuleAsync() by serv/watch mode.
+      registerLoader();
+    }
 
     const promises = [options.data, loaderContext.entryData, this.#queryData].map((file) => this.#loadData(file));
 

@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.20.0-beta.6",
+  "version": "4.20.0-beta.7",
   "description": "Generates complete single-page or multi-page website from source assets. Build-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
@@ -25,10 +25,9 @@
     "integrity",
     "js",
     "javascript",
+    "style",
     "css",
-    "scss",
-    "style-loader",
-    "html-webpack-plugin"
+    "scss"
   ],
   "license": "ISC",
   "author": "webdiscus (https://github.com/webdiscus)",

@@ -4,6 +4,8 @@
 /**
  * Custom resolve hook.
  *
+ * Asynchronous version accepted by module.register().
+ *
  * Appends a unique cache-busting query parameter to module URLs when the parent
  * module was imported with the `nocache` flag.
  * This helps force reloads of changed ESM modules, useful for features like Live Reload or HMR.

@@ -1,4 +1,4 @@
-import address from './companyAddress.js';
+import address from './companyAddress.mjs';
 
 const data = {
   name: 'Awesome Corp',

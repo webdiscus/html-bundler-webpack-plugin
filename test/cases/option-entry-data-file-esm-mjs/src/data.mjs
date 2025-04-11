@@ -1,9 +1,17 @@
+// Note:
+// Using .mjs for all sub-imported files forces Node to treat them all as ES modules, even in mixed projects.
+// So no `default` wrapping occurs.
+
+import { URL } from 'node:url'; // node
+import company from './company.mjs';
+
 const data = {
   company: {
-    name: 'Awesome Corp',
-    address: '123 Main Street, Springfield',
-    phone: '+1 234 567 890',
-    email: 'info@awesomecorp.com',
+    ...company,
+    email: 'admin@awesomecorp.com', // override company.email
+  },
+  info: {
+    url: new URL('https://awesomecorp.com/?query=demo'),
   },
 };
 
