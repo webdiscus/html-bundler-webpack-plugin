@@ -1,8 +1,8 @@
 # Changelog
 
-## 4.20.0-beta.0
+## 4.20.0
 
-- feat: add support for ESM data file
+- feat: add support for ESM data files
 - chore: remove tests with Node.js version 18
 
 ## 4.19.2
