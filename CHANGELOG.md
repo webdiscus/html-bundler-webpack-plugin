@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.20.1 (2025-04-17)
+
+- fix: disallow `undefined` value for optional properties by `route` option
+
 ## 4.20.0
 
 - feat: add support for ESM data files

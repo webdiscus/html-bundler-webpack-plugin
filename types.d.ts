@@ -391,17 +391,17 @@ type Sources =
 type Router =
   | boolean
   | {
-      enabled?: boolean;
+      enabled: boolean;
       // replaces matched source route with its output URL, defaults is <PluginOption>.test depends on used preprocessor
-      test?: RegExp | Array<RegExp>;
+      test: RegExp | Array<RegExp>;
       // Note: if a route contains a query or a segment (e.g. index.html#contact), the rewriteIndex is ignored!
       // if rewriteIndex is `false` (defaults), do nothing
       // if rewriteIndex is a string:
       //   - if publicPath is `auto` replaces "index.html" with the specified string, should be on of: ".", ""
       //   - if publicPath is not empty, replaces "index.html" with "" (empty string) regardless of specified value
-      rewriteIndex?: false | string;
+      rewriteIndex: false | string;
       // called after the resolving of output filenames
-      resolve?: (props: {
+      resolve: (props: {
         sourceRoute: string; // resolved href value (absolute path)
         outputRoute: string; // output URL regards publicPath, e.g. by auto publicPath is relative to outputFile
         sourceFile: string; // absolute path to the template file
@@ -410,6 +410,13 @@ type Router =
         // - void - do nothing
         // - any string - the returned string replaces the value
       }) => void | string;
+    }
+  // disallow `undefined` value for optional properties
+  | {
+      enabled?: never;
+      test?: never;
+      rewriteIndex?: never;
+      resolve?: never;
     };
 
 type WatchFiles = {
