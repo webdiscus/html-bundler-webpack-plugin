@@ -33,6 +33,10 @@ expect.extend({
   },
 });
 
+export const isCI = (() => {
+  return 'GITHUB_ACTIONS' in process.env;
+})();
+
 export const getCompareFileList = function (receivedPath, expectedPath) {
   return {
     received: readDirRecursiveSync(receivedPath)

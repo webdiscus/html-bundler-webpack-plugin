@@ -372,6 +372,11 @@ class Option {
       if (typeof routerOptions === 'boolean') {
         this.router.enabled = routerOptions;
       } else if (typeof routerOptions === 'object') {
+        // for invalid value, set default value
+        if (routerOptions.rewriteIndex !== false && typeof routerOptions.rewriteIndex !== 'string') {
+          routerOptions.rewriteIndex = this.router.rewriteIndex;
+        }
+
         this.router = { ...this.router, ...routerOptions };
 
         if (typeof routerOptions.resolve !== 'function') {

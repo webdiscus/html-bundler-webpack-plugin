@@ -1,23 +1,27 @@
 # Changelog
 
+## 4.20.2 (2025-04-17)
+
+- fix: invalid values for `route.rewriteIndex` option are treated as default value
+
 ## 4.20.1 (2025-04-17)
 
 - fix: disallow `undefined` value for optional properties by `route` option
 
-## 4.20.0
+## 4.20.0 (2025-04-11)
 
 - feat: add support for ESM data files
 - chore: remove tests with Node.js version 18
 
-## 4.19.2
+## 4.19.2 (2025-04-01)
 
 - feat: case-insensitive preprocessor patterns, #165
 
-## 4.19.1
+## 4.19.1 (2025-03-29)
 
 - fix: `js.chunkFilename` should default to `js.filename` when `js.filename` is specified as a string, #164
 
-## 4.19.0
+## 4.19.0 (2025-03-16)
 
 ### 🔥 CHANGES by inlining SVG only
 
@@ -46,7 +50,7 @@
   Result:
   ```html
   <svg class="icon" ...>...</svg>
-    ```
+  ```
 - When inlining SVG as a data URL, consider Webpack's `generator.dataUrl()` and `generator.dataUrl.encoding` options.
 - Display a warning when used `?embed` URL query for SVG files in JS or CSS.
 
