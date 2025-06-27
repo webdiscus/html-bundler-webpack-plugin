@@ -100,6 +100,7 @@ describe('usage template in js on client side', () => {
   test('hbs: compile to fn', () => compareFiles('_preprocessor/js-tmpl-hbs-compile'));
   test('hbs: compile to fn with helpers', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-helpers'));
   test('hbs: compile to fn with partials', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-partials'));
+  test('hbs: partials in hbs- and JS templates', () => compareFiles('_preprocessor/js-tmpl-hbs-partials-in-hbs-js'));
   test('hbs: compile to fn with variables', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-variables'));
 
   // Nunjucks

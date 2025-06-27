@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    <script src="app.js" defer="defer"></script>
+  </head>
+  <body>
+    {{> 'header'}}
+    {{!-- the partial (name containing '/') used in both a Handlebars template and a JS template --}}
+    {{> 'header/subheader' subheaderTitle="this partial used in HBS-template"}}
+    {{!-- the partial used in both a Handlebars template and a JS template --}}
+    {{> person name="Heisenberg" age="50"}}
+    <div id="app"></div>
+  </body>
+</html>

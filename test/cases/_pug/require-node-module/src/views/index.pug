@@ -1,6 +1,8 @@
-//- test the resolving of the 'exports' filed in package.json of the `ansis` module
-- const ansis = require('ansis');
-- const { inverse } = require('ansis');
+//- TODO: the resolving of the 'exports' filed in package.json of the `ansis` module
+//- ansis@3.17 works, but in v4.1.0 - not works
+//- const ansis, { inverse } = require('ansis');
+//-h1 #{ansis.green(`Hello ${inverse('ANSI')} World!`)}
 
-//-h1 #{ansis.green(`Hello ${ansis.inverse('ANSI')} World!`)}
-h1 #{ansis.green`Hello ${inverse`ANSI`} World!`}
+- const { lorem, libA, libB } = require('@test-fixtures/js');
+
+h1 Hello '#{libA.getName()}'!

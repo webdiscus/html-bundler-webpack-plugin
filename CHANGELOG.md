@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.20.3 (2025-06-27)
+
+- fix: handlebars preprocessor when a partial is used in both a Handlebars template and a JS template, #174
+- fix: handlebars preprocessor for the `compile` mode when a partial name contains `/` char
+
 ## 4.20.2 (2025-04-17)
 
 - fix: invalid values for `route.rewriteIndex` option are treated as default value

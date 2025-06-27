@@ -5,12 +5,12 @@ const makeSerializable = require('webpack/lib/util/makeSerializable');
 /** @typedef {import("webpack/lib/serialization/ObjectMiddleware").ObjectSerializerContext} ObjectSerializerContext */
 
 const ansis = require('ansis');
-const { red, yellow, cyan, green, ansi256, cyanBright, reset, whiteBright, bgYellow } = require('ansis');
+const { red, yellow, cyan, green, fg, cyanBright, reset, whiteBright, bgYellow } = require('ansis');
 const Config = require('../../Common/Config');
 
 const { pluginLabel } = Config.get();
 
-const redBright = ansi256(203);
+const redBright = fg(203);
 const pluginHeaderHtml = `<span style="color:#e36049">[${pluginLabel}]</span>`;
 
 class LoaderException extends WebpackError {

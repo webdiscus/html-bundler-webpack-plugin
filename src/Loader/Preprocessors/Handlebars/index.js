@@ -113,6 +113,11 @@ const preprocessor = (loaderContext, options) => {
 
       const template = fs.readFileSync(partialFile, 'utf8');
       Handlebars.registerPartial(name, template);
+
+      if (!('_sourcePartials' in Handlebars)) {
+        Handlebars._sourcePartials = {};
+      }
+      Handlebars._sourcePartials[name] = template;
     }
   };
 
@@ -219,15 +224,26 @@ const preprocessor = (loaderContext, options) => {
         let compiled;
 
         try {
+          if (typeof source == 'function') {
+            // Handlebars.precompile requires a string.
+            // However, if a partial is used in both a Handlebars template and a JS template,
+            // it may already be compiled into a function.
+            // In that case, we retrieve the original source from the `_sourcePartials` property,
+            // where it was previously saved in `updatePartials()`.
+            source = Handlebars._sourcePartials[name];
+          }
           compiled = Handlebars.precompile(source, options);
         } catch (error) {
           let message = `Could not compile partial '${name}', in the template: ${resourcePath}`;
           throw new Error(message + '\n' + error.toString());
         }
 
+        // normalize the name to variable-safe name
+        const varName = name.replace(/[\/-]/g, '_');
+
         precompiledPartials += `
-        var partial_${name} = ${compiled};
-        Handlebars.partials['${name}'] = Handlebars.template(partial_${name});
+        var partial_${varName} = ${compiled};
+        Handlebars.partials['${name}'] = Handlebars.template(partial_${varName});
         `;
       }
 
