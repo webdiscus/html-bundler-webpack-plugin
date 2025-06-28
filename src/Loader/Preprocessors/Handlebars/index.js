@@ -1,8 +1,8 @@
 const path = require('path');
+const LoaderFactory = require('../../LoaderFactory');
 const { stringifyJSON, stringifyFn } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
-const LoaderFactory = require('../../LoaderFactory');
 
 // node module name
 const moduleName = 'handlebars';
@@ -239,11 +239,11 @@ const preprocessor = (loaderContext, options) => {
         }
 
         // normalize the name to variable-safe name
-        const varName = name.replace(/[\/-]/g, '_');
+        const varName = 'partial_' + name.replace(/[\/-]/g, '_');
 
         precompiledPartials += `
-        var partial_${varName} = ${compiled};
-        Handlebars.partials['${name}'] = Handlebars.template(partial_${varName});
+        var ${varName} = ${compiled};
+        Handlebars.partials['${name}'] = Handlebars.template(${varName});
         `;
       }
 
@@ -286,7 +286,7 @@ const preprocessor = (loaderContext, options) => {
         ${precompiledHelpers}
         ${precompiledTemplate}
         var ${exportFunctionName} = (context) => {
-          var template = (Handlebars['default'] || Handlebars).template(precompiledTemplate);
+          var template = (Handlebars.default || Handlebars).template(precompiledTemplate);
           return template(Object.assign({}, data, context));
         };
         ${exportCode}${exportFunctionName};`;

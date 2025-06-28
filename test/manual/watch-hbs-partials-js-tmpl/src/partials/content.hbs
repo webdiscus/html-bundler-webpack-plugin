@@ -1,0 +1,9 @@
+{{!-- the partial (name containing '/') used in both a Handlebars template and a JS template --}}
+{{> 'header/subheader' subheaderTitle="this partial used in JS-template !!"}}
+{{!-- the partial will be compiled with variables defined in JS --}}
+{{> person}}
+{{!-- the partial will be compiled with the local variables --}}
+{{> person name="Jerry" age="30"}}
+{{!-- the partial contains resolved image --}}
+{{> star}}
+{{!-- TODO: implement loading helpers in runtime: {{include 'src/markdown.md'}} --}}

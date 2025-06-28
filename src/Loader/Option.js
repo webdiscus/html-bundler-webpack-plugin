@@ -81,7 +81,10 @@ class Option {
       options.contextDir = loaderOptions.context || '';
 
       // whether it should be used ESM export for the rendered/compiled result
-      options.esModule = options?.esModule === true;
+      options.esModule = options.esModule === true;
+
+      // save the initial value defined in the webpack config
+      options.originalPreprocessorMode = options.preprocessorMode;
 
       // set reference to sources defined directly in plugin options
       if (this.#pluginOption.options?.sources != null) {
@@ -148,7 +151,6 @@ class Option {
     const queryData = this.#queryData;
     const options = this.#options;
     const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
-
     let [defaultPreprocessorMode] = this.preprocessorModes;
     let isIssuerScript = false;
     let preprocessorMode;
@@ -176,6 +178,10 @@ class Option {
         break;
       }
     }
+
+    // reset the original option value, also no cached state,
+    // because the loader works in different modes depend on the context
+    options.preprocessorMode = options.originalPreprocessorMode;
 
     if (preprocessorMode && this.preprocessorModes.has(preprocessorMode)) {
       options.preprocessorMode = preprocessorMode;

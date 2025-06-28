@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.20.4 (2025-06-28)
+
+- fix: template rendering error in serve/watch mode with JS templates, #174
+  This issue was introduced in v4. In v3 works fine.
+
 ## 4.20.3 (2025-06-27)
 
 - fix: handlebars preprocessor when a partial is used in both a Handlebars template and a JS template, #174

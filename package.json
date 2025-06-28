@@ -1,6 +1,6 @@
 {
   "name": "html-bundler-webpack-plugin",
-  "version": "4.20.3",
+  "version": "4.20.4",
   "description": "Generates complete single-page or multi-page website from source assets. Built-in support for Markdown, Eta, EJS, Handlebars, Nunjucks, Pug. Alternative to html-webpack-plugin.",
   "keywords": [
     "html",
