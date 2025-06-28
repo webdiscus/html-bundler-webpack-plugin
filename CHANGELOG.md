@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.20.5 (2025-06-29)
+
+- fix: handle mixed `preprocessorMode` cases consistently, #174
+
 ## 4.20.4 (2025-06-28)
 
 - fix: template rendering error in serve/watch mode with JS templates, #174

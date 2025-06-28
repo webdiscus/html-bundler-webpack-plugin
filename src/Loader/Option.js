@@ -40,6 +40,7 @@ class Option {
   // rule: the first value is default
   preprocessorModes = new Set(['render', 'compile']);
   #preprocessorModule;
+  #originalPreprocessorMode;
 
   constructor() {}
 
@@ -84,7 +85,7 @@ class Option {
       options.esModule = options.esModule === true;
 
       // save the initial value defined in the webpack config
-      options.originalPreprocessorMode = options.preprocessorMode;
+      this.#originalPreprocessorMode = options.preprocessorMode;
 
       // set reference to sources defined directly in plugin options
       if (this.#pluginOption.options?.sources != null) {
@@ -150,6 +151,7 @@ class Option {
   #initPreprocessor(loaderContext) {
     const queryData = this.#queryData;
     const options = this.#options;
+    //const resource = loaderContext.resourcePath + loaderContext.resourceQuery;
     const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
     let [defaultPreprocessorMode] = this.preprocessorModes;
     let isIssuerScript = false;
@@ -181,13 +183,16 @@ class Option {
 
     // reset the original option value, also no cached state,
     // because the loader works in different modes depend on the context
-    options.preprocessorMode = options.originalPreprocessorMode;
+    options.preprocessorMode = this.#originalPreprocessorMode;
 
     if (preprocessorMode && this.preprocessorModes.has(preprocessorMode)) {
       options.preprocessorMode = preprocessorMode;
     } else if (!this.preprocessorModes.has(options.preprocessorMode)) {
       options.preprocessorMode = defaultPreprocessorMode;
     }
+
+    // safe dynamic option directly into module meta data
+    loaderContext._module.resourceResolveData._bundlerPluginMeta.preprocessorMode = options.preprocessorMode;
   }
 
   /**
@@ -442,6 +447,13 @@ class Option {
     // save preprocessor into options, because it will be cached,
     // that reduce amount of the preprocessor creation by every loader calling
     this.#preprocessorModule._module = preprocessor;
+  }
+
+  /**
+   * @param {string} mode
+   */
+  setPreprocessorMode(mode) {
+    this.#options.preprocessorMode = mode;
   }
 
   /**

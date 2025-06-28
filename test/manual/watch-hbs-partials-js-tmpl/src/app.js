@@ -1,4 +1,4 @@
-import tmpl from './app.hbs';
+import tmpl from './app.hbs?lang=de';
 
 const locals = {
   helloName: 'World',

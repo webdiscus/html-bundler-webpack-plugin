@@ -11,5 +11,12 @@
     {{!-- the partial used in both a Handlebars template and a JS template --}}
     {{> person name="Heisenberg" age="50"}}
     <div id="app"></div>
+    <h3>Product</h3>
+    <ul class="people_list">
+      {{#each smallSliderProductCards}}
+        <li>id: {{this.id}}, current price: {{this.currentPrice}}</li>
+      {{/each}}
+    </ul>
+    <p>{{ copyright }}</p>
   </body>
 </html>

@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "start": "webpack serve",
     "watch": "webpack watch --mode development",

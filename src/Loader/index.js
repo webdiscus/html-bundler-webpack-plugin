@@ -54,6 +54,7 @@ const loader = function (content, map, meta) {
   const loader = LoaderFactory.createLoader(pluginCompiler);
   const hooks = PluginService.getHooks(pluginCompiler);
   const loaderOptionPromise = LoaderFactory.createOption(pluginCompiler, loaderContext);
+  const preprocessorMode = loaderContext._module?.resourceResolveData?._bundlerPluginMeta?.preprocessorMode;
   let loaderOption = null;
 
   loaderOptionPromise
@@ -61,6 +62,9 @@ const loader = function (content, map, meta) {
       // the options must be initialized before others
       errorStage = 'init';
       loaderOption = result;
+
+      // update with correct dynamic value
+      loaderOption.setPreprocessorMode(preprocessorMode);
 
       // bind the loaderOption before initialisations
       PluginService.setLoaderOption(pluginCompiler, loaderOption);
@@ -97,6 +101,9 @@ const loader = function (content, map, meta) {
       return hooks.beforePreprocessor.promise(content, loaderContext);
     })
     .then((value) => {
+      // update with correct dynamic value
+      loaderOption.setPreprocessorMode(preprocessorMode);
+
       const beforePreprocessor = loaderOption.get().beforePreprocessor;
       if (beforePreprocessor != null) {
         errorStage = 'beforePreprocessor';
@@ -105,6 +112,9 @@ const loader = function (content, map, meta) {
       return value;
     })
     .then((value) => {
+      // update with correct dynamic value
+      loaderOption.setPreprocessorMode(preprocessorMode);
+
       const loaderOptions = loaderOption.get();
       errorStage = 'preprocessor';
 
@@ -112,7 +122,9 @@ const loader = function (content, map, meta) {
       return hooks.preprocessor.promise(value, loaderContext, loaderOptions);
     })
     .then((value) => {
-      // 3
+      // update with correct dynamic value
+      loaderOption.setPreprocessorMode(preprocessorMode);
+
       const preprocessor = loaderOption.getPreprocessor();
       if (preprocessor) {
         const loaderOptions = loaderOption.get();
@@ -180,6 +192,9 @@ const loader = function (content, map, meta) {
       }
 
       const browserErrorMessage = loader?.exportError(error, resource);
+
+      // update with correct value
+      loaderOption.setPreprocessorMode(preprocessorMode);
 
       // initialize dependency when an exception occurs before regular dependency initialisation
       dependency.init({ loaderContext, loaderOption });

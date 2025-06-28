@@ -1,7 +1,12 @@
-const path = require('path');
-const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
+import HtmlBundlerPlugin from '@test/html-bundler-webpack-plugin';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+// Since we're using ES modules, we need to get __dirname differently
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
   mode: 'production',
 
   output: {
@@ -24,10 +29,15 @@ module.exports = {
         strict: true,
         partials: ['src/partials'],
       },
-      //data: './src/data/index.js',
-      data: {
-        projectName: 'Test',
+      // data: {
+      //   projectName: 'Test',
+      // },
+      // IMPORTANT: ESM data file must have '.mjs' file extension
+      data: './src/data/index.mjs',
+      watchFiles: {
+        includes: [/\/data\/.+\.(m?js|json)$/],
       },
+      //verbose: true,
     }),
   ],
 
