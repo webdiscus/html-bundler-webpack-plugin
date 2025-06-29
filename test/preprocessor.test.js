@@ -98,6 +98,7 @@ describe('usage template in js on client side', () => {
 
   // Handlebars
   test('hbs: compile to fn', () => compareFiles('_preprocessor/js-tmpl-hbs-compile'));
+  test('hbs: compile undefined vars', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-undefined-var'));
   test('hbs: compile to fn with helpers', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-helpers'));
   test('hbs: compile to fn with partials', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-partials'));
   test('hbs: partials in hbs- and JS templates', () => compareFiles('_preprocessor/js-tmpl-hbs-partials-in-hbs-js'));

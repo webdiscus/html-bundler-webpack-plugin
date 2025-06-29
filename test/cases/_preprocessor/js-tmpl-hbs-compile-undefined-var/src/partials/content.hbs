@@ -1,0 +1,21 @@
+<h1>Hello {{ name }}!</h1>
+
+{{!-- Test: variable in src compiled to JS-template (in this case by pass value) --}}
+<img src="{{ imgPear }}">
+
+{{!-- Test: undefined variable in src compiled to JS-template --}}
+<img src="{{ undefinedVariable2 }}" alt="undefinedVariable2">
+
+{{!-- Test: variable in srcset compiled to JS-template (in this case by pass value) --}}
+<img srcset="{{ imgKiwi }}" />
+
+<div>Global data: title = "{{ title }}"</div>
+<div>Query param: lang = "{{ lang }}"</div>
+
+<ul>
+    {{#each people}}
+    <li>{{this}}</li>
+    {{/each}}
+</ul>
+
+<img src="@images/fig.png" srcset="@images/kiwi.png 300w, @images/pear.png 400w">

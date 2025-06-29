@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.20.6 (2025-06-29)
+
+- fix: built fails when used a template variable in srcset with JS-template, #176
+  ```html
+  <img srcset="{{ img }}" />
+  ```
+
 ## 4.20.5 (2025-06-29)
 
 - fix: handle mixed `preprocessorMode` cases consistently, #174
