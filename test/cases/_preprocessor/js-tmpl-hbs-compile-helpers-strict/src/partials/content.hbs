@@ -1,0 +1,21 @@
+<h1>Hello {{ name }}!</h1>
+
+<h3>Custom helpers in JS-template</h3>
+<ul>
+  <li>{{#bold}}bold{{/bold}}</li>
+  <li>{{#italic}}italic{{/italic}}</li>
+  <li>{{#italic}}italic{{/italic}}</li>
+  <li>getFirstChars 3: {{getFirstChars 'some text' len="3"}}</li>
+  <li>'trim' helper as arrow function: {{trim ' Trim spaces around '}}</li>
+</ul>
+
+<div><b>complexHelper</b></div>
+<div>{{complexHelper 'Text foo "bar"'}}</div>
+
+
+<h3>Variables in JS-template</h3>
+<ul>
+    {{#each people}}
+    <li>{{this}}</li>
+    {{/each}}
+</ul>

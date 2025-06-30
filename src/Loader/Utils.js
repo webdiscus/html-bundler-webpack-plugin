@@ -202,18 +202,141 @@ const stringifyJSON = (data) => {
     : json || '{}';
 };
 
-const stringifyFn = (fn) => {
-  let value = fn.toString().replace(/\n/g, '');
-  let isArrowFunction = value.indexOf('=>', 1) > 0;
+/**
+ * Removes all JavaScript comments (single-line and multi-line)
+ * from the given source code, while preserving string and template literals.
+ *
+ * This function avoids removing comment-like patterns inside string literals
+ * (single quotes, double quotes, or backticks), and skips escaped characters.
+ *
+ * @param {string} code The JavaScript source code to clean.
+ * @returns {string} The code with all comments removed.
+ *
+ * @example
+ * // Removes only real comments, not content inside strings:
+ * const input = "const x = 'text // not a comment'; // real comment";
+ * const output = stripComments(input);
+ * // => "const x = 'text // not a comment'; "
+ */
+function stripComments(code) {
+  let out = '';
+  let i = 0;
+  const len = code.length;
+  let inStr = null; // "'", '"', or '`'
+  let inBlockComment = false;
+  let inLineComment = false;
 
-  if (!isArrowFunction) {
-    const pos = value.indexOf('(');
-    if (pos > 0 && value.slice(0, pos).trim() !== 'function') {
-      value = 'function' + value.slice(pos);
+  while (i < len) {
+    const char = code[i];
+    const next = code[i + 1];
+
+    // end of line comment
+    if (inLineComment && (char === '\n' || char === '\r')) {
+      inLineComment = false;
+      out += char;
+      i++;
+      continue;
     }
+
+    // end of block comment
+    if (inBlockComment && char === '*' && next === '/') {
+      inBlockComment = false;
+      i += 2;
+      continue;
+    }
+
+    if (inLineComment || inBlockComment) {
+      i++;
+      continue;
+    }
+
+    // handle string start
+    if (!inStr && (char === '"' || char === "'" || char === '`')) {
+      inStr = char;
+      out += char;
+      i++;
+      continue;
+    }
+
+    // handle string end (skip escaped)
+    if (inStr) {
+      out += char;
+      if (char === '\\') {
+        out += code[i + 1];
+        i += 2;
+        continue;
+      }
+      if (char === inStr) {
+        inStr = null;
+      }
+      i++;
+      continue;
+    }
+
+    // handle line comment start
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    // handle block comment start
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    out += char;
+    i++;
   }
 
-  return value;
+  return out;
+}
+
+/**
+ * Stringify any JavaScript function and remove all comments.
+ *
+ * @param {Function} fn - The function to stringify.
+ * @returns {string|null} The cleaned stringified function or null if not a function or native.
+ */
+const stringifyFn = (fn) => {
+  if (typeof fn !== 'function') return null;
+
+  try {
+    const raw = fn.toString();
+
+    // skip native or bound functions
+    if (raw.includes('[native code]') || raw.includes('[object Function]')) {
+      return null;
+    }
+
+    // safe comment removal
+    let cleaned = stripComments(raw);
+
+    // remove leading indent and join into one line
+    cleaned = cleaned
+      .split('\n')
+      .map((line) => line.trimStart())
+      .join(' ')
+      .trim();
+
+    // check if it is top-level arrow function
+    const isArrowFunction = /^(\(?[^=(){};]*\)?)\s*=>/.test(cleaned);
+
+    // replace method shorthand to function expression
+    // Example: getFoo(a, b) { ... } -> function(a, b) { ... }
+    if (!isArrowFunction) {
+      const pos = cleaned.indexOf('(');
+      if (pos > 0 && cleaned.slice(0, pos).trim() !== 'function') {
+        cleaned = 'function' + cleaned.slice(pos);
+      }
+    }
+
+    return cleaned;
+  } catch {
+    return null;
+  }
 };
 
 module.exports = {

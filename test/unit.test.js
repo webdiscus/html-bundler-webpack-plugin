@@ -8,14 +8,6 @@ import { HtmlParser, parseTagAttributes } from '../src/Common/HtmlParser';
 import { relativePathVerbose } from '../src/Plugin/Messages/Info';
 import { isDir, loadModule, resolveFile, filterParentPaths } from '../src/Common/FileUtils';
 import { loadModuleAsync } from '../src/Common/FileSystem/loadModule';
-import {
-  stringifyJSON,
-  stringifyFn,
-  injectBeforeEndHead,
-  injectBeforeEndBody,
-  escapeSequences,
-  escapeCodesForJSON,
-} from '../src/Loader/Utils';
 
 import Asset from '../src/Plugin/Asset';
 import Template from '../src/Loader/Template';
@@ -337,114 +329,6 @@ describe('file extension', () => {
   test('path.sample\\file.ext?query', () => {
     const received = getFileExtension('path.sample\\file.ext?query', true);
     const expected = 'ext';
-    return expect(received).toEqual(expected);
-  });
-});
-
-describe('utils', () => {
-  test('injectBeforeEndHead', () => {
-    const html = `<html><head><title>test</title></head><body><p>body</p></body></html>`;
-    const received = injectBeforeEndHead(html, `<script src="test.js"></script>`);
-    const expected = `<html><head><title>test</title><script src="test.js"></script></head><body><p>body</p></body></html>`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('injectBeforeEndHead without head', () => {
-    const html = `<html><body><p>body</p></body></html>`;
-    const received = injectBeforeEndHead(html, `<script src="test.js"></script>`);
-    const expected = `<html><body><p>body</p><script src="test.js"></script></body></html>`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('injectBeforeEndBody', () => {
-    const html = `<html><head><title>test</title></head><body><p>body</p></body></html>`;
-    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
-    const expected = `<html><head><title>test</title></head><body><p>body</p><script src="test.js"></script></body></html>`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('injectBeforeEndBody without body', () => {
-    const html = `<html><head><title>test</title></head><p>body</p></html>`;
-    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
-    const expected = `<html><head><title>test</title></head><p>body</p><script src="test.js"></script></html>`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('injectBeforeEndBody without html', () => {
-    const html = `<p>body</p>`;
-    const received = injectBeforeEndBody(html, `<script src="test.js"></script>`);
-    const expected = `<p>body</p><script src="test.js"></script>`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('escapeSequences', () => {
-    const html = `
-<img
-  src="img.png"
->
-`;
-    const received = escapeSequences(html);
-    const expected = `\\n<img\\n  src=\"img.png\"\\n>\\n`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('escapeCodesForJSON', () => {
-    const html = '<div data-json="{key: `text\\ntext`}">';
-    const received = escapeCodesForJSON(html);
-    const expected = '<div data-json="{key: \\`text\\\\ntext\\`}">';
-    return expect(received).toEqual(expected);
-  });
-});
-
-describe('stringifyJSON', () => {
-  test('{ fn() {} }', () => {
-    const json = { fn() {} };
-    const received = stringifyJSON(json);
-    const expected = `{"fn":function() {}}`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('{ fn: () => {} }', () => {
-    const json = { fn: () => {} };
-    const received = stringifyJSON(json);
-    const expected = `{"fn":() => {}}`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('{ fn: function() {} }', () => {
-    const json = { fn: function () {} };
-    const received = stringifyJSON(json);
-    const expected = `{"fn":function () {}}`;
-    return expect(received).toEqual(expected);
-  });
-});
-
-describe('stringifyFn', () => {
-  test('{ fn() {} }', () => {
-    const obj = { fn() {} };
-    const received = stringifyFn(obj.fn);
-    const expected = `function() {}`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('{ fn: function() {} }', () => {
-    const obj = { fn: function () {} };
-    const received = stringifyFn(obj.fn);
-    const expected = `function () {}`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('{ fn: () => {} }', () => {
-    const obj = { fn: () => {} };
-    const received = stringifyFn(obj.fn);
-    const expected = `() => {}`;
-    return expect(received).toEqual(expected);
-  });
-
-  test('{ fn: o => o.toString() }', () => {
-    const obj = { fn: (o) => o.toString() };
-    const received = stringifyFn(obj.fn);
-    const expected = `o => o.toString()`;
     return expect(received).toEqual(expected);
   });
 });

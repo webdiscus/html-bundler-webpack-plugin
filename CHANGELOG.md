@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.20.7 (2025-06-30)
+
+- fix: support Handlebars helpers defined as object methods to prevent build failure, #177
+
 ## 4.20.6 (2025-06-29)
 
 - fix: built fails when used a template variable in srcset with JS-template, #176
