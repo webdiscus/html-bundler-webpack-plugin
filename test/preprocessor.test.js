@@ -97,6 +97,7 @@ describe('usage template in js on client side', () => {
   test('ejs: compile to fn', () => compareFiles('_preprocessor/js-tmpl-ejs-compile'));
 
   // Handlebars
+
   test('hbs: compile to fn', () => compareFiles('_preprocessor/js-tmpl-hbs-compile'));
   test('hbs: compile undefined vars', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-strict-undefined-var'));
   test('hbs: compile, helpers', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-helpers'));
@@ -104,8 +105,10 @@ describe('usage template in js on client side', () => {
   test('hbs: compile, partials', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-partials'));
   test('hbs: compile, variables', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-variables'));
   test('hbs: partials in hbs- and JS templates', () => compareFiles('_preprocessor/js-tmpl-hbs-partials-in-hbs-js'));
-
   test('hbs: render/compile images', () => compareFiles('_preprocessor/js-tmpl-hbs-compile-images'));
+
+  // Handlebars issues
+  test('handlebars compile, issue template', () => compareFiles('_preprocessor/handlebars-compile-issue-template'));
 
   // Nunjucks
   test('njk: compile to fn', () => compareFiles('_preprocessor/js-tmpl-njk-compile'));
