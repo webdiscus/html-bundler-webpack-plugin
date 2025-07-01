@@ -203,13 +203,10 @@ const stringifyJSON = (data) => {
 };
 
 /**
- * Removes all JavaScript comments (single-line and multi-line)
- * from the given source code, while preserving string and template literals.
+ * Removes all JavaScript comments (single-line and multi-line) from code,
+ * while preserving strings containing comment-like patterns.
  *
- * This function avoids removing comment-like patterns inside string literals
- * (single quotes, double quotes, or backticks), and skips escaped characters.
- *
- * @param {string} code The JavaScript source code to clean.
+ * @param {string} code The source code.
  * @returns {string} The code with all comments removed.
  *
  * @example
@@ -219,12 +216,12 @@ const stringifyJSON = (data) => {
  * // => "const x = 'text // not a comment'; "
  */
 function stripComments(code) {
-  let out = '';
-  let i = 0;
   const len = code.length;
   let inStr = null; // "'", '"', or '`'
   let inBlockComment = false;
   let inLineComment = false;
+  let out = '';
+  let i = 0;
 
   while (i < len) {
     const char = code[i];
@@ -250,7 +247,7 @@ function stripComments(code) {
       continue;
     }
 
-    // handle string start
+    // string start
     if (!inStr && (char === '"' || char === "'" || char === '`')) {
       inStr = char;
       out += char;
@@ -258,7 +255,7 @@ function stripComments(code) {
       continue;
     }
 
-    // handle string end (skip escaped)
+    // string end (skip escaped)
     if (inStr) {
       out += char;
       if (char === '\\') {
@@ -273,14 +270,14 @@ function stripComments(code) {
       continue;
     }
 
-    // handle line comment start
+    // line comment start
     if (char === '/' && next === '/') {
       inLineComment = true;
       i += 2;
       continue;
     }
 
-    // handle block comment start
+    // block comment start
     if (char === '/' && next === '*') {
       inBlockComment = true;
       i += 2;
@@ -295,7 +292,7 @@ function stripComments(code) {
 }
 
 /**
- * Stringify any JavaScript function and remove all comments.
+ * Stringify any JavaScript function.
  *
  * @param {Function} fn - The function to stringify.
  * @returns {string|null} The cleaned stringified function or null if not a function or native.
