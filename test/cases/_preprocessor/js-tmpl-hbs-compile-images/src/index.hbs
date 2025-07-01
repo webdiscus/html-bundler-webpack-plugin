@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ title }}</title>
+    {{!-- load the rendered template in JS and add it into HTML in runtime --}}
+    <script src="app.js" defer="defer"></script>
+  </head>
+  <body>
+    <h2>HBS-template</h2>
+    {{!-- render partials with image aliases defined in helper array --}}
+    {{> icons}}
+
+    <h2>JS-template</h2>
+    <div id="app"></div>
+  </body>
+</html>

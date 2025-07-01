@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Title</title>
+    <script src="app.js" defer="defer"></script>
+  </head>
+  <body>
+    <h2>HBS-template</h2>
+    <div><b>Resolve static image path</b></div>
+    <img src="img/stern.6adb226f.svg">
+    
+    <p><b>Render images resolved in a helper attribute</b></p>
+      <div>
+        <a href="./home.html">
+            <img
+              src="img/home.c7e37912.svg"
+              alt=""
+            />
+            <span>home</span> <-- <span>@images/icons/home.svg</span>
+        </a>
+      </div>
+      <div>
+        <a href="./token.html">
+            <img
+              src="img/imac.3666c92d.svg"
+              alt=""
+            />
+            <span>iMac</span> <-- <span>@images/icons/imac.svg</span>
+        </a>
+      </div>
+
+    <h2>JS-template</h2>
+    <div id="app"></div>
+  </body>
+</html>

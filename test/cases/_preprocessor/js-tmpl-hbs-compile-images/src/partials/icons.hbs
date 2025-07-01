@@ -1,0 +1,18 @@
+<div><b>Resolve static image path</b></div>
+<img src="@images/stern.svg">
+
+<p><b>Render images resolved in a helper attribute</b></p>
+{{#each (array
+    (object href='./home.html' text='home' icon='@images/icons/home.svg')
+    (object href='./token.html' text='iMac' icon='@images/icons/imac.svg')
+  ) as |tag|}}
+  <div>
+    <a href="{{ tag.href }}">
+        <img
+          src="{{ tag.icon }}"
+          alt=""
+        />
+        <span>{{ tag.text }}</span> <-- <span>{{ tag.icon }}</span>
+    </a>
+  </div>
+{{/each}}

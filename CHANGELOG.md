@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.20.9 (2025-07-01)
+
+- fix: prevent build failure when used JS-template with dynamic tag attribute, #178
+
 ## 4.20.8 (2025-07-01)
 
 - fix: support Handlebars partial name containing dot, #179

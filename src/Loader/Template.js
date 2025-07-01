@@ -36,7 +36,9 @@ class Template {
     for (let { type, tag, raw, parsedAttrs } of parsedTags) {
       for (let { attr, value, resolvedValue, startPos, endPos, quote, inEscapedDoubleQuotes } of parsedAttrs) {
         if (resolvedValue == null) {
-          if (!value) continue;
+          if (!value || !HtmlParser.isHtmlAttributeValue(value)) {
+            continue;
+          }
 
           const result = this.resolveFile({
             loader,
