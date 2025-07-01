@@ -1,6 +1,6 @@
 const path = require('path');
 const LoaderFactory = require('../../LoaderFactory');
-const { stringifyJSON, stringifyFn } = require('../../Utils');
+const { normalizeVarName, stringifyJSON, stringifyFn } = require('../../Utils');
 const { loadModule, readDirRecursiveSync } = require('../../../Common/FileUtils');
 const { isWin, pathToPosix } = require('../../../Common/Helpers');
 
@@ -238,8 +238,8 @@ const preprocessor = (loaderContext, options) => {
           throw new Error(message + '\n' + error.toString());
         }
 
-        // normalize the name to variable-safe name
-        const varName = 'partial_' + name.replace(/[\/-]/g, '_');
+        // normalize the partial name to a safe JavaScript variable name
+        const varName = 'partial_' + name.replace(/[^a-zA-Z0-9_]/g, '_');
 
         precompiledPartials += `
         var ${varName} = ${compiled};

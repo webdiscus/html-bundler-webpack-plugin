@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.20.8 (2025-07-01)
+
+- fix: support Handlebars partial name containing dot, #179
+  e.g: `schema.org/rating`
+
 ## 4.20.7 (2025-06-30)
 
 - fix: support Handlebars helpers defined as object methods to prevent build failure, #177
