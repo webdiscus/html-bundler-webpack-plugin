@@ -349,6 +349,7 @@ module.exports = {
   makeTemplateId,
   injectBeforeEndHead,
   injectBeforeEndBody,
+  stripComments,
   encodeReservedChars,
   decodeReservedChars,
   escapeSequences,
