@@ -215,13 +215,13 @@ const stringifyJSON = (data) => {
  * const output = stripComments(input);
  * // => "const x = 'text // not a comment'; "
  */
-function stripComments(code) {
+function stripComments2(code) {
   const len = code.length;
-  let inStr = null;          // "'", '"', or '`'
-  let inRegex = false;
-  let regexClass = false;    // inside [...]
-  let inBlockComment = false;
-  let inLineComment = false;
+  let inStr = null; // quote: ', ", or `
+  let inRegex = false; // inside /.../ regex literal
+  let inRegexClass = false; // inside [...] character class
+  let inLineComment = false; // inside //
+  let inBlockComment = false; // inside /* */
   let out = '';
   let i = 0;
 
@@ -230,7 +230,7 @@ function stripComments(code) {
     const next = code[i + 1];
     const prev = code[i - 1];
 
-    // end of line comment
+    // line comment end
     if (inLineComment && (char === '\n' || char === '\r')) {
       inLineComment = false;
       out += char;
@@ -238,7 +238,7 @@ function stripComments(code) {
       continue;
     }
 
-    // end of block comment
+    // block comment end
     if (inBlockComment && char === '*' && next === '/') {
       inBlockComment = false;
       i += 2;
@@ -250,29 +250,66 @@ function stripComments(code) {
       continue;
     }
 
-    // inside string
-    if (inStr) {
+    // string start
+    if (!inStr && (char === '"' || char === "'" || char === '`')) {
+      inStr = char;
       out += char;
-      if (char === '\\') {
-        out += code[i + 1];
-        i += 2;
-        continue;
-      }
-      if (char === inStr) inStr = null;
       i++;
       continue;
     }
 
-    // inside RegExp
+    // string end
+    if (inStr) {
+      out += char;
+      if (char === '\\') {
+        // copy escaped char
+        if (i + 1 < len) {
+          out += code[i + 1];
+          i += 2;
+          continue;
+        }
+      } else if (char === inStr) {
+        inStr = null;
+      }
+      i++;
+      continue;
+    }
+
+    // RegExp start
+    if (char === '/' && next !== '/' && next !== '*') {
+      // scan backward for prev non-whitespace char
+      let j = i - 1;
+      while (j >= 0 && /\s/.test(code[j])) j--;
+      const prevChar = j >= 0 ? code[j] : '';
+      // treat as Regex if after following chars
+      if (j < 0 || /[=({\[:~%^\-*,!&|?;<>]/.test(prevChar)) {
+        inRegex = true;
+        inRegexClass = false;
+        out += char;
+        i++;
+        continue;
+      }
+      // otherwise treat as division
+    }
+
+    // RegExp end
     if (inRegex) {
       out += char;
-      if (regexClass) {
-        if (char === ']' && prev !== '\\') regexClass = false;
+      if (inRegexClass) {
+        if (char === ']' && prev !== '\\') inRegexClass = false;
       } else {
         if (char === '[' && prev !== '\\') {
-          regexClass = true;
+          inRegexClass = true;
         } else if (char === '/' && prev !== '\\') {
-          inRegex = false;   // flags follow
+          inRegex = false;
+          // copy regex flags
+          let k = i + 1;
+          while (k < len && /[a-z]/i.test(code[k])) {
+            out += code[k];
+            k++;
+          }
+          i = k;
+          continue;
         }
       }
       i++;
@@ -293,32 +330,142 @@ function stripComments(code) {
       continue;
     }
 
-    // string start
-    if (char === '"' || char === "'" || char === '`') {
+    out += char;
+    i++;
+  }
+
+  return out;
+}
+
+/**
+ * Removes all JavaScript comments (single-line and multi-line) from code,
+ * while preserving strings and regex literals with comment-like patterns.
+ *
+ * @param {string} code The source code.
+ * @returns {string} The code with all comments removed.
+ */
+function stripComments(code) {
+  let out = '';
+  let inStr = null; // current quote: ', ", or `
+  let inRegex = false; // inside a /.../ regex literal
+  let inRegexClass = false; // inside a [...] character class within regex
+  let inLineComment = false; // inside //
+  let inBlockComment = false; // inside /* */
+  let prev = '';
+  let i = 0;
+  const len = code.length;
+
+  while (i < len) {
+    const char = code[i];
+    const next = code[i + 1];
+
+    // -- Line Comment --
+    if (inLineComment) {
+      if (char === '\n' || char === '\r') {
+        inLineComment = false;
+        out += char;
+      }
+      i++;
+      continue;
+    }
+
+    // -- Block Comment --
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        i += 2;
+      } else {
+        i++;
+      }
+      continue;
+    }
+
+    // -- String Start --
+    if (!inStr && !inRegex && (char === '"' || char === "'" || char === '`')) {
       inStr = char;
       out += char;
       i++;
       continue;
     }
 
-    // RegExp start (простая, но практичная эвристика)
-    if (char === '/' && next !== '/' && next !== '*') {
+    // -- Inside String --
+    if (inStr) {
+      out += char;
+      if (char === '\\') {
+        // Copy escaped char
+        if (i + 1 < len) {
+          out += code[i + 1];
+          i += 2;
+        } else {
+          i++;
+        }
+        continue;
+      } else if (char === inStr) {
+        inStr = null;
+      }
+      i++;
+      continue;
+    }
+
+    // -- Regex Start (not after identifier, ), ], +, - or number) --
+    if (!inRegex && char === '/' && next !== '/' && next !== '*') {
+      // Scan backward for prev non-whitespace char
       let j = i - 1;
       while (j >= 0 && /\s/.test(code[j])) j--;
-      const prevSym = j >= 0 ? code[j] : '';
-      if (j < 0 || /[({\[=:+\-*,!&|?;<>]/.test(prevSym)) {
+      const prevChar = j >= 0 ? code[j] : '';
+      // Only treat as regex if after certain tokens or start of input
+      if (j < 0 || /[=({\[:;,!&|?~%^<>*/]/.test(prevChar)) {
         inRegex = true;
-        regexClass = false;
         out += char;
         i++;
         continue;
       }
+      // otherwise: treat as division
     }
 
+    // -- Inside Regex --
+    if (inRegex) {
+      out += char;
+      if (inRegexClass) {
+        if (char === ']' && prev !== '\\') inRegexClass = false;
+      } else {
+        if (char === '[' && prev !== '\\') {
+          inRegexClass = true;
+        } else if (char === '/' && prev !== '\\') {
+          inRegex = false;
+          // Copy regex flags
+          let k = i + 1;
+          while (k < len && /[a-z]/i.test(code[k])) {
+            out += code[k];
+            k++;
+          }
+          i = k;
+          continue;
+        }
+      }
+      prev = char;
+      i++;
+      continue;
+    }
+
+    // -- Line Comment Start --
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    // -- Block Comment Start --
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    // -- Default: copy --
     out += char;
     i++;
   }
-
   return out;
 }
 

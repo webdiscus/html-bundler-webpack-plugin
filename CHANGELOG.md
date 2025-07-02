@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.20.10 (2025-07-02)
+
+- fix: removes comments from code containing RegExp literals, #180
+
 ## 4.20.9 (2025-07-01)
 
 - fix: prevent build failure when used JS-template with dynamic tag attribute, #178
