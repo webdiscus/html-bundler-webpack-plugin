@@ -16,3 +16,6 @@ insert_final_newline = false
 # keep nl for expected files from tests with pretty option
 [cases/*pretty*/**.html]
 insert_final_newline = true
+
+[stripComments.test.js]
+trim_trailing_whitespace = false
