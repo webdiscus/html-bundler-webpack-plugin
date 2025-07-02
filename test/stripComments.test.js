@@ -95,12 +95,23 @@ describe('stripComments', () => {
     expect(stripComments(code)).toBe(expected);
   });
 
-  test('does not remove slashes inside regex literals (known limitation)', () => {
-    // NOTE: This will fail! The function does not support regex detection.
-    // Documented as a limitation.
+  test('correctly preserves regex with double slashes', () => {
     const code = `const re = /\\/\\/.*$/; // regex`;
-    // The actual output will be incorrect.
-    // This test documents the limitation (not a failure if you comment it out).
-    // expect(stripComments(code)).toBe(`const re = /\\/\\/.*$/; `);
+    expect(stripComments(code)).toBe(`const re = /\\/\\/.*$/; `);
+  });
+
+  test('preserves RegExp with double slashes inside', () => {
+    expect(stripComments('const re = /https?:\\/\\/example\\.com/; // trailing comment'))
+      .toBe('const re = /https?:\\/\\/example\\.com/; ');
+  });
+
+  test('does not break on block comment inside RegExp character class', () => {
+    expect(stripComments('const re = /[/*]/; // comment'))
+      .toBe('const re = /[/*]/; ');
+  });
+
+  test('does not treat RegExp with /* */ as comment', () => {
+    expect(stripComments('const r = /a*/*test/; // trailing'))
+      .toBe('const r = /a*/*test/; ');
   });
 });

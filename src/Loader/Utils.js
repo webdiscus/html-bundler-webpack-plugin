@@ -217,7 +217,9 @@ const stringifyJSON = (data) => {
  */
 function stripComments(code) {
   const len = code.length;
-  let inStr = null; // "'", '"', or '`'
+  let inStr = null;          // "'", '"', or '`'
+  let inRegex = false;
+  let regexClass = false;    // inside [...]
   let inBlockComment = false;
   let inLineComment = false;
   let out = '';
@@ -226,6 +228,7 @@ function stripComments(code) {
   while (i < len) {
     const char = code[i];
     const next = code[i + 1];
+    const prev = code[i - 1];
 
     // end of line comment
     if (inLineComment && (char === '\n' || char === '\r')) {
@@ -247,15 +250,7 @@ function stripComments(code) {
       continue;
     }
 
-    // string start
-    if (!inStr && (char === '"' || char === "'" || char === '`')) {
-      inStr = char;
-      out += char;
-      i++;
-      continue;
-    }
-
-    // string end (skip escaped)
+    // inside string
     if (inStr) {
       out += char;
       if (char === '\\') {
@@ -263,8 +258,22 @@ function stripComments(code) {
         i += 2;
         continue;
       }
-      if (char === inStr) {
-        inStr = null;
+      if (char === inStr) inStr = null;
+      i++;
+      continue;
+    }
+
+    // inside RegExp
+    if (inRegex) {
+      out += char;
+      if (regexClass) {
+        if (char === ']' && prev !== '\\') regexClass = false;
+      } else {
+        if (char === '[' && prev !== '\\') {
+          regexClass = true;
+        } else if (char === '/' && prev !== '\\') {
+          inRegex = false;   // flags follow
+        }
       }
       i++;
       continue;
@@ -282,6 +291,28 @@ function stripComments(code) {
       inBlockComment = true;
       i += 2;
       continue;
+    }
+
+    // string start
+    if (char === '"' || char === "'" || char === '`') {
+      inStr = char;
+      out += char;
+      i++;
+      continue;
+    }
+
+    // RegExp start (простая, но практичная эвристика)
+    if (char === '/' && next !== '/' && next !== '*') {
+      let j = i - 1;
+      while (j >= 0 && /\s/.test(code[j])) j--;
+      const prevSym = j >= 0 ? code[j] : '';
+      if (j < 0 || /[({\[=:+\-*,!&|?;<>]/.test(prevSym)) {
+        inRegex = true;
+        regexClass = false;
+        out += char;
+        i++;
+        continue;
+      }
     }
 
     out += char;

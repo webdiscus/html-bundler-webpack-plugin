@@ -40,7 +40,7 @@ const complexHelper = function (content, options) {
   const SEP = /(\s|&nbsp;|<br\s*\/?>)+/gi;
   const parts = content.split(SEP).filter(Boolean);
   const lastWord = parts.pop() || '';
-  const firstPart = parts.join('');
+  const firstPart = parts.join(''); // magic comment
 
   if (!firstPart.trim()) {
     out = `<p class="title">${escapeHTML(lastWord)}</p>`;
