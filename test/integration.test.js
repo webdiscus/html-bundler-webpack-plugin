@@ -1,9 +1,5 @@
 import { isCI, compareFiles, compareFilesRuns, stdoutContain, watchCompareFiles } from './utils/helpers';
 
-//import { removeDirsSync } from './utils/file';
-// Remove all 'dist/' directories from tests, use it only for some local tests.
-//removeDirsSync(__dirname, /dist$/);
-
 beforeAll(() => {
   // important: the environment constant is used in code
   // the value must be type string
@@ -161,6 +157,7 @@ describe('plugin option entry', () => {
   test('entry data CJS .cjs file', () => compareFiles('option-entry-data-file-commonjs-cjs'));
   test('entry data CJS .js file', () => compareFiles('option-entry-data-file-commonjs-js'));
 
+  // TODO: test it only in console, in IDE doesn't work: TypeError: A dynamic import callback was invoked without --experimental-vm-modules
   test('entry data ESM .mjs file', () => compareFiles('option-entry-data-file-esm-mjs'));
   test('entry data ESM .js file', () => compareFiles('option-entry-data-file-esm-js'));
 

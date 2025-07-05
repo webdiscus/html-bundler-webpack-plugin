@@ -1,0 +1,1 @@
+{"version":3,"file":"assets/css/style.aa2dd642.css","mappings":"AAAA,KACE,eACA,uBACA,gBAGF,GACE","sources":["webpack:///./src/style.css"],"sourcesContent":["body {\n  font-size: 18px;\n  font-family: sans-serif;\n  color: royalblue;\n}\n\nh1 {\n  color: crimson;\n}\n"],"names":[],"sourceRoot":""}

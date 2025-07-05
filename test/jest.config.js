@@ -29,6 +29,7 @@ module.exports = {
 
   // The directory where Jest should output its coverage files
   // coverageDirectory: null,
+  coverageDirectory: 'coverage',
 
   // An array of regexp pattern strings used to skip coverage collection
   //coveragePathIgnorePatterns: ['/node_modules/'],
@@ -36,6 +37,7 @@ module.exports = {
   // Indicates which provider should be used to instrument code for coverage.
   // Allowed values are babel (default) or v8.
   // coverageProvider: 'babel',
+  // coverageProvider: 'v8',
 
   // A list of reporter names that Jest uses when writing coverage reports
   // coverageReporters: [
@@ -187,6 +189,7 @@ module.exports = {
   //   "**/__tests__/**/*.[jt]s?(x)",
   //   "**/?(*.)+(spec|test).[jt]s?(x)",
   // ],
+  testMatch: ['**/?(*).test.js'],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   // testPathIgnorePatterns: [

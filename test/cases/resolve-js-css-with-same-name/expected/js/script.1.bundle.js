@@ -1,1 +1,1 @@
-console.log(">> news");
+console.log(">> home");

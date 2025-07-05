@@ -312,28 +312,28 @@ describe('parseJSON5Query errors', () => {
     const expected = `invalid end of input`;
     expect(() => {
       parseJSON5Query(``);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unterminated multiline comments', () => {
     const expected = `invalid end of input`;
     expect(() => {
       parseJSON5Query(`/*`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unterminated multiline comment closings', () => {
     const expected = `invalid end of input`;
     expect(() => {
       parseJSON5Query(`/**`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('incomplete single line comments', () => {
     const expected = `invalid character 'a' at position 3`;
     expect(() => {
       parseJSON5Query(`{/a}`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('multiple values', () => {
@@ -341,146 +341,146 @@ describe('parseJSON5Query errors', () => {
     expect(() => {
       //parseJSON5Query(`1]`); // the same case
       parseJSON5Query(`1 2`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed objects before property names', () => {
     const expected = `invalid end of input`;
     expect(() => {
       parseJSON5Query(`{`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed objects after property names', () => {
     const expected = `invalid end of input at position 3`;
     expect(() => {
       parseJSON5Query(`{a`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed objects before property values', () => {
     const expected = `invalid end of input at position 4`;
     expect(() => {
       parseJSON5Query(`{a:`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed objects after property values', () => {
     const expected = `invalid end of input at position 5`;
     expect(() => {
       parseJSON5Query(`{a:1`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid identifier start characters in property names', () => {
     const expected = `invalid character '!'`;
     expect(() => {
       parseJSON5Query(`{!:1}`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('object items w/o value', () => {
     const expected = `invalid character '}' at position 3`;
     expect(() => {
       parseJSON5Query(`{a}`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a property name', () => {
     const expected = `invalid character '!'`;
     expect(() => {
       parseJSON5Query(`{a!1}`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a property name, 2', () => {
     const expected = `invalid character '\\"' at position 3`;
     expect(() => {
       parseJSON5Query(`{a"`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a property value', () => {
     const expected = `invalid character '!'`;
     expect(() => {
       parseJSON5Query(`{a:1!}`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed arrays before values', () => {
     const expected = `invalid end of input at position 2`;
     expect(() => {
       parseJSON5Query(`[`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unclosed arrays after values', () => {
     const expected = `invalid end of input at position 3`;
     expect(() => {
       parseJSON5Query(`[1`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('unterminated strings', () => {
     const expected = `invalid end of input at position 7`;
     expect(() => {
       parseJSON5Query(`["abc]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters in json5 value', () => {
     const expected = `invalid character 'a' at position 1`;
     expect(() => {
       parseJSON5Query(`a`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following an array value', () => {
     const expected = `invalid character '!' at position 3`;
     expect(() => {
       parseJSON5Query(`[1!]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters in literals', () => {
     const expected = `invalid character '!' at position 5`;
     expect(() => {
       parseJSON5Query(`[tru!]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a sign', () => {
     const expected = `invalid character 'a' at position 3`;
     expect(() => {
       parseJSON5Query(`[-a]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a leading decimal point', () => {
     const expected = `invalid character 'a' at position 3`;
     expect(() => {
       parseJSON5Query(`[.a]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following a hexadecimal prefix', () => {
     const expected = `invalid character 'g' at position 4`;
     expect(() => {
       parseJSON5Query(`[0xg]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following an exponent indicator', () => {
     const expected = `invalid character 'a' at position 4`;
     expect(() => {
       parseJSON5Query(`[1ea]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 
   test('invalid characters following an exponent sign', () => {
     const expected = `invalid character 'a' at position 5`;
     expect(() => {
       parseJSON5Query(`[1e-a]`);
-    }).toThrowError(expected);
+    }).toThrow(expected);
   });
 });
