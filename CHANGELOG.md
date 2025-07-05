@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.21.0 (2025-07-02)
+
+- feat: optimize compilation Handlebars templates into JS-templates including only used helpers and partials, #183
+- feat: removes comments from code defined as a function in JSON data
+
 ## 4.20.10 (2025-07-02)
 
 - fix: removes comments from code containing RegExp literals, #180

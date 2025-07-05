@@ -1,0 +1,7 @@
+{{> custom-helpers}}
+{{> builtin-helpers}}
+
+{{!-- test multiple usage the same partial - should be included into JS-template only once --}}
+<h3>Partials</h3>
+{{> person personName="Walter White" personAge="52"}}
+{{> person personName="Jesse Pinkman" personAge="25"}}

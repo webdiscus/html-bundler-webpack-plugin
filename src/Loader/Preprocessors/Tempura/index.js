@@ -59,7 +59,7 @@ const preprocessor = (loaderContext, options) => {
     options.blocks = {};
   }
 
-  const buildInHelpers = {
+  const builtInHelpers = {
     include: require('./helpers/include')({
       Tempura,
       fs,
@@ -70,7 +70,7 @@ const preprocessor = (loaderContext, options) => {
     }),
   };
 
-  options.blocks = { ...buildInHelpers, ...options.blocks };
+  options.blocks = { ...builtInHelpers, ...options.blocks };
 
   const helpersString = stringifyJSON(options.blocks);
 

@@ -21,7 +21,7 @@ const config = {
 
       preprocessor: 'handlebars',
       preprocessorOptions: {
-        // test override build-in plugin helpers with own helper
+        // test override built-in plugin helpers with own helper
         helpers: [path.join(__dirname, 'src/views/helpers')],
         partials: [path.join(__dirname, 'src/views/pages/'), path.join(__dirname, 'src/views/partials/')],
       },

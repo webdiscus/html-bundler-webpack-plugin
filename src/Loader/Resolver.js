@@ -88,7 +88,7 @@ class Resolver {
     // resolver for resources: scripts w/o an ext (e.g. in pug: require('./data')), images, fonts, etc.
     this.resolveFile = ResolverFactory.create.sync(fileResolverOptions);
 
-    // TODO: use the resolver build-in in loaderContext, problem: this resolver is async
+    // TODO: use the resolver built-in in loaderContext, problem: this resolver is async
     //const resolveFileAsync = this.loaderContext.getResolve(fileResolverOptions);
     //this.resolveFile = async (context, request) => await resolveFileAsync(context, request);
 
