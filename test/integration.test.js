@@ -30,7 +30,6 @@ describe('cache tests', () => {
 
   test('filesystem, display stats', () => stdoutContain('cache-filesystem-display-stats', 'compiled successfully'));
   test('filesystem, multiple config', () => compareFiles('cache-filesystem-multi-config'));
-
   test('filesystem-js-runs_n1', () => compareFilesRuns('cache-filesystem-js', false, 1));
 
   // TODO: fix DEP_WEBPACK_COMPILATION_ASSETS warning
@@ -53,8 +52,6 @@ describe('resolve files', () => {
 
   test('assets filenames in relative entry', () => compareFiles('resolve-asset-filenames-in-relative-entry'));
   test('not resolve in template comment', () => compareFiles('comment-not-resolve'));
-
-  console.log();
 
   if (!isCI) {
     // test only locally, as the result in CI environment may be random
