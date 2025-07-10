@@ -14,7 +14,7 @@ describe('Eta', () => {
   test('include many md files', () => compareFiles('_preprocessor/eta-include-md-many-files'));
 
   // TODO: implement the feature for this test
-  //test('include a file using custom loader', () => compareFiles('_preprocessor/eta-include-custom-loader'));
+  //test('include a file using custom loader', () => compareFiles('_preprocessor/eta-include-md-custom-loader'));
 });
 
 describe('EJS', () => {
