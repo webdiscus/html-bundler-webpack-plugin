@@ -34,6 +34,7 @@ describe('handlebars', () => {
   test('option partials as array', () => compareFiles('_preprocessor/handlebars-option-partials-array'));
   test('option partials as object', () => compareFiles('_preprocessor/handlebars-option-partials-object'));
 
+  test('page specific js css', () => compareFiles('_preprocessor/handlebars-page-specific-js-css'));
   test('usage partials', () => compareFiles('_preprocessor/handlebars-option-partials-usage'));
   test('custom runtime', () => compareFiles('_preprocessor/handlebars-custom-runtime'));
 
