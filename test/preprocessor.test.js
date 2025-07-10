@@ -11,6 +11,10 @@ describe('Eta', () => {
   test('option views', () => compareFiles('_preprocessor/eta-option-views'));
   test('option async', () => compareFiles('_preprocessor/eta-option-async'));
   test('include md', () => compareFiles('_preprocessor/eta-include-md'));
+  test('include many md files', () => compareFiles('_preprocessor/eta-include-md-many-files'));
+
+  // TODO: implement the feature for this test
+  //test('include a file using custom loader', () => compareFiles('_preprocessor/eta-include-custom-loader'));
 });
 
 describe('EJS', () => {
