@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.21.1 (2025-07-21)
+
+- docs: update base url of documentation pages in readme
+
 ## 4.21.0 (2025-07-02)
 
 - feat: optimize compilation Handlebars templates into JS-templates including only used helpers and partials, #183

@@ -37,18 +37,18 @@ npm install html-bundler-webpack-plugin --save-dev
 
 ## Documentation
 
-- [Get Started](https://webdiscus.github.io/html-bundler-webpack-plugin/category/getting-started)
-- [Migrating from `html-webpack-plugin`](https://webdiscus.github.io/html-bundler-webpack-plugin/getting-started/migrating-from-html-webpack-plugin)
-- [Features](https://webdiscus.github.io/html-bundler-webpack-plugin/introduction#key-features)
-- [Options](https://webdiscus.github.io/html-bundler-webpack-plugin/category/options)
-- [Guides](https://webdiscus.github.io/html-bundler-webpack-plugin/guides)
-- [F.A.Q.](https://webdiscus.github.io/html-bundler-webpack-plugin/faq/import-url-in-css)
+- [Get Started](https://webdiscus.github.io/html-bundler-docs/category/getting-started)
+- [Migrating from `html-webpack-plugin`](https://webdiscus.github.io/html-bundler-docs/getting-started/migrating-from-html-webpack-plugin)
+- [Features](https://webdiscus.github.io/html-bundler-docs/introduction#key-features)
+- [Options](https://webdiscus.github.io/html-bundler-docs/category/options)
+- [Guides](https://webdiscus.github.io/html-bundler-docs/guides)
+- [F.A.Q.](https://webdiscus.github.io/html-bundler-docs/faq/import-url-in-css)
 
 For full documentation, visit [HTML Bundler Docs](https://webdiscus.github.io/html-bundler-webpack-plugin).
 
 ## Read it
 
-- [Why do developers migrate from Webpack?](https://webdiscus.github.io/html-bundler-webpack-plugin/introduction#why-do-developers-migrate-from-webpack)
+- [Why do developers migrate from Webpack?](https://webdiscus.github.io/html-bundler-docs/introduction#why-do-developers-migrate-from-webpack)
 - [Use a HTML file as an entry point?](https://github.com/webpack/webpack/issues/536) (Webpack issue, #536)
 - [Using HTML Bundler Plugin for Webpack to generate HTML files](https://dev.to/webdiscus/using-html-bundler-plugin-for-webpack-to-generate-html-files-30gd)
 - [Keep output directory structure in Webpack](https://dev.to/webdiscus/how-to-keep-the-folder-structure-of-source-templates-in-webpack-for-output-html-files-39bj)
