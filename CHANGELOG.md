@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.22.0-alpha.0 (2025-07-31)
+
+- feat(experimental): add support for markdown in nunjucks preprocessor
+
 ## 4.21.1 (2025-07-21)
 
 - docs: update base url of documentation pages in readme

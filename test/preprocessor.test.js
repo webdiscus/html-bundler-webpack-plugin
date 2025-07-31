@@ -55,6 +55,7 @@ describe('handlebars', () => {
 describe('nunjucks', () => {
   test('useful options', () => compareFiles('_preprocessor/nunjucks-options'));
   test('option async', () => compareFiles('_preprocessor/nunjucks-option-async'));
+  test('markdownExtension', () => compareFiles('_preprocessor/nunjucks-extension-markdown'));
 });
 
 describe('liquid', () => {
@@ -74,8 +75,8 @@ describe('other preprocessors', () => {
 });
 
 describe('tempura', () => {
-  test('default', () => compareFiles('_preprocessor/tempura-default'));
   test('render', () => compareFiles('_preprocessor/tempura-render'));
+  test('default', () => compareFiles('_preprocessor/tempura-default'));
 });
 
 describe('special use cases', () => {

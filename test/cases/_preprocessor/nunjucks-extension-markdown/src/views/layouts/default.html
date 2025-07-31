@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{title}}</title>
+  <!-- block for specific page styles -->
+  {% block styles %}{% endblock %}
+  <!-- block for specific page scripts -->
+  {% block scripts %}{% endblock %}
+</head>
+<body>
+  {% include "header.html" %}
+  {% include "menu/nav.html" %}
+  <main class="main-content">
+    <!-- block for specific page content -->
+    {% block content %}{% endblock %}
+  </main>
+  {% include "footer.html" %}
+</body>
+</html>

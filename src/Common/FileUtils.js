@@ -92,7 +92,7 @@ const readDirRecursiveSync = (dir, { fs, includes = [], excludes = [] }) => {
  * @param {string} root The root path for the file with an absolute path (e.g., /file.html)
  * @param {Array<string>} paths Resolve a file in these paths.
  * @param {Array<string>} extensions Resolve a file without an extension with these extensions.
- * @return {string|boolean} Returns resolved file otherwise returns false.
+ * @return {string|false} Returns resolved file otherwise returns false.
  */
 const resolveFile = (file, { fs, root = process.cwd(), paths = [], extensions = [] }) => {
   const resolveFileExt = (file, extensions = []) => {
@@ -131,8 +131,12 @@ const resolveFile = (file, { fs, root = process.cwd(), paths = [], extensions = 
 
   // test path/file.ext
   for (let filePath of paths) {
-    if (!filePath.endsWith(path.sep)) filePath += path.sep;
-    resolvedFile = resolveFileExt(filePath + file, extensions);
+    if (!path.isAbsolute(filePath)) {
+      filePath = path.join(root, filePath);
+    }
+
+    resolvedFile = resolveFileExt(path.join(filePath, file), extensions);
+
     if (resolvedFile) return resolvedFile;
   }
 

@@ -1,13 +1,60 @@
+const fs = require('fs');
 const path = require('path');
 const { makeTemplateId, stringifyJSON } = require('../../Utils');
-const { loadModule } = require('../../../Common/FileUtils');
+const { loadModule, resolveFile } = require('../../../Common/FileUtils');
+const MarkdownFilter = require('../../PreprocessorFilters/markdown');
+
+const markdownExtension = function (nunjucks, { viewPaths }) {
+  const name = 'includeMarkdown';
+
+  const markdownFilterOptions = {
+    highlight: {
+      use: {
+        module: 'prismjs',
+        options: {
+          verbose: true, // display loaded dependencies
+        },
+      },
+    },
+  };
+
+  function IncludeMarkdown() {
+    this.tags = [name];
+
+    this.parse = function (parser, nodes) {
+      const tok = parser.nextToken();
+      const args = parser.parseSignature(null, true);
+      parser.advanceAfterBlockEnd(tok.value);
+      return new nodes.CallExtension(this, 'run', args);
+    };
+
+    this.run = function (context, filePath) {
+      const file = resolveFile(filePath, { fs, paths: viewPaths, extensions: ['.md'] });
+
+      if (!file) {
+        throw new Error(`Could not find the include file '${filePath}'`);
+      }
+
+      const raw = fs.readFileSync(file, 'utf8');
+      const html = MarkdownFilter.getInstance(markdownFilterOptions).apply(raw);
+
+      return new nunjucks.runtime.SafeString(html);
+    };
+  }
+
+  return {
+    name,
+    extension: new IncludeMarkdown(),
+  };
+};
 
 // node module name
 const moduleName = 'nunjucks';
 
 const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
   const nunjucks = loadModule(moduleName);
-  const env = new nunjucks.Environment();
+  const { FileSystemLoader, Environment, runtime } = nunjucks;
+
   const { rootContext } = loaderContext;
   const viewPaths = (options.views = [...new Set([...(options.views || []), rootContext])]);
   const async = options?.async === true;
@@ -27,8 +74,18 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
     nunjucks.installJinjaCompat();
   }
 
-  // set root template dirs, see the options https://mozilla.github.io/nunjucks/api.html#configure
-  nunjucks.configure(viewPaths, options);
+  const env = new Environment(
+    // set root template dirs, see the options https://mozilla.github.io/nunjucks/api.html#configure
+    new FileSystemLoader(viewPaths, options),
+    options
+  );
+
+  // register custom extensions
+  const extensions = [markdownExtension(nunjucks, { viewPaths })];
+  extensions.forEach(({ name, extension }) => {
+    env.addExtension(name, extension);
+    // console.log('[nunjucks] added extension:', name);
+  });
 
   return {
     /**
@@ -48,12 +105,12 @@ const preprocessor = (loaderContext, options = {}, { esModule, watch }) => {
     render: async
       ? (content, { data }) =>
           new Promise((resolve, reject) => {
-            nunjucks.renderString(content, data, (error, result) => {
+            env.renderString(content, data, (error, result) => {
               if (!error) resolve(result);
               else reject(error);
             });
           })
-      : (source, { data = {} }) => nunjucks.renderString(source, data),
+      : (content, { data = {} }) => env.renderString(content, data),
 
     /**
      * Compile template into template function.

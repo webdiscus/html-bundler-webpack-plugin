@@ -1,0 +1,13 @@
+{% extends "default.html" %}
+
+{% block styles %}
+  <link href="./home.scss" rel="stylesheet">
+{% endblock %}
+
+{% block scripts %}
+  <script src="./home.js" defer="defer"></script>
+{% endblock %}
+
+{% block content %}
+  {% includeMarkdown "docs/readme.md" %}
+{% endblock %}
