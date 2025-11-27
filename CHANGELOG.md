@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.22.0 (2025-11-27)
+
+- fix: preprocessor options for the default preprocessor
+
 ## 4.22.0-alpha.0 (2025-07-31)
 
 - feat(experimental): add support for markdown in nunjucks preprocessor

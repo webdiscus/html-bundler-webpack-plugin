@@ -48,10 +48,10 @@ class PluginService {
       // add reference for the preprocessor option into the loader options
       if (pluginOptions.preprocessor != null && loaderOptions.preprocessor == null) {
         loaderOptions.preprocessor = pluginOptions.preprocessor;
+      }
 
-        if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
-          loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
-        }
+      if (pluginOptions.preprocessorOptions && !loaderOptions.preprocessorOptions) {
+        loaderOptions.preprocessorOptions = pluginOptions.preprocessorOptions;
       }
 
       context = {
