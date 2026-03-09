@@ -1,1 +1,1 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[339],{339:()=>{console.log(">> script.js")}}]);
+(self.webpackChunk=self.webpackChunk||[]).push([[339],{339(){console.log(">> script.js")}}]);

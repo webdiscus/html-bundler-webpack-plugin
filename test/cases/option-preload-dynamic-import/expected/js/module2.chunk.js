@@ -1,1 +1,1 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[791],{557:()=>{console.log(">> module-b")}}]);
+(self.webpackChunk=self.webpackChunk||[]).push([[791],{557(){console.log(">> module-b")}}]);

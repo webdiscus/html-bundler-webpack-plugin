@@ -1,1 +1,1 @@
-(self.webpackChunk=self.webpackChunk||[]).push([[364],{911:()=>{console.log(">> module-a")}}]);
+(self.webpackChunk=self.webpackChunk||[]).push([[364],{911(){console.log(">> module-a")}}]);

@@ -1,35 +1,35 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./src/import1.scss":
+/***/ "./src/import1.scss"
 /*!**************************!*\
   !*** ./src/import1.scss ***!
   \**************************/
-/***/ (() => {
+() {
 
 /* extracted by HTMLBundler CSSLoader */
 
-/***/ }),
+/***/ },
 
-/***/ "./src/import2.scss":
+/***/ "./src/import2.scss"
 /*!**************************!*\
   !*** ./src/import2.scss ***!
   \**************************/
-/***/ (() => {
+() {
 
 /* extracted by HTMLBundler CSSLoader */
 
-/***/ }),
+/***/ },
 
-/***/ "./src/import3.scss?inline":
+/***/ "./src/import3.scss?inline"
 /*!*********************************!*\
   !*** ./src/import3.scss?inline ***!
   \*********************************/
-/***/ (() => {
+() {
 
 /* extracted by HTMLBundler CSSLoader */
 
-/***/ })
+/***/ }
 
 /******/ 	});
 /************************************************************************/
@@ -51,6 +51,12 @@
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
