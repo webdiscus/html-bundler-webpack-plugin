@@ -1,0 +1,1 @@
+(()=>{const o=function(o){console.log(o)};o("about"),o("test")})();

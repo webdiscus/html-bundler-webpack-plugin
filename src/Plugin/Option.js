@@ -528,6 +528,16 @@ class Option {
   }
 
   /**
+   * Whether HTML minification is enabled for the given entry.
+   *
+   * @param {AssetEntryOptions|null} entry
+   * @return {boolean}
+   */
+  isEntryMinify(entry = null) {
+    return this.getEntryRuntimeOptions(entry).minify === true;
+  }
+
+  /**
    * @return {boolean}
    */
   isVerbose() {
@@ -616,11 +626,12 @@ class Option {
    *
    * @param {string} resource The resource file, including a query.
    * @param {string} chunk The chunk filename.
+   * @param {AssetEntryOptions|null} entry The current entry options.
    * @return {boolean}
    */
-  isInlineJs(resource, chunk) {
+  isInlineJs(resource, chunk, entry = null) {
     const value = getQueryParam(resource, 'inline');
-    const { inline } = this.options.js;
+    const { inline } = this.getJs(entry);
 
     if (value != null) {
       return this.toBool(value, false, inline.enabled);
@@ -639,14 +650,16 @@ class Option {
    * Whether the CSS resource should be inlined, regard of the global css.inline option and the file query.
    *
    * @param {string} resource The resource file, including a query.
+   * @param {AssetEntryOptions|null} entry The current entry options.
    * @return {boolean}
    */
-  isInlineCss(resource) {
+  isInlineCss(resource, entry = null) {
     const value = getQueryParam(resource, 'inline');
     const hasQueryInline = value != null;
     const isInlinedByQuery = this.toBool(value, false, false);
+    const { inline } = this.getCss(entry);
 
-    return (this.options.css.inline && (isInlinedByQuery || !hasQueryInline)) || isInlinedByQuery;
+    return (inline && (isInlinedByQuery || !hasQueryInline)) || isInlinedByQuery;
   }
 
   /**
@@ -842,10 +855,11 @@ class Option {
   /**
    * Return LF when minify is disabled and return empty string when minify is enabled.
    *
+   * @param {AssetEntryOptions|null} entry The current entry options.
    * @return {string}
    */
-  getLF() {
-    return this.isMinify() ? '' : '\n';
+  getLF(entry = null) {
+    return this.isEntryMinify(entry) ? '' : '\n';
   }
 
   /**
@@ -871,17 +885,158 @@ class Option {
   }
 
   /**
+   * Get JS options for the given entry.
+   *
+   * @param {AssetEntryOptions|null} entry The current entry options.
    * @return {JsOptions}
    */
-  getJs() {
-    return this.options.js;
+  getJs(entry = null) {
+    return this.getEntryRuntimeOptions(entry).js;
   }
 
   /**
+   * Get CSS options for the given entry.
+   *
+   * @param {AssetEntryOptions|null} entry The current entry options.
    * @return {CssOptions}
    */
-  getCss() {
-    return this.options.css;
+  getCss(entry = null) {
+    return this.getEntryRuntimeOptions(entry).css;
+  }
+
+  /**
+   * Get HTML minifier options for the given entry.
+   *
+   * @param {AssetEntryOptions|null} entry
+   * @return {import('html-minifier-terser').Options}
+   */
+  getMinifyOptions(entry = null) {
+    return this.getEntryRuntimeOptions(entry).minifyOptions;
+  }
+
+  /**
+   * Get normalized options for the entry.
+   *
+   * @param {AssetEntryOptions|null} entry
+   * @return {{js: JsOptions, css: CssOptions, minify: boolean, minifyOptions: Object}}
+   */
+  getEntryRuntimeOptions(entry = null) {
+    if (!entry?.options) {
+      return {
+        js: this.options.js,
+        css: this.options.css,
+        minify: this.options.minify,
+        minifyOptions: this.options.minifyOptions,
+      };
+    }
+
+    return entry.options;
+  }
+
+  /**
+   * Create normalized runtime options for the entry description.
+   *
+   * @param {Object|null} entry
+   * @return {{js: JsOptions, css: CssOptions, minify: boolean, minifyOptions: Object}}
+   */
+  createEntryRuntimeOptions(entry = null) {
+    const js = this.#createEntryJsOptions(entry?.js);
+    const css = this.#createEntryCssOptions(entry?.css);
+    const { minify, minifyOptions } = this.#createEntryMinifyOptions(entry);
+
+    return { js, css, minify, minifyOptions };
+  }
+
+  /**
+   * Create JS options for the entry by overriding global defaults.
+   *
+   * @param {JsOptions|null} entryJs
+   * @return {JsOptions}
+   */
+  #createEntryJsOptions(entryJs = null) {
+    const js = {
+      ...this.options.js,
+      ...(entryJs || {}),
+    };
+    const baseInline = this.options.js.inline;
+    const entryInline = entryJs?.inline;
+
+    if (
+      baseInline &&
+      typeof baseInline === 'object' &&
+      entryInline &&
+      typeof entryInline === 'object' &&
+      !Array.isArray(baseInline) &&
+      !Array.isArray(entryInline)
+    ) {
+      js.inline = { ...baseInline, ...entryInline };
+    }
+
+    if (js.inline && typeof js.inline === 'object') {
+      js.inline.enabled = this.toBool(js.inline.enabled, false, true);
+      if (js.inline.chunk && !Array.isArray(js.inline.chunk)) {
+        js.inline.chunk = [js.inline.chunk];
+      }
+      if (js.inline.source && !Array.isArray(js.inline.source)) {
+        js.inline.source = [js.inline.source];
+      }
+      if (typeof js.inline.attributeFilter !== 'function') {
+        js.inline.attributeFilter = undefined;
+      }
+    } else {
+      js.inline = {
+        enabled: this.toBool(js.inline, false, this.js.inline),
+        chunk: undefined,
+        source: undefined,
+        attributeFilter: undefined,
+      };
+    }
+
+    return js;
+  }
+
+  /**
+   * Create CSS options for the entry by overriding global defaults.
+   *
+   * @param {CssOptions|null} entryCss
+   * @return {CssOptions}
+   */
+  #createEntryCssOptions(entryCss = null) {
+    const css = { ...this.options.css, ...(entryCss || {}) };
+    css.enabled = this.toBool(css.enabled, true, this.css.enabled);
+    css.inline = this.toBool(css.inline, false, this.css.inline);
+
+    return css;
+  }
+
+  /**
+   * Create HTML minify options for the entry by overriding global defaults.
+   *
+   * @param {Object|null} entry
+   * @return {{minify: boolean, minifyOptions: Object}}
+   */
+  #createEntryMinifyOptions(entry = null) {
+    let minify = this.options.minify;
+    let minifyOptions = { ...this.options.minifyOptions };
+
+    if (!entry) {
+      return { minify, minifyOptions };
+    }
+
+    if (entry.minify != null && typeof entry.minify === 'object') {
+      minify = true;
+      minifyOptions = { ...minifyOptions, ...entry.minify };
+    } else {
+      if (entry.minify != null) {
+        minify = this.toBool(entry.minify, true, this.options.minify);
+      }
+
+      if (entry.minifyOptions != null) {
+        minifyOptions = { ...minifyOptions, ...entry.minifyOptions };
+      }
+    }
+
+    return { minify, minifyOptions };
   }
 
   /**

@@ -1315,7 +1315,7 @@ class AssetCompiler {
       return;
     }
 
-    const inline = this.collection.isInlineStyle(resource);
+    const inline = this.pluginOption.isInlineCss(resource, this.currentEntryPoint);
     const { name } = path.parse(sourceFile);
     const hash = buildInfo.assetInfo?.contenthash || buildInfo.hash;
     const { isCached, filename } = this.getStyleAsseFile({
@@ -1406,7 +1406,7 @@ class AssetCompiler {
 
         const urlQuery = module.resourceResolveData?.query || '';
         const isUrl = urlQuery.includes('url');
-        const isInline = this.pluginOption.isInlineCss(urlQuery);
+        const isInline = this.pluginOption.isInlineCss(urlQuery, entry);
         const importData = {
           resource: module.resource,
           assets: [],

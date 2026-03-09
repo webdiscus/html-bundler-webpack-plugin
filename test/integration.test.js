@@ -175,6 +175,15 @@ describe('plugin option entry', () => {
   test('entry path filter excludes', () => compareFiles('option-entry-path-filter-excludes'));
 });
 
+describe('plugin option entry override', () => {
+  // feature request #188
+  test('js.inline, dev (not minify js)', () => compareFiles('option-entry-js-inline-override-dev'));
+  test('js.inline, prod (minify js)', () => compareFiles('option-entry-js-inline-override'));
+  test('css.inline, dev (not minify css)', () => compareFiles('option-entry-css-inline-override-dev'));
+  test('css.inline, prod (minify css)', () => compareFiles('option-entry-css-inline-override'));
+  test('minify HTML', () => compareFiles('option-entry-minify-override'));
+});
+
 describe('plugin option preload', () => {
   test('preload', () => compareFiles('option-preload'));
   test('preload font', () => compareFiles('option-preload-font'));

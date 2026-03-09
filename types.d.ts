@@ -206,6 +206,24 @@ type EntryDescription = {
    * The data passed to the imported template.
    */
   data?: Data;
+  /**
+   * Override JavaScript options for the entry.
+   * Useful for per-entry inline behavior.
+   */
+  js?: JsOptions;
+  /**
+   * Override CSS options for the entry.
+   * Useful for per-entry inline behavior.
+   */
+  css?: CssOptions;
+  /**
+   * Override minification for the entry.
+   */
+  minify?: 'auto' | boolean | MinifyOptions;
+  /**
+   * Additional minify options for the entry.
+   */
+  minifyOptions?: MinifyOptions;
 };
 
 /**

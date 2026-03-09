@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Entry JS inline override dev</title>
+  </head>
+  <body>
+    <h1>Home</h1>
+    <script>/******/ (() => { // webpackBootstrap
+/*!**********************!*\
+  !*** ./src/index.js ***!
+  \**********************/
+const log = function (message) {
+  console.log(message);
+};
+
+log('home');
+log('test');
+
+/******/ })()
+;</script>
+  </body>
+</html>

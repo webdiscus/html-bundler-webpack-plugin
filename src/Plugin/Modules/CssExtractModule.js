@@ -88,9 +88,10 @@ class CssExtractModule {
 
   /**
    * @param {string} assetFile The asset filename.
+   * @param {boolean} keepAsset Keep the emitted CSS file when it is still referenced externally.
    * @returns {string}
    */
-  getInlineSource(assetFile) {
+  getInlineSource(assetFile, keepAsset = false) {
     const sources = this.compilation.assets;
     const assetMapFile = assetFile + '.map';
     const mapFilename = path.basename(assetMapFile);
@@ -104,7 +105,9 @@ class CssExtractModule {
     }
 
     // don't generate css file for inlined styles
-    this.assetTrash.add(assetFile);
+    if (!keepAsset) {
+      this.assetTrash.add(assetFile);
+    }
 
     return source;
   }

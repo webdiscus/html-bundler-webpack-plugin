@@ -140,9 +140,10 @@ class Collection {
    * @param {AssetEntryOptions} entry
    * @param {Array<Object>} styles
    * @param {string} LF The new line feed in depends on the minification option.
+   * @param {Set<string>} externalStyleAssets Styles that must stay as emitted files for other entries.
    * @return {string|undefined}
    */
-  #bindImportedStyles(content, entry, styles, LF) {
+  async #bindImportedStyles(content, entry, styles, LF, externalStyleAssets) {
     const insertPos = this.findStyleInsertPos(content);
     if (insertPos < 0) {
       noHeadException(entry.resource);
@@ -153,7 +154,7 @@ class Collection {
 
     for (const asset of styles) {
       if (asset.inline) {
-        const source = this.cssExtractModule.getInlineSource(asset.assetFile);
+        const source = this.cssExtractModule.getInlineSource(asset.assetFile, externalStyleAssets.has(asset.assetFile));
 
         // note: in inlined style must be no LF character after the open tag, otherwise the mapping will not work
         styleTags += `<style>` + source + `</style>${LF}`;
@@ -174,19 +175,22 @@ class Collection {
    * @param {string} search The original request of a style in the content.
    * @param {Object} asset The object of the style.
    * @param {string} LF The new line feed in depends on the minification option.
+   * @param {Set<string>} externalStyleAssets Styles that must stay as emitted files for other entries.
+   * @param {AssetEntryOptions} entry
    * @return {string|boolean} Return content with inlined CSS or false if the content was not modified.
    */
-  #inlineStyle(content, search, asset, LF) {
+  async #inlineStyle(content, search, asset, LF, externalStyleAssets, entry) {
     const pos = content.indexOf(search);
+    const searchPos = pos < 0 ? content.indexOf(asset.assetFile) : pos;
 
-    if (pos < 0) return false;
+    if (searchPos < 0) return false;
 
-    const source = this.cssExtractModule.getInlineSource(asset.assetFile);
+    const source = this.cssExtractModule.getInlineSource(asset.assetFile, externalStyleAssets.has(asset.assetFile));
     const tagEnd = '>';
     const openTag = '<style>';
     let closeTag = '</style>';
-    let tagStartPos = pos;
-    let tagEndPos = pos + search.length;
+    let tagStartPos = searchPos;
+    let tagEndPos = searchPos + (pos < 0 ? asset.assetFile.length : search.length);
 
     while (tagStartPos >= 0 && content.charAt(--tagStartPos) !== '<') {}
     tagEndPos = content.indexOf(tagEnd, tagEndPos) + tagEnd.length;
@@ -207,13 +211,18 @@ class Collection {
    * @param {string} resource The resource file containing in the content.
    * @param {Object} asset The object of the script.
    * @param {string} LF The new line feed in depends on the minification option.
+   * @param {AssetEntryOptions} entry
+   * @param {Set<string>} externalChunkFiles Chunks that must stay as emitted files for other entries.
    * @return {string|boolean} Return content with inlined JS or false if the content was not modified.
    */
-  #bindScript(content, resource, asset, LF) {
+  #bindScript(content, resource, asset, LF, entry, externalChunkFiles) {
     let pos = content.indexOf(resource);
+    if (pos < 0 && asset.chunks?.length > 0) {
+      pos = content.indexOf(asset.chunks[0].assetFile);
+    }
     if (pos < 0) return false;
 
-    const { attributeFilter } = this.pluginOption.getJs().inline;
+    const { attributeFilter } = this.pluginOption.getJs(entry).inline;
 
     const sources = this.compilation.assets;
     const { chunks } = asset;
@@ -267,7 +276,9 @@ class Collection {
         }
 
         replacement += openTag + code + closeTag;
-        this.assetTrash.add(chunkFile);
+        if (!externalChunkFiles.has(chunkFile)) {
+          this.assetTrash.add(chunkFile);
+        }
       } else {
         replacement += beforeTagSrc + assetFile + afterTagSrc;
       }
@@ -277,6 +288,38 @@ class Collection {
     if (LF && !'\n\r'.includes(content[tagEndPos])) replacement += LF;
 
     return content.slice(0, tagStartPos) + replacement + content.slice(tagEndPos);
+  }
+
+  /**
+   * Collect emitted JS chunks and CSS assets that must remain on disk because
+   * at least one entry still references them as external files.
+   *
+   * This prevents removing an asset while inlining it into one page when the
+   * same emitted file is still needed by another page.
+   *
+   * @return {{externalChunkFiles: Set<string>, externalStyleAssets: Set<string>}}
+   */
+  #collectExternalAssetReferences() {
+    const externalChunkFiles = new Set();
+    const externalStyleAssets = new Set();
+
+    for (const [, { assets }] of this.data) {
+      for (const asset of assets) {
+        if (asset.type === Collection.type.script) {
+          for (const chunk of [...(asset.chunks || []), ...(asset.children || [])]) {
+            if (!chunk.inline) {
+              externalChunkFiles.add(chunk.chunkFile);
+            }
+          }
+        }
+
+        if (asset.type === Collection.type.style && asset.inline === false) {
+          externalStyleAssets.add(asset.assetFile);
+        }
+      }
+    }
+
+    return { externalChunkFiles, externalStyleAssets };
   }
 
   /**
@@ -343,7 +386,8 @@ class Collection {
             injectedChunks.add(chunkFile);
           }
 
-          const inline = this.pluginOption.isInlineJs(resource, chunkFile);
+          const entry = this.data.get(entryFile)?.entry;
+          const inline = this.pluginOption.isInlineJs(resource, chunkFile, entry);
           const assetFile = this.pluginOption.getOutputFilename(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
@@ -357,7 +401,8 @@ class Collection {
             injectedChunks.add(chunkFile);
           }
 
-          const inline = this.pluginOption.isInlineJs(resource, chunkFile);
+          const entry = this.data.get(entryFile)?.entry;
+          const inline = this.pluginOption.isInlineJs(resource, chunkFile, entry);
           const assetFile = this.pluginOption.getOutputFilename(chunkFile, entryFile);
 
           splitChunkFiles.add(chunkFile);
@@ -914,9 +959,6 @@ class Collection {
     const compilation = this.compilation;
     const { RawSource } = compilation.compiler.webpack.sources;
     const hasIntegrity = this.pluginOption.isIntegrityEnabled();
-    const isHtmlMinify = this.pluginOption.isMinify();
-    const { minifyOptions } = this.pluginOption.get();
-    const LF = this.pluginOption.getLF();
     const hooks = this.hooks;
     const promises = [];
 
@@ -930,6 +972,7 @@ class Collection {
 
     this.#normalizeData();
     this.#prepareScriptData();
+    const { externalChunkFiles, externalStyleAssets } = this.#collectExternalAssetReferences();
 
     // TODO: update this.data.assets[].asset.resource after change the filename in a template
     //  - e.g. src="./main.js?v=1" => ./main.js?v=123 => WRONG filename is replaced
@@ -959,6 +1002,9 @@ class Collection {
       const resourcePath = entry.resource;
       const entryDirname = path.dirname(entryFilename);
       const importedStyles = [];
+      const isHtmlMinify = this.pluginOption.isEntryMinify(entry);
+      const minifyOptions = this.pluginOption.getMinifyOptions(entry);
+      const LF = this.pluginOption.getLF(entry);
       const parseOptions = new Map();
       let hasInlineSvg = false;
       let content = rawSource.source();
@@ -1046,7 +1092,7 @@ class Collection {
       }
 
       // 4. inline JS and CSS
-      promise = promise.then((content) => {
+      promise = promise.then(async (content) => {
         // TODO:
         //  - style: rename output filename `assetFile` into filename or assetFilename
         //  - style: add additional filed - assetFile as asset path relative to output.path, not to issuer
@@ -1064,7 +1110,7 @@ class Collection {
               if (imported) {
                 importedStyles.push(asset);
               } else if (inline) {
-                content = this.#inlineStyle(content, resource, asset, LF) || content;
+                content = (await this.#inlineStyle(content, resource, asset, LF, externalStyleAssets, entry)) || content;
               } else {
                 // special use case for Pug only e.g.: style(scope='some')=require('./component.css?include')
                 const [, query] = resource.split('?');
@@ -1134,7 +1180,7 @@ class Collection {
                 }
               }
 
-              content = this.#bindScript(content, resource, asset, LF) || content;
+              content = this.#bindScript(content, resource, asset, LF, entry, externalChunkFiles) || content;
               break;
           }
         }
@@ -1144,7 +1190,9 @@ class Collection {
 
       // 5. inject styles imported in JS
       promise = promise.then((content) =>
-        importedStyles.length > 0 ? this.#bindImportedStyles(content, entry, importedStyles, LF) || content : content
+        importedStyles.length > 0
+          ? this.#bindImportedStyles(content, entry, importedStyles, LF, externalStyleAssets) || content
+          : content
       );
 
       // 6. inline SVG

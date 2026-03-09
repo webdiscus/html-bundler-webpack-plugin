@@ -35,6 +35,7 @@ const loader = require.resolve('../Loader');
  * @property {string} sourcePath The path where are source files.
  * @property {string} outputPath The absolute output path.
  * @property {string} publicPath The public path relative to outputPath.
+ * @property {{js: JsOptions, css: CssOptions, minify: boolean, minifyOptions: Object}} options The normalized runtime options.
  * @property {{name: string, type: string}} library Define the output a js file.
  *  See https://webpack.js.org/configuration/output/#outputlibrary
  * @property {boolean|string} [verbose = false] Show an information by handles of the entry in a postprocess.
@@ -455,6 +456,7 @@ class AssetEntry {
       if (options == null) continue;
 
       let { verbose, filename: filenameTemplate, sourcePath, outputPath } = options;
+      const runtimeOptions = this.pluginOption.createEntryRuntimeOptions(entry);
 
       // Note:
       // when the entry contains the same source file for many chunks,
@@ -501,6 +503,7 @@ class AssetEntry {
         sourcePath,
         outputPath,
         publicPath: '',
+        options: runtimeOptions,
         library: entry.library,
         verbose,
         isTemplate: this.pluginOption.isEntry(sourceFile),

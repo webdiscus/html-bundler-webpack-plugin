@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.23.0 (2026-03-09)
+
+- feat: add per-entry override support for `js.inline`, `css.inline`, and HTML `minify` options
+
 ## 4.22.0 (2025-11-27)
 
 - fix: preprocessor options for the default preprocessor
