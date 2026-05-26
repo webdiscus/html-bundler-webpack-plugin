@@ -16,6 +16,7 @@ import AssetEntry from '../src/Plugin/AssetEntry';
 import Snapshot from '../src/Plugin/Snapshot';
 import Option from '../src/Plugin/Option';
 import Collection from '../src/Plugin/Collection';
+import PluginResolver from '../src/Plugin/Resolver';
 
 const asset = new Asset();
 const assetEntry = new AssetEntry({});
@@ -1942,5 +1943,103 @@ describe('misc tests', () => {
     const received = collection.findStyleInsertPos(content);
     const expected = -1;
     return expect(received).toEqual(expected);
+  });
+
+  test('Collection.recoverMissingScript restores a script from the chunk graph', () => {
+    const resource = '/project/src/main.js';
+    const issuer = { resource: '/project/src/index.html' };
+    const entry = { id: 1, filename: 'index.html' };
+    const chunk = {};
+    const templateChunk = {};
+    const recoveredCollection = new Collection({});
+
+    recoveredCollection.assetEntry = {
+      entriesByName: new Map([['__bundler-plugin-entry__index', { isTemplate: true }]]),
+    };
+    recoveredCollection.compilation = {
+      namedChunkGroups: new Map([
+        [
+          '__bundler-plugin-entry__index',
+          {
+            chunks: [templateChunk],
+          },
+        ],
+        [
+          'main',
+          {
+            chunks: [chunk],
+          },
+        ],
+      ]),
+      chunkGraph: {
+        getChunkModulesIterable: (receivedChunk) =>
+          receivedChunk === chunk || receivedChunk === templateChunk ? [{ resource }] : [],
+      },
+    };
+
+    const received = recoveredCollection.recoverMissingScript({ resource, issuer, entry });
+    const item = recoveredCollection.assets.get(resource);
+
+    expect(received).toBe(true);
+    expect(recoveredCollection.hasScript(resource)).toBe(true);
+    expect(item.name).toBe('main');
+    expect(Array.from(item.entries.get(issuer.resource))).toEqual([entry.filename]);
+    expect(Array.from(recoveredCollection.orderedResources.get(entry.id))).toEqual([resource]);
+  });
+
+  test('Collection.deserialize clears structurally invalid cache data', () => {
+    const recoveredCollection = new Collection({});
+    const values = [{}, new Map()];
+
+    recoveredCollection.assets.set('/project/src/main.js', {
+      type: Collection.type.script,
+      entries: new Map(),
+    });
+    recoveredCollection.deserialized = true;
+    recoveredCollection.deserialize({ read: () => values.shift() });
+
+    expect(recoveredCollection.isDeserialized()).toBe(false);
+    expect(recoveredCollection.assets.size).toBe(0);
+  });
+
+  test('Plugin Resolver recovers an existing script missing from collection cache', () => {
+    const script = '/project/src/main.js';
+    const issuer = '/project/src/index.html';
+    const recoverMissingScript = jest.fn(() => true);
+    const resolver = new PluginResolver({
+      pluginOption: {
+        context: '/project',
+        js: { test: /\.js$/ },
+        isEntry: () => false,
+      },
+      assetEntry: {
+        isEntryResource: () => true,
+      },
+      assetInline: {
+        getDataUrl: () => null,
+        isDataUrl: () => false,
+        isSvgFile: () => false,
+      },
+      collection: {
+        hasScript: () => false,
+        hasStyle: () => false,
+        isInlineStyle: () => false,
+        recoverMissingScript,
+      },
+    });
+
+    resolver.init({
+      fs: {
+        existsSync: (file) => file === script,
+      },
+    });
+    resolver.setContext({ filename: 'index.html' }, { resource: issuer, filename: 'index.html' });
+
+    expect(resolver.require(script)).toBe(script);
+    expect(recoverMissingScript).toHaveBeenCalledWith({
+      resource: script,
+      issuer: { resource: issuer, filename: 'index.html' },
+      entry: { filename: 'index.html' },
+    });
   });
 });

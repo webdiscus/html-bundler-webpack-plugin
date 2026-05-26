@@ -30,10 +30,7 @@ describe('cache tests', () => {
 
   test('filesystem, display stats', () => stdoutContain('cache-filesystem-display-stats', 'compiled successfully'));
   test('filesystem, multiple config', () => compareFiles('cache-filesystem-multi-config'));
-  test('filesystem-js-runs_n1', () => compareFilesRuns('cache-filesystem-js', false, 1));
-
-  // TODO: fix DEP_WEBPACK_COMPILATION_ASSETS warning
-  //test('filesystem-js-runs_n2', () => compareFilesRuns('cache-filesystem-js', false, 2));
+  test('filesystem-js-runs_n2', () => compareFilesRuns('cache-filesystem-js', false, 2));
 });
 
 describe('resolve files', () => {

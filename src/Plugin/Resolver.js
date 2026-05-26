@@ -277,6 +277,15 @@ class Resolver {
     const file = resource || rawRequest;
 
     if (this.pluginOption.js.test.test(file) && this.assetEntry.isEntryResource(issuer.resource)) {
+      const [sourceFile] = file.split('?', 1);
+
+      if (
+        this.fs.existsSync(sourceFile) &&
+        this.collection.recoverMissingScript({ resource: file, issuer, entry: this.entryPoint })
+      ) {
+        return file;
+      }
+
       // occur after rename/delete of a js file when the entry module was already rebuilt
       Snapshot.addMissingFile(issuer.resource, file);
       resolveException(file, issuer.resource, this.rootContext, this.pluginOption);

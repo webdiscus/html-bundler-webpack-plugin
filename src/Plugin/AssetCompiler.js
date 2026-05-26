@@ -312,33 +312,29 @@ class AssetCompiler {
     // TODO: init by PluginIndex, for each instance create own PluginService instance for pluginOption
     PluginService.init(compiler, this.pluginContext, AssetCompiler);
 
+    this.cacheDataComplete = false;
+
     if (this.pluginOption.isCacheable()) {
       const collectionCache = createPersistentCache(this.collection);
       const cache = compiler.getCache(pluginName).getItemCache('PersistentCache', null);
-      let isCached = false;
 
-      compiler.hooks.beforeCompile.tap(pluginName, () => {
-        cache.get((error, data) => {
-          if (error) {
-            throw new Error(error);
-          }
-          isCached = !!data;
+      compiler.hooks.beforeCompile.tapPromise(pluginName, () => {
+        return cache.getPromise().catch(() => {
+          this.collection.clear();
         });
       });
 
-      // note: if used `tapAsync` then no webpack statistics or errors will be displayed
-      // then use in the `done` hook the output of `stats.compilation.options.stats` in Promise.finally
-      //compiler.cache.hooks.shutdown.tapAsync({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
-      compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK }, () => {
-        if (!isCached) {
-          const cacheData = collectionCache.getData();
+      // Store before Webpack's disk cache shutdown task collects pending cache writes.
+      compiler.cache.hooks.shutdown.tap({ name: pluginName, stage: Cache.STAGE_DISK - 1 }, () => {
+        if (!this.cacheDataComplete) return;
 
-          cache.store(cacheData, (error) => {
-            if (error) {
-              throw new Error(error);
-            }
-          });
-        }
+        const cacheData = collectionCache.getData();
+
+        cache.store(cacheData, (error) => {
+          if (error) {
+            throw new Error(error);
+          }
+        });
       });
     }
 
@@ -405,6 +401,7 @@ class AssetCompiler {
     const normalModuleHooks = NormalModule.getCompilationHooks(compilation);
     const renderStage = this.pluginOption.getRenderStage();
 
+    this.cacheDataComplete = false;
     this.IS_WEBPACK_VERSION_LOWER_5_96_0 = compareVersions(compilation.compiler.webpack.version, '<', '5.96.0');
 
     this.compilation = compilation;
@@ -1776,6 +1773,8 @@ class AssetCompiler {
         // }
 
         if (this.exceptions.size > 0) {
+          this.cacheDataComplete = false;
+
           const messages = Array.from(this.exceptions)
             .map((error) => (error.stack ? error.stack : error.toString()))
             .reduce((previousValue, currentValue) => previousValue + currentValue, '');
@@ -1785,6 +1784,8 @@ class AssetCompiler {
         }
 
         if (this.pluginOption.isVerbose()) verbose(pluginCompiler);
+
+        this.cacheDataComplete = !hasError;
 
         this.asset.reset();
         this.assetEntry.reset();

@@ -485,6 +485,99 @@ class Collection {
   }
 
   /**
+   * Recover a script entry from Webpack's cached chunk graph.
+   *
+   * This is a fallback for the case where Webpack restores a cached template
+   * module, but the plugin's persistent collection cache is missing the script
+   * resource that the restored module still requires.
+   *
+   * @param {{resource: string, issuer: FileInfo, entry: AssetEntryOptions}} options
+   * @return {boolean}
+   */
+  recoverMissingScript({ resource, issuer, entry }) {
+    const issuerResource = issuer?.resource;
+    const entryFilename = entry?.filename;
+
+    if (!issuerResource || !entryFilename) return false;
+
+    let item = this.assets.get(resource);
+    if (item && item.type !== Collection.type.script) return false;
+
+    const name = item?.name || this.#findScriptEntryName(resource);
+    if (!name) return false;
+
+    if (!item) {
+      item = {
+        type: Collection.type.script,
+        inline: undefined,
+        name,
+        entries: new Map(),
+        assets: [],
+      };
+      this.assets.set(resource, item);
+    } else if (!item.name) {
+      item.name = name;
+    }
+
+    let entryFilenames = item.entries.get(issuerResource);
+    if (!entryFilenames) {
+      entryFilenames = new Set();
+      item.entries.set(issuerResource, entryFilenames);
+    }
+
+    entryFilenames.add(entryFilename);
+
+    if (entry.id != null) {
+      let orderedResources = this.orderedResources.get(entry.id);
+      if (!orderedResources) {
+        orderedResources = new Set();
+        this.orderedResources.set(entry.id, orderedResources);
+      }
+      orderedResources.add(resource);
+    }
+
+    return true;
+  }
+
+  /**
+   * Find an entrypoint containing the script resource.
+   *
+   * @param {string} resource The script resource.
+   * @return {string|null}
+   */
+  #findScriptEntryName(resource) {
+    const compilation = this.compilation;
+    const chunkGraph = compilation?.chunkGraph;
+    const namedChunkGroups =
+      compilation?.entrypoints?.size > 0 ? compilation.entrypoints : compilation?.namedChunkGroups;
+    const [sourceFile] = resource.split('?', 1);
+
+    if (!chunkGraph || !namedChunkGroups) return null;
+
+    for (const [name, entrypoint] of namedChunkGroups) {
+      for (const chunk of entrypoint.chunks) {
+        const modules = chunkGraph.getChunkModulesIterable(chunk);
+
+        if (!modules) continue;
+
+        for (const module of modules) {
+          const moduleResource = module.resource;
+          if (!moduleResource) continue;
+
+          const [moduleFile] = moduleResource.split('?', 1);
+          if (moduleResource === resource || moduleFile === sourceFile) {
+            const entry = this.assetEntry?.entriesByName.get(name);
+
+            if (!entry?.isTemplate) return name;
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Whether the collection contains the style file.
    *
    * @param {string} resource The resource file, including a query.
@@ -1308,6 +1401,7 @@ class Collection {
     this.importStyleRootIssuers.clear();
     this.importStyleSources.clear();
     this.importStyleIdx = 1000;
+    this.deserialized = false;
   }
 
   /**
@@ -1341,6 +1435,7 @@ class Collection {
       // the original functions will be recovered by deserialization from the cached object `AssetEntry`
       entry.filenameFn = null;
       entry.filenameTemplate = null;
+      entry.options = null;
     }
 
     write(this.assets);
@@ -1352,18 +1447,62 @@ class Collection {
    * @param {Function} read The deserialize function.
    */
   deserialize({ read }) {
-    this.assets = read();
-    this.data = read();
+    const assets = read();
+    const data = read();
+
+    if (!this.#isDeserializedDataValid(assets, data)) {
+      this.clear();
+      return;
+    }
+
+    this.assets = assets;
+    this.data = data;
+
+    const assetEntry = this.assetEntry || this.pluginContext.assetEntry;
+
+    if (!assetEntry) {
+      this.clear();
+      return;
+    }
 
     for (let [, { entry }] of this.data) {
-      const cachedEntry = this.assetEntry.entriesById.get(entry.id);
+      if (!entry.id) continue;
+
+      const cachedEntry = assetEntry.entriesById.get(entry.id);
+
+      if (!cachedEntry) {
+        this.clear();
+        return;
+      }
 
       // recovery original not serializable functions from the object cached in the memory
       entry.filenameFn = cachedEntry.filenameFn;
       entry.filenameTemplate = cachedEntry.filenameTemplate;
+      entry.options = cachedEntry.options;
     }
 
     this.deserialized = true;
+  }
+
+  /**
+   * @param {Map} assets
+   * @param {Map} data
+   * @return {boolean}
+   */
+  #isDeserializedDataValid(assets, data) {
+    if (!(assets instanceof Map) || !(data instanceof Map)) return false;
+
+    for (const [, item] of assets) {
+      if (item == null || typeof item !== 'object') return false;
+      if (!item.type || !(item.entries instanceof Map)) return false;
+    }
+
+    for (const [, item] of data) {
+      if (item == null || typeof item !== 'object') return false;
+      if (item.entry == null || !Array.isArray(item.assets)) return false;
+    }
+
+    return true;
   }
 
   isDeserialized() {
