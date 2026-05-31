@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.23.1 (2026-05-31)
+
+- fix: prevent watcher crash in multi-compiler mode when Webpack invalidates a compilation with a `null` filename after deleting a watched source file, #191
+
 ## 4.23.0 (2026-03-09)
 
 - feat: add per-entry override support for `js.inline`, `css.inline`, and HTML `minify` options

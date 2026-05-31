@@ -609,6 +609,8 @@ class AssetCompiler {
     const isEntry = this.assetEntry.isEntryResource(fileName);
 
     if (!isEntry) {
+      if (!this.compilation) return;
+
       const dependency = PluginService.getDependencyInstance(this.compilation.compiler);
 
       // dependency is null when no html entry defined and a style in entry was changed

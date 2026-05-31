@@ -243,6 +243,8 @@ class AssetEntry {
    * @return {boolean}
    */
   isEntryResource(resource) {
+    if (!resource) return false;
+
     const [resourceFile] = resource.split('?', 1);
     for (let { isTemplate, sourceFile } of this.entriesByName.values()) {
       if (isTemplate && sourceFile === resourceFile) return true;

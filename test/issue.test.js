@@ -1,3 +1,8 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import webpack from 'webpack';
+import HtmlBundlerPlugin from '../src';
 import { compareFiles } from './utils/helpers';
 
 beforeAll(() => {
@@ -19,4 +24,56 @@ describe('issue tests', () => {
   test('issue advanced template', () => compareFiles('issue-0-advanced-template'));
 
   test('issue infinity walk by circular dependency', () => compareFiles('issue-mui-css'));
+
+  test('multi compiler invalid hook handles null filename, issue #191', () => {
+    const context = fs.mkdtempSync(path.join(os.tmpdir(), 'html-bundler-webpack-plugin-'));
+    const sourcePath = path.join(context, 'src');
+
+    fs.mkdirSync(sourcePath, { recursive: true });
+    fs.writeFileSync(path.join(sourcePath, 'home.html'), '<!doctype html><script src="./home.js"></script>');
+    fs.writeFileSync(path.join(sourcePath, 'home.js'), 'console.log("home");');
+    fs.writeFileSync(path.join(sourcePath, 'about.html'), '<!doctype html><script src="./about.js"></script>');
+    fs.writeFileSync(path.join(sourcePath, 'about.js'), 'console.log("about");');
+
+    try {
+      const compiler = webpack([
+        {
+          name: 'home',
+          mode: 'development',
+          context,
+          output: {
+            path: path.join(context, 'dist/home'),
+          },
+          plugins: [
+            new HtmlBundlerPlugin({
+              entry: {
+                home: './src/home.html',
+              },
+            }),
+          ],
+        },
+        {
+          name: 'about',
+          mode: 'development',
+          context,
+          output: {
+            path: path.join(context, 'dist/about'),
+          },
+          plugins: [
+            new HtmlBundlerPlugin({
+              entry: {
+                about: './src/about.html',
+              },
+            }),
+          ],
+        },
+      ]);
+
+      for (const childCompiler of compiler.compilers) {
+        expect(() => childCompiler.hooks.invalid.call(null, null)).not.toThrow();
+      }
+    } finally {
+      fs.rmSync(context, { recursive: true, force: true });
+    }
+  });
 });
