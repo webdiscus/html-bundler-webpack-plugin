@@ -133,9 +133,11 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
   const results = [];
   const expected = Array(num).fill(true);
   const filter = /.(html|css|css.map|js|js.map|json)$/;
+  let promise = Promise.resolve();
 
   for (let i = 0; i < num; i++) {
-    const res = compile(PATHS, relTestCasePath, {})
+    promise = promise
+      .then(() => compile(PATHS, relTestCasePath, {}))
       .then(() => {
         const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
         expect(receivedFiles).toEqual(expectedFiles);
@@ -146,15 +148,14 @@ export const compareFilesRuns = (relTestCasePath, compareContent = true, num = 1
           });
         }
 
-        return Promise.resolve(true);
+        results.push(true);
       })
       .catch((error) => {
-        return Promise.reject(new Error(error.stack));
+        return Promise.reject(new Error(error.stack ? error.stack : error));
       });
-    results.push(res);
   }
 
-  return expect(Promise.all(results)).resolves.toEqual(expected);
+  return expect(promise.then(() => results)).resolves.toEqual(expected);
 };
 
 /**

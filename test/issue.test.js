@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import webpack from 'webpack';
 import HtmlBundlerPlugin from '../src';
-import { compareFiles } from './utils/helpers';
+import { compareFiles, compareFilesRuns } from './utils/helpers';
 
 beforeAll(() => {
   // important: the environment constant is used in code
@@ -24,6 +24,22 @@ describe('issue tests', () => {
   test('issue advanced template', () => compareFiles('issue-0-advanced-template'));
 
   test('issue infinity walk by circular dependency', () => compareFiles('issue-mui-css'));
+
+  test('filesystem cache restores script on second run, issue #190', async () => {
+    const testPath = path.join(__dirname, 'issues/issue-190-cache-filesystem-js');
+    const cleanup = () => {
+      fs.rmSync(path.join(testPath, 'dist'), { recursive: true, force: true });
+      fs.rmSync(path.join(testPath, '.cache'), { recursive: true, force: true });
+    };
+
+    cleanup();
+
+    try {
+      await compareFilesRuns('../issues/issue-190-cache-filesystem-js', false, 2);
+    } finally {
+      cleanup();
+    }
+  });
 
   test('multi compiler invalid hook handles null filename, issue #191', () => {
     const context = fs.mkdtempSync(path.join(os.tmpdir(), 'html-bundler-webpack-plugin-'));
