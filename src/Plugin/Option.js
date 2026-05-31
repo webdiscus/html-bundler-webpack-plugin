@@ -594,6 +594,7 @@ class Option {
    * @return {boolean}
    */
   isStyle(resource) {
+    if (resource == null) return false;
     const [file] = resource.split('?', 1);
     return this.options.css.enabled && this.options.css.test.test(file);
   }
@@ -603,6 +604,7 @@ class Option {
    * @return {boolean}
    */
   isScript(resource) {
+    if (resource == null) return false;
     const [file] = resource.split('?', 1);
     return this.options.js.enabled && this.options.js.test.test(file);
   }

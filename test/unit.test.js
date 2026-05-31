@@ -1481,6 +1481,18 @@ describe('plugin options unit tests', () => {
     return expect(received).toEqual(true);
   });
 
+  test('isScript null resource', () => {
+    option.options = {
+      js: {
+        enabled: true,
+        test: option.js.test,
+      },
+    };
+
+    const received = option.isScript(null);
+    return expect(received).toEqual(false);
+  });
+
   test('getEntryPath', () => {
     option.dynamicEntry = 'src/views/';
     option.options.entry = option.dynamicEntry;
