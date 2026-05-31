@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.23.2 (2026-06-01)
+
+- fix: restore Webpack filesystem cache builds when a cached HTML template references a script and `js.filename` is configured as a function, #190
+  The plugin persistent cache now excludes non-serializable entry options from the serialized collection data and restores them from the current entry configuration during deserialization. 
+  This prevents the second filesystem-cache build from losing the script and failing with a false `Can't resolve .../src/main.js` error.
+
 ## 4.23.1 (2026-05-31)
 
 - fix: prevent watcher crash in multi-compiler mode when Webpack invalidates a compilation with a `null` filename after deleting a watched source file, #191

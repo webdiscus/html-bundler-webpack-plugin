@@ -1110,7 +1110,8 @@ class Collection {
               if (imported) {
                 importedStyles.push(asset);
               } else if (inline) {
-                content = (await this.#inlineStyle(content, resource, asset, LF, externalStyleAssets, entry)) || content;
+                content =
+                  (await this.#inlineStyle(content, resource, asset, LF, externalStyleAssets, entry)) || content;
               } else {
                 // special use case for Pug only e.g.: style(scope='some')=require('./component.css?include')
                 const [, query] = resource.split('?');
@@ -1341,6 +1342,7 @@ class Collection {
       // the original functions will be recovered by deserialization from the cached object `AssetEntry`
       entry.filenameFn = null;
       entry.filenameTemplate = null;
+      entry.options = null;
     }
 
     write(this.assets);
@@ -1361,6 +1363,7 @@ class Collection {
       // recovery original not serializable functions from the object cached in the memory
       entry.filenameFn = cachedEntry.filenameFn;
       entry.filenameTemplate = cachedEntry.filenameTemplate;
+      entry.options = cachedEntry.options;
     }
 
     this.deserialized = true;
