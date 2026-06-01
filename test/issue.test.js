@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import webpack from 'webpack';
 import HtmlBundlerPlugin from '../src';
+import Snapshot from '../src/Plugin/Snapshot';
 import { compareFiles, compareFilesRuns } from './utils/helpers';
 
 beforeAll(() => {
@@ -90,6 +91,48 @@ describe('issue tests', () => {
       }
     } finally {
       fs.rmSync(context, { recursive: true, force: true });
+    }
+  });
+
+  test.each([
+    {
+      name: 'missing uses backslashes, restored uses slashes',
+      issuer: 'C:\\path\\to\\index.html',
+      missingFile: 'C:\\path\\to\\script.js',
+      restoredFile: 'C:/path/to/script.js',
+    },
+    {
+      name: 'missing uses slashes, restored uses backslashes',
+      issuer: 'C:\\path\\to\\index.html',
+      missingFile: 'C:/path/to/script.js',
+      restoredFile: 'C:\\path\\to\\script.js',
+    },
+    {
+      name: 'missing uses backslashes, restored uses backslashes',
+      issuer: 'C:\\path\\to\\index.html',
+      missingFile: 'C:\\path\\to\\script.js',
+      restoredFile: 'C:\\path\\to\\script.js',
+    },
+    {
+      name: 'missing uses slashes, restored uses slashes',
+      issuer: 'C:/path/to/index.html',
+      missingFile: 'C:/path/to/script.js',
+      restoredFile: 'C:/path/to/script.js',
+    },
+    {
+      name: 'missing script matches POSIX path',
+      issuer: '/path/to/index.html',
+      missingFile: '/path/to/script.js',
+      restoredFile: '/path/to/script.js',
+    },
+  ])('watch restored missing script matches Windows paths: $name', ({ issuer, missingFile, restoredFile }) => {
+    Snapshot.missingFiles.clear();
+    Snapshot.addMissingFile(issuer, missingFile);
+
+    try {
+      expect(Snapshot.hasMissingFile(issuer, restoredFile)).toBe(true);
+    } finally {
+      Snapshot.missingFiles.clear();
     }
   });
 });

@@ -1,4 +1,5 @@
 const { readDirRecursiveSync } = require('../Common/FileUtils');
+const { pathToPosix } = require('../Common/Helpers');
 
 /**
  * Snapshot of files.
@@ -138,7 +139,9 @@ class Snapshot {
     let files = this.missingFiles.get(issuer);
     if (!files) return false;
 
-    return !!Array.from(files).find((missingFile) => file.endsWith(missingFile));
+    file = pathToPosix(file);
+
+    return !!Array.from(files).find((missingFile) => file.endsWith(pathToPosix(missingFile)));
   }
 
   static getDiff(a, b) {

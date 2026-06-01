@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.23.3 (2026-06-01)
+
+- fix: normalize restored missing script paths in watch mode to prevent false `Can't resolve ...` errors on Windows.
+
 ## 4.23.2 (2026-06-01)
 
 - fix: restore Webpack filesystem cache builds when a cached HTML template references a script and `js.filename` is configured as a function, #190
