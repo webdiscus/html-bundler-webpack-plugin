@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk=self.webpackChunk||[]).push([[245],{480(e,u,a){a.d(u,["default",0,"lazy chunk loaded"])}}]);
