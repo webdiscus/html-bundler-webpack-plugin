@@ -3,7 +3,7 @@ const {
   ASSET_MODULE_TYPE_INLINE,
   ASSET_MODULE_TYPE_SOURCE,
   ASSET_MODULE_TYPE_RESOURCE,
-} = require('webpack/lib//ModuleTypeConstants');
+} = require('./ModuleTypeConstants');
 
 const { parseTagAttributes } = require('../Common/HtmlParser');
 

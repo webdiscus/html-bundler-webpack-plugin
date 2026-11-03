@@ -3,7 +3,8 @@ const path = require('path');
 const { AsyncSeriesHook, AsyncSeriesWaterfallHook, SyncBailHook, SyncWaterfallHook } = require('tapable');
 const Compiler = require('webpack/lib/Compiler');
 const Compilation = require('webpack/lib/Compilation');
-const Cache = require('webpack/lib/Cache');
+const webpack = require('webpack');
+const Cache = webpack.cache?.Cache || webpack.Cache;
 
 const AssetParser = require('webpack/lib/asset/AssetParser');
 const AssetGenerator = require('webpack/lib/asset/AssetGenerator');
@@ -15,7 +16,7 @@ const {
   ASSET_MODULE_TYPE_INLINE,
   ASSET_MODULE_TYPE_SOURCE,
   ASSET_MODULE_TYPE_RESOURCE,
-} = require('webpack/lib//ModuleTypeConstants');
+} = require('./ModuleTypeConstants');
 
 const { yellowBright, cyanBright, green, greenBright, yellow } = require('ansis');
 

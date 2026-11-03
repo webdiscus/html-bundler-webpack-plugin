@@ -25,6 +25,11 @@ It resolves  dependencies, compiles templates, and ensures that the output HTML 
 npm install html-bundler-webpack-plugin --save-dev
 ```
 
+## Node.js Support
+
+The published package supports Node.js 18+.\
+Development requires Node.js 22+.
+
 ## What does the HTML Bundler do?
 
 - **Treats HTML as an entry point**: Initiates the build process from HTML, allowing direct inclusion of source asset files like scripts and styles.
