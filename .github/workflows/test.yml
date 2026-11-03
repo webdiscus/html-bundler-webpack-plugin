@@ -19,7 +19,7 @@ jobs:
         # because test assets become diff filenames with content hash
 
         os: [ubuntu-latest]
-        node-version: [20, 22]
+        node-version: [20, 22, 24, 26]
 
     runs-on: ${{ matrix.os }}
     name: integration - Node ${{ matrix.node-version }} on ${{ matrix.os }}
