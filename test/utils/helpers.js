@@ -84,27 +84,31 @@ export const compareFileContents = function (receivedFile, expectedFile, filter)
  * @param {string} relTestCasePath The relative path to the test directory.
  * @param {boolean} compareContent Whether the content of files should be compared too.
  * @param {RegExp|null} filter
+ * @param {Object} options Optional absolute paths overriding the default dist and expected directories.
+ * @param {string} [options.pathReceived] The absolute path to the received files.
+ * @param {string} [options.pathExpected] The absolute path to the expected files.
  * @return {Promise<void>}
  */
 export const compareFiles = (
   relTestCasePath,
   compareContent = true,
-  filter = /.(html|css|css.map|js|js.map|json)$/
+  filter = /.(html|css|css.map|js|js.map|json)$/,
+  options = {}
 ) => {
   const absTestPath = path.join(PATHS.testSource, relTestCasePath),
-    webRootPath = path.join(absTestPath, PATHS.webRoot),
-    expectedPath = path.join(absTestPath, PATHS.expected);
+    pathReceived = options.pathReceived ?? path.join(absTestPath, PATHS.webRoot),
+    pathExpected = options.pathExpected ?? path.join(absTestPath, PATHS.expected);
 
   return expect(
     compile(PATHS, relTestCasePath, {})
       .then(() => {
-        const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(webRootPath, expectedPath);
+        const { received: receivedFiles, expected: expectedFiles } = getCompareFileList(pathReceived, pathExpected);
 
         expect(receivedFiles).toEqual(expectedFiles);
 
         if (compareContent) {
           expectedFiles.forEach((file) => {
-            compareFileContents(path.join(webRootPath, file), path.join(expectedPath, file), filter);
+            compareFileContents(path.join(pathReceived, file), path.join(pathExpected, file), filter);
           });
         }
 
