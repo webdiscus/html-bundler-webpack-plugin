@@ -99,7 +99,11 @@ class CssExtractModule {
     let source = sources[assetFile].source();
 
     if (sourceMap) {
-      const base64 = Buffer.from(JSON.stringify(sourceMap)).toString('base64');
+      const mapContent =
+        typeof sourceMap === 'string' || Buffer.isBuffer(sourceMap)
+          ? sourceMap
+          : JSON.stringify(sourceMap);
+      const base64 = Buffer.from(mapContent).toString('base64');
       const inlineSourceMap = 'data:application/json;charset=utf-8;base64,' + base64;
       source = source.replace(mapFilename, inlineSourceMap);
     }

@@ -175,6 +175,16 @@ class Option {
   initWebpack(compiler) {
     const { entry, js, css } = this.options;
     const options = compiler.options;
+    const optimization = options.optimization;
+
+    // Keep HTML minification under the plugin's control unless explicitly configured.
+    if ('minimizeOptions' in optimization) {
+      const minimizeOptions = (optimization.minimizeOptions ??= {});
+      if (minimizeOptions.html === undefined) {
+        minimizeOptions.html = false;
+      }
+    }
+
     const splitChunks = options?.optimization?.splitChunks?.chunks;
 
     if (splitChunks && splitChunks === 'all') {

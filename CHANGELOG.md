@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.24.0 (2026-11-03)
+
+- fix: restore compatibility with Webpack 5.112.2 after internal module paths changed, while retaining support for older Webpack 5 versions
+- fix: disable Webpack's built-in HTML minification by default to preserve the plugin's `minify` behavior, respecting explicit user configuration
+- fix: prevent template entry modules from being concatenated with dependencies, which could emit JavaScript instead of rendered HTML
+- fix: correctly encode inline CSS source maps supplied as strings, Buffers, or objects without double serialization
+- fix: work around Webpack skipping content hash replacement in Buffer-backed source maps, leaving outdated filenames and runtime references
+- test: capture complete stdout instead of only the first write
+- test: compare colliding asset names independently of asynchronous suffix assignment and re-enable the affected tests in CI
+- test: preserve Webpack <= 5.105 missing-CSS-loader behavior in the integrity error regression test
+- test: update expected output for Webpack 5.112.2
+
 ## 4.23.3 (2026-06-01)
 
 - fix: normalize restored missing script paths in watch mode to prevent false `Can't resolve ...` errors on Windows.

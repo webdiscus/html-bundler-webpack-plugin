@@ -1,4 +1,5 @@
 import { isCI, compareFiles, compareFilesRuns, stdoutContain, watchCompareFiles } from './utils/helpers';
+import { compareFilesWithUniqueNames } from './utils/compareFilesWithUniqueNames';
 
 beforeAll(() => {
   // important: the environment constant is used in code
@@ -53,10 +54,7 @@ describe('resolve files', () => {
   test('assets filenames in relative entry', () => compareFiles('resolve-asset-filenames-in-relative-entry'));
   test('not resolve in template comment', () => compareFiles('comment-not-resolve'));
 
-  if (!isCI) {
-    // test only locally, as the result in CI environment may be random
-    test('js, css with same name', () => compareFiles('resolve-js-css-with-same-name'));
-  }
+  test('js, css with same name', () => compareFilesWithUniqueNames('resolve-js-css-with-same-name'));
 });
 
 describe('resolve styles', () => {
@@ -616,8 +614,5 @@ describe('resolve assets in entry', () => {
 describe('setup examples', () => {
   test('minimal, one page', () => compareFiles('setup-minimal-one-page'));
 
-  if (!isCI) {
-    // test only locally, as the result in CI environment may be random
-    test('base, multi pages', () => compareFiles('setup-base-multi-pages'));
-  }
+  test('base, multi pages', () => compareFilesWithUniqueNames('setup-base-multi-pages'));
 });

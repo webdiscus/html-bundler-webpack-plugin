@@ -461,6 +461,27 @@ class AssetCompiler {
       this.processAssetsOptimizeSize
     );
 
+    // Work around Webpack emitting source maps as Buffers:
+    // RealContentHashPlugin skips hash replacement in Buffer contents,
+    // leaving sourceMap.file with an outdated content hash.
+    // Convert source maps to text before realContentHash processing.
+    compilation.hooks.processAssets.tap(
+      { name: pluginName, stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_HASH - 1 },
+      () => {
+        for (const asset of compilation.getAssets()) {
+          const sourceMaps = asset.info.related?.sourceMap;
+          const names = sourceMaps ? (Array.isArray(sourceMaps) ? sourceMaps : [sourceMaps]) : [];
+
+          for (const name of names) {
+            const content = compilation.getAsset(name)?.source.source();
+            if (Buffer.isBuffer(content)) {
+              compilation.updateAsset(name, new RawSource(content.toString('utf8')));
+            }
+          }
+        }
+      }
+    );
+
     // after render module's sources
     // only in the processAssets hook is possible to modify an asset content via async function
     compilation.hooks.processAssets.tapPromise({ name: pluginName, stage: renderStage }, this.processAssetsFinalAsync);
@@ -1081,7 +1102,11 @@ class AssetCompiler {
    *
    * @param {Object} module The Webpack module.
    */
-  afterBuildModule(module) {}
+  afterBuildModule(module) {
+    if (this.assetEntry.isEntryResource(module.resource)) {
+      module.buildInfo.moduleConcatenationBailout ||= 'HTML template rendering';
+    }
+  }
 
   /**
    * @param {Array<Object>} result

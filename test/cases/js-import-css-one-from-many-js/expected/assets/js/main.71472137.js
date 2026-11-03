@@ -1,0 +1,1 @@
+(()=>{"use strict";const e=e=>{var o=Object.getOwnPropertyDescriptor(e,"name");(!o||!o.writable&&o.configurable)&&Object.defineProperty(e,"name",{value:"default",configurable:!0})},o=()=>console.log(">> app/nav");e(o),o();const n=()=>console.log(">> app/index");e(n),n(),console.log(">> main")})();

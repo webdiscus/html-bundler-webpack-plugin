@@ -14,7 +14,7 @@ if (typeof global.btoa === 'undefined') {
 
 const promisifyStdout = function (stdout) {
   const { calls } = stdout.mock;
-  let output = calls.length > 0 ? calls[0][0] : '';
+  let output = calls.map(([chunk]) => chunk.toString()).join('');
   output = ansis.strip(output);
 
   stdout.mockClear();

@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 const ImageMinimizerPlugin = require('image-minimizer-webpack-plugin');
-const TerserPlugin = require('terser-webpack-plugin');
 const CssMinimizer = require('css-minimizer-webpack-plugin');
 
 // the base configuration for a simple single page
@@ -81,9 +80,6 @@ module.exports = {
       }),
 
       new CssMinimizer(),
-
-      //new TerserPlugin(),
-
       // https://webpack.js.org/configuration/optimization/#optimizationminimizer
       '...', // equivalent to `new TerserPlugin()`
     ],

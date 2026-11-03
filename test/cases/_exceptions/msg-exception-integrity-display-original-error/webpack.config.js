@@ -3,6 +3,11 @@ const HtmlBundlerPlugin = require('@test/html-bundler-webpack-plugin');
 
 module.exports = {
   mode: 'production',
+  experiments: {
+    // Preserve Webpack <= 5.105 behavior for this compatibility test:
+    // without a CSS loader, CSS must produce the original missing-loader error.
+    css: false,
+  },
   output: {
     crossOriginLoading: 'anonymous',
   },
