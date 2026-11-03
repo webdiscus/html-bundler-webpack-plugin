@@ -153,6 +153,8 @@ class Option {
     const options = this.#options;
     //const resource = loaderContext.resourcePath + loaderContext.resourceQuery;
     const issuer = loaderContext._module.resourceResolveData?.context?.issuer || '';
+    const issuerModule = loaderContext._compilation.moduleGraph.getIssuer(loaderContext._module);
+    const isIssuerCompiled = issuerModule?.resourceResolveData?._bundlerPluginMeta?.preprocessorMode === 'compile';
     let [defaultPreprocessorMode] = this.preprocessorModes;
     let isIssuerScript = false;
     let preprocessorMode;
@@ -167,8 +169,8 @@ class Option {
       }
     }
 
-    // rule: defaults, if issuer is JS, then compile template to the template function
-    if (isIssuerScript) {
+    // Compile templates imported by JavaScript or another compiled template.
+    if (isIssuerScript || isIssuerCompiled) {
       preprocessorMode = defaultPreprocessorMode = 'compile';
     }
 

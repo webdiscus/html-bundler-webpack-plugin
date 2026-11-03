@@ -12,6 +12,7 @@ beforeAll(() => {
   // important: the environment constant is used in code
   // the value must be type string
   process.env.NODE_ENV_TEST = 'true';
+  process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
 });
 
 describe('simple tests', () => {
