@@ -230,6 +230,15 @@ class Resolver {
     // bypass the asset contained data-URL
     if (this.assetInline.isDataUrl(rawRequest)) return rawRequest;
 
+    // Generated template requests are relative, but collection keys remain absolute.
+    // Keep other requests unchanged for issuer-specific CSS resource resolution.
+    if (rawRequest.startsWith('./') || rawRequest.startsWith('../')) {
+      const [file] = rawRequest.split('?', 1);
+      const resource = path.resolve(this.context, file) + rawRequest.slice(file.length);
+
+      if (this.collection.hasScript(resource) || this.collection.isInlineStyle(resource)) return resource;
+    }
+
     // bypass the source script file to replace it after the process
     if (this.collection.hasScript(rawRequest)) return rawRequest;
 

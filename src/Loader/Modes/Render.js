@@ -23,9 +23,12 @@ class Render extends PreprocessorModeAbstract {
 
   /**
    * @param {string} file
+   * @param {string} [issuer]
    * @return {string}
    */
-  requireExpression(file) {
+  requireExpression(file, issuer) {
+    file = this.getRequireRequest(file, issuer);
+
     return `\\u0027 + require(\\u0027${file}\\u0027) + \\u0027`;
   }
 

@@ -28,10 +28,13 @@ class Compile extends PreprocessorModeAbstract {
 
   /**
    * @param {string} file
+   * @param {string} [issuer]
    * @return {string}
    */
-  requireExpression(file) {
+  requireExpression(file, issuer) {
     const quote = this.enclosingQuotes;
+
+    file = this.getRequireRequest(file, issuer);
 
     if (isWin) file = pathToPosix(file);
 

@@ -1,5 +1,6 @@
+const path = require('path');
 const Resolver = require('../Resolver');
-const { isUrl } = require('../../Common/Helpers');
+const { isUrl, pathToPosix } = require('../../Common/Helpers');
 
 /**
  * @typedef {Object} PreprocessorModeProperties
@@ -50,10 +51,35 @@ class PreprocessorModeAbstract {
 
   /**
    * @param {string} file
+   * @param {string} [issuer]
    * @return {string}
    * @abstract This method must be defined in the child class.
    */
-  requireExpression(file) {}
+  requireExpression(file, issuer) {}
+
+  /**
+   * Keep generated template requests independent of the project directory.
+   * Absolute resource identities remain unchanged in the collection and resolver.
+   *
+   * @param {string} resource
+   * @param {string} [issuer]
+   * @return {string}
+   */
+  getRequireRequest(resource, issuer) {
+    if (!issuer || !this.loaderOption.isEntry(issuer) || !path.isAbsolute(resource)) return resource;
+
+    const [file] = resource.split('?', 1);
+    const [issuerFile] = issuer.split('?', 1);
+    const relativeFile = path.relative(path.dirname(issuerFile), file);
+
+    // Windows paths on different drives cannot be represented by a relative request.
+    if (path.isAbsolute(relativeFile)) return resource;
+
+    const request = pathToPosix(relativeFile);
+    const prefix = request.startsWith('../') || request.startsWith('./') ? '' : './';
+
+    return prefix + request + resource.slice(file.length);
+  }
 
   /**
    * Export template code with rendered HTML.
@@ -118,7 +144,7 @@ class PreprocessorModeAbstract {
 
     return {
       resolvedFile,
-      requireExpression: this.requireExpression(resolvedFile),
+      requireExpression: this.requireExpression(resolvedFile, issuer),
     };
   }
 
@@ -151,7 +177,7 @@ class PreprocessorModeAbstract {
 
     return {
       resolvedFile,
-      requireExpression: this.requireExpression(resolvedFile),
+      requireExpression: this.requireExpression(resolvedFile, issuer),
     };
   }
 
@@ -184,7 +210,7 @@ class PreprocessorModeAbstract {
 
     return {
       resolvedFile,
-      requireExpression: this.requireExpression(resolvedFile),
+      requireExpression: this.requireExpression(resolvedFile, issuer),
     };
   }
 }

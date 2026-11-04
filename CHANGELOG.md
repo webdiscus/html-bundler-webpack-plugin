@@ -1,5 +1,12 @@
 # Changelog
 
+## 4.24.1 (2026-11-04)
+
+- fix: generate relative requests in template modules to make build hashes independent of the project directory, including filenames using `[fullhash]`, #195
+- fix: preserve css-loader runtime dependencies for CSSStyleSheet exports regardless of module processing order
+- fix: preserve nested dependencies loaded via `importModule`, preventing intermittent build failures with CSS imported through SCSS
+- test: verify reproducible output across project directories with both `[contenthash]` and `[fullhash]`
+
 ## 4.24.0 (2026-11-03)
 
 - fix: restore compatibility with Webpack 5.112.2 after internal module paths changed, while retaining support for older Webpack 5 versions

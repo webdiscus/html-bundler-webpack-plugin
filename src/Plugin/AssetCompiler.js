@@ -796,10 +796,11 @@ class AssetCompiler {
 
       const isIssuerStyle = this.pluginOption.isStyle(issuer);
       const parentModule = resolveData.dependencies[0]?._parentModule;
-      const { isLoaderImport } = parentModule?.resourceResolveData?._bundlerPluginMeta || {};
+      const { isLoaderImport, isParentLoaderImport, isCSSStyleSheet } =
+        parentModule?.resourceResolveData?._bundlerPluginMeta || {};
 
-      // skip the module loaded via importModule
-      if (isLoaderImport) {
+      // Preserve dependencies throughout the module tree loaded via importModule.
+      if (isLoaderImport || isParentLoaderImport) {
         meta.isParentLoaderImport = true;
         return;
       }
@@ -808,8 +809,12 @@ class AssetCompiler {
       // to avoid splitting the loader runtime scripts;
       // allow runtime scripts for styles imported in JavaScript, regards deep imported styles via url()
       if (isIssuerStyle && file.endsWith('.js')) {
-        const rootIssuer = findRootIssuer(this.compilation, issuer);
         meta.isScript = true;
+
+        // CSSStyleSheet needs its runtime regardless of which issuer Webpack discovers first.
+        if (isCSSStyleSheet) return;
+
+        const rootIssuer = findRootIssuer(this.compilation, issuer);
 
         // return true if the root issuer is a JS (not style and not template), otherwise return false
         return rootIssuer != null && !this.pluginOption.isStyle(rootIssuer) && !this.pluginOption.isEntry(rootIssuer);

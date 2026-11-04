@@ -22,24 +22,19 @@ describe('config with contenthash', () => {
     process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
   });
 
-  // This test reprodice the issue where tmp1.buildInfo.hash != tmp2.buildInfo.hash.
-  // But where is the practicle sense?
+  test('internal template module hashes and sources are independent of the project directory', async () => {
+    const first = await compile(PATHS, `${testCasePath}/path1`, {});
+    const second = await compile(PATHS, `${testCasePath}/path2`, {});
+    const firstTemplate = getTemplateModule(first);
+    const secondTemplate = getTemplateModule(second);
 
-  // Expected: "9360abb4bcd0d9c1a76f41c01dcb6bdb"
-  // Received: "298fc7f41a8b51d0f5c0428a919fc93f"
-  // test('internal template module hashes and sources are independent of the project directory', async () => {
-  //   const first = await compile(PATHS, `${testCasePath}/path1`, {});
-  //   const second = await compile(PATHS, `${testCasePath}/path2`, {});
-  //   const firstTemplate = getTemplateModule(first);
-  //   const secondTemplate = getTemplateModule(second);
-  //
-  //   // Diagnostic check of Webpack internals, stronger than final artifact equality.
-  //   // Different intermediate hashes alone do not prove different emitted files.
-  //   expect(firstTemplate.buildInfo.hash).toBe(secondTemplate.buildInfo.hash);
-  //   expect(firstTemplate.originalSource().source().toString()).toBe(
-  //     secondTemplate.originalSource().source().toString()
-  //   );
-  // });
+    // Diagnostic check of Webpack internals, stronger than final artifact equality.
+    // Different intermediate hashes alone do not prove different emitted files.
+    expect(firstTemplate.buildInfo.hash).toBe(secondTemplate.buildInfo.hash);
+    expect(firstTemplate.originalSource().source().toString()).toBe(
+      secondTemplate.originalSource().source().toString()
+    );
+  });
 
   test('emitted artifacts in both directories match path1/expected byte for byte', async () => {
     // path1/dist vs path1/expected.
@@ -62,24 +57,19 @@ describe('config with fullhash', () => {
     process.env.BROWSERSLIST_IGNORE_OLD_DATA = 'true';
   });
 
-  // This test reprodice the issue where tmp1.buildInfo.hash != tmp2.buildInfo.hash.
-  // But where is the practicle sense?
+  test('internal template module hashes and sources are independent of the project directory', async () => {
+    const first = await compile(PATHS, `${testCasePath}/path1`, {});
+    const second = await compile(PATHS, `${testCasePath}/path2`, {});
+    const firstTemplate = getTemplateModule(first);
+    const secondTemplate = getTemplateModule(second);
 
-  // Expected: "9360abb4bcd0d9c1a76f41c01dcb6bdb"
-  // Received: "298fc7f41a8b51d0f5c0428a919fc93f"
-  // test('internal template module hashes and sources are independent of the project directory', async () => {
-  //   const first = await compile(PATHS, `${testCasePath}/path1`, {});
-  //   const second = await compile(PATHS, `${testCasePath}/path2`, {});
-  //   const firstTemplate = getTemplateModule(first);
-  //   const secondTemplate = getTemplateModule(second);
-  //
-  //   // Diagnostic check of Webpack internals, stronger than final artifact equality.
-  //   // Different intermediate hashes alone do not prove different emitted files.
-  //   expect(firstTemplate.buildInfo.hash).toBe(secondTemplate.buildInfo.hash);
-  //   expect(firstTemplate.originalSource().source().toString()).toBe(
-  //     secondTemplate.originalSource().source().toString()
-  //   );
-  // });
+    // Diagnostic check of Webpack internals, stronger than final artifact equality.
+    // Different intermediate hashes alone do not prove different emitted files.
+    expect(firstTemplate.buildInfo.hash).toBe(secondTemplate.buildInfo.hash);
+    expect(firstTemplate.originalSource().source().toString()).toBe(
+      secondTemplate.originalSource().source().toString()
+    );
+  });
 
   test('emitted artifacts in both directories match path1/expected byte for byte', async () => {
     // path1/dist vs path1/expected.

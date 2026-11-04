@@ -87,6 +87,9 @@ describe('issue tests', () => {
         },
       ]);
 
+      // Regression test for #191: Webpack may invalidate without a filename.
+      // Verify that passing null does not throw.
+      // This currently also triggers Node.js DEP0187 via fs.existsSync(null).
       for (const childCompiler of compiler.compilers) {
         expect(() => childCompiler.hooks.invalid.call(null, null)).not.toThrow();
       }
